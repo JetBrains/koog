@@ -5,6 +5,8 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
@@ -232,12 +234,16 @@ class AnthropicToolSerializationTest {
         val toolResult = content[0].jsonObject
         assertEquals("tool_result", toolResult["type"]?.jsonPrimitive?.content)
         assertEquals("tool-call-1", toolResult["tool_use_id"]?.jsonPrimitive?.content)
-        assertEquals("Tool execution failed: something went wrong", toolResult["content"]?.jsonPrimitive?.content)
+        val toolResultContent = toolResult["content"]?.jsonArray
+        assertNotNull(toolResultContent)
+        assertEquals(1, toolResultContent.size)
+        assertEquals("text", toolResultContent[0].jsonObject["type"]?.jsonPrimitive?.content)
+        assertEquals("Tool execution failed: something went wrong", toolResultContent[0].jsonObject["text"]?.jsonPrimitive?.content)
         assertEquals(true, toolResult["is_error"]?.jsonPrimitive?.booleanOrNull)
     }
 
     @Test
-    fun testCreateAnthropicRequestOmitsIsErrorForSuccessfulToolResult() {
+    fun testCreateAnthropicRequestIncludesIsErrorFalseForSuccessfulToolResult() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
         val metaInfo = RequestMetaInfo.create(KoogClock.System)
@@ -274,5 +280,120 @@ class AnthropicToolSerializationTest {
         val toolResult = content[0].jsonObject
         assertEquals("tool_result", toolResult["type"]?.jsonPrimitive?.content)
         assertEquals(false, toolResult["is_error"]?.jsonPrimitive?.booleanOrNull)
+    }
+
+    @Test
+    fun testToolResultWithBase64ImageSerializesToAnthropicImageBlock() {
+        val client = AnthropicLLMClient(apiKey = "test-key")
+        val model = AnthropicModels.Sonnet_4
+        val metaInfo = RequestMetaInfo.create(KoogClock.System)
+        val base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+        val requestJson = client.createAnthropicRequest(
+            prompt = Prompt(
+                messages = listOf(
+                    Message.User(
+                        parts = listOf(
+                            MessagePart.Tool.Result(
+                                id = "tool-call-3",
+                                tool = "screenshot_tool",
+                                parts = listOf(
+                                    MessagePart.Text("Here is the screenshot:"),
+                                    MessagePart.Attachment(
+                                        source = AttachmentSource.Image(
+                                            content = AttachmentContent.Binary.Base64(base64Data),
+                                            format = "png",
+                                            mimeType = "image/png"
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        metaInfo = metaInfo
+                    )
+                ),
+                id = "id"
+            ),
+            tools = emptyList(),
+            model = model,
+            stream = false
+        )
+
+        val request = json.parseToJsonElement(requestJson).jsonObject
+        val messages = request["messages"]?.jsonArray
+        assertNotNull(messages)
+
+        val toolResult = messages[0].jsonObject["content"]?.jsonArray?.get(0)?.jsonObject
+        assertNotNull(toolResult)
+        assertEquals("tool_result", toolResult["type"]?.jsonPrimitive?.content)
+
+        val resultContent = toolResult["content"]?.jsonArray
+        assertNotNull(resultContent)
+        assertEquals(2, resultContent.size)
+
+        val textBlock = resultContent[0].jsonObject
+        assertEquals("text", textBlock["type"]?.jsonPrimitive?.content)
+        assertEquals("Here is the screenshot:", textBlock["text"]?.jsonPrimitive?.content)
+
+        val imageBlock = resultContent[1].jsonObject
+        assertEquals("image", imageBlock["type"]?.jsonPrimitive?.content)
+        val source = imageBlock["source"]?.jsonObject
+        assertNotNull(source)
+        assertEquals("base64", source["type"]?.jsonPrimitive?.content)
+        assertEquals("image/png", source["media_type"]?.jsonPrimitive?.content)
+        assertEquals(base64Data, source["data"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun testToolResultWithUrlImageSerializesToAnthropicImageBlock() {
+        val client = AnthropicLLMClient(apiKey = "test-key")
+        val model = AnthropicModels.Sonnet_4
+        val metaInfo = RequestMetaInfo.create(KoogClock.System)
+
+        val requestJson = client.createAnthropicRequest(
+            prompt = Prompt(
+                messages = listOf(
+                    Message.User(
+                        parts = listOf(
+                            MessagePart.Tool.Result(
+                                id = "tool-call-4",
+                                tool = "fetch_image_tool",
+                                parts = listOf(
+                                    MessagePart.Attachment(
+                                        source = AttachmentSource.Image(
+                                            content = AttachmentContent.URL("https://example.com/image.png"),
+                                            format = "png"
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        metaInfo = metaInfo
+                    )
+                ),
+                id = "id"
+            ),
+            tools = emptyList(),
+            model = model,
+            stream = false
+        )
+
+        val request = json.parseToJsonElement(requestJson).jsonObject
+        val messages = request["messages"]?.jsonArray
+        assertNotNull(messages)
+
+        val toolResult = messages[0].jsonObject["content"]?.jsonArray?.get(0)?.jsonObject
+        assertNotNull(toolResult)
+
+        val resultContent = toolResult["content"]?.jsonArray
+        assertNotNull(resultContent)
+        assertEquals(1, resultContent.size)
+
+        val imageBlock = resultContent[0].jsonObject
+        assertEquals("image", imageBlock["type"]?.jsonPrimitive?.content)
+        val source = imageBlock["source"]?.jsonObject
+        assertNotNull(source)
+        assertEquals("url", source["type"]?.jsonPrimitive?.content)
+        assertEquals("https://example.com/image.png", source["url"]?.jsonPrimitive?.content)
     }
 }

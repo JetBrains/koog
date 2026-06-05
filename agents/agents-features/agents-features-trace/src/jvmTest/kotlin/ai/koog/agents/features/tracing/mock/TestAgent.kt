@@ -99,7 +99,8 @@ fun receivedToolResult(
     toolDescription = toolDescription,
     output = content,
     resultKind = ToolResultKind.Success,
-    result = result
+    result = result,
+    parts = listOf(MessagePart.Text(content)),
 )
 
 /**

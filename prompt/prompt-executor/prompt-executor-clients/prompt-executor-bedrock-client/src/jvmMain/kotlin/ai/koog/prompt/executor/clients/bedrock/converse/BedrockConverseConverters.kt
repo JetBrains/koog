@@ -242,8 +242,7 @@ internal object BedrockConverseConverters {
                                 ContentBlock.ToolResult(
                                     ToolResultBlock {
                                         this.toolUseId = part.id
-                                        // only text results are currently supported
-                                        this.content = listOf(ToolResultContentBlock.Text(part.output))
+                                        this.content = part.parts.map { it.toToolResultContentBlock(model) }
                                     }
                                 )
                             )
@@ -609,6 +608,72 @@ internal object BedrockConverseConverters {
                                     is AttachmentContent.URL ->
                                         VideoSource.S3Location(content.toS3Location())
 
+                                    is AttachmentContent.PlainText ->
+                                        throw IllegalArgumentException("Video can't have plain text content")
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Converts a [MessagePart.ContentPart] to [ToolResultContentBlock] for Bedrock Converse API tool results.
+     *
+     * @throws IllegalArgumentException if the given part is not supported in tool results.
+     */
+    private fun MessagePart.ContentPart.toToolResultContentBlock(model: LLModel): ToolResultContentBlock {
+        return when (val part = this) {
+            is MessagePart.Text -> ToolResultContentBlock.Text(part.text)
+            is MessagePart.Attachment -> {
+                when (val source = part.source) {
+                    is AttachmentSource.Audio ->
+                        throw IllegalArgumentException("Bedrock Converse API doesn't support audio content in tool results.")
+                    is AttachmentSource.File ->
+                        ToolResultContentBlock.Document(
+                            (part as MessagePart.ContentPart).let {
+                                DocumentBlock {
+                                    this.format = DocumentFormat.fromValue(source.format)
+                                    this.name = source.fileName?.substringBefore('.')
+                                    this.source = when (val content = source.content) {
+                                        is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                            DocumentSource.Bytes(content.asBytes())
+                                        is AttachmentContent.URL ->
+                                            DocumentSource.S3Location(content.toS3Location())
+                                        is AttachmentContent.PlainText ->
+                                            DocumentSource.Bytes(content.text.encodeToByteArray())
+                                    }
+                                }
+                            }
+                        )
+                    is AttachmentSource.Image -> {
+                        require(model.supports(LLMCapability.Vision.Image)) { "${model.id} doesn't support images" }
+                        ToolResultContentBlock.Image(
+                            ImageBlock {
+                                this.format = ImageFormat.fromValue(source.format)
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        ImageSource.Bytes(content.asBytes())
+                                    is AttachmentContent.URL ->
+                                        ImageSource.S3Location(content.toS3Location())
+                                    is AttachmentContent.PlainText ->
+                                        throw IllegalArgumentException("Image can't have plain text content")
+                                }
+                            }
+                        )
+                    }
+                    is AttachmentSource.Video -> {
+                        require(model.supports(LLMCapability.Vision.Video)) { "${model.id} doesn't support videos" }
+                        ToolResultContentBlock.Video(
+                            VideoBlock {
+                                this.format = VideoFormat.fromValue(source.format)
+                                this.source = when (val content = source.content) {
+                                    is AttachmentContent.Binary.Base64, is AttachmentContent.Binary.Bytes ->
+                                        VideoSource.Bytes(content.asBytes())
+                                    is AttachmentContent.URL ->
+                                        VideoSource.S3Location(content.toS3Location())
                                     is AttachmentContent.PlainText ->
                                         throw IllegalArgumentException("Video can't have plain text content")
                                 }

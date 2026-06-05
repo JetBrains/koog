@@ -60,6 +60,7 @@ abstract class <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.core.tools/Tool
     open fun decodeResult(ai.koog.serialization/JSONElement, ai.koog.serialization/JSONSerializer): #B // ai.koog.agents.core.tools/ToolBase.decodeResult|decodeResult(ai.koog.serialization.JSONElement;ai.koog.serialization.JSONSerializer){}[0]
     open fun encodeArgs(#A, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONObject // ai.koog.agents.core.tools/ToolBase.encodeArgs|encodeArgs(1:0;ai.koog.serialization.JSONSerializer){}[0]
     open fun encodeResult(#B, ai.koog.serialization/JSONSerializer): ai.koog.serialization/JSONElement // ai.koog.agents.core.tools/ToolBase.encodeResult|encodeResult(1:1;ai.koog.serialization.JSONSerializer){}[0]
+    open fun encodeResultToParts(#B, ai.koog.serialization/JSONSerializer): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.agents.core.tools/ToolBase.encodeResultToParts|encodeResultToParts(1:1;ai.koog.serialization.JSONSerializer){}[0]
     open fun encodeResultToString(#B, ai.koog.serialization/JSONSerializer): kotlin/String // ai.koog.agents.core.tools/ToolBase.encodeResultToString|encodeResultToString(1:1;ai.koog.serialization.JSONSerializer){}[0]
 }
 

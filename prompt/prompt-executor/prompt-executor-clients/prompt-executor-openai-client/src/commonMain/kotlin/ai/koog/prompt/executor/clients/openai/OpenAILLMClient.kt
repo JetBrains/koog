@@ -64,6 +64,11 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
@@ -774,10 +779,69 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                         // First add tool results
                         message.parts.filterIsInstance<MessagePart.Tool.Result>().forEach { part ->
                             if (model.supports(LLMCapability.Tools)) {
+                                val output: JsonElement = if (part.parts.size == 1 && part.parts.single() is MessagePart.Text) {
+                                    JsonPrimitive((part.parts.single() as MessagePart.Text).text)
+                                } else {
+                                    buildJsonArray {
+                                        part.parts.forEach { p ->
+                                            when (p) {
+                                                is MessagePart.Text -> add(
+                                                    buildJsonObject {
+                                                        put("type", "input_text")
+                                                        put("text", p.text)
+                                                    }
+                                                )
+                                                is MessagePart.Attachment -> {
+                                                    when (val source = p.source) {
+                                                        is AttachmentSource.Image -> {
+                                                            val imageUrl = when (val c = source.content) {
+                                                                is AttachmentContent.URL -> c.url
+                                                                is AttachmentContent.Binary -> "data:${source.mimeType};base64,${c.asBase64()}"
+                                                                else -> {
+                                                                    logger.warn { "Unsupported image content type in tool result for OpenAI: ${c::class}, skipping" }
+                                                                    null
+                                                                }
+                                                            }
+                                                            if (imageUrl != null) {
+                                                                add(
+                                                                    buildJsonObject {
+                                                                        put("type", "input_image")
+                                                                        put("image_url", imageUrl)
+                                                                        put("detail", "auto")
+                                                                    }
+                                                                )
+                                                            }
+                                                        }
+                                                        is AttachmentSource.File -> {
+                                                            when (val c = source.content) {
+                                                                is AttachmentContent.Binary -> add(
+                                                                    buildJsonObject {
+                                                                        put("type", "input_file")
+                                                                        put("file_data", "data:${source.mimeType};base64,${c.asBase64()}")
+                                                                        source.fileName?.let { put("filename", it) }
+                                                                    }
+                                                                )
+                                                                is AttachmentContent.URL -> add(
+                                                                    buildJsonObject {
+                                                                        put("type", "input_file")
+                                                                        put("file_url", c.url)
+                                                                        source.fileName?.let { put("filename", it) }
+                                                                    }
+                                                                )
+                                                                else -> logger.warn { "Unsupported file content type in tool result for OpenAI: ${c::class}, skipping" }
+                                                            }
+                                                        }
+                                                        else -> logger.warn { "Unsupported attachment type in tool result for OpenAI: ${source::class}, skipping" }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                                 add(
                                     Item.FunctionToolCallOutput(
                                         callId = part.id ?: Uuid.random().toString(),
-                                        output = part.output
+                                        output = output
                                     )
                                 )
                             } else {

@@ -240,7 +240,8 @@ class EventHandlerTest {
             output = dummyTool.result,
             resultKind = ToolResultKind.Success,
             result = dummyToolResultEncoded,
-            resultObject = "Dummy result"
+            resultObject = "Dummy result",
+            parts = listOf(MessagePart.Text(dummyTool.result)),
         )
 
         val toolCallPart = "{type: Call, tool: $dummyToolName, args: $dummyToolArgsEncoded}"
