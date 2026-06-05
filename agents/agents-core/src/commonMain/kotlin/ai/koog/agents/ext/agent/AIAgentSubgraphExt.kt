@@ -43,6 +43,7 @@ import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import ai.koog.serialization.kotlinx.toKotlinxJsonObject
 import ai.koog.serialization.typeToken
+import kotlinx.schema.generator.json.JsonSchemaConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -118,7 +119,9 @@ public class FinishTool<Output>
     argsType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
     resultType = typeToken(FinishResult::class, typeArguments = listOf(outputType)),
     descriptor = run {
-        val resultSchema = getJsonSchema(outputType)
+        // Include the polymorphic discriminator so sealed Output types reach the LLM with the
+        // `type` const that kotlinx-serialization requires when decoding back into a sealed instance.
+        val resultSchema = getJsonSchema(outputType, JsonSchemaConfig(includePolymorphicDiscriminator = true))
         val resultToolParameter = resultSchema.toToolParameter(resultSchema.defs)
 
         ToolDescriptor(

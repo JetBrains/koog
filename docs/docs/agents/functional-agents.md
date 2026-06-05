@@ -169,11 +169,11 @@ To calculate the product of 12 and 9, we multiply these two numbers together.
 
 In many cases, a functional agent needs to complete specific tasks,
 such as reading and writing data, calling APIs, or performing other deterministic operations.
-In Koog, you expose such capabilities as [tools](../tools-overview.md) and let the LLM decide when to call them.
+In Koog, you expose such capabilities as [tools](../tools/index.md) and let the LLM decide when to call them.
 
 Here is what you need to do:
 
-1. Create an [annotation-based tool](../annotation-based-tools.md).
+1. Create an [annotation-based tool](../tools/annotation-based-tools.md).
 2. Add it to a tool registry and pass the registry to the agent.
 3. Make sure the agent strategy can identify tool calls in LLM responses, execute the requested tools,
    send their results back to the LLM, and repeat the process until there are no tool calls remaining.

@@ -1,13 +1,17 @@
 package com.jetbrains.example.koog.compose
 
+import androidx.datastore.core.Storage
+import androidx.datastore.core.okio.OkioStorage
 import com.jetbrains.example.koog.compose.settings.AppSettings
+import com.jetbrains.example.koog.compose.settings.AppSettingsData
+import com.jetbrains.example.koog.compose.settings.AppSettingsSerializer
 import com.jetbrains.example.koog.compose.settings.DataStoreAppSettings
-import com.jetbrains.example.koog.compose.settings.PrefPathProvider
+import com.jetbrains.example.koog.compose.settings.StorageProvider
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCClass
 import kotlinx.cinterop.getOriginalKotlinClass
-import okio.Path
+import okio.FileSystem
 import okio.Path.Companion.toPath
 import org.koin.core.Koin
 import org.koin.core.module.Module
@@ -21,21 +25,25 @@ import platform.Foundation.NSUserDomainMask
 
 @OptIn(ExperimentalForeignApi::class)
 actual val appPlatformModule: Module = module {
-    single<PrefPathProvider> {
-        object : PrefPathProvider {
-            override fun get(): Path {
-                val documentDirectory: NSURL? = NSFileManager.defaultManager.URLForDirectory(
-                    directory = NSDocumentDirectory,
-                    inDomain = NSUserDomainMask,
-                    appropriateForURL = null,
-                    create = false,
-                    error = null,
-                )
-                return (documentDirectory?.path + "/settings.preferences_pb").toPath()
-            }
+    single<StorageProvider> {
+        object : StorageProvider {
+            override fun getStorage(): Storage<AppSettingsData> = OkioStorage(
+                fileSystem = FileSystem.SYSTEM,
+                serializer = AppSettingsSerializer,
+                producePath = {
+                    val documentDirectory: NSURL? = NSFileManager.defaultManager.URLForDirectory(
+                        directory = NSDocumentDirectory,
+                        inDomain = NSUserDomainMask,
+                        appropriateForURL = null,
+                        create = false,
+                        error = null,
+                    )
+                    (documentDirectory?.path + "/app_settings.json").toPath()
+                }
+            )
         }
     }
-    single<AppSettings> { DataStoreAppSettings(prefPathProvider = get<PrefPathProvider>()) }
+    single<AppSettings> { DataStoreAppSettings(storageProvider = get()) }
 }
 
 @OptIn(BetaInteropApi::class)

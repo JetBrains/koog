@@ -727,7 +727,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             is ToolParameterType.Enum -> JsonObject(
                 mapOf(
                     "type" to JsonPrimitive("string"),
-                    "enum" to JsonArray(type.entries.map { JsonPrimitive(it.lowercase()) })
+                    "enum" to JsonArray(type.entries.map { JsonPrimitive(it) })
                 )
             )
 

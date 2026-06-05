@@ -890,7 +890,9 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                             Item.FunctionToolCall(
                                                 callId = part.id ?: Uuid.random().toString(),
                                                 name = part.tool,
-                                                arguments = Json.encodeToString(part.args)
+                                                // `args` already holds the JSON-encoded arguments; re-encoding here would
+                                                // double-encode it into a quoted string that strict backends (e.g. DashScope) reject.
+                                                arguments = part.args
                                             )
                                         )
                                     } else {

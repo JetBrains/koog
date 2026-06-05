@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.jetbrains.annotations.ApiStatus.Experimental
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -36,7 +35,6 @@ import kotlin.time.Duration.Companion.minutes
  * @property logger A logging instance of type KLogger for recording client-related events and errors.
  * @property httpClient The configured Java HttpClient instance used for making HTTP requests.
  */
-@Experimental
 public class JavaKoogHttpClient internal constructor(
     override val clientName: String,
     private val logger: KLogger,
@@ -394,7 +392,6 @@ public class JavaKoogHttpClient internal constructor(
  * @param json The Json instance used for serialization/deserialization. Defaults to a default Json instance.
  * @return An instance of `KoogHttpClient` configured with the provided parameters.
  */
-@Experimental
 public fun KoogHttpClient.Companion.fromJavaHttpClient(
     clientName: String,
     logger: KLogger,

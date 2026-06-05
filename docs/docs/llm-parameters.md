@@ -182,12 +182,12 @@ For a list of default values for each parameter, see the corresponding LLM provi
 
 - [OpenAI Chat](https://platform.openai.com/docs/api-reference/chat/create)
 - [OpenAI Responses](https://platform.openai.com/docs/api-reference/responses/create)
-- [Google](https://ai.google.dev/api/generate-content#generationconfig)
+- [Google](https://ai.google.dev/api/generate-content#generationconfig) β
 - [Anthropic](https://platform.claude.com/docs/en/api/messages/create)
-- [Mistral](https://docs.mistral.ai/api/#operation/chatCompletions)
-- [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request)
+- [Mistral](https://docs.mistral.ai/api/#operation/chatCompletions) β
+- [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request) β
 - [OpenRouter](https://openrouter.ai/docs/api/reference/parameters)
-- Alibaba ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference))
+- Alibaba β ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference))
 - [Ollama](https://docs.ollama.com/api/openai-compatibility)
 
 ## Schema

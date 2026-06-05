@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # A2A protocol
+
+--8<-- "versioning-snippets.md:beta"
 
 This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
 

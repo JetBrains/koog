@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # Long-term memory
+
+--8<-- "versioning-snippets.md:beta"
 
 The `LongTermMemory` feature adds persistent memory to Koog AI agents via two independent group of settings:
 - **Retrieval** — augments LLM prompts with relevant context from a memory storage (Retrieval-Augmented Generation or RAG)

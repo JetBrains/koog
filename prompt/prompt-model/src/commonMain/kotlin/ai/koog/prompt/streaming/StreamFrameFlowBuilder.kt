@@ -197,7 +197,13 @@ public class StreamFrameFlowBuilder(
         tryEmitPendingReasoning()
         val sanitizedId = id?.takeUnless { it.isBlank() }
         val previous: PendingToolCall? = pendingToolCallRef.load()
-        val new: PendingToolCall = if (sanitizedId != null || index != previous?.index) {
+        // `id` and `index` are optional per-chunk signals. A new tool call begins only when a
+        // present signal differs from the pending call, not merely because `id` is non-null:
+        // some OpenAI-compatible providers send the same `id` on every chunk (see #2002).
+        val isNewToolCall =
+            (sanitizedId != null && sanitizedId != previous?.id) ||
+                (index != null && index != previous?.index)
+        val new: PendingToolCall = if (isNewToolCall) {
             tryEmitPendingToolCall()
             PendingToolCall(sanitizedId, name, args, index)
         } else {

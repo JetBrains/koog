@@ -19,6 +19,12 @@ While Java developers can leverage the full power of Koog on the JVM using idiom
 
     Learn the essential terms
 
+-   :material-shield-check-outline:{ .lg .middle } [**Module versioning**](module-versioning.md)
+
+    ---
+
+    Understand stable vs. beta modules and API guarantees
+
 </div>
 
 ## Agents
@@ -45,7 +51,7 @@ Learn about [agents in general](agents/index.md) and how to create different typ
 
     Implement a custom workflow as a strategy graph
 
--   :material-list-status:{ .lg .middle } [**Planner agents**](agents/planner-agents/index.md)
+-   :material-list-status:{ .lg .middle } [**Planner agents**](agents/planner-agents/index.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 
@@ -71,7 +77,7 @@ Learn about the core components of Koog agents in detail:
 
     Design the agent's intended workflow as a directed graph
 
--   :material-tools:{ .lg .middle } [**Tools**](tools-overview.md)
+-   :material-tools:{ .lg .middle } [**Tools**](tools/index.md)
 
     ---
 
@@ -115,7 +121,7 @@ Learn about the core components of Koog agents in detail:
 
     Process responses in real-time with streaming support and parallel tool calls
 
--   :material-database-search:{ .lg .middle } [**Knowledge retrieval**](embeddings.md)
+-   :material-database-search:{ .lg .middle } [**Knowledge retrieval**](embeddings.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 
@@ -127,7 +133,7 @@ Learn about the core components of Koog agents in detail:
 
     Debug and monitor agent execution with detailed, configurable tracing
 
--   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](features/long-term-memory.md)
+-   :material-timeline-text:{ .lg .middle } [**Long Term Memory**](features/long-term-memory.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 
@@ -139,19 +145,19 @@ Learn about the core components of Koog agents in detail:
 
 <div class="grid cards" markdown>
 
--   :material-puzzle:{ .lg .middle } [**Model Context Protocol (MCP)**](model-context-protocol.md)
+-   :material-puzzle:{ .lg .middle } [**Model Context Protocol (MCP)**](model-context-protocol.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 
     Use MCP tools directly in AI agents
 
--   :material-leaf:{ .lg .middle } [**Spring Boot**](spring-boot.md)
+-   :material-leaf:{ .lg .middle } [**Spring Boot**](spring-boot.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 
     Add Koog to your Spring applications
 
--   :material-cloud-outline:{ .lg .middle } [**Ktor**](ktor-plugin.md)
+-   :material-cloud-outline:{ .lg .middle } [**Ktor**](ktor-plugin.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 
@@ -163,7 +169,7 @@ Learn about the core components of Koog agents in detail:
 
     Trace, log, and measure your agent with popular observability tools
 
--   :material-lan:{ .lg .middle } [**A2A Protocol**](a2a-protocol-overview.md)
+-   :material-lan:{ .lg .middle } [**A2A Protocol**](a2a/index.md) <span class="beta-badge" title="Beta — API may change">beta</span>
 
     ---
 

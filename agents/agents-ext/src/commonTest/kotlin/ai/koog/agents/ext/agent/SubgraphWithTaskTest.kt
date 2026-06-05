@@ -7,7 +7,9 @@ import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.TestBlankTool
 import ai.koog.agents.testing.tools.TestFinishTool
@@ -31,6 +33,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.js.JsName
 import kotlin.test.Test
@@ -39,6 +42,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
+@OptIn(InternalAgentToolsApi::class)
 class SubgraphWithTaskTest {
     companion object {
         private val logger = KotlinLogging.logger { }
@@ -786,6 +790,132 @@ class SubgraphWithTaskTest {
         }
 
         assertTrue(executor.callCount >= 2, "Expected at least 2 LLM calls for recovery")
+    }
+
+    //endregion
+
+    //region Sealed Output Type Test
+
+    @Serializable
+    sealed interface SealedAnswer {
+        @Serializable
+        @SerialName("text_answer")
+        data class Text(val text: String) : SealedAnswer
+
+        @Serializable
+        @SerialName("number_answer")
+        data class Number(val value: Int) : SealedAnswer
+    }
+
+    private class FixedFinishCallExecutor(
+        private val finishToolName: String,
+        private val resultPayload: String,
+    ) : PromptExecutor() {
+        val capturedTools: MutableList<List<ToolDescriptor>> = mutableListOf()
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            capturedTools += tools
+            return Message.Assistant(
+                part = MessagePart.Tool.Call(
+                    id = "1",
+                    tool = finishToolName,
+                    args = "{\"result\": $resultPayload}",
+                ),
+                metaInfo = ResponseMetaInfo.Empty,
+            )
+        }
+
+        override fun executeStreaming(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Flow<StreamFrame> =
+            emptyFlow()
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
+            ModerationResult(isHarmful = false, categories = emptyMap())
+
+        override fun close() {}
+    }
+
+    @Test
+    @JsName("testSubgraphWithTaskSupportsSealedOutputTextBranch")
+    fun `test subgraphWithTask supports sealed output text branch`() = runTest {
+        val payload = "{\"type\":\"text_answer\",\"text\":\"hi\"}"
+        val executor = FixedFinishCallExecutor(SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME, payload)
+
+        val strategy = strategy<String, SealedAnswer>("sealed_strategy") {
+            val subgraph by subgraphWithTask<String, SealedAnswer>(
+                toolSelectionStrategy = ToolSelectionStrategy.ALL,
+                parallelTools = false,
+            ) { input -> input }
+
+            nodeStart then subgraph then nodeFinish
+        }
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("sealed_agent") {
+                system("You are a test agent.")
+            },
+            model = OpenAIModels.Chat.GPT5,
+            maxAgentIterations = 50,
+        )
+
+        AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY,
+        ).use { agent ->
+            val result = agent.run("Say hi")
+            assertEquals(SealedAnswer.Text("hi"), result)
+        }
+
+        val finishToolDescriptor = executor.capturedTools.flatten()
+            .firstOrNull { it.name == SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME }
+        assertTrue(finishToolDescriptor != null, "Expected finish tool to be exposed to the LLM")
+
+        val resultParameter = finishToolDescriptor.requiredParameters.single { it.name == "result" }
+        val resultType = resultParameter.type
+        assertTrue(
+            resultType is ToolParameterType.AnyOf,
+            "Expected result parameter type to be AnyOf with sealed branches, got: $resultType"
+        )
+        assertEquals(2, resultType.types.size, "Expected one AnyOf branch per sealed subclass")
+    }
+
+    @Test
+    @JsName("testSubgraphWithTaskSupportsSealedOutputNumberBranch")
+    fun `test subgraphWithTask supports sealed output number branch`() = runTest {
+        val payload = "{\"type\":\"number_answer\",\"value\":42}"
+        val executor = FixedFinishCallExecutor(SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME, payload)
+
+        val strategy = strategy<String, SealedAnswer>("sealed_strategy_number") {
+            val subgraph by subgraphWithTask<String, SealedAnswer>(
+                toolSelectionStrategy = ToolSelectionStrategy.ALL,
+                parallelTools = false,
+            ) { input -> input }
+
+            nodeStart then subgraph then nodeFinish
+        }
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("sealed_agent_number") {
+                system("You are a test agent.")
+            },
+            model = OpenAIModels.Chat.GPT5,
+            maxAgentIterations = 50,
+        )
+
+        AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY,
+        ).use { agent ->
+            val result = agent.run("Give me a number")
+            assertEquals(SealedAnswer.Number(42), result)
+        }
     }
 
     //endregion
