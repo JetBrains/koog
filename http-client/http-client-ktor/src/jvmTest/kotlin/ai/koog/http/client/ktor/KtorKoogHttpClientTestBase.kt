@@ -1,6 +1,7 @@
 package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.lines
 import ai.koog.http.client.post
 import ai.koog.http.client.test.BaseKoogHttpClientTest
 import io.ktor.client.HttpClient
@@ -15,6 +16,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -137,6 +139,71 @@ abstract class KtorKoogHttpClientTestBase : BaseKoogHttpClientTest() {
         val ktorClient = (client as KtorKoogHttpClient).ktorClient
         assertNotNull(ktorClient.plugin(HttpTimeout))
         assertNotNull(ktorClient.plugin(SSE))
+        client.close()
+    }
+
+    @Test
+    fun `factory should send pre-serialized String body as raw JSON object on post`() = runTest {
+        var capturedBody: String? = null
+        var capturedContentType: ContentType? = null
+        val engine = MockEngine { request ->
+            val body = request.body as TextContent
+            capturedBody = body.text
+            capturedContentType = body.contentType
+            respond(
+                content = "RESPONSE_OK",
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+            )
+        }
+        val client = ktorClient(
+            baseClient = HttpClient(engine),
+            baseUrl = "https://example.test/api",
+        )
+
+        val payload = """{"request":"hello"}"""
+        val result = client.post<String, String>(
+            path = "v1/messages",
+            requestBody = payload
+        )
+
+        assertEquals("RESPONSE_OK", result)
+        // ContentNegotiation must NOT re-serialize an already-serialized JSON String:
+        // the wire body must stay a JSON object, not become a JSON-quoted string ("{...}").
+        assertEquals(payload, capturedBody)
+        assertTrue(capturedContentType?.match(ContentType.Application.Json) == true)
+        client.close()
+    }
+
+    @Test
+    fun `factory should send pre-serialized String body as raw JSON object on lines`() = runTest {
+        var capturedBody: String? = null
+        var capturedContentType: ContentType? = null
+        val engine = MockEngine { request ->
+            val body = request.body as TextContent
+            capturedBody = body.text
+            capturedContentType = body.contentType
+            respond(
+                content = "{\"i\":1}\n{\"i\":2}\n",
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+            )
+        }
+        val client = ktorClient(
+            baseClient = HttpClient(engine),
+            baseUrl = "https://example.test/api",
+        )
+
+        val payload = """{"request":"hello"}"""
+        val collected = client.lines(
+            path = "v1/stream",
+            requestBody = payload
+        ).toList()
+
+        assertEquals(listOf("""{"i":1}""", """{"i":2}"""), collected)
+        // Same double-encode guard for the streaming (lines) request path.
+        assertEquals(payload, capturedBody)
+        assertTrue(capturedContentType?.match(ContentType.Application.Json) == true)
         client.close()
     }
 
