@@ -128,11 +128,9 @@ class JacksonSerializerTest {
             JSONObject(mapOf("name" to JSONPrimitive("Bob"), "age" to JSONPrimitive(25))),
         ))
 
-        // decodeFromJSONElement uses rawClass, losing generic type info
         val fromElement: List<Person> = serializer.decodeFromJSONElement(jsonElement, typeToken<List<Person>>())
         fromElement.first().name shouldBe "Alice"
 
-        // decodeFromString uses full JavaType and works correctly
         val json = """[{"name":"Alice","age":30},{"name":"Bob","age":25}]"""
         val fromString: List<Person> = serializer.decodeFromString(json, typeToken<List<Person>>())
         fromString.first().name shouldBe "Alice"
