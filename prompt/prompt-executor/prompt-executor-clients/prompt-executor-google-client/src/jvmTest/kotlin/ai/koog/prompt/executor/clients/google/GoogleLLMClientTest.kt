@@ -6,11 +6,13 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GooglePromptFeedback
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
@@ -22,16 +24,19 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -40,6 +45,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.reflect.KClass
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class GoogleLLMClientTest {
 
@@ -694,5 +700,90 @@ class GoogleLLMClientTest {
         response.parts[1].shouldBeInstanceOf<MessagePart.Attachment>()
         val filePart = (response.parts[1] as MessagePart.Attachment).source as AttachmentSource.Image
         filePart.format shouldBe "png"
+    }
+
+    @Test
+    fun `GoogleResponse deserializes when candidates field is missing`() {
+        // When a prompt is blocked by safety filters, Google returns 200 with only promptFeedback
+        // and omits the candidates field entirely. Deserialization must tolerate that.
+        val json = Json { ignoreUnknownKeys = true; isLenient = true }
+        val payload = """
+            {
+              "promptFeedback": { "blockReason": "SAFETY" },
+              "usageMetadata": { "promptTokenCount": 7, "totalTokenCount": 7 },
+              "modelVersion": "gemini-2.5-pro"
+            }
+        """.trimIndent()
+
+        val response = json.decodeFromString<GoogleResponse>(payload)
+
+        response.candidates.shouldBeEmpty()
+        response.promptFeedback?.blockReason shouldBe "SAFETY"
+    }
+
+    @Test
+    fun `execute surfaces block reason when prompt is blocked and no candidates returned`() = runTest {
+        val model = GoogleModels.Gemini2_5Pro
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "GoogleBlockedTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            @Suppress("UNCHECKED_CAST")
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R {
+                path shouldBe "v1beta/models/${model.id}:generateContent"
+                requestBody.shouldBeInstanceOf<GoogleRequest>()
+                return GoogleResponse(
+                    candidates = emptyList(),
+                    promptFeedback = GooglePromptFeedback(blockReason = "SAFETY"),
+                ) as R
+            }
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<O> = error("sse is not expected in this test")
+
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = GoogleLLMClient(httpClient = transport)
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.execute(
+                prompt = Prompt(messages = listOf(Message.User("spicy question", RequestMetaInfo.Empty)), id = "id"),
+                model = model,
+                tools = emptyList(),
+            )
+        }
+
+        exception.message shouldContain "SAFETY"
     }
 }

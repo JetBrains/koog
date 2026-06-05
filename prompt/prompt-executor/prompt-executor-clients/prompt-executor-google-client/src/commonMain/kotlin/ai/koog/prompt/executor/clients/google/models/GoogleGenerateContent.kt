@@ -399,13 +399,15 @@ internal enum class GoogleFunctionCallingMode {
  * Represents the response from the Google AI.
  *
  * @property candidates Candidate responses from the model.
+ * Defaults to an empty list because the field is omitted entirely when the prompt is blocked
+ * by Google's safety filters (only [promptFeedback] is returned in that case).
  * @property promptFeedback Returns the prompt's feedback related to the content filters.
  * @property usageMetadata Metadata on the generation requests' token usage.
  * @property modelVersion The model version used to generate the response.
  */
 @Serializable
 internal class GoogleResponse(
-    val candidates: List<GoogleCandidate>,
+    val candidates: List<GoogleCandidate> = emptyList(),
     val promptFeedback: GooglePromptFeedback? = null,
     val usageMetadata: GoogleUsageMetadata? = null,
     val modelVersion: String? = null,
