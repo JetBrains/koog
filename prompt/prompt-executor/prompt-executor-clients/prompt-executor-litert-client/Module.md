@@ -83,9 +83,3 @@ agent.run("Your prompt here")
 ```
 
 > **Note:** If the message history, tools, or model settings change between calls, the LiteRT session will be recreated. This incurs additional initialization time, so minimize unnecessary changes to these parameters.
-
----
-
-### Current limitation: only one tool call per model response is supported
-
-LiteRT `ToolCall` does not expose a stable call id. Koog uses tool-call ids to correlate `Message.Tool.Result` with `Message.Tool.Call`. Therefore this client currently supports only a single tool call per LiteRT response. Multiple tool calls must either be rejected or handled by synthesizing stable ids and batching tool responses back to LiteRT in order. Until proper support exists, the converter fails fast with `UnsupportedOperationException` when more than one tool call is present in a single LiteRT response.

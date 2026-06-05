@@ -13,6 +13,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -107,7 +108,7 @@ class LLMAsJudgeNodeTest {
             task = CRITIC_TASK
         )
 
-        coEvery { mockPromptExecutor.execute(any(), any()) } returns
+        coEvery { mockPromptExecutor.execute(any(), any<LLModel>()) } returns
             Message.Assistant(
                 content = Json.encodeToString(
                     CriticResultFromLLM.serializer(),
@@ -158,7 +159,7 @@ class LLMAsJudgeNodeTest {
                         (it.messages.last().role == Message.Role.User && (it.messages.last().parts.first() as MessagePart.Text).text.trimIndent() == expectedXMLHistory) &&
                         (it.id == "critic")
                 },
-                model = match {
+                model = match<LLModel> {
                     it == anotherModel
                 }
             )

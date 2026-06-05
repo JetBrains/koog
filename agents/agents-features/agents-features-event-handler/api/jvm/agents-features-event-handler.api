@@ -1,0 +1,73 @@
+public final class ai/koog/agents/features/eventHandler/feature/EventHandler {
+	public static final field Feature Lai/koog/agents/features/eventHandler/feature/EventHandler$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/koog/agents/features/eventHandler/feature/EventHandler$Feature : ai/koog/agents/core/feature/AIAgentFunctionalFeature, ai/koog/agents/core/feature/AIAgentGraphFeature, ai/koog/agents/core/feature/AIAgentPlannerFeature {
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/features/eventHandler/feature/EventHandlerConfig;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Ljava/lang/Object;
+	public fun install (Lai/koog/agents/features/eventHandler/feature/EventHandlerConfig;Lai/koog/agents/core/feature/pipeline/AIAgentFunctionalPipeline;)Lai/koog/agents/features/eventHandler/feature/EventHandler;
+	public fun install (Lai/koog/agents/features/eventHandler/feature/EventHandlerConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/features/eventHandler/feature/EventHandler;
+	public fun install (Lai/koog/agents/features/eventHandler/feature/EventHandlerConfig;Lai/koog/agents/core/feature/pipeline/AIAgentPlannerPipeline;)Lai/koog/agents/features/eventHandler/feature/EventHandler;
+}
+
+public class ai/koog/agents/features/eventHandler/feature/EventHandlerConfig : ai/koog/agents/features/eventHandler/feature/EventHandlerConfigCommon {
+	public fun <init> ()V
+	public final fun onAgentClosing (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onAgentCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onAgentExecutionFailed (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onAgentStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onLLMCallCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onLLMCallStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onLLMStreamingCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onLLMStreamingFailed (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onLLMStreamingFrameReceived (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onLLMStreamingStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onNodeExecutionCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onNodeExecutionFailed (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onNodeExecutionStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onStrategyCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onStrategyStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onSubgraphExecutionCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onSubgraphExecutionFailed (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onSubgraphExecutionStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onToolCallCompleted (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onToolCallFailed (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onToolCallStarting (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+	public final fun onToolValidationFailed (Lai/koog/agents/core/feature/pipeline/Interceptor;)V
+}
+
+public class ai/koog/agents/features/eventHandler/feature/EventHandlerConfigCommon : ai/koog/agents/core/feature/config/FeatureConfig {
+	public fun <init> ()V
+	public final synthetic fun onAgentClosing (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onAgentCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onAgentExecutionFailed (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onAgentStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onLLMCallCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onLLMCallStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onLLMStreamingCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onLLMStreamingFailed (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onLLMStreamingFrameReceived (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onLLMStreamingStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onNodeExecutionCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onNodeExecutionFailed (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onNodeExecutionStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onStrategyCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onStrategyStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onSubgraphExecutionCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onSubgraphExecutionFailed (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onSubgraphExecutionStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onToolCallCompleted (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onToolCallFailed (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onToolCallStarting (Lkotlin/jvm/functions/Function2;)V
+	public final synthetic fun onToolValidationFailed (Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class ai/koog/agents/features/eventHandler/feature/EventHandlerKt {
+	public static final fun handleEvents (Lai/koog/agents/core/agent/GraphAIAgent$FeatureContext;Lkotlin/jvm/functions/Function1;)V
+}
+

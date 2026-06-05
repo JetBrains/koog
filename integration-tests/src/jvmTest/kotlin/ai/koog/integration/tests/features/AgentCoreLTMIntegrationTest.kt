@@ -6,7 +6,10 @@ import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.chathistory.aws.AgentcoreChatHistoryProvider
 import ai.koog.agents.features.longtermmemory.aws.AgentcoreNamespaceResolver
+import ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreDiscoveredStrategyType
+import ai.koog.agents.features.longtermmemory.aws.discovery.AgentcoreStrategyDiscovery
 import ai.koog.agents.features.longtermmemory.aws.dsl.agentcore
+import ai.koog.agents.features.longtermmemory.aws.dsl.agentcoreDiscovered
 import ai.koog.agents.longtermmemory.feature.LongTermMemory
 import ai.koog.agents.longtermmemory.retrieval.augmentation.UserPromptAugmenter
 import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
@@ -170,31 +173,16 @@ class AgentCoreLTMIntegrationTest {
             seedViaChatMemory(sessionId, conversationId, scenario.seedTurns)
 
             val agent = createLtmAgent(discovered, actorId, sessionId, resolver)
-            val start = System.currentTimeMillis()
-            val attempt = java.util.concurrent.atomic.AtomicInteger(0)
-            val lastAnswer = java.util.concurrent.atomic.AtomicReference("")
-
-            try {
-                org.awaitility.kotlin.await
-                    .atMost(java.time.Duration.ofMillis(RETRY_BUDGET_MS))
-                    .pollDelay(java.time.Duration.ofMillis(INITIAL_WAIT_MS))
-                    .pollInterval(java.time.Duration.ofMillis(RETRY_INTERVAL_MS))
-                    .until {
-                        val n = attempt.incrementAndGet()
-                        val elapsed = (System.currentTimeMillis() - start) / 1000
-                        val answer = runBlocking { agent.run(scenario.question, conversationId) }
-                        lastAnswer.set(answer)
-                        val preview = answer.take(140).replace("\n", " ")
-                        val match = answer.contains(scenario.expectedKeyword, ignoreCase = true)
-                        println("[${discovered.kind}] attempt #$n @ ${elapsed}s: ${if (match) "MATCH" else "no match yet"} -> $preview")
-                        match
-                    }
-            } catch (e: org.awaitility.core.ConditionTimeoutException) {
-                throw AssertionError(
-                    "Agent should eventually answer '${scenario.expectedKeyword}' from LTM (${discovered.kind}). " +
-                        "Last answer after ${attempt.get()} attempts: ${lastAnswer.get()}"
-                )
-            }
+            awaitAgentMatches(
+                tag = discovered.kind.name,
+                agent = agent,
+                question = scenario.question,
+                conversationId = conversationId,
+                expectedKeyword = scenario.expectedKeyword,
+                budgetMs = RETRY_BUDGET_MS,
+                intervalMs = RETRY_INTERVAL_MS,
+                initialWaitMs = INITIAL_WAIT_MS,
+            )
         }
     }
 
@@ -226,8 +214,8 @@ class AgentCoreLTMIntegrationTest {
             .memory?.strategies.orEmpty()
             .firstOrNull { it.type == MemoryStrategyType.Episodic }
             ?: error("Memory '$memoryId' has no EPISODIC strategy configured")
-        val strategyId = episodic.strategyId ?: error("EPISODIC strategy has no id")
-        val namespaceTemplate = episodic.namespaces?.firstOrNull() ?: error("EPISODIC strategy has no namespace")
+        val strategyId = episodic.strategyId
+        val namespaceTemplate = episodic.namespaceTemplates.firstOrNull() ?: error("EPISODIC strategy has no namespace")
         val resolver = namespaceResolverFor(namespaceTemplate)
 
         val actorId = "ltm-actor-episodic-${UUID.randomUUID()}"
@@ -278,30 +266,130 @@ class AgentCoreLTMIntegrationTest {
             }
         }
 
-        val start = System.currentTimeMillis()
-        val attempt = java.util.concurrent.atomic.AtomicInteger(0)
-        val lastAnswer = java.util.concurrent.atomic.AtomicReference("")
-        try {
-            org.awaitility.kotlin.await
-                .atMost(java.time.Duration.ofMillis(EPISODIC_RETRY_BUDGET_MS))
-                .pollDelay(java.time.Duration.ofMillis(EPISODIC_INITIAL_WAIT_MS))
-                .pollInterval(java.time.Duration.ofMillis(EPISODIC_RETRY_INTERVAL_MS))
-                .until {
-                    val n = attempt.incrementAndGet()
-                    val elapsed = (System.currentTimeMillis() - start) / 1000
-                    val answer = runBlocking { agent.run("What trip did I book?", conversationId) }
-                    lastAnswer.set(answer)
-                    val preview = answer.take(200).replace("\n", " ")
-                    val match = answer.contains("Paris", ignoreCase = true)
-                    println("[EPISODIC] attempt #$n @ ${elapsed}s: ${if (match) "MATCH" else "no match yet"} -> $preview")
-                    match
-                }
-        } catch (e: org.awaitility.core.ConditionTimeoutException) {
-            throw AssertionError(
-                "Agent should eventually answer 'Paris' from EPISODIC LTM. " +
-                    "Last answer after ${attempt.get()} attempts: ${lastAnswer.get()}"
-            )
+        awaitAgentMatches(
+            tag = "EPISODIC",
+            agent = agent,
+            question = "What trip did I book?",
+            conversationId = conversationId,
+            expectedKeyword = "Paris",
+            budgetMs = EPISODIC_RETRY_BUDGET_MS,
+            intervalMs = EPISODIC_RETRY_INTERVAL_MS,
+            initialWaitMs = EPISODIC_INITIAL_WAIT_MS,
+            previewChars = 200,
+        )
+    }
+
+    /**
+     * End-to-end test for the auto-discovery feature.
+     *
+     * Verifies in two phases:
+     *
+     *  1. **Discovery** — [AgentcoreStrategyDiscovery] returns the configured strategies of the
+     *     memory with namespace templates and reflection-episode hierarchy intact. Asserts that
+     *     all four supported strategy types (SEMANTIC, USER_PREFERENCE, SUMMARY, EPISODIC) are
+     *     present, that namespace templates carry the expected placeholders, and that EPISODIC
+     *     reflection namespaces are segment-prefixes of episode namespaces.
+     *
+     *  2. **DSL wiring** — the [LongTermMemory.RetrievalSettingsBuilder.agentcoreDiscovered] DSL
+     *     accepts the discovered list and produces a working `LongTermMemory` retrieval. A single
+     *     `agent.run(...)` exercises the retriever for every discovered strategy with an unseeded
+     *     actor; assertions are intentionally about *not throwing*. Per-strategy retrieval
+     *     correctness is owned by `agent answers from LTM after async extraction`.
+     *
+     * Placeholder presence is asserted instead of literal templates so the test is robust to
+     * AgentCore template renames; literal-template tests would lock in an implementation detail
+     * of AWS.
+     */
+    @Test
+    fun `agentcoreDiscovered DSL discovers strategies and wires LongTermMemory retrieval`(): Unit = runBlocking {
+        // ── 1. Discovery ──────────────────────────────────────────────────────────
+        val discovered = AgentcoreStrategyDiscovery(controlClient).discover(memoryId)
+
+        val byType = discovered.associateBy { it.type }
+        // Hard requirement: this test's memory must have all four supported strategies.
+        // If any are missing the assertion message names them so the test environment
+        // can be fixed rather than papering over with skips.
+        val missing = AgentcoreDiscoveredStrategyType.entries.filter { it !in byType }
+        assert(missing.isEmpty()) {
+            "Memory '$memoryId' is missing required strategies for this test: $missing. " +
+                "Configure them on the AgentCore memory before running."
         }
+
+        for ((type, strategy) in byType) {
+            assert(strategy.strategyId.isNotBlank()) { "$type strategyId is blank" }
+            assert(strategy.namespaces.isNotEmpty()) { "$type has no namespace templates" }
+            for (ns in strategy.namespaces) {
+                assert("{memoryStrategyId}" in ns) { "$type namespace '$ns' missing {memoryStrategyId}" }
+                assert("{actorId}" in ns) { "$type namespace '$ns' missing {actorId}" }
+            }
+        }
+
+        // Session-scoped strategies must carry {sessionId} so per-session retrieval works.
+        // SEMANTIC and USER_PREFERENCE are actor-scoped only on this memory, so they're
+        // intentionally excluded.
+        for (sessionScoped in listOf(AgentcoreDiscoveredStrategyType.EPISODIC, AgentcoreDiscoveredStrategyType.SUMMARY)) {
+            val ns = byType.getValue(sessionScoped).namespaces
+            assert(ns.any { "{sessionId}" in it }) {
+                "$sessionScoped expected at least one session-scoped namespace, got $ns"
+            }
+        }
+
+        // EPISODIC reflection namespaces — the only non-trivial mapping in the discovery
+        // logic — must be populated. AWS rule: a reflection namespace must be 'less
+        // nested' than at least one episode namespace, i.e. a segment-aligned prefix of
+        // it (equality allowed).
+        val episodic = byType.getValue(AgentcoreDiscoveredStrategyType.EPISODIC)
+        assert(episodic.reflectionsNamespaces.isNotEmpty()) {
+            "EPISODIC strategy '${episodic.strategyId}' has no reflection namespaces; " +
+                "expected discovery to extract them from EpisodicReflectionConfiguration"
+        }
+        val episodeTemplates = episodic.namespaces
+        for (ns in episodic.reflectionsNamespaces) {
+            assert("{memoryStrategyId}" in ns) { "EPISODIC reflection namespace '$ns' missing {memoryStrategyId}" }
+            val matched = episodeTemplates.any { ep -> isSegmentPrefix(ns, ep) }
+            assert(matched) {
+                "EPISODIC reflection namespace '$ns' is not a segment-prefix of any " +
+                    "episode namespace ($episodeTemplates); reflections must be 'less nested' than episodes."
+            }
+        }
+
+        // Other strategies must not carry reflection namespaces — those are episodic-only.
+        for (type in listOf(
+            AgentcoreDiscoveredStrategyType.SEMANTIC,
+            AgentcoreDiscoveredStrategyType.USER_PREFERENCE,
+            AgentcoreDiscoveredStrategyType.SUMMARY,
+        )) {
+            assert(byType.getValue(type).reflectionsNamespaces.isEmpty()) {
+                "$type unexpectedly carries reflection namespaces: ${byType.getValue(type).reflectionsNamespaces}"
+            }
+        }
+
+        // ── 2. DSL wiring ─────────────────────────────────────────────────────────
+        val actorId = "ltm-actor-discovered-${UUID.randomUUID()}"
+        val sessionId = "ltm-session-discovered-${UUID.randomUUID()}"
+        val conversationId = "$actorId:$sessionId"
+
+        val agent = AIAgent(
+            promptExecutor = llmExecutor,
+            llmModel = BedrockModels.AmazonNovaMicro,
+            toolRegistry = ToolRegistry.EMPTY,
+            systemPrompt = "You are a helpful assistant.",
+        ) {
+            install(LongTermMemory) {
+                retrieval {
+                    agentcoreDiscovered(
+                        client = agentCoreClient,
+                        memoryId = memoryId,
+                        discoveredStrategies = discovered,
+                        actorId = actorId,
+                        sessionId = sessionId,
+                    )
+                }
+            }
+        }
+
+        val response = agent.run("hello", conversationId)
+        assert(response.isNotBlank()) { "agent.run produced an empty response: '$response'" }
     }
 
     private companion object {
@@ -317,6 +405,54 @@ class AgentCoreLTMIntegrationTest {
     // Helpers
     // -----------------------------------------------------------------
 
+    /**
+     * Polls [agent] with [question] until the response contains [expectedKeyword] (case
+     * insensitive) or [budgetMs] elapses, retrying every [intervalMs] after an initial
+     * [initialWaitMs] wait. Each attempt prints a `[tag] attempt #N @ Ts: MATCH/no match
+     * yet -> <preview>` line — useful for diagnosing slow async extraction without
+     * leaving the test silent for minutes.
+     *
+     * On timeout, throws `AssertionError` carrying the last response, attempt count,
+     * and which keyword was missing — so a flaky run is debuggable from the failure
+     * message alone without re-running.
+     */
+    private fun awaitAgentMatches(
+        tag: String,
+        agent: AIAgent<String, String>,
+        question: String,
+        conversationId: String,
+        expectedKeyword: String,
+        budgetMs: Long,
+        intervalMs: Long,
+        initialWaitMs: Long,
+        previewChars: Int = 140,
+    ) {
+        val start = System.currentTimeMillis()
+        val attempt = java.util.concurrent.atomic.AtomicInteger(0)
+        val lastAnswer = java.util.concurrent.atomic.AtomicReference("")
+        try {
+            org.awaitility.kotlin.await
+                .atMost(java.time.Duration.ofMillis(budgetMs))
+                .pollDelay(java.time.Duration.ofMillis(initialWaitMs))
+                .pollInterval(java.time.Duration.ofMillis(intervalMs))
+                .until {
+                    val n = attempt.incrementAndGet()
+                    val elapsed = (System.currentTimeMillis() - start) / 1000
+                    val answer = runBlocking { agent.run(question, conversationId) }
+                    lastAnswer.set(answer)
+                    val preview = answer.take(previewChars).replace("\n", " ")
+                    val match = answer.contains(expectedKeyword, ignoreCase = true)
+                    println("[$tag] attempt #$n @ ${elapsed}s: ${if (match) "MATCH" else "no match yet"} -> $preview")
+                    match
+                }
+        } catch (e: org.awaitility.core.ConditionTimeoutException) {
+            throw AssertionError(
+                "[$tag] agent should eventually answer '$expectedKeyword'. " +
+                    "Last answer after ${attempt.get()} attempts: ${lastAnswer.get()}"
+            )
+        }
+    }
+
     private suspend fun discoverStrategies(): List<DiscoveredStrategy> {
         val response = controlClient.getMemory(GetMemoryRequest { memoryId = this@AgentCoreLTMIntegrationTest.memoryId })
         return response.memory?.strategies.orEmpty().mapNotNull { s ->
@@ -326,8 +462,8 @@ class AgentCoreLTMIntegrationTest {
                 MemoryStrategyType.Summarization -> StrategyKind.SUMMARY
                 else -> null
             } ?: return@mapNotNull null
-            val namespaceTemplate = s.namespaces?.firstOrNull() ?: return@mapNotNull null
-            val strategyId = s.strategyId ?: return@mapNotNull null
+            val namespaceTemplate = s.namespaceTemplates.firstOrNull() ?: return@mapNotNull null
+            val strategyId = s.strategyId
             DiscoveredStrategy(kind, strategyId, namespaceTemplate)
         }
     }
@@ -340,6 +476,19 @@ class AgentCoreLTMIntegrationTest {
     private fun namespaceResolverFor(rawTemplate: String): AgentcoreNamespaceResolver {
         val normalized = rawTemplate.replace("{memoryStrategyId}", "{strategyId}")
         return AgentcoreNamespaceResolver.template(actorScoped = normalized, sessionScoped = normalized)
+    }
+
+    /**
+     * Segment-aligned prefix check: returns true iff [full] equals [prefix] (after
+     * trimming a trailing slash on either side) or [full] starts with `prefix/`. Used to
+     * check that a reflection namespace template is 'less nested' than an episode
+     * namespace template per the AgentCore reflection rule. String-level only — does
+     * not resolve `{...}` placeholders.
+     */
+    private fun isSegmentPrefix(prefix: String, full: String): Boolean {
+        val p = prefix.removeSuffix("/")
+        val f = full.removeSuffix("/")
+        return f == p || f.startsWith("$p/")
     }
 
     private suspend fun seedViaChatMemory(sessionId: String, conversationId: String, turns: List<String>) {

@@ -3,7 +3,10 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.MessagePart
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -13,6 +16,7 @@ import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class GenericAgentEnvironmentTest {
@@ -190,6 +194,75 @@ class GenericAgentEnvironmentTest {
 
         assertEquals(ToolResultKind.Success, result.resultKind)
         assertEquals("ok:value", result.output)
+    }
+
+    private class ImageTool : SimpleTool<RequiredArgs>(
+        argsType = typeToken<RequiredArgs>(),
+        name = "image_tool",
+        description = "Tool that returns an image alongside its text result.",
+    ) {
+        val fakeImageBytes = byteArrayOf(1, 2, 3, 4)
+
+        override suspend fun execute(args: RequiredArgs): String = "image data"
+
+        override fun encodeResultToParts(result: String, serializer: JSONSerializer): List<MessagePart.ContentPart> =
+            listOf(MessagePart.Attachment(AttachmentSource.Image(AttachmentContent.Binary.Bytes(fakeImageBytes), format = "png")))
+    }
+
+    @Test
+    fun testMultimodalToolPartsFlowThroughToMessage() = runTest {
+        val tool = ImageTool()
+        val environment = GenericAgentEnvironment(
+            agentId = "test_agent",
+            logger = KotlinLogging.logger { },
+            toolRegistry = ToolRegistry { tool(tool) },
+            serializer = serializer,
+        )
+
+        val result = environment.executeTool(
+            MessagePart.Tool.Call(
+                id = "1",
+                tool = "image_tool",
+                args = """{"required":"value"}""",
+            )
+        )
+
+        assertEquals(ToolResultKind.Success, result.resultKind)
+        val parts = assertNotNull(result.parts)
+        assertEquals(1, parts.size)
+        val attachmentPart = parts.single() as MessagePart.Attachment
+        val imageSource = attachmentPart.source as AttachmentSource.Image
+        assertEquals("png", imageSource.format)
+        assertTrue((imageSource.content as AttachmentContent.Binary.Bytes).data.contentEquals(tool.fakeImageBytes))
+
+        val messagePart = result.toMessagePart()
+        assertEquals(1, messagePart.parts.size)
+        assertTrue((messagePart.parts.single() as MessagePart.Attachment).source is AttachmentSource.Image)
+    }
+
+    @Test
+    fun testNonMultimodalToolDefaultsToTextPart() = runTest {
+        val environment = GenericAgentEnvironment(
+            agentId = "test_agent",
+            logger = KotlinLogging.logger { },
+            toolRegistry = ToolRegistry { tool(SuccessTool()) },
+            serializer = serializer,
+        )
+
+        val result = environment.executeTool(
+            MessagePart.Tool.Call(
+                id = "1",
+                tool = "success_tool",
+                args = """{"required":"value"}""",
+            )
+        )
+
+        assertEquals(ToolResultKind.Success, result.resultKind)
+        val textPart = result.parts?.single() as? MessagePart.Text
+        assertEquals("ok:value", textPart?.text)
+
+        val messagePart = result.toMessagePart()
+        assertEquals("ok:value", (messagePart.parts.single() as MessagePart.Text).text)
     }
 
     @Test

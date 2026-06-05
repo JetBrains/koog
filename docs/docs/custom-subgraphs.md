@@ -140,7 +140,7 @@ Custom subgraphs are typically created using the following patterns:
     <!--- KNIT exampleCustomSubgraphsJava02.java -->
 
 For more information about parameters and parameter values, see the `subgraph` [API reference](api:agents-core::ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase.subgraph). For more
-information about tools, see [Tools](tools-overview.md).
+information about tools, see [Tools](tools/index.md).
 
 The following code sample shows an actual implementation of a custom subgraph:
 

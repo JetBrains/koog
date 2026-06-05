@@ -1,0 +1,1301 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-executor-openai-client-base>
+final enum class ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat : kotlin/Enum<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat|null[0]
+    enum entry FLAC // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.FLAC|null[0]
+    enum entry MP3 // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.MP3|null[0]
+    enum entry OPUS // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.OPUS|null[0]
+    enum entry PCM16 // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.PCM16|null[0]
+    enum entry WAV // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.WAV|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice : kotlin/Enum<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice|null[0]
+    enum entry Alloy // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Alloy|null[0]
+    enum entry Ash // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Ash|null[0]
+    enum entry Ballad // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Ballad|null[0]
+    enum entry Coral // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Coral|null[0]
+    enum entry Echo // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Echo|null[0]
+    enum entry Fable // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Fable|null[0]
+    enum entry Nova // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Nova|null[0]
+    enum entry Onyx // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Onyx|null[0]
+    enum entry Sage // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Sage|null[0]
+    enum entry Shimmer // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Shimmer|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities : kotlin/Enum<ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities|null[0]
+    enum entry Audio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.Audio|null[0]
+    enum entry Text // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.Text|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIModalities.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort : kotlin/Enum<ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort> { // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort|null[0]
+    enum entry HIGH // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.HIGH|null[0]
+    enum entry LOW // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.LOW|null[0]
+    enum entry MEDIUM // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.MEDIUM|null[0]
+    enum entry MINIMAL // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.MINIMAL|null[0]
+    enum entry NONE // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.NONE|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort> // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort> // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort> // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.koog.prompt.executor.clients.openai.base.models/ServiceTier : kotlin/Enum<ai.koog.prompt.executor.clients.openai.base.models/ServiceTier> { // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier|null[0]
+    enum entry AUTO // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.AUTO|null[0]
+    enum entry DEFAULT // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.DEFAULT|null[0]
+    enum entry FLEX // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.FLEX|null[0]
+    enum entry PRIORITY // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.PRIORITY|null[0]
+
+    final val entries // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.base.models/ServiceTier> // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.prompt.executor.clients.openai.base.models/ServiceTier // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.prompt.executor.clients.openai.base.models/ServiceTier> // ai.koog.prompt.executor.clients.openai.base.models/ServiceTier.values|values#static(){}[0]
+}
+
+abstract interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest|null[0]
+    abstract val model // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.model|{}model[0]
+        abstract fun <get-model>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.model.<get-model>|<get-model>(){}[0]
+    abstract val stream // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.stream|{}stream[0]
+        abstract fun <get-stream>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.stream.<get-stream>|<get-stream>(){}[0]
+    abstract val temperature // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.temperature|{}temperature[0]
+        abstract fun <get-temperature>(): kotlin/Double? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.temperature.<get-temperature>|<get-temperature>(){}[0]
+    abstract val topLogprobs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.topLogprobs|{}topLogprobs[0]
+        abstract fun <get-topLogprobs>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.topLogprobs.<get-topLogprobs>|<get-topLogprobs>(){}[0]
+    abstract val topP // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.topP|{}topP[0]
+        abstract fun <get-topP>(): kotlin/Double? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMRequest.topP.<get-topP>|<get-topP>(){}[0]
+}
+
+abstract interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse|null[0]
+    abstract val created // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse.created|{}created[0]
+        abstract fun <get-created>(): kotlin/Long // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse.created.<get-created>|<get-created>(){}[0]
+    abstract val id // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse.id|{}id[0]
+        abstract fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse.id.<get-id>|<get-id>(){}[0]
+    abstract val model // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse.model|{}model[0]
+        abstract fun <get-model>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse.model.<get-model>|<get-model>(){}[0]
+}
+
+abstract interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMStreamResponse : ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse // ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMStreamResponse|null[0]
+
+sealed interface ai.koog.prompt.executor.clients.openai.base.models/Content { // ai.koog.prompt.executor.clients.openai.base.models/Content|null[0]
+    abstract fun text(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/Content.text|text(){}[0]
+
+    final value class Parts : ai.koog.prompt.executor.clients.openai.base.models/Content { // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts|null[0]
+        constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart>) // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart>){}[0]
+
+        final val value // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.value|{}value[0]
+            final fun <get-value>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart> // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.hashCode|hashCode(){}[0]
+        final fun text(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.text|text(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/Content.Parts> { // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/Content.Parts // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/Content.Parts) // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.Content.Parts){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/Content.Parts> // ai.koog.prompt.executor.clients.openai.base.models/Content.Parts.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final value class Text : ai.koog.prompt.executor.clients.openai.base.models/Content { // ai.koog.prompt.executor.clients.openai.base.models/Content.Text|null[0]
+        constructor <init>(kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.<init>|<init>(kotlin.String){}[0]
+
+        final val value // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.value|{}value[0]
+            final fun <get-value>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.hashCode|hashCode(){}[0]
+        final fun text(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.text|text(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/Content.Text> { // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/Content.Text // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/Content.Text) // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.Content.Text){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/Content.Text> // ai.koog.prompt.executor.clients.openai.base.models/Content.Text.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/Content.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/Content> // ai.koog.prompt.executor.clients.openai.base.models/Content.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/Content.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart|null[0]
+    final class Audio : ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.InputAudio){}[0]
+
+        final val inputAudio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.inputAudio|{}inputAudio[0]
+            final fun <get-inputAudio>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.inputAudio.<get-inputAudio>|<get-inputAudio>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.Audio){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Audio.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class File : ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.FileData){}[0]
+
+        final val file // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.file|{}file[0]
+            final fun <get-file>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.file.<get-file>|<get-file>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.File){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.File.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class FileData { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+
+        final val fileData // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.fileData|{}fileData[0]
+            final fun <get-fileData>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.fileData.<get-fileData>|<get-fileData>(){}[0]
+        final val fileId // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.fileId|{}fileId[0]
+            final fun <get-fileId>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.fileId.<get-fileId>|<get-fileId>(){}[0]
+        final val filename // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.filename|{}filename[0]
+            final fun <get-filename>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.filename.<get-filename>|<get-filename>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.FileData){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.FileData.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Image : ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.ImageUrl){}[0]
+
+        final val imageUrl // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.imageUrl|{}imageUrl[0]
+            final fun <get-imageUrl>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.imageUrl.<get-imageUrl>|<get-imageUrl>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.Image){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Image.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class ImageUrl { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl|null[0]
+        constructor <init>(kotlin/String, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.<init>|<init>(kotlin.String;kotlin.String?){}[0]
+
+        final val detail // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.detail|{}detail[0]
+            final fun <get-detail>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.detail.<get-detail>|<get-detail>(){}[0]
+        final val url // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.url|{}url[0]
+            final fun <get-url>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.url.<get-url>|<get-url>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.ImageUrl){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.ImageUrl.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class InputAudio { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio|null[0]
+        constructor <init>(kotlin/String, kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+        final val data // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.data|{}data[0]
+            final fun <get-data>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.data.<get-data>|<get-data>(){}[0]
+        final val format // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.format|{}format[0]
+            final fun <get-format>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.format.<get-format>|<get-format>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.InputAudio){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.InputAudio.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Text : ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text|null[0]
+        constructor <init>(kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.<init>|<init>(kotlin.String){}[0]
+
+        final val text // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.text.<get-text>|<get-text>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart.Text){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Text.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIContentPart.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage|null[0]
+    abstract val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.content|{}content[0]
+        abstract fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.content.<get-content>|<get-content>(){}[0]
+
+    final class Assistant : ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/Content? = ..., kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall>? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation>? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.Content?;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudio?;kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolCall>?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebUrlCitation>?){}[0]
+
+        final val annotations // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.annotations|{}annotations[0]
+            final fun <get-annotations>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.annotations.<get-annotations>|<get-annotations>(){}[0]
+        final val audio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.audio|{}audio[0]
+            final fun <get-audio>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.audio.<get-audio>|<get-audio>(){}[0]
+        final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.content.<get-content>|<get-content>(){}[0]
+        final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.name|{}name[0]
+            final fun <get-name>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.name.<get-name>|<get-name>(){}[0]
+        final val reasoningContent // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.reasoningContent|{}reasoningContent[0]
+            final fun <get-reasoningContent>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.reasoningContent.<get-reasoningContent>|<get-reasoningContent>(){}[0]
+        final val refusal // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.refusal|{}refusal[0]
+            final fun <get-refusal>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.refusal.<get-refusal>|<get-refusal>(){}[0]
+        final val toolCalls // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.toolCalls|{}toolCalls[0]
+            final fun <get-toolCalls>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.toolCalls.<get-toolCalls>|<get-toolCalls>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage.Assistant){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Assistant.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Developer : ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/Content, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.Content;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.content.<get-content>|<get-content>(){}[0]
+        final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.name|{}name[0]
+            final fun <get-name>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.name.<get-name>|<get-name>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage.Developer){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Developer.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class System : ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/Content, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.Content;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.content.<get-content>|<get-content>(){}[0]
+        final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.name|{}name[0]
+            final fun <get-name>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.name.<get-name>|<get-name>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage.System){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.System.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Tool : ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/Content, kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.Content;kotlin.String){}[0]
+
+        final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.content.<get-content>|<get-content>(){}[0]
+        final val toolCallId // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.toolCallId|{}toolCallId[0]
+            final fun <get-toolCallId>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.toolCallId.<get-toolCallId>|<get-toolCallId>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage.Tool){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Tool.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class User : ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/Content, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.Content;kotlin.String?){}[0]
+
+        final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.content|{}content[0]
+            final fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.content.<get-content>|<get-content>(){}[0]
+        final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.name|{}name[0]
+            final fun <get-name>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.name.<get-name>|<get-name>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage.User){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.User.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat|null[0]
+    final class JsonObject : ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject|null[0]
+        constructor <init>() // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.<init>|<init>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat.JsonObject){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonObject.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class JsonSchema : ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.JsonSchemaObject){}[0]
+
+        final val jsonSchema // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.jsonSchema|{}jsonSchema[0]
+            final fun <get-jsonSchema>(): ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.jsonSchema.<get-jsonSchema>|<get-jsonSchema>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat.JsonSchema){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.JsonSchema.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Text : ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text|null[0]
+        constructor <init>() // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.<init>|<init>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat.Text){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Text.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice|null[0]
+    final class Function : ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function|null[0]
+        constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice.FunctionName){}[0]
+
+        final val function // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.function|{}function[0]
+            final fun <get-function>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.function.<get-function>|<get-function>(){}[0]
+        final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.type|{}type[0]
+            final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.type.<get-type>|<get-type>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice.Function){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class FunctionName { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName|null[0]
+        constructor <init>(kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.<init>|<init>(kotlin.String){}[0]
+
+        final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.name.<get-name>|<get-name>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice.FunctionName){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.FunctionName.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final value class Mode : ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode|null[0]
+        final val value // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.value|{}value[0]
+            final fun <get-value>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice.Mode){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion|null[0]
+        final val Auto // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.Auto|{}Auto[0]
+            final fun <get-Auto>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.Auto.<get-Auto>|<get-Auto>(){}[0]
+        final val None // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.None|{}None[0]
+            final fun <get-None>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.None.<get-None>|<get-None>(){}[0]
+        final val Required // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.Required|{}Required[0]
+            final fun <get-Required>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Mode // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.Required.<get-Required>|<get-Required>(){}[0]
+
+        final fun function(kotlin/String): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Function // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.function|function(kotlin.String){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+abstract class <#A: ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMResponse, #B: ai.koog.prompt.executor.clients.openai.base.models/OpenAIBaseLLMStreamResponse> ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient : ai.koog.prompt.executor.clients/LLMClient { // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings, ai.koog.http.client/KoogHttpClient, ai.koog.utils.time/KoogClock = ..., io.github.oshai.kotlinlogging/KLogger, ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator) // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings;ai.koog.http.client.KoogHttpClient;ai.koog.utils.time.KoogClock;io.github.oshai.kotlinlogging.KLogger;ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator){}[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings, ai.koog.http.client/KoogHttpClient.Factory, kotlin/String, ai.koog.utils.time/KoogClock = ..., io.github.oshai.kotlinlogging/KLogger, ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator) // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings;ai.koog.http.client.KoogHttpClient.Factory;kotlin.String;ai.koog.utils.time.KoogClock;io.github.oshai.kotlinlogging.KLogger;ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator){}[0]
+
+    final val clock // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.clock|{}clock[0]
+        final fun <get-clock>(): ai.koog.utils.time/KoogClock // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.clock.<get-clock>|<get-clock>(){}[0]
+    final val httpClient // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.httpClient|{}httpClient[0]
+        final fun <get-httpClient>(): ai.koog.http.client/KoogHttpClient // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.httpClient.<get-httpClient>|<get-httpClient>(){}[0]
+    final val json // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.json|{}json[0]
+        final fun <get-json>(): kotlinx.serialization.json/Json // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.json.<get-json>|<get-json>(){}[0]
+    final val logger // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.logger|{}logger[0]
+        final fun <get-logger>(): io.github.oshai.kotlinlogging/KLogger // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.logger.<get-logger>|<get-logger>(){}[0]
+
+    abstract fun decodeResponse(kotlin/String): #A // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.decodeResponse|decodeResponse(kotlin.String){}[0]
+    abstract fun decodeStreamingResponse(kotlin/String): #B // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.decodeStreamingResponse|decodeStreamingResponse(kotlin.String){}[0]
+    abstract fun processProviderChatResponse(#A): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.processProviderChatResponse|processProviderChatResponse(1:0){}[0]
+    abstract fun processStreamingResponse(kotlinx.coroutines.flow/Flow<#B>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.processStreamingResponse|processStreamingResponse(kotlinx.coroutines.flow.Flow<1:1>){}[0]
+    abstract fun serializeProviderChatRequest(kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage>, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAITool>?, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice?, ai.koog.prompt.params/LLMParams, kotlin/Boolean): kotlin/String // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.serializeProviderChatRequest|serializeProviderChatRequest(kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage>;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAITool>?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice?;ai.koog.prompt.params.LLMParams;kotlin.Boolean){}[0]
+    final fun (ai.koog.agents.core.tools/ToolDescriptor).toOpenAIChatTool(): ai.koog.prompt.executor.clients.openai.base.models/OpenAITool // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.toOpenAIChatTool|toOpenAIChatTool@ai.koog.agents.core.tools.ToolDescriptor(){}[0]
+    final fun (ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage).toMessageResponse(kotlin/String?, ai.koog.prompt.message/ResponseMetaInfo): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.toMessageResponse|toMessageResponse@ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo){}[0]
+    final fun (ai.koog.prompt.llm/LLModel).requireCapability(ai.koog.prompt.llm/LLMCapability, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.requireCapability|requireCapability@ai.koog.prompt.llm.LLModel(ai.koog.prompt.llm.LLMCapability;kotlin.String?){}[0]
+    final fun (ai.koog.prompt.params/LLMParams.ToolChoice).toOpenAIToolChoice(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolChoice // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.toOpenAIToolChoice|toOpenAIToolChoice@ai.koog.prompt.params.LLMParams.ToolChoice(){}[0]
+    final fun (kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>).toMessageContent(ai.koog.prompt.llm/LLModel): ai.koog.prompt.executor.clients.openai.base.models/Content // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.toMessageContent|toMessageContent@kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>(ai.koog.prompt.llm.LLModel){}[0]
+    final fun convertPromptToMessages(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage> // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.convertPromptToMessages|convertPromptToMessages(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+    final fun createMetaInfo(ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage?): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.createMetaInfo|createMetaInfo(ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage?){}[0]
+    open fun close() // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.close|close(){}[0]
+    open fun createResponseFormat(ai.koog.prompt.params/LLMParams.Schema?, ai.koog.prompt.llm/LLModel): ai.koog.prompt.executor.clients.openai.base.models/OpenAIResponseFormat? // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.createResponseFormat|createResponseFormat(ai.koog.prompt.params.LLMParams.Schema?;ai.koog.prompt.llm.LLModel){}[0]
+    open fun executeStreaming(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlinx.coroutines.flow/Flow<ai.koog.prompt.streaming/StreamFrame> // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.executeStreaming|executeStreaming(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open fun getBasicJsonSchemaGenerator(): ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.getBasicJsonSchemaGenerator|getBasicJsonSchemaGenerator(){}[0]
+    open fun getStandardJsonSchemaGenerator(): ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.getStandardJsonSchemaGenerator|getStandardJsonSchemaGenerator(){}[0]
+    open suspend fun execute(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.execute|execute(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeMultipleChoices(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.executeMultipleChoices|executeMultipleChoices(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.Companion|null[0]
+        final fun createConfiguredHttpClient(kotlin/String, ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings, ai.koog.http.client/KoogHttpClient.Factory, kotlin/String): ai.koog.http.client/KoogHttpClient // ai.koog.prompt.executor.clients.openai.base/AbstractOpenAILLMClient.Companion.createConfiguredHttpClient|createConfiguredHttpClient(kotlin.String;ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings;ai.koog.http.client.KoogHttpClient.Factory;kotlin.String){}[0]
+    }
+}
+
+abstract class ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings { // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings|null[0]
+    constructor <init>(kotlin/String, kotlin/String, ai.koog.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.<init>|<init>(kotlin.String;kotlin.String;ai.koog.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val baseUrl // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val chatCompletionsPath // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.chatCompletionsPath|{}chatCompletionsPath[0]
+        final fun <get-chatCompletionsPath>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.chatCompletionsPath.<get-chatCompletionsPath>|<get-chatCompletionsPath>(){}[0]
+    final val timeoutConfig // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.timeoutConfig|{}timeoutConfig[0]
+        final fun <get-timeoutConfig>(): ai.koog.prompt.executor.clients/ConnectionTimeoutConfig // ai.koog.prompt.executor.clients.openai.base/OpenAIBaseSettings.timeoutConfig.<get-timeoutConfig>|<get-timeoutConfig>(){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails { // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails|null[0]
+    constructor <init>(kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ...) // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.<init>|<init>(kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?){}[0]
+
+    final val acceptedPredictionTokens // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.acceptedPredictionTokens|{}acceptedPredictionTokens[0]
+        final fun <get-acceptedPredictionTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.acceptedPredictionTokens.<get-acceptedPredictionTokens>|<get-acceptedPredictionTokens>(){}[0]
+    final val audioTokens // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.audioTokens|{}audioTokens[0]
+        final fun <get-audioTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.audioTokens.<get-audioTokens>|<get-audioTokens>(){}[0]
+    final val reasoningTokens // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.reasoningTokens|{}reasoningTokens[0]
+        final fun <get-reasoningTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.reasoningTokens.<get-reasoningTokens>|<get-reasoningTokens>(){}[0]
+    final val rejectedPredictionTokens // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.rejectedPredictionTokens|{}rejectedPredictionTokens[0]
+        final fun <get-rejectedPredictionTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.rejectedPredictionTokens.<get-rejectedPredictionTokens>|<get-rejectedPredictionTokens>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails> { // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails) // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.CompletionTokensDetails){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails> // ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject { // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ...) // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.<init>|<init>(kotlin.String;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?){}[0]
+
+    final val description // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.description.<get-description>|<get-description>(){}[0]
+    final val name // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.name.<get-name>|<get-name>(){}[0]
+    final val schema // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.schema|{}schema[0]
+        final fun <get-schema>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.schema.<get-schema>|<get-schema>(){}[0]
+    final val strict // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.strict|{}strict[0]
+        final fun <get-strict>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.strict.<get-strict>|<get-strict>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject> { // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject) // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.JsonSchemaObject){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject> // ai.koog.prompt.executor.clients.openai.base.models/JsonSchemaObject.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/Long? = ..., kotlin/String, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.<init>|<init>(kotlin.String?;kotlin.Long?;kotlin.String;kotlin.String?){}[0]
+
+    final val data // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.data|{}data[0]
+        final fun <get-data>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.data.<get-data>|<get-data>(){}[0]
+    final val expiresAt // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.expiresAt|{}expiresAt[0]
+        final fun <get-expiresAt>(): kotlin/Long? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.expiresAt.<get-expiresAt>|<get-expiresAt>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.id.<get-id>|<get-id>(){}[0]
+    final val transcript // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.transcript|{}transcript[0]
+        final fun <get-transcript>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.transcript.<get-transcript>|<get-transcript>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudio){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudio.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat, ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat;ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice){}[0]
+
+    final val format // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.format|{}format[0]
+        final fun <get-format>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioFormat // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.format.<get-format>|<get-format>(){}[0]
+    final val voice // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.voice|{}voice[0]
+        final fun <get-voice>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioVoice // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.voice.<get-voice>|<get-voice>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIAudioConfig.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice|null[0]
+    constructor <init>(kotlin/String, kotlin/Int, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.<init>|<init>(kotlin.String;kotlin.Int;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage){}[0]
+
+    final val finishReason // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.finishReason|{}finishReason[0]
+        final fun <get-finishReason>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+    final val index // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.index|{}index[0]
+        final fun <get-index>(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.index.<get-index>|<get-index>(){}[0]
+    final val logprobs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.logprobs|{}logprobs[0]
+        final fun <get-logprobs>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
+    final val message // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.message|{}message[0]
+        final fun <get-message>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIMessage // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.message.<get-message>|<get-message>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoice){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoice.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs>? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs>? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs.ContentLogProbs>?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs.ContentLogProbs>?){}[0]
+
+    final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.content|{}content[0]
+        final fun <get-content>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.content.<get-content>|<get-content>(){}[0]
+    final val refusal // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.refusal|{}refusal[0]
+        final fun <get-refusal>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.refusal.<get-refusal>|<get-refusal>(){}[0]
+
+    final class ContentLogProbs { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs|null[0]
+        constructor <init>(kotlin.collections/List<kotlin/Int>? = ..., kotlin/Double, kotlin/String, kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs>) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.<init>|<init>(kotlin.collections.List<kotlin.Int>?;kotlin.Double;kotlin.String;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs.ContentTopLogProbs>){}[0]
+
+        final val bytes // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.bytes|{}bytes[0]
+            final fun <get-bytes>(): kotlin.collections/List<kotlin/Int>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.bytes.<get-bytes>|<get-bytes>(){}[0]
+        final val logprob // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.logprob|{}logprob[0]
+            final fun <get-logprob>(): kotlin/Double // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.logprob.<get-logprob>|<get-logprob>(){}[0]
+        final val token // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.token|{}token[0]
+            final fun <get-token>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.token.<get-token>|<get-token>(){}[0]
+        final val topLogprobs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.topLogprobs|{}topLogprobs[0]
+            final fun <get-topLogprobs>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.topLogprobs.<get-topLogprobs>|<get-topLogprobs>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs.ContentLogProbs){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentLogProbs.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class ContentTopLogProbs { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs|null[0]
+        constructor <init>(kotlin.collections/List<kotlin/Int>? = ..., kotlin/Double, kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.<init>|<init>(kotlin.collections.List<kotlin.Int>?;kotlin.Double;kotlin.String){}[0]
+
+        final val bytes // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.bytes|{}bytes[0]
+            final fun <get-bytes>(): kotlin.collections/List<kotlin/Int>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.bytes.<get-bytes>|<get-bytes>(){}[0]
+        final val logprob // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.logprob|{}logprob[0]
+            final fun <get-logprob>(): kotlin/Double // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.logprob.<get-logprob>|<get-logprob>(){}[0]
+        final val token // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.token|{}token[0]
+            final fun <get-token>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.token.<get-token>|<get-token>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs.ContentTopLogProbs){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.ContentTopLogProbs.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction|null[0]
+    constructor <init>(kotlin/String, kotlin/String = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val arguments // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.arguments|{}arguments[0]
+        final fun <get-arguments>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.arguments.<get-arguments>|<get-arguments>(){}[0]
+    final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.name.<get-name>|<get-name>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIFunction){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/Content) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.Content){}[0]
+
+    final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.content|{}content[0]
+        final fun <get-content>(): ai.koog.prompt.executor.clients.openai.base.models/Content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.content.<get-content>|<get-content>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.type.<get-type>|<get-type>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticContent.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta, kotlin/String? = ..., kotlin/Int, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta;kotlin.String?;kotlin.Int;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs?){}[0]
+
+    final val delta // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.delta|{}delta[0]
+        final fun <get-delta>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.delta.<get-delta>|<get-delta>(){}[0]
+    final val finishReason // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.finishReason|{}finishReason[0]
+        final fun <get-finishReason>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
+    final val index // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.index|{}index[0]
+        final fun <get-index>(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.index.<get-index>|<get-index>(){}[0]
+    final val logprobs // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.logprobs|{}logprobs[0]
+        final fun <get-logprobs>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall>?){}[0]
+
+    final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.content|{}content[0]
+        final fun <get-content>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.content.<get-content>|<get-content>(){}[0]
+    final val refusal // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.refusal|{}refusal[0]
+        final fun <get-refusal>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.refusal.<get-refusal>|<get-refusal>(){}[0]
+    final val role // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.role|{}role[0]
+        final fun <get-role>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.role.<get-role>|<get-role>(){}[0]
+    final val toolCalls // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.toolCalls|{}toolCalls[0]
+        final fun <get-toolCalls>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.toolCalls.<get-toolCalls>|<get-toolCalls>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction|null[0]
+    constructor <init>(kotlin/String?, kotlin/String?) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+
+    final val arguments // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.arguments|{}arguments[0]
+        final fun <get-arguments>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.arguments.<get-arguments>|<get-arguments>(){}[0]
+    final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.name.<get-name>|<get-name>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamFunction){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions|null[0]
+    constructor <init>(kotlin/Boolean? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.<init>|<init>(kotlin.Boolean?){}[0]
+
+    final val includeUsage // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.includeUsage|{}includeUsage[0]
+        final fun <get-includeUsage>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.includeUsage.<get-includeUsage>|<get-includeUsage>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamOptions.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall|null[0]
+    constructor <init>(kotlin/Int, kotlin/String?, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction?, kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.<init>|<init>(kotlin.Int;kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamFunction?;kotlin.String?){}[0]
+
+    final val function // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.function|{}function[0]
+        final fun <get-function>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamFunction? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.function.<get-function>|<get-function>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.id|{}id[0]
+        final fun <get-id>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.id.<get-id>|<get-id>(){}[0]
+    final val index // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.index|{}index[0]
+        final fun <get-index>(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.index.<get-index>|<get-index>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.type|{}type[0]
+        final fun <get-type>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.type.<get-type>|<get-type>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAITool { // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction) // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolFunction){}[0]
+
+    final val function // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.function|{}function[0]
+        final fun <get-function>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.function.<get-function>|<get-function>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.type.<get-type>|<get-type>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAITool> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAITool // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAITool) // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAITool){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAITool> // ai.koog.prompt.executor.clients.openai.base.models/OpenAITool.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall|null[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIFunction){}[0]
+
+    final val function // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.function|{}function[0]
+        final fun <get-function>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.function.<get-function>|<get-function>(){}[0]
+    final val id // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.id.<get-id>|<get-id>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.type.<get-type>|<get-type>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolCall){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/Boolean? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.<init>|<init>(kotlin.String;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.Boolean?){}[0]
+
+    final val description // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.description.<get-description>|<get-description>(){}[0]
+    final val name // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.name.<get-name>|<get-name>(){}[0]
+    final val parameters // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.parameters|{}parameters[0]
+        final fun <get-parameters>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.parameters.<get-parameters>|<get-parameters>(){}[0]
+    final val strict // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.strict|{}strict[0]
+        final fun <get-strict>(): kotlin/Boolean? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.strict.<get-strict>|<get-strict>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolFunction){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolFunction.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage|null[0]
+    constructor <init>(kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails? = ..., ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.<init>|<init>(kotlin.Int?;kotlin.Int?;kotlin.Int?;ai.koog.prompt.executor.clients.openai.base.models.CompletionTokensDetails?;ai.koog.prompt.executor.clients.openai.base.models.PromptTokensDetails?){}[0]
+
+    final val completionTokens // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.completionTokens|{}completionTokens[0]
+        final fun <get-completionTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.completionTokens.<get-completionTokens>|<get-completionTokens>(){}[0]
+    final val completionTokensDetails // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.completionTokensDetails|{}completionTokensDetails[0]
+        final fun <get-completionTokensDetails>(): ai.koog.prompt.executor.clients.openai.base.models/CompletionTokensDetails? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.completionTokensDetails.<get-completionTokensDetails>|<get-completionTokensDetails>(){}[0]
+    final val promptTokens // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.promptTokens|{}promptTokens[0]
+        final fun <get-promptTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.promptTokens.<get-promptTokens>|<get-promptTokens>(){}[0]
+    final val promptTokensDetails // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.promptTokensDetails|{}promptTokensDetails[0]
+        final fun <get-promptTokensDetails>(): ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.promptTokensDetails.<get-promptTokensDetails>|<get-promptTokensDetails>(){}[0]
+    final val totalTokens // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.totalTokens|{}totalTokens[0]
+        final fun <get-totalTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.totalTokens.<get-totalTokens>|<get-totalTokens>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUsage.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIUserLocation.ApproximateLocation){}[0]
+
+    final val approximate // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.approximate|{}approximate[0]
+        final fun <get-approximate>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.approximate.<get-approximate>|<get-approximate>(){}[0]
+    final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.type.<get-type>|<get-type>(){}[0]
+
+    final class ApproximateLocation { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+
+        final val city // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.city|{}city[0]
+            final fun <get-city>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.city.<get-city>|<get-city>(){}[0]
+        final val country // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.country|{}country[0]
+            final fun <get-country>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.country.<get-country>|<get-country>(){}[0]
+        final val region // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.region|{}region[0]
+            final fun <get-region>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.region.<get-region>|<get-region>(){}[0]
+        final val timezone // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.timezone|{}timezone[0]
+            final fun <get-timezone>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.timezone.<get-timezone>|<get-timezone>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUserLocation.ApproximateLocation){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.ApproximateLocation.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUserLocation){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions|null[0]
+    constructor <init>(kotlin/String? = ..., ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.<init>|<init>(kotlin.String?;ai.koog.prompt.executor.clients.openai.base.models.OpenAIUserLocation?){}[0]
+
+    final val searchContextSize // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.searchContextSize|{}searchContextSize[0]
+        final fun <get-searchContextSize>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.searchContextSize.<get-searchContextSize>|<get-searchContextSize>(){}[0]
+    final val userLocation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.userLocation|{}userLocation[0]
+        final fun <get-userLocation>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIUserLocation? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.userLocation.<get-userLocation>|<get-userLocation>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebSearchOptions.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation|null[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebUrlCitation.Citation){}[0]
+
+    final val type // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.type.<get-type>|<get-type>(){}[0]
+    final val urlCitation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.urlCitation|{}urlCitation[0]
+        final fun <get-urlCitation>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.urlCitation.<get-urlCitation>|<get-urlCitation>(){}[0]
+
+    final class Citation { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int, kotlin/String, kotlin/String) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.String;kotlin.String){}[0]
+
+        final val endIndex // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.endIndex|{}endIndex[0]
+            final fun <get-endIndex>(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.endIndex.<get-endIndex>|<get-endIndex>(){}[0]
+        final val startIndex // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.startIndex|{}startIndex[0]
+            final fun <get-startIndex>(): kotlin/Int // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.startIndex.<get-startIndex>|<get-startIndex>(){}[0]
+        final val title // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.title|{}title[0]
+            final fun <get-title>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.title.<get-title>|<get-title>(){}[0]
+        final val url // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.url|{}url[0]
+            final fun <get-url>(): kotlin/String // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.url.<get-url>|<get-url>(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.$serializer|null[0]
+            final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebUrlCitation.Citation){}[0]
+        }
+
+        final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Citation.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebUrlCitation){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation> // ai.koog.prompt.executor.clients.openai.base.models/OpenAIWebUrlCitation.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails { // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails|null[0]
+    constructor <init>(kotlin/Int? = ..., kotlin/Int? = ...) // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.<init>|<init>(kotlin.Int?;kotlin.Int?){}[0]
+
+    final val audioTokens // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.audioTokens|{}audioTokens[0]
+        final fun <get-audioTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.audioTokens.<get-audioTokens>|<get-audioTokens>(){}[0]
+    final val cachedTokens // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.cachedTokens|{}cachedTokens[0]
+        final fun <get-cachedTokens>(): kotlin/Int? // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.cachedTokens.<get-cachedTokens>|<get-cachedTokens>(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails> { // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails) // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.executor.clients.openai.base.models.PromptTokensDetails){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails> // ai.koog.prompt.executor.clients.openai.base.models/PromptTokensDetails.Companion.serializer|serializer(){}[0]
+    }
+}
+
+open class ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/BasicJsonSchemaGenerator { // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final object Default : ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIBasicJsonSchemaGenerator.Default|null[0]
+}
+
+open class ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator : ai.koog.prompt.structure.json.generator/StandardJsonSchemaGenerator { // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.<init>|<init>(){}[0]
+
+    open fun generate(kotlinx.serialization.json/Json, kotlin/String, kotlinx.serialization/KSerializer<*>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Set<kotlin/String>): ai.koog.prompt.params/LLMParams.Schema.JSON.Standard // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.generate|generate(kotlinx.serialization.json.Json;kotlin.String;kotlinx.serialization.KSerializer<*>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Set<kotlin.String>){}[0]
+    open fun processClassDiscriminator(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.processClassDiscriminator|processClassDiscriminator(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processList(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.processList|processList(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processMap(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.processMap|processMap(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processObject(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.processObject|processObject(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+    open fun processPolymorphic(ai.koog.prompt.structure.json.generator/JsonSchemaGenerator.GenerationContext): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.processPolymorphic|processPolymorphic(ai.koog.prompt.structure.json.generator.JsonSchemaGenerator.GenerationContext){}[0]
+
+    final object Companion : ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator // ai.koog.prompt.executor.clients.openai.base.structure/OpenAIStandardJsonSchemaGenerator.Companion|null[0]
+}
+
+open class ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator : ai.koog.agents.core.tools.serialization/ToolDescriptorSchemaGenerator { // ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator|null[0]
+    constructor <init>() // ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator.<init>|<init>(){}[0]
+
+    open fun generate(ai.koog.agents.core.tools/ToolDescriptor): kotlinx.serialization.json/JsonObject // ai.koog.prompt.executor.clients.openai.base/OpenAICompatibleToolDescriptorSchemaGenerator.generate|generate(ai.koog.agents.core.tools.ToolDescriptor){}[0]
+}

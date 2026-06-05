@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorOperation
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -44,9 +45,18 @@ public class ContextualPromptExecutor(
         val eventId = Uuid.random().toString()
 
         val promptBeforeInterceptors = context.llm.prompt // because onLLMCallStarting might change context.llm.prompt
+        val resolvedModel = executor.resolveModel(model, PromptExecutorOperation.Execute)
 
         logger.debug { "Starting LLM call (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        context.pipeline.onLLMCallStarting(eventId, context.executionInfo, context, context.runId, prompt, model, tools)
+        context.pipeline.onLLMCallStarting(
+            eventId = eventId,
+            executionInfo = context.executionInfo,
+            context = context,
+            runId = context.runId,
+            prompt = prompt,
+            model = resolvedModel.effectiveModel,
+            tools = tools
+        )
 
         val effectivePrompt = if (context.llm.prompt !== promptBeforeInterceptors) {
             logger.debug { "Executing LLM call with modified prompt (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
@@ -57,14 +67,33 @@ public class ContextualPromptExecutor(
         }
 
         try {
-            val response = executor.execute(effectivePrompt, model, tools)
+            val response = executor.execute(effectivePrompt, resolvedModel, tools)
             logger.trace { "Finished LLM call (event id: $eventId) with responses: $response]" }
 
-            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context, context.runId, effectivePrompt, model, tools, response, moderationResponse = null)
+            context.pipeline.onLLMCallCompleted(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                context = context,
+                runId = context.runId,
+                prompt = effectivePrompt,
+                model = resolvedModel.effectiveModel,
+                tools = tools,
+                response = response,
+                moderationResponse = null
+            )
             return response
         } catch (e: Throwable) {
             logger.debug(e) { "Error in executing LLM call (event id: $eventId): $e" }
-            context.pipeline.onLLMCallFailed(eventId, context.executionInfo, context, context.runId, prompt, model, tools, error = e)
+            context.pipeline.onLLMCallFailed(
+                eventId,
+                context.executionInfo,
+                context,
+                context.runId,
+                prompt,
+                resolvedModel.effectiveModel,
+                tools,
+                error = e
+            )
             throw e
         }
     }
@@ -94,12 +123,24 @@ public class ContextualPromptExecutor(
         logger.debug { "Executing LLM streaming call (event id: $eventId, prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
 
         var effectivePrompt: Prompt = prompt
+        var effectiveModel: LLModel = model
 
         return flow {
+            val resolvedModel = executor.resolveModel(model, PromptExecutorOperation.Streaming)
+            effectiveModel = resolvedModel.effectiveModel
+
             val promptBeforeInterceptors = context.llm.prompt // because onLLMStreamingStarting might change it
 
             logger.debug { "Starting LLM streaming call (event id: $eventId)" }
-            context.pipeline.onLLMStreamingStarting(eventId, context.executionInfo, context, context.runId, prompt, model, tools)
+            context.pipeline.onLLMStreamingStarting(
+                eventId = eventId,
+                executionInfo = context.executionInfo,
+                context = context,
+                runId = context.runId,
+                prompt = prompt,
+                model = effectiveModel,
+                tools = tools
+            )
 
             effectivePrompt = if (context.llm.prompt !== promptBeforeInterceptors) {
                 logger.debug { "Executing LLM streaming call with modified prompt (event id: $eventId, prompt: ${context.llm.prompt}, tools: [${tools.joinToString { it.name }}])" }
@@ -109,17 +150,33 @@ public class ContextualPromptExecutor(
                 prompt
             }
 
-            executor.executeStreaming(effectivePrompt, model, tools).collect { frame ->
+            executor.executeStreaming(effectivePrompt, resolvedModel, tools).collect { frame ->
                 emit(frame)
             }
         }
             .onEach { frame ->
                 logger.trace { "Received frame from LLM streaming call (event id: $eventId): $frame" }
-                context.pipeline.onLLMStreamingFrameReceived(eventId, context.executionInfo, context, context.runId, prompt = effectivePrompt, model, streamFrame = frame)
+                context.pipeline.onLLMStreamingFrameReceived(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    context = context,
+                    runId = context.runId,
+                    prompt = effectivePrompt,
+                    model = effectiveModel,
+                    streamFrame = frame
+                )
             }
             .catch { error ->
                 logger.debug(error) { "Error in LLM streaming call (event id: $eventId): $error" }
-                context.pipeline.onLLMStreamingFailed(eventId, context.executionInfo, context, context.runId, prompt = effectivePrompt, model, error = error)
+                context.pipeline.onLLMStreamingFailed(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    context = context,
+                    runId = context.runId,
+                    prompt = effectivePrompt,
+                    model = effectiveModel,
+                    error = error
+                )
 
                 throw error
             }
@@ -127,7 +184,15 @@ public class ContextualPromptExecutor(
                 logger.debug(error) { "Finished LLM streaming call (event id: $eventId): $error" }
 
                 // Note: it will be executed in any case (even if error is null)
-                context.pipeline.onLLMStreamingCompleted(eventId, context.executionInfo, context, context.runId, prompt = effectivePrompt, model, tools)
+                context.pipeline.onLLMStreamingCompleted(
+                    eventId = eventId,
+                    executionInfo = context.executionInfo,
+                    context = context,
+                    runId = context.runId,
+                    prompt = effectivePrompt,
+                    model = effectiveModel,
+                    tools = tools
+                )
             }
     }
 
@@ -139,7 +204,8 @@ public class ContextualPromptExecutor(
     ): LLMChoice {
         logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
 
-        val responses = executor.executeMultipleChoices(prompt, model, tools)
+        val resolvedModel = executor.resolveModel(model, PromptExecutorOperation.MultipleChoices)
+        val responses = executor.executeMultipleChoices(prompt, resolvedModel, tools)
 
         logger.debug { "Finished LLM call with LLM Choice response: $responses" }
 
@@ -153,10 +219,19 @@ public class ContextualPromptExecutor(
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
         val promptBeforeInterceptors = context.llm.prompt
+        val resolvedModel = executor.resolveModel(model, PromptExecutorOperation.Moderate)
 
         logger.debug { "Starting moderation LLM request (event id: $eventId, prompt: $prompt)" }
 
-        context.pipeline.onLLMCallStarting(eventId, context.executionInfo, context, context.runId, prompt, model, tools = emptyList())
+        context.pipeline.onLLMCallStarting(
+            eventId,
+            context.executionInfo,
+            context,
+            context.runId,
+            prompt,
+            resolvedModel.effectiveModel,
+            tools = emptyList()
+        )
 
         val effectivePrompt = if (context.llm.prompt !== promptBeforeInterceptors) {
             logger.debug { "Executing moderation LLM request with modified prompt (event id: $eventId, prompt: ${context.llm.prompt})" }
@@ -167,14 +242,33 @@ public class ContextualPromptExecutor(
         }
 
         try {
-            val result = executor.moderate(effectivePrompt, model)
+            val result = executor.moderate(effectivePrompt, resolvedModel)
             logger.trace { "Finished moderation LLM request (event id: $eventId) with response: $result" }
 
-            context.pipeline.onLLMCallCompleted(eventId, context.executionInfo, context, context.runId, effectivePrompt, model, tools = emptyList(), response = null, moderationResponse = result)
+            context.pipeline.onLLMCallCompleted(
+                eventId,
+                context.executionInfo,
+                context,
+                context.runId,
+                effectivePrompt,
+                resolvedModel.effectiveModel,
+                tools = emptyList(),
+                response = null,
+                moderationResponse = result
+            )
             return result
         } catch (e: Throwable) {
             logger.debug(e) { "Error in moderation LLM request (event id: $eventId): $e" }
-            context.pipeline.onLLMCallFailed(eventId, context.executionInfo, context, context.runId, prompt, model, tools = emptyList(), error = e)
+            context.pipeline.onLLMCallFailed(
+                eventId,
+                context.executionInfo,
+                context,
+                context.runId,
+                prompt,
+                resolvedModel.effectiveModel,
+                tools = emptyList(),
+                error = e
+            )
 
             throw e
         }

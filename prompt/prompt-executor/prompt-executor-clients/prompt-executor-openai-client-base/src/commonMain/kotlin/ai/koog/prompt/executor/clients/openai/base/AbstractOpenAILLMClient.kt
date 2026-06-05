@@ -287,9 +287,16 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     is Message.User -> {
                         // First add tool results
                         message.parts.filterIsInstance<MessagePart.Tool.Result>().forEach { part ->
+                            if (part.parts.any { it !is MessagePart.Text }) {
+                                logger.warn {
+                                    "OpenAI Chat Completions API does not support non-text content in tool results (tool: '${part.tool}'). Non-text parts will be ignored."
+                                }
+                            }
                             add(
                                 OpenAIMessage.Tool(
-                                    content = OpenAIContent.Text(part.output),
+                                    content = OpenAIContent.Text(
+                                        part.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { it.text }
+                                    ),
                                     toolCallId = part.id ?: Uuid.random().toString()
                                 )
                             )
@@ -319,7 +326,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                                     ?.map {
                                         OpenAIToolCall(
                                             it.id ?: Uuid.random().toString(),
-                                            function = OpenAIFunction(it.tool, Json.encodeToString(it.args))
+                                            // `args` already holds the JSON-encoded arguments; re-encoding here would
+                                            // double-encode it into a quoted string that strict backends (e.g. DashScope) reject.
+                                            function = OpenAIFunction(it.tool, it.args)
                                         )
                                     }
                             )

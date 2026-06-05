@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # Agent Client Protocol
+
+--8<-- "versioning-snippets.md:beta"
 
 Agent Client Protocol (ACP) is an open-source, standardized protocol
 that enables client applications to communicate with AI agents through a consistent, bidirectional interface.

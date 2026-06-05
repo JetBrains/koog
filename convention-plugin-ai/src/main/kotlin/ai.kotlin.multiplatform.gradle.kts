@@ -5,6 +5,7 @@ import ai.koog.gradle.tests.configureTests
 import ai.koog.gradle.xcframework.XCFrameworkConfig.configureXCFrameworkIfRequested
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
     kotlin("multiplatform")
@@ -19,8 +20,24 @@ plugins {
 // for example, the "OTel Kotlin SDK 0.3.0" set `koog.target.wasmJs=false` in their gradle.properties.
 // The target is not registered at all, and no wasm-js publication is produced.
 val isWasmJsIncluded = (findProperty("koog.target.wasmJs") as? String)?.toBoolean() ?: true
-
 kotlin {
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation {
+        enabled = true
+
+        filters {
+            excluded {
+                annotatedWith.add("ai.koog.agents.core.annotation.InternalAgentsApi")
+                annotatedWith.add("ai.koog.prompt.annotations.InternalPromptAPI")
+                annotatedWith.add("ai.koog.agents.core.tools.annotations.InternalAgentToolsApi")
+                annotatedWith.add("ai.koog.prompt.executor.clients.InternalLLMClientApi")
+                annotatedWith.add("ai.koog.prompt.structure.annotations.InternalStructuredOutputApi")
+                annotatedWith.add("ai.koog.serialization.annotations.InternalKoogSerializationApi")
+                annotatedWith.add("ai.koog.a2a.annotations.InternalA2AApi")
+            }
+        }
+    }
+
     // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
     // Tier 1
     iosSimulatorArm64()
@@ -143,9 +160,9 @@ android {
 
     // Without an explicit minSdk, AGP falls back to its default (`1`), which propagates
     // into the published AAR's merged manifest and forces every consumer to override it.
-    // It also breaks transitive deps that require a higher minSdk (e.g. LiteRT requires 24+).
+    // It also breaks transitive deps that require a higher minSdk.
     defaultConfig {
-        minSdk = 35
+        minSdk = 23
     }
 
     compileOptions {
@@ -194,4 +211,15 @@ signing {
 // so Gradle's work validation does not flag it as an implicit dependency problem.
 tasks.withType<AbstractPublishToMaven>().configureEach {
     dependsOn(tasks.withType<Sign>())
+}
+
+// Disable ABI validation tasks for beta modules. The isBeta extra property is set in
+// each module's build.gradle.kts body, which runs after the plugins {} block applies
+// this convention plugin, so we must defer the check to afterEvaluate.
+afterEvaluate {
+    if (extra["isBeta"] == true) {
+        tasks.matching { it.name.contains("Abi") }.configureEach {
+            enabled = false
+        }
+    }
 }

@@ -1,0 +1,383 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:prompt-llm>
+final class ai.koog.prompt.llm/LLModel { // ai.koog.prompt.llm/LLModel|null[0]
+    constructor <init>(ai.koog.prompt.llm/LLMProvider, kotlin/String, kotlin.collections/List<ai.koog.prompt.llm/LLMCapability>? = ..., kotlin/Long? = ..., kotlin/Long? = ...) // ai.koog.prompt.llm/LLModel.<init>|<init>(ai.koog.prompt.llm.LLMProvider;kotlin.String;kotlin.collections.List<ai.koog.prompt.llm.LLMCapability>?;kotlin.Long?;kotlin.Long?){}[0]
+
+    final val capabilities // ai.koog.prompt.llm/LLModel.capabilities|{}capabilities[0]
+        final fun <get-capabilities>(): kotlin.collections/List<ai.koog.prompt.llm/LLMCapability>? // ai.koog.prompt.llm/LLModel.capabilities.<get-capabilities>|<get-capabilities>(){}[0]
+    final val contextLength // ai.koog.prompt.llm/LLModel.contextLength|{}contextLength[0]
+        final fun <get-contextLength>(): kotlin/Long? // ai.koog.prompt.llm/LLModel.contextLength.<get-contextLength>|<get-contextLength>(){}[0]
+    final val id // ai.koog.prompt.llm/LLModel.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.llm/LLModel.id.<get-id>|<get-id>(){}[0]
+    final val maxOutputTokens // ai.koog.prompt.llm/LLModel.maxOutputTokens|{}maxOutputTokens[0]
+        final fun <get-maxOutputTokens>(): kotlin/Long? // ai.koog.prompt.llm/LLModel.maxOutputTokens.<get-maxOutputTokens>|<get-maxOutputTokens>(){}[0]
+    final val provider // ai.koog.prompt.llm/LLModel.provider|{}provider[0]
+        final fun <get-provider>(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.llm/LLModel.provider.<get-provider>|<get-provider>(){}[0]
+
+    final fun component1(): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.llm/LLModel.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.koog.prompt.llm/LLModel.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<ai.koog.prompt.llm/LLMCapability>? // ai.koog.prompt.llm/LLModel.component3|component3(){}[0]
+    final fun component4(): kotlin/Long? // ai.koog.prompt.llm/LLModel.component4|component4(){}[0]
+    final fun component5(): kotlin/Long? // ai.koog.prompt.llm/LLModel.component5|component5(){}[0]
+    final fun copy(ai.koog.prompt.llm/LLMProvider = ..., kotlin/String = ..., kotlin.collections/List<ai.koog.prompt.llm/LLMCapability>? = ..., kotlin/Long? = ..., kotlin/Long? = ...): ai.koog.prompt.llm/LLModel // ai.koog.prompt.llm/LLModel.copy|copy(ai.koog.prompt.llm.LLMProvider;kotlin.String;kotlin.collections.List<ai.koog.prompt.llm.LLMCapability>?;kotlin.Long?;kotlin.Long?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLModel.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLModel.hashCode|hashCode(){}[0]
+    final fun supports(ai.koog.prompt.llm/LLMCapability): kotlin/Boolean // ai.koog.prompt.llm/LLModel.supports|supports(ai.koog.prompt.llm.LLMCapability){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.llm/LLModel.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.llm/LLModel> { // ai.koog.prompt.llm/LLModel.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.llm/LLModel.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.llm/LLModel.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.llm/LLModel.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.llm/LLModel // ai.koog.prompt.llm/LLModel.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.llm/LLModel) // ai.koog.prompt.llm/LLModel.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.llm.LLModel){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.llm/LLModel.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.llm/LLModel.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.llm/LLModel.Companion.serializer|serializer(){}[0]
+    }
+}
+
+open class ai.koog.prompt.llm/LLMProvider { // ai.koog.prompt.llm/LLMProvider|null[0]
+    constructor <init>(kotlin/Int, kotlin/String?, kotlin/String?, kotlinx.serialization.internal/SerializationConstructorMarker?) // ai.koog.prompt.llm/LLMProvider.<init>|<init>(kotlin.Int;kotlin.String?;kotlin.String?;kotlinx.serialization.internal.SerializationConstructorMarker?){}[0]
+    constructor <init>(kotlin/String, kotlin/String) // ai.koog.prompt.llm/LLMProvider.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val display // ai.koog.prompt.llm/LLMProvider.display|{}display[0]
+        final fun <get-display>(): kotlin/String // ai.koog.prompt.llm/LLMProvider.display.<get-display>|<get-display>(){}[0]
+    final val id // ai.koog.prompt.llm/LLMProvider.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.llm/LLMProvider.id.<get-id>|<get-id>(){}[0]
+
+    open fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMProvider.equals|equals(kotlin.Any?){}[0]
+    open fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMProvider.hashCode|hashCode(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.llm/LLMProvider> { // ai.koog.prompt.llm/LLMProvider.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.llm/LLMProvider.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.llm/LLMProvider.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.llm/LLMProvider.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.llm/LLMProvider // ai.koog.prompt.llm/LLMProvider.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.llm/LLMProvider) // ai.koog.prompt.llm/LLMProvider.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.llm.LLMProvider){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.llm/LLMProvider.Companion|null[0]
+        final val Alibaba // ai.koog.prompt.llm/LLMProvider.Companion.Alibaba|{}Alibaba[0]
+            final fun <get-Alibaba>(): ai.koog.prompt.llm/AlibabaLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Alibaba.<get-Alibaba>|<get-Alibaba>(){}[0]
+        final val Anthropic // ai.koog.prompt.llm/LLMProvider.Companion.Anthropic|{}Anthropic[0]
+            final fun <get-Anthropic>(): ai.koog.prompt.llm/AnthropicLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Anthropic.<get-Anthropic>|<get-Anthropic>(){}[0]
+        final val Azure // ai.koog.prompt.llm/LLMProvider.Companion.Azure|{}Azure[0]
+            final fun <get-Azure>(): ai.koog.prompt.llm/AzureLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Azure.<get-Azure>|<get-Azure>(){}[0]
+        final val Bedrock // ai.koog.prompt.llm/LLMProvider.Companion.Bedrock|{}Bedrock[0]
+            final fun <get-Bedrock>(): ai.koog.prompt.llm/BedrockLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Bedrock.<get-Bedrock>|<get-Bedrock>(){}[0]
+        final val DeepSeek // ai.koog.prompt.llm/LLMProvider.Companion.DeepSeek|{}DeepSeek[0]
+            final fun <get-DeepSeek>(): ai.koog.prompt.llm/DeepSeekLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.DeepSeek.<get-DeepSeek>|<get-DeepSeek>(){}[0]
+        final val Google // ai.koog.prompt.llm/LLMProvider.Companion.Google|{}Google[0]
+            final fun <get-Google>(): ai.koog.prompt.llm/GoogleLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Google.<get-Google>|<get-Google>(){}[0]
+        final val HuggingFace // ai.koog.prompt.llm/LLMProvider.Companion.HuggingFace|{}HuggingFace[0]
+            final fun <get-HuggingFace>(): ai.koog.prompt.llm/HuggingFaceLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.HuggingFace.<get-HuggingFace>|<get-HuggingFace>(){}[0]
+        final val Meta // ai.koog.prompt.llm/LLMProvider.Companion.Meta|{}Meta[0]
+            final fun <get-Meta>(): ai.koog.prompt.llm/MetaLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Meta.<get-Meta>|<get-Meta>(){}[0]
+        final val MiniMax // ai.koog.prompt.llm/LLMProvider.Companion.MiniMax|{}MiniMax[0]
+            final fun <get-MiniMax>(): ai.koog.prompt.llm/MiniMaxLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.MiniMax.<get-MiniMax>|<get-MiniMax>(){}[0]
+        final val MistralAI // ai.koog.prompt.llm/LLMProvider.Companion.MistralAI|{}MistralAI[0]
+            final fun <get-MistralAI>(): ai.koog.prompt.llm/MistralAILLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.MistralAI.<get-MistralAI>|<get-MistralAI>(){}[0]
+        final val OCI // ai.koog.prompt.llm/LLMProvider.Companion.OCI|{}OCI[0]
+            final fun <get-OCI>(): ai.koog.prompt.llm/OCILLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.OCI.<get-OCI>|<get-OCI>(){}[0]
+        final val Ollama // ai.koog.prompt.llm/LLMProvider.Companion.Ollama|{}Ollama[0]
+            final fun <get-Ollama>(): ai.koog.prompt.llm/OllamaLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Ollama.<get-Ollama>|<get-Ollama>(){}[0]
+        final val OpenAI // ai.koog.prompt.llm/LLMProvider.Companion.OpenAI|{}OpenAI[0]
+            final fun <get-OpenAI>(): ai.koog.prompt.llm/OpenAILLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.OpenAI.<get-OpenAI>|<get-OpenAI>(){}[0]
+        final val OpenRouter // ai.koog.prompt.llm/LLMProvider.Companion.OpenRouter|{}OpenRouter[0]
+            final fun <get-OpenRouter>(): ai.koog.prompt.llm/OpenRouterLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.OpenRouter.<get-OpenRouter>|<get-OpenRouter>(){}[0]
+        final val Vertex // ai.koog.prompt.llm/LLMProvider.Companion.Vertex|{}Vertex[0]
+            final fun <get-Vertex>(): ai.koog.prompt.llm/VertexLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Vertex.<get-Vertex>|<get-Vertex>(){}[0]
+        final val ZhipuAI // ai.koog.prompt.llm/LLMProvider.Companion.ZhipuAI|{}ZhipuAI[0]
+            final fun <get-ZhipuAI>(): ai.koog.prompt.llm/ZhipuAILLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.ZhipuAI.<get-ZhipuAI>|<get-ZhipuAI>(){}[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMProvider> // ai.koog.prompt.llm/LLMProvider.Companion.serializer|serializer(){}[0]
+    }
+}
+
+sealed class ai.koog.prompt.llm/LLMCapability { // ai.koog.prompt.llm/LLMCapability|null[0]
+    final val id // ai.koog.prompt.llm/LLMCapability.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.koog.prompt.llm/LLMCapability.id.<get-id>|<get-id>(){}[0]
+
+    sealed class OpenAIEndpoint : ai.koog.prompt.llm/LLMCapability { // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint|null[0]
+        final val endpoint // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.endpoint|{}endpoint[0]
+            final fun <get-endpoint>(): kotlin/String // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.endpoint.<get-endpoint>|<get-endpoint>(){}[0]
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint> // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object Completions : ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions|null[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions.hashCode|hashCode(){}[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions> // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Completions.toString|toString(){}[0]
+        }
+
+        final object Responses : ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses|null[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses.hashCode|hashCode(){}[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses> // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.OpenAIEndpoint.Responses.toString|toString(){}[0]
+        }
+    }
+
+    sealed class Schema : ai.koog.prompt.llm/LLMCapability { // ai.koog.prompt.llm/LLMCapability.Schema|null[0]
+        final val lang // ai.koog.prompt.llm/LLMCapability.Schema.lang|{}lang[0]
+            final fun <get-lang>(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Schema.lang.<get-lang>|<get-lang>(){}[0]
+
+        sealed class JSON : ai.koog.prompt.llm/LLMCapability.Schema { // ai.koog.prompt.llm/LLMCapability.Schema.JSON|null[0]
+            final val support // ai.koog.prompt.llm/LLMCapability.Schema.JSON.support|{}support[0]
+                final fun <get-support>(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Schema.JSON.support.<get-support>|<get-support>(){}[0]
+
+            final object Basic : ai.koog.prompt.llm/LLMCapability.Schema.JSON, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic|null[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic.hashCode|hashCode(){}[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic> // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+                final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Basic.toString|toString(){}[0]
+            }
+
+            final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Schema.JSON> // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Companion.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            }
+
+            final object Standard : ai.koog.prompt.llm/LLMCapability.Schema.JSON, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard|null[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard.hashCode|hashCode(){}[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard> // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+                final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Schema.JSON.Standard.toString|toString(){}[0]
+            }
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Schema.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Schema> // ai.koog.prompt.llm/LLMCapability.Schema.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Schema.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed class Vision : ai.koog.prompt.llm/LLMCapability { // ai.koog.prompt.llm/LLMCapability.Vision|null[0]
+        final val visionType // ai.koog.prompt.llm/LLMCapability.Vision.visionType|{}visionType[0]
+            final fun <get-visionType>(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Vision.visionType.<get-visionType>|<get-visionType>(){}[0]
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Vision.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Vision> // ai.koog.prompt.llm/LLMCapability.Vision.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Vision.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object Image : ai.koog.prompt.llm/LLMCapability.Vision, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Vision.Image|null[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Vision.Image.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Vision.Image.hashCode|hashCode(){}[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Vision.Image> // ai.koog.prompt.llm/LLMCapability.Vision.Image.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Vision.Image.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Vision.Image.toString|toString(){}[0]
+        }
+
+        final object Video : ai.koog.prompt.llm/LLMCapability.Vision, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Vision.Video|null[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Vision.Video.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Vision.Video.hashCode|hashCode(){}[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Vision.Video> // ai.koog.prompt.llm/LLMCapability.Vision.Video.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Vision.Video.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Vision.Video.toString|toString(){}[0]
+        }
+    }
+
+    final object Audio : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Audio|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Audio.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Audio.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Audio> // ai.koog.prompt.llm/LLMCapability.Audio.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Audio.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Audio.toString|toString(){}[0]
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability> // ai.koog.prompt.llm/LLMCapability.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+
+    final object Completion : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Completion|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Completion.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Completion.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Completion> // ai.koog.prompt.llm/LLMCapability.Completion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Completion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Completion.toString|toString(){}[0]
+    }
+
+    final object Document : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Document|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Document.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Document.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Document> // ai.koog.prompt.llm/LLMCapability.Document.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Document.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Document.toString|toString(){}[0]
+    }
+
+    final object Embed : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Embed|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Embed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Embed.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Embed> // ai.koog.prompt.llm/LLMCapability.Embed.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Embed.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Embed.toString|toString(){}[0]
+    }
+
+    final object Moderation : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Moderation|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Moderation.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Moderation.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Moderation> // ai.koog.prompt.llm/LLMCapability.Moderation.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Moderation.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Moderation.toString|toString(){}[0]
+    }
+
+    final object MultipleChoices : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.MultipleChoices|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.MultipleChoices.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.MultipleChoices.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.MultipleChoices> // ai.koog.prompt.llm/LLMCapability.MultipleChoices.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.MultipleChoices.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.MultipleChoices.toString|toString(){}[0]
+    }
+
+    final object PromptCaching : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.PromptCaching|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.PromptCaching.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.PromptCaching.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.PromptCaching> // ai.koog.prompt.llm/LLMCapability.PromptCaching.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.PromptCaching.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.PromptCaching.toString|toString(){}[0]
+    }
+
+    final object Speculation : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Speculation|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Speculation.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Speculation.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Speculation> // ai.koog.prompt.llm/LLMCapability.Speculation.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Speculation.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Speculation.toString|toString(){}[0]
+    }
+
+    final object Temperature : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Temperature|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Temperature.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Temperature.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Temperature> // ai.koog.prompt.llm/LLMCapability.Temperature.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Temperature.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Temperature.toString|toString(){}[0]
+    }
+
+    final object Thinking : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Thinking|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Thinking.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Thinking.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Thinking> // ai.koog.prompt.llm/LLMCapability.Thinking.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Thinking.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Thinking.toString|toString(){}[0]
+    }
+
+    final object ToolChoice : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.ToolChoice|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.ToolChoice.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.ToolChoice.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.ToolChoice> // ai.koog.prompt.llm/LLMCapability.ToolChoice.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.ToolChoice.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.ToolChoice.toString|toString(){}[0]
+    }
+
+    final object Tools : ai.koog.prompt.llm/LLMCapability, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/LLMCapability.Tools|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.llm/LLMCapability.Tools.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.koog.prompt.llm/LLMCapability.Tools.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/LLMCapability.Tools> // ai.koog.prompt.llm/LLMCapability.Tools.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/LLMCapability.Tools.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.koog.prompt.llm/LLMCapability.Tools.toString|toString(){}[0]
+    }
+}
+
+final object ai.koog.prompt.llm/AlibabaLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/AlibabaLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/AlibabaLLMProvider> // ai.koog.prompt.llm/AlibabaLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/AlibabaLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/AnthropicLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/AnthropicLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/AnthropicLLMProvider> // ai.koog.prompt.llm/AnthropicLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/AnthropicLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/AzureLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/AzureLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/AzureLLMProvider> // ai.koog.prompt.llm/AzureLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/AzureLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/BedrockLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/BedrockLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/BedrockLLMProvider> // ai.koog.prompt.llm/BedrockLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/BedrockLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/DeepSeekLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/DeepSeekLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/DeepSeekLLMProvider> // ai.koog.prompt.llm/DeepSeekLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/DeepSeekLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/GoogleLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/GoogleLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/GoogleLLMProvider> // ai.koog.prompt.llm/GoogleLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/GoogleLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/HuggingFaceLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/HuggingFaceLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/HuggingFaceLLMProvider> // ai.koog.prompt.llm/HuggingFaceLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/HuggingFaceLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/MetaLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/MetaLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/MetaLLMProvider> // ai.koog.prompt.llm/MetaLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/MetaLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/MiniMaxLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/MiniMaxLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/MiniMaxLLMProvider> // ai.koog.prompt.llm/MiniMaxLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/MiniMaxLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/MistralAILLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/MistralAILLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/MistralAILLMProvider> // ai.koog.prompt.llm/MistralAILLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/MistralAILLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/OCILLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/OCILLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/OCILLMProvider> // ai.koog.prompt.llm/OCILLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/OCILLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/OllamaLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/OllamaLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/OllamaLLMProvider> // ai.koog.prompt.llm/OllamaLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/OllamaLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/OpenAILLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/OpenAILLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/OpenAILLMProvider> // ai.koog.prompt.llm/OpenAILLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/OpenAILLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/OpenRouterLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/OpenRouterLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/OpenRouterLLMProvider> // ai.koog.prompt.llm/OpenRouterLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/OpenRouterLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/VertexLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/VertexLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/VertexLLMProvider> // ai.koog.prompt.llm/VertexLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/VertexLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/ZhipuAILLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/ZhipuAILLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/ZhipuAILLMProvider> // ai.koog.prompt.llm/ZhipuAILLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/ZhipuAILLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final fun (ai.koog.prompt.llm/LLModel).ai.koog.prompt.llm/toModelInfo(): ai.koog.agents.utils/ModelInfo // ai.koog.prompt.llm/toModelInfo|toModelInfo@ai.koog.prompt.llm.LLModel(){}[0]

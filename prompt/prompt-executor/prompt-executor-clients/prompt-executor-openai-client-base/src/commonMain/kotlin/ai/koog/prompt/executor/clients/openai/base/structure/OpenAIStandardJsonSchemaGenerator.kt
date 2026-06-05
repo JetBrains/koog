@@ -74,6 +74,41 @@ public open class OpenAIStandardJsonSchemaGenerator : StandardJsonSchemaGenerato
         throw UnsupportedOperationException("OpenAI JSON schema doesn't support maps")
     }
 
+    /*
+     OpenAI strict-mode validators (notably the GPT-5 family) reject nullable arrays encoded as
+     a type union `{"type": ["array", "null"], "items": {...}}`. Emit `anyOf` instead, which is
+     accepted by all current OpenAI strict validators. Non-nullable lists are unchanged.
+     */
+    override fun processList(context: GenerationContext): JsonObject {
+        if (!context.descriptor.isNullable) {
+            return super.processList(context)
+        }
+
+        val itemDescriptor = context.descriptor.getElementDescriptor(0)
+        return buildJsonObject {
+            put(
+                JsonSchemaConsts.Keys.ANY_OF,
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.ARRAY)
+                            put(
+                                JsonSchemaConsts.Keys.ITEMS,
+                                process(context.copy(descriptor = itemDescriptor, currentDescription = null))
+                            )
+                        }
+                    )
+                    add(
+                        buildJsonObject {
+                            put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.NULL)
+                        }
+                    )
+                }
+            )
+            context.currentDescription?.let { put(JsonSchemaConsts.Keys.DESCRIPTION, it) }
+        }
+    }
+
     override fun processObject(context: GenerationContext): JsonObject {
         val refObject = super.processObject(context).toMutableMap()
 

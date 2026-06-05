@@ -7,8 +7,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotContain
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Path
+import javax.imageio.ImageIO
 
 object MediaTestUtils {
     fun getImageFileForScenario(scenario: MediaTestScenarios.ImageTestScenario, testResourcesDir: Path): Path {
@@ -18,7 +21,7 @@ object MediaTestUtils {
             }
 
             MediaTestScenarios.ImageTestScenario.BASIC_JPG -> {
-                testResourcesDir.resolve("basic.jpeg")
+                createSmallJpegImage()
             }
 
             MediaTestScenarios.ImageTestScenario.EMPTY_IMAGE -> {
@@ -29,6 +32,26 @@ object MediaTestUtils {
                 testResourcesDir.resolve("corrupted.png")
             }
         }
+    }
+
+    private fun createSmallJpegImage(): Path {
+        val file = Files.createTempFile("koog-basic-jpg-", ".jpeg")
+        file.toFile().deleteOnExit()
+        val image = BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB)
+        val graphics = image.createGraphics()
+        try {
+            graphics.color = Color.WHITE
+            graphics.fillRect(0, 0, image.width, image.height)
+            graphics.color = Color(0x1E, 0x88, 0xE5)
+            graphics.fillOval(16, 16, 64, 64)
+            graphics.color = Color(0xF4, 0x51, 0x1E)
+            graphics.fillRect(38, 38, 20, 20)
+        } finally {
+            graphics.dispose()
+        }
+
+        ImageIO.write(image, "jpeg", file.toFile())
+        return file
     }
 
     fun createTextFileForScenario(scenario: MediaTestScenarios.TextTestScenario, testResourcesDir: Path): Path {

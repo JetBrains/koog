@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # Ktor Integration: Koog plugin
+
+--8<-- "versioning-snippets.md:beta"
 
 Koog fits naturally into your Ktor server allowing you to write server-side AI applications using ideomatic Kotlin API from both sides.
 

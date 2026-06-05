@@ -1,14 +1,23 @@
 package ai.koog.prompt.executor.llms
 
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ModelResolutionException
+import ai.koog.prompt.executor.model.PromptExecutorOperation
+import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.LLMChoice
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -29,6 +38,48 @@ class RoutingLLMPromptExecutorTest {
 
         override fun clientFor(model: LLModel): LLMClient? =
             clients.firstOrNull { it.llmProvider() == model.provider }
+    }
+
+    private class LegacyOverrideRoutingLLMPromptExecutor(
+        router: LLMClientRouter
+    ) : RoutingLLMPromptExecutor(router) {
+
+        var executeCalls = 0
+        var executeStreamingCalls = 0
+        var executeMultipleChoicesCalls = 0
+        var moderateCalls = 0
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            executeCalls++
+            return super.execute(prompt, model, tools)
+        }
+
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> {
+            executeStreamingCalls++
+            return super.executeStreaming(prompt, model, tools)
+        }
+
+        override suspend fun executeMultipleChoices(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): LLMChoice {
+            executeMultipleChoicesCalls++
+            return super.executeMultipleChoices(prompt, model, tools)
+        }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+            moderateCalls++
+            return super.moderate(prompt, model)
+        }
     }
 
     @Test
@@ -81,7 +132,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.execute(prompt, AnthropicModels.Sonnet_4)
         }
     }
@@ -134,7 +185,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }
@@ -183,7 +234,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.executeMultipleChoices(prompt, AnthropicModels.Sonnet_4, emptyList())
         }
     }
@@ -232,7 +283,7 @@ class RoutingLLMPromptExecutorTest {
         )
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.moderate(prompt, AnthropicModels.Sonnet_4)
         }
     }
@@ -325,5 +376,70 @@ class RoutingLLMPromptExecutorTest {
 
         assertTrue(googleClient.wasClosed())
         assertTrue(openAIClient.wasClosed())
+    }
+
+    @Test
+    fun testResolveModelReturnsRequestedWhenProviderInRouter() = runTest {
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI)))
+        val requested = OpenAIModels.Chat.GPT4o
+
+        assertEquals(
+            ResolvedModel(requested),
+            executor.resolveModel(requested, PromptExecutorOperation.Execute)
+        )
+    }
+
+    @Test
+    fun testResolveModelUsesFallbackWhenProviderUnknown() = runTest {
+        val fallbackModel = OpenAIModels.Chat.GPT4o
+        val executor = RoutingLLMPromptExecutor(
+            clientRouter = SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI)),
+            fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(fallbackModel = fallbackModel),
+        )
+
+        assertEquals(
+            ResolvedModel(fallbackModel),
+            executor.resolveModel(AnthropicModels.Sonnet_4, PromptExecutorOperation.Execute)
+        )
+    }
+
+    @Test
+    fun testResolveModelThrowsWhenNoClientAndNoFallback() = runTest {
+        val executor = RoutingLLMPromptExecutor(SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI)))
+        val requested = AnthropicModels.Sonnet_4
+
+        assertFailsWith<ModelResolutionException> {
+            executor.resolveModel(requested, PromptExecutorOperation.Execute)
+        }
+    }
+
+    @Test
+    fun testConstructorFailsWhenFallbackProviderNotInRouter() {
+        val router = SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI))
+        val fallback = RoutingLLMPromptExecutor.FallbackPromptExecutorSettings(
+            fallbackModel = GoogleModels.Gemini2_5Flash,
+        )
+
+        assertFailsWith<IllegalStateException> {
+            RoutingLLMPromptExecutor(clientRouter = router, fallback = fallback)
+        }
+    }
+
+    @Test
+    fun testLegacyLLModelOverridesRemainSupported() = runTest {
+        val executor = LegacyOverrideRoutingLLMPromptExecutor(
+            SimpleTestRouter(MockLLMClient(provider = LLMProvider.OpenAI))
+        )
+        val model = OpenAIModels.Chat.GPT4o
+
+        executor.execute(prompt, model)
+        executor.executeStreaming(prompt, model).collect()
+        executor.executeMultipleChoices(prompt, model, emptyList())
+        executor.moderate(prompt, model)
+
+        assertEquals(1, executor.executeCalls)
+        assertEquals(1, executor.executeStreamingCalls)
+        assertEquals(1, executor.executeMultipleChoicesCalls)
+        assertEquals(1, executor.moderateCalls)
     }
 }

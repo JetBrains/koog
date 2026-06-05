@@ -4,6 +4,7 @@ import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.ModelResolutionException
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
@@ -116,7 +117,7 @@ class RoundRobinBasedExecutorTest {
         val executor = RoutingLLMPromptExecutor(openAIClient)
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.execute(prompt, AnthropicModels.Sonnet_4)
         }
     }
@@ -128,7 +129,7 @@ class RoundRobinBasedExecutorTest {
         val executor = RoutingLLMPromptExecutor(openAIClient)
 
         // When, Then
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ModelResolutionException> {
             executor.executeStreaming(prompt, AnthropicModels.Sonnet_4).collect()
         }
     }

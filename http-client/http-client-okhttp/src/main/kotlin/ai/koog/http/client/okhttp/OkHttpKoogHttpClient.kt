@@ -28,7 +28,6 @@ import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
-import org.jetbrains.annotations.ApiStatus.Experimental
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
@@ -43,7 +42,6 @@ import kotlin.reflect.KClass
  * @property logger A logging instance of type KLogger for recording client-related events and errors.
  * @property okHttpClient The configured OkHttp client instance used for making HTTP requests.
  */
-@Experimental
 public class OkHttpKoogHttpClient internal constructor(
     override val clientName: String,
     private val logger: KLogger,
@@ -376,7 +374,6 @@ public class OkHttpKoogHttpClient internal constructor(
  * @param json The Json instance used for serialization/deserialization. Defaults to a default Json instance.
  * @return An instance of `KoogHttpClient` configured with the provided parameters.
  */
-@Experimental
 public fun KoogHttpClient.Companion.fromOkHttpClient(
     clientName: String,
     logger: KLogger,

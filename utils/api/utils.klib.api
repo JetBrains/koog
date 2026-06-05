@@ -1,0 +1,63 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Alias: ios => [iosArm64, iosSimulatorArm64, iosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:utils>
+open annotation class ai.koog.utils.annotations/InternalKoogUtils : kotlin/Annotation { // ai.koog.utils.annotations/InternalKoogUtils|null[0]
+    constructor <init>() // ai.koog.utils.annotations/InternalKoogUtils.<init>|<init>(){}[0]
+}
+
+abstract fun interface ai.koog.utils.time/KoogClock { // ai.koog.utils.time/KoogClock|null[0]
+    abstract fun now(): kotlin.time/Instant // ai.koog.utils.time/KoogClock.now|now(){}[0]
+
+    final object Companion { // ai.koog.utils.time/KoogClock.Companion|null[0]
+        final val System // ai.koog.utils.time/KoogClock.Companion.System|{}System[0]
+            final fun <get-System>(): ai.koog.utils.time/KoogClock // ai.koog.utils.time/KoogClock.Companion.System.<get-System>|<get-System>(){}[0]
+    }
+}
+
+abstract interface ai.koog.utils.io/Closeable { // ai.koog.utils.io/Closeable|null[0]
+    abstract suspend fun close() // ai.koog.utils.io/Closeable.close|close(){}[0]
+}
+
+abstract interface ai.koog.utils.system/SystemConfigReader { // ai.koog.utils.system/SystemConfigReader|null[0]
+    abstract fun getConfigVariable(kotlin/String): kotlin/String? // ai.koog.utils.system/SystemConfigReader.getConfigVariable|getConfigVariable(kotlin.String){}[0]
+}
+
+abstract interface ai.koog.utils.system/SystemSecretsReader { // ai.koog.utils.system/SystemSecretsReader|null[0]
+    abstract fun getSecret(kotlin/String): kotlin/String? // ai.koog.utils.system/SystemSecretsReader.getSecret|getSecret(kotlin.String){}[0]
+}
+
+final class ai.koog.utils.serializers/ByteArrayAsBase64Serializer : kotlinx.serialization/KSerializer<kotlin/ByteArray> { // ai.koog.utils.serializers/ByteArrayAsBase64Serializer|null[0]
+    constructor <init>() // ai.koog.utils.serializers/ByteArrayAsBase64Serializer.<init>|<init>(){}[0]
+
+    final val descriptor // ai.koog.utils.serializers/ByteArrayAsBase64Serializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.utils.serializers/ByteArrayAsBase64Serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): kotlin/ByteArray // ai.koog.utils.serializers/ByteArrayAsBase64Serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, kotlin/ByteArray) // ai.koog.utils.serializers/ByteArrayAsBase64Serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;kotlin.ByteArray){}[0]
+}
+
+final val ai.koog.utils.io/SuitableForIO // ai.koog.utils.io/SuitableForIO|@kotlinx.coroutines.Dispatchers{}SuitableForIO[0]
+    final fun (kotlinx.coroutines/Dispatchers).<get-SuitableForIO>(): kotlinx.coroutines/CoroutineDispatcher // ai.koog.utils.io/SuitableForIO.<get-SuitableForIO>|<get-SuitableForIO>@kotlinx.coroutines.Dispatchers(){}[0]
+
+final fun (kotlin/String?).ai.koog.utils.lang/masked(kotlin/Char = ...): kotlin/String? // ai.koog.utils.lang/masked|masked@kotlin.String?(kotlin.Char){}[0]
+final fun ai.koog.utils.system/systemConfigReader(): ai.koog.utils.system/SystemConfigReader // ai.koog.utils.system/systemConfigReader|systemConfigReader(){}[0]
+final fun ai.koog.utils.system/systemSecretsReader(): ai.koog.utils.system/SystemSecretsReader // ai.koog.utils.system/systemSecretsReader|systemSecretsReader(){}[0]
+final suspend inline fun <#A: ai.koog.utils.io/Closeable, #B: kotlin/Any?> (#A).ai.koog.utils.io/use(kotlin.coroutines/SuspendFunction1<#A, #B>): #B // ai.koog.utils.io/use|use@0:0(kotlin.coroutines.SuspendFunction1<0:0,0:1>){0§<ai.koog.utils.io.Closeable>;1§<kotlin.Any?>}[0]
+
+// Targets: [ios]
+final class ai.koog.utils.system/UserDefaultsSystemConfigReader : ai.koog.utils.system/SystemConfigReader { // ai.koog.utils.system/UserDefaultsSystemConfigReader|null[0]
+    constructor <init>(platform.Foundation/NSUserDefaults) // ai.koog.utils.system/UserDefaultsSystemConfigReader.<init>|<init>(platform.Foundation.NSUserDefaults){}[0]
+
+    final fun getConfigVariable(kotlin/String): kotlin/String? // ai.koog.utils.system/UserDefaultsSystemConfigReader.getConfigVariable|getConfigVariable(kotlin.String){}[0]
+
+    final object Companion { // ai.koog.utils.system/UserDefaultsSystemConfigReader.Companion|null[0]
+        final val shared // ai.koog.utils.system/UserDefaultsSystemConfigReader.Companion.shared|{}shared[0]
+            final fun <get-shared>(): ai.koog.utils.system/UserDefaultsSystemConfigReader // ai.koog.utils.system/UserDefaultsSystemConfigReader.Companion.shared.<get-shared>|<get-shared>(){}[0]
+    }
+}

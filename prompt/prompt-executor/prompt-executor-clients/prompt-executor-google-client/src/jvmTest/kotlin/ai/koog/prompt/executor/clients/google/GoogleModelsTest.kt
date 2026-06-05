@@ -104,7 +104,10 @@ class GoogleModelsTest {
 
     @Test
     fun `Gemini 3 preview models should advertise thinking capability`() {
-        assertNotNull(GoogleModels.Gemini3_Pro_Preview.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(GoogleModels.Gemini3_Flash_Preview.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(GoogleModels.Gemini3_1Pro_Preview.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(GoogleModels.Gemini3_1FlashLite_Preview.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(GoogleModels.Gemini3_1FlashLite.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(GoogleModels.Gemini3_5Flash.capabilities) shouldContain LLMCapability.Thinking
     }
 }

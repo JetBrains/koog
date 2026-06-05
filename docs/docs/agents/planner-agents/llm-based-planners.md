@@ -1,4 +1,10 @@
+---
+status: beta
+---
+
 # LLM-based planners
+
+--8<-- "versioning-snippets.md:beta"
 
 LLM-based planners use LLMs to generate and evaluate plans.
 They operate on a string-based state and execute steps through LLM requests.

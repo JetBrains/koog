@@ -226,14 +226,25 @@ internal sealed interface GoogleData {
      * @property name The name of the function to call.
      * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 63.
      * @property response The function response in JSON object format.
+     * @property parts Optional inline multimodal data attached to this function response.
+     *   Supported for Gemini 3+ models (e.g. [GoogleModels.Gemini3_Flash_Preview]).
      */
     @Serializable
     class FunctionResponse(
         val id: String? = null,
         val name: String,
-        val response: JsonObject
+        val response: JsonObject,
+        val parts: List<FunctionResponseInlineData>? = null,
     ) : GoogleData
 }
+
+/**
+ * A single inline-data attachment inside a multimodal [GoogleData.FunctionResponse].
+ */
+@Serializable
+internal class FunctionResponseInlineData(
+    val inlineData: GoogleData.Blob,
+)
 
 /**
  * Tool details that the model may use to generate a response.

@@ -18,7 +18,11 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
 
     ``` kotlin title="build.gradle.kts"
     dependencies {
+        // Stable
         implementation("ai.koog:koog-agents:1.0.0")
+
+        // Beta
+        implementation("ai.koog:koog-agents-additions:1.0.0-beta")
     }
     ```
 
@@ -26,7 +30,11 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
 
     ``` groovy title="build.gradle"
     dependencies {
+        // Stable
         implementation 'ai.koog:koog-agents:1.0.0'
+
+        // Beta
+        implementation 'ai.koog:koog-agents-additions:1.0.0-beta'
     }
     ```
 
@@ -34,15 +42,25 @@ Add the [Koog package](https://central.sonatype.com/artifact/ai.koog/koog-agents
 
     ```xml title="pom.xml"
     <dependency>
-        <groupId>ai.koog</groupId>
-        <artifactId>koog-agents-jvm</artifactId>
-        <version>0.7.1</version>
+        <!-- Stable -->
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>koog-agents-jvm</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- Beta -->
+        <dependency>
+            <groupId>ai.koog</groupId>
+            <artifactId>koog-agents-additions-jvm</artifactId>
+            <version>1.0.0-beta</version>
+        </dependency>
     </dependency>
     ```
 # --8<-- [end:dependencies]
 
 # --8<-- [start:api-key]
 Get an API key from an LLM provider or run a local LLM via Ollama.
-For more information, see [Quickstart](/quickstart.md).
+For more information, see [Quickstart](../quickstart.md).
 # --8<-- [end:api-key]
 

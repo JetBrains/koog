@@ -87,6 +87,7 @@ A stable module at version `X.Y.Z` is always compatible with a beta module at ve
 | `http-client-java` | `1.0.0` |
 | `http-client-ktor` | `1.0.0` |
 | `http-client-okhttp` | `1.0.0` |
+| `http-client-spring-webclient` | `1.0.0` |
 | `http-client-test` | `1.0.0` |
 | `koog-agents` | `1.0.0` |
 | `koog-spring-ai` | `1.0.0` |
