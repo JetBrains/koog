@@ -290,7 +290,8 @@ public class OpenAIAudio(
 @Serializable
 public class OpenAIToolCall(
     public val id: String,
-    public val function: OpenAIFunction
+    public val function: OpenAIFunction,
+    public val extraContent: JsonObject? = null,
 ) {
     /** The type of the tool. Currently, only `function` is supported. */
     public val type: String = "function"
