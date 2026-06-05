@@ -1,5 +1,8 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.message.Message
@@ -27,7 +30,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.time.Instant
 
 class OpenAIChatCompletionLLMClientTest {
@@ -174,5 +179,179 @@ class OpenAIChatCompletionLLMClientTest {
         val decoded = Json.parseToJsonElement(arguments)
         assertIs<JsonObject>(decoded, "function.arguments must be a JSON object, not a double-encoded JSON string")
         assertEquals(JsonObject(mapOf("city" to JsonPrimitive("Boston"))), decoded)
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Gemini 3 thought_signature round-trip (Vertex OpenAI-compat). Gemini 3 returns the signature
+    // on each function call in tool_calls[].extra_content.google.thought_signature and rejects the
+    // next tool turn with HTTP 400 if it is not echoed back verbatim.
+    // ---------------------------------------------------------------------------------------------
+
+    private val toolCallWithThoughtSignatureBody = """
+        {
+          "id": "chatcmpl-g3",
+          "object": "chat.completion",
+          "created": 1677652288,
+          "model": "gemini-3.5-flash",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "tool_calls": [
+                  {
+                    "id": "call_g3",
+                    "type": "function",
+                    "extra_content": { "google": { "thought_signature": "SIG_ABC_123" } },
+                    "function": {
+                      "name": "weather",
+                      "arguments": "{\"city\": \"Sofia\"}"
+                    }
+                  }
+                ]
+              },
+              "finish_reason": "tool_calls"
+            }
+          ]
+        }
+    """.trimIndent()
+
+    private val weatherTools = listOf(
+        ToolDescriptor(
+            name = "weather",
+            description = "Get the weather for a city",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "city",
+                    description = "The city to get weather for",
+                    type = ToolParameterType.String,
+                ),
+            ),
+        ),
+    )
+
+    @Test
+    fun testGemini3ThoughtSignatureParsedIntoReasoningPart() = runTest {
+        // INBOUND: extra_content.google.thought_signature must be lifted into a signature-only
+        // Reasoning part placed immediately before its tool call.
+        val engine = MockEngine {
+            respond(
+                content = toolCallWithThoughtSignatureBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+        val client = OpenAILLMClient(
+            apiKey = key,
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(engine)),
+            clock = FixedClock,
+        )
+
+        val response = client.execute(
+            Prompt.build("g3-in") { user("What's the weather in Sofia?") },
+            OpenAIModels.Chat.GPT4o,
+            weatherTools,
+        )
+
+        val reasoningIndex = response.parts.indexOfFirst {
+            it is MessagePart.Reasoning && it.encrypted == "SIG_ABC_123"
+        }
+        val callIndex = response.parts.indexOfFirst { it is MessagePart.Tool.Call }
+        assertNotEquals(-1, reasoningIndex, "thought_signature was not lifted into a Reasoning part")
+        assertEquals(reasoningIndex + 1, callIndex, "Reasoning(signature) must directly precede its tool call")
+    }
+
+    @Test
+    fun testGemini3ThoughtSignatureEchoedBackOnNextTurn() = runTest {
+        // ROUND-TRIP: feed the assistant tool call from turn 1 back on turn 2 and assert the
+        // request carries tool_calls[0].extra_content.google.thought_signature verbatim.
+        var capturedBody: String? = null
+        val engine = MockEngine { request ->
+            capturedBody = (request.body as TextContent).text
+            respond(
+                content = toolCallWithThoughtSignatureBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+        val client = OpenAILLMClient(
+            apiKey = key,
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(engine)),
+            clock = FixedClock,
+        )
+
+        // Turn 1 — obtain the assistant message carrying the signature.
+        val assistantTurn = client.execute(
+            Prompt.build("g3-turn1") { user("What's the weather in Sofia?") },
+            OpenAIModels.Chat.GPT4o,
+            weatherTools,
+        )
+
+        // Turn 2 — replay the assistant tool call + a tool result, capture the outbound request.
+        val followUp = Prompt.build("g3-turn2") {
+            user("What's the weather in Sofia?")
+            message(assistantTurn)
+            message(
+                Message.User(
+                    MessagePart.Tool.Result(id = "call_g3", tool = "weather", output = "sunny"),
+                    RequestMetaInfo.create(FixedClock),
+                ),
+            )
+        }
+        client.execute(followUp, OpenAIModels.Chat.GPT4o, weatherTools)
+
+        val body = Json.parseToJsonElement(requireNotNull(capturedBody)).jsonObject
+        val toolCall = body["messages"]!!.jsonArray
+            .first { it.jsonObject["tool_calls"] != null }
+            .jsonObject["tool_calls"]!!.jsonArray[0].jsonObject
+        val signature = toolCall["extra_content"]
+            ?.jsonObject?.get("google")
+            ?.jsonObject?.get("thought_signature")
+            ?.jsonPrimitive?.content
+        assertEquals("SIG_ABC_123", signature, "thought_signature was not echoed back: $toolCall")
+    }
+
+    @Test
+    fun testNonGeminiToolCallHasNoExtraContent() = runTest {
+        // NO-REGRESS: a plain tool call (no extra_content inbound) must NOT add extra_content
+        // outbound, so OpenAI / OpenRouter / Gemini 2.5 requests stay byte-for-byte unchanged.
+        var capturedBody: String? = null
+        val engine = MockEngine { request ->
+            capturedBody = (request.body as TextContent).text
+            respond(
+                content = toolCallWithReasoningBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+        val client = OpenAILLMClient(
+            apiKey = key,
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(engine)),
+            clock = FixedClock,
+        )
+
+        val assistantTurn = client.execute(
+            Prompt.build("plain-turn1") { user("What's the weather in Boston?") },
+            OpenAIModels.Chat.GPT4o,
+            weatherTools,
+        )
+
+        val followUp = Prompt.build("plain-turn2") {
+            user("What's the weather in Boston?")
+            message(assistantTurn)
+            message(
+                Message.User(
+                    MessagePart.Tool.Result(id = "call_abc123", tool = "weather", output = "rainy"),
+                    RequestMetaInfo.create(FixedClock),
+                ),
+            )
+        }
+        client.execute(followUp, OpenAIModels.Chat.GPT4o, weatherTools)
+
+        val body = Json.parseToJsonElement(requireNotNull(capturedBody)).jsonObject
+        val toolCall = body["messages"]!!.jsonArray
+            .first { it.jsonObject["tool_calls"] != null }
+            .jsonObject["tool_calls"]!!.jsonArray[0].jsonObject
+        assertNull(toolCall["extra_content"], "non-Gemini tool call must not carry extra_content")
     }
 }
