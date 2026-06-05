@@ -18,6 +18,8 @@ import kotlinx.serialization.Transient
  * @property resultKind The kind of result produced by the tool, indicating success, failure, or validation error.
  * @property result The result produced by the tool.
  * @property resultObject The raw result object produced by the tool. This value will not survive serialization, hence it should be used with caution and is marked as `@InternalAgentsApi`.
+ * @property parts The content parts of the tool result. When non-null, these are forwarded to the LLM
+ *   client and may include non-text content such as images. When null, [output] is used as plain text.
  */
 @Serializable
 public data class ReceivedToolResult(
@@ -29,6 +31,7 @@ public data class ReceivedToolResult(
     val resultKind: ToolResultKind,
     val result: JSONElement?,
     @property:InternalAgentsApi @property:Transient val resultObject: Any? = null,
+    val parts: List<MessagePart.ContentPart>? = null,
 ) {
     /**
      * Converts the current `ReceivedToolResult` instance into a `MessagePart.Tool.Result` object.
@@ -38,7 +41,7 @@ public data class ReceivedToolResult(
     public fun toMessagePart(): MessagePart.Tool.Result = MessagePart.Tool.Result(
         id = id,
         tool = tool,
-        output = output,
+        parts = parts ?: listOf(MessagePart.Text(output)),
         isError = resultKind !is ToolResultKind.Success // Failure and ValidationError both represent tool errors
     )
 }

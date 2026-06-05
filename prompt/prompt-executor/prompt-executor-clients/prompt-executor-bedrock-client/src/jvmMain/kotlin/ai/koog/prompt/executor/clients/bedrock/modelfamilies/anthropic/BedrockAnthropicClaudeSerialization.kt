@@ -49,7 +49,12 @@ internal object BedrockAnthropicClaudeSerialization {
                     is MessagePart.Attachment -> throw IllegalArgumentException("No attachments are supported in user messages")
                     is MessagePart.Tool.Result -> BedrockAnthropicInvokeModelContent.ToolResult(
                         toolUseId = part.id!!,
-                        content = part.output,
+                        content = part.parts.map { p ->
+                            require(p is MessagePart.Text) {
+                                "Bedrock InvokeModel (legacy) path only supports text content in tool results, got: ${p::class}"
+                            }
+                            BedrockAnthropicInvokeModelContent.Text(p.text)
+                        },
                         isError = part.isError
                     )
                 }

@@ -132,14 +132,14 @@ public sealed interface BedrockAnthropicInvokeModelContent {
      * tool's usage and the returned content.
      *
      * @property toolUseId The unique identifier for the specific tool invocation. This can be used to trace or debug the usage of tools.
-     * @property content The content or result returned by the tool after execution.
+     * @property content The list of content blocks returned by the tool after execution.
      * @property isError Whether this tool result represents an error.
      */
     @Serializable
     @SerialName("tool_result")
     public class ToolResult(
         @SerialName("tool_use_id") public val toolUseId: String,
-        public val content: String,
+        public val content: List<BedrockAnthropicInvokeModelContent>,
         @SerialName("is_error") public val isError: Boolean
     ) : BedrockAnthropicInvokeModelContent
 

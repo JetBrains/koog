@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.google.models.FunctionResponseInlineData
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
@@ -570,12 +571,28 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         }
 
                         is MessagePart.Tool.Result -> {
+                            val inlineParts = mutableListOf<FunctionResponseInlineData>()
+                            val response = buildJsonObject {
+                                part.parts.forEach { p ->
+                                    when (p) {
+                                        is MessagePart.Text -> put("result", p.text)
+                                        is MessagePart.Attachment -> {
+                                            when (val content = p.source.content) {
+                                                is AttachmentContent.Binary ->
+                                                    inlineParts.add(FunctionResponseInlineData(GoogleData.Blob(p.source.mimeType, content.asBytes())))
+                                                else -> logger.warn { "Unsupported attachment content type in tool result for Google: ${content::class}, skipping" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             add(
                                 GooglePart.FunctionResponse(
                                     functionResponse = GoogleData.FunctionResponse(
                                         id = part.id,
                                         name = part.tool,
-                                        response = buildJsonObject { put("result", part.output) }
+                                        response = response,
+                                        parts = inlineParts.ifEmpty { null },
                                     )
                                 )
                             )

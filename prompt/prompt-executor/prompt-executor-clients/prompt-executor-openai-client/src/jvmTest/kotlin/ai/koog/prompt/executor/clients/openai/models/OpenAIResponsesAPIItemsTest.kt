@@ -144,7 +144,7 @@ class OpenAIResponsesAPIItemsTest {
                 ItemPolymorphicSerializer,
                 Item.FunctionToolCallOutput(
                     callId = "call_123",
-                    output = """{"result": "success"}""",
+                    output = JsonPrimitive("""{"result": "success"}"""),
                     id = "output_456",
                     status = OpenAIInputStatus.COMPLETED
                 )
