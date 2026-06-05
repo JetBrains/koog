@@ -83,6 +83,7 @@ class MockWebServer {
         val contentType: ContentType = ContentType.Application.Json,
         val expectedParameters: Map<String, String> = emptyMap(),
         val expectedHeaders: Map<String, String> = emptyMap(),
+        val responseHeaders: Map<String, String> = emptyMap(),
         val lineDelayMillis: Long = 10,
         val onLineWritten: (Int) -> Unit = {},
         val onStreamClosed: () -> Unit = {},
@@ -204,6 +205,9 @@ class MockWebServer {
                             }
                         }
 
+                        config.responseHeaders.forEach { (name, value) ->
+                            call.response.header(name, value)
+                        }
                         call.respondTextWriter(contentType = config.contentType, status = config.statusCode) {
                             try {
                                 config.lines.forEachIndexed { index, line ->

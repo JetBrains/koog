@@ -2,7 +2,6 @@ package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
-import ai.koog.http.client.lowercaseHeaderKeys
 import ai.koog.http.client.mergeHeaders
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
@@ -100,6 +99,10 @@ public class KtorKoogHttpClient internal constructor(
             headers = response.headers.toResponseHeaderMap(),
         )
     }
+
+    // Keys keep Ktor's casing; KoogHttpClientException normalizes them to lowercase itself.
+    private fun Headers.toResponseHeaderMap(): Map<String, List<String>> =
+        entries().associate { it.key to it.value }
 
     private fun HttpRequestBuilder.applyRequestHeaders(headers: Map<String, String>) {
         headers.forEach { (name, value) ->
@@ -256,6 +259,7 @@ public class KtorKoogHttpClient internal constructor(
                         clientName = clientName,
                         statusCode = response.status.value,
                         errorBody = response.bodyAsText(),
+                        headers = response.headers.toResponseHeaderMap(),
                     )
                 }
 

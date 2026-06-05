@@ -459,6 +459,36 @@ abstract class BaseKoogHttpClientTest {
         assertEquals(400, failure.statusCode)
     }
 
+    open fun testCaptureHeadersOnLinesError(): Unit = runTest {
+        mockServer.start(
+            linesEndpoints = listOf(
+                MockWebServer.LinesEndpointConfig(
+                    path = "/stream",
+                    lines = emptyList(),
+                    statusCode = HttpStatusCode.TooManyRequests,
+                    contentType = ContentType.Text.Plain,
+                    responseHeaders = mapOf(
+                        "Retry-After" to "5",
+                        "X-RateLimit-Reset-Tokens" to "6m0s"
+                    )
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val failure = assertThrows<KoogHttpClientException> {
+            client.lines(
+                path = mockServer.url("/stream"),
+                requestBody = "{}"
+            ).toList()
+        }
+        assertEquals(429, failure.statusCode)
+        // Header keys are normalized to lowercase regardless of how the server sent them.
+        assertEquals(listOf("5"), failure.headers["retry-after"])
+        assertEquals(listOf("6m0s"), failure.headers["x-ratelimit-reset-tokens"])
+    }
+
     @Suppress("FunctionName")
     open fun `test lines propagates cancellation`(): Unit = runTest {
         // Given: server that emits up to 1000 lines

@@ -215,6 +215,140 @@ class RetryingLLMClientTest {
     }
 
     @Test
+    fun testRetryAfterHintIsCappedAtMaxDelay() = runTest {
+        // A server-controlled hint must never exceed the user's configured ceiling, otherwise
+        // a misbehaving server could stall the retry loop arbitrarily long (or forever).
+        val error = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "rate limited",
+            message = "rate limited",
+            headers = mapOf("retry-after" to listOf("3600"))
+        )
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = error
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds, maxDelay = 2.seconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(2_000L, elapsed)
+    }
+
+    @Test
+    fun testHugeResetHeaderFallsBackToExponentialBackoff() = runTest {
+        // A reset value that saturates to Duration.INFINITE must be discarded as a hint so the
+        // client backs off normally instead of sleeping forever.
+        val error = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "rate limited",
+            message = "rate limited",
+            headers = mapOf("x-ratelimit-reset-tokens" to listOf("99999999999999999999999999s"))
+        )
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = error
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 50.milliseconds, jitterFactor = 0.0)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(50L, elapsed)
+    }
+
+    @Test
+    fun testOuterWrapperMessageHintUsedWhenInnerHasNone() = runTest {
+        // The wrapper's own message carries the only parseable hint; the wrapped
+        // KoogHttpClientException has no headers and no hint in its message. The retry layer
+        // must fall back to the outer message (the pre-header behavior) instead of silently
+        // using exponential backoff.
+        val inner = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = null,
+            message = "too many requests",
+            headers = emptyMap()
+        )
+        val wrapped = RuntimeException("Error 429 rate limited, retry-after: 6", inner)
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = wrapped
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(6_000L, elapsed)
+    }
+
+    @Test
+    fun testUnwrapsKoogHttpClientExceptionNestedSeveralLevelsDeep() = runTest {
+        // Header metadata must be found regardless of how many wrapper layers a client adds.
+        val httpError = KoogHttpClientException(
+            clientName = "TestClient",
+            statusCode = 429,
+            errorBody = "rate limited",
+            message = "rate limited",
+            headers = mapOf("retry-after" to listOf("3"))
+        )
+        val wrapped = RuntimeException(
+            "Outer wrapper without retry tokens",
+            IllegalStateException("Intermediate wrapper", httpError)
+        )
+
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failure = wrapped
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+        val elapsed = testScheduler.currentTime - startTime
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertEquals(3_000L, elapsed)
+    }
+
+    @Test
     fun testSucceedOnFirstAttempt() = runTest {
         val mockClient = MockLLMClient(
             executeResponse = testResponse

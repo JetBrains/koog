@@ -79,6 +79,10 @@ abstract class JavaKoogHttpClientTestBase : BaseKoogHttpClientTest() {
         super.`test lines surfaces non-2xx as KoogHttpClientException`()
 
     @Test
+    override fun testCaptureHeadersOnLinesError() =
+        super.testCaptureHeadersOnLinesError()
+
+    @Test
     override fun `test lines propagates cancellation`() =
         super.`test lines propagates cancellation`()
 
