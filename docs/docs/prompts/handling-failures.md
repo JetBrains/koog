@@ -227,8 +227,9 @@ to) the error body. OpenAI in particular uses `retry-after`, `x-ratelimit-reset-
 `x-ratelimit-reset-tokens` to signal when a client should back off.
 
 When the underlying HTTP client raises a `KoogHttpClientException`, the exception exposes the
-response headers on its `headers: Map<String, List<String>>` property. Keys are normalized to
-lowercase, so extractors can look them up without re-casing.
+response headers on its `headers: Map<String, List<String>>` property. The exception constructor
+normalizes keys to lowercase, so extractors can look them up without re-casing no matter which
+HTTP client implementation produced the error.
 
 Out of the box, `RetryConfig.retryAfterExtractor` is a `CompositeRetryAfterExtractor` that
 consults `StandardHeaderRetryAfterExtractor` first and falls back to `DefaultRetryAfterExtractor`.
@@ -237,41 +238,44 @@ So a 429 carrying `retry-after: 5` is honored without any extra configuration.
 `StandardHeaderRetryAfterExtractor` understands:
 
 - `retry-after` as either delta-seconds or an IMF-fixdate (RFC 9110 §10.2.3);
-- `x-ratelimit-reset-requests` / `x-ratelimit-reset-tokens` as OpenAI-style durations like
-  `1s`, `6m0s`, `100ms`.
+- `x-ratelimit-reset-requests` / `x-ratelimit-reset-tokens` as Go-style durations like
+  `1s`, `6m0s`, `100ms` (the format OpenAI uses).
 
-When multiple hints are present it returns the smallest strictly-positive delay so the client
-doesn't sleep longer than any of the individual rate-limit buckets require.
-A literal `0`, an expired HTTP-date, or a zero-length OpenAI-style duration is treated as
-"no hint" rather than "retry immediately": the caller falls back to exponential backoff or to
-the next extractor in the composite.
+`retry-after` is authoritative: when it carries a usable delay it wins outright. Only when it is
+absent or unusable are the reset headers consulted, taking the smallest strictly-positive value
+so the client retries as soon as the first rate-limit bucket refills. Every value of a repeated
+header is considered, not just the first. A literal `0`, a negative or expired value, and
+anything that fails to parse are all treated as "no hint" rather than "retry immediately": the
+caller falls back to exponential backoff or to the next extractor in the composite. Whatever the
+hint's source, `RetryingLLMClient` caps the resulting delay at `RetryConfig.maxDelay`, so a
+misbehaving server cannot stall the retry loop beyond the configured bound.
 
-To supply a custom header-aware extractor, implement `RetryAfterExtractor` and override
-`extract(error: KoogHttpClientException)`. Existing single-arg SAM lambdas that only inspect
-the error message continue to work unchanged.
+Retry eligibility follows the same principle: `RetryingLLMClient` matches its retryable patterns
+against both the thrown error's message and the message of any `KoogHttpClientException` found in
+its cause chain, so a provider wrapper whose own message omits the status code still retries when
+the underlying HTTP error is transient.
+
+Provider-specific header names do not require a custom extractor: pass them to
+`StandardHeaderRetryAfterExtractor` directly, as shown below. For full control, implement
+`RetryAfterExtractor` and override `extract(error: KoogHttpClientException)`. Existing single-arg
+SAM lambdas that only inspect the error message continue to work unchanged.
 
 === "Kotlin"
 
     <!--- INCLUDE
-    import ai.koog.http.client.KoogHttpClientException
     import ai.koog.prompt.executor.clients.retry.CompositeRetryAfterExtractor
     import ai.koog.prompt.executor.clients.retry.DefaultRetryAfterExtractor
-    import ai.koog.prompt.executor.clients.retry.RetryAfterExtractor
     import ai.koog.prompt.executor.clients.retry.RetryConfig
-    import kotlin.time.Duration
-    import kotlin.time.Duration.Companion.seconds
-
-    object MyHeaderRetryAfterExtractor : RetryAfterExtractor {
-        override fun extract(message: String): Duration? = null
-        override fun extract(error: KoogHttpClientException): Duration? =
-            error.headers["x-my-retry-after"]?.firstOrNull()?.toLongOrNull()?.seconds
-    }
+    import ai.koog.prompt.executor.clients.retry.StandardHeaderRetryAfterExtractor
     -->
     ```kotlin
-    // Header-aware extractor first, message-based fallback second.
+    // Provider-specific header names first, message-based fallback second.
     val config = RetryConfig(
         retryAfterExtractor = CompositeRetryAfterExtractor(
-            MyHeaderRetryAfterExtractor,
+            StandardHeaderRetryAfterExtractor(
+                retryAfterHeaders = listOf("x-my-retry-after"),
+                resetDurationHeaders = listOf("x-my-ratelimit-reset"),
+            ),
             DefaultRetryAfterExtractor,
         )
     )

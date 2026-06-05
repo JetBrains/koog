@@ -1,10 +1,10 @@
 package ai.koog.prompt.executor.clients.retry
 
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.utils.time.KoogClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -42,7 +42,7 @@ class StandardHeaderRetryAfterExtractorTest {
 
     @Test
     fun testIgnoresRetryAfterZeroAsNonCandidate() {
-        // Zero is not a "nonzero" candidate per the extractor contract; no other hints → null.
+        // Zero means "no usable hint", not "retry immediately"; no other hints -> null.
         assertNull(extractor.extract(error(mapOf("retry-after" to listOf("0")))))
     }
 
@@ -58,23 +58,44 @@ class StandardHeaderRetryAfterExtractorTest {
     }
 
     @Test
+    fun testIgnoresHugeRetryAfterThatSaturatesToInfinite() {
+        // Long.MAX_VALUE seconds saturates to Duration.INFINITE; an infinite "hint" must be
+        // discarded instead of stalling the retry loop forever.
+        assertNull(extractor.extract(error(mapOf("retry-after" to listOf("9223372036854775807")))))
+    }
+
+    @Test
     fun testExtractsHttpDateRetryAfter() {
         // Reference "now" = 2026-01-01T00:00:00Z; server says retry at 2026-01-01T00:00:42Z.
         val now = Instant.parse("2026-01-01T00:00:00Z")
-        val fixedExtractor = StandardHeaderRetryAfterExtractor(clock = fixedClockAt(now))
+        val fixedExtractor = StandardHeaderRetryAfterExtractor(clock = KoogClock { now })
 
         val e = error(mapOf("retry-after" to listOf("Thu, 01 Jan 2026 00:00:42 GMT")))
         assertEquals(42.seconds, fixedExtractor.extract(e))
     }
 
     @Test
-    fun testHttpDateRetryAfterInPastClampsToZeroAndIsIgnored() {
+    fun testHttpDateRetryAfterInPastIsIgnored() {
         val now = Instant.parse("2026-01-01T00:01:00Z")
-        val fixedExtractor = StandardHeaderRetryAfterExtractor(clock = fixedClockAt(now))
+        val fixedExtractor = StandardHeaderRetryAfterExtractor(clock = KoogClock { now })
 
         val e = error(mapOf("retry-after" to listOf("Thu, 01 Jan 2026 00:00:00 GMT")))
-        // Past date → Duration.ZERO → filtered out as non-positive → null.
+        // Past date -> negative delta -> filtered out as non-positive -> null.
         assertNull(fixedExtractor.extract(e))
+    }
+
+    @Test
+    fun testConsidersAllValuesOfRepeatedHeader() {
+        // A merged/repeated header may carry an unusable first value; later usable values
+        // must still be consulted instead of being masked by the first.
+        assertEquals(5.seconds, extractor.extract(error(mapOf("retry-after" to listOf("", "5")))))
+        assertEquals(30.seconds, extractor.extract(error(mapOf("retry-after" to listOf("0", "30")))))
+    }
+
+    @Test
+    fun testParsesCommaFoldedRetryAfter() {
+        // Some proxies fold repeated headers into one comma-separated value.
+        assertEquals(5.seconds, extractor.extract(error(mapOf("retry-after" to listOf("5, 10")))))
     }
 
     @Test
@@ -99,17 +120,37 @@ class StandardHeaderRetryAfterExtractorTest {
 
     @Test
     fun testRejectsMalformedOpenAIDuration() {
-        // Extra characters that don't match any token should reject the whole value.
+        // Values that are not a well-formed duration must reject as a whole.
         assertNull(extractor.extract(error(mapOf("x-ratelimit-reset-tokens" to listOf("6minutes")))))
         assertNull(extractor.extract(error(mapOf("x-ratelimit-reset-tokens" to listOf("1s foo")))))
         assertNull(extractor.extract(error(mapOf("x-ratelimit-reset-tokens" to listOf("")))))
     }
 
     @Test
-    fun testZeroHintSkippedWhenAnotherHintWins() {
-        // A zero-duration hint must be filtered as "no hint" rather than chosen as the
-        // minimum, so the next-smallest positive value wins. Otherwise a server returning
-        // `x-ratelimit-reset-requests: 0s` would clobber a usable retry-after.
+    fun testRejectsNonFiniteResetDuration() {
+        // Duration.parseOrNull accepts "Infinity"; the extractor must not surface it as a hint.
+        assertNull(extractor.extract(error(mapOf("x-ratelimit-reset-tokens" to listOf("Infinity")))))
+        assertNull(
+            extractor.extract(error(mapOf("x-ratelimit-reset-tokens" to listOf("99999999999999999999999999s"))))
+        )
+    }
+
+    @Test
+    fun testRetryAfterPreferredOverResetDurations() {
+        // retry-after is authoritative (RFC 9110): even a much smaller informational bucket
+        // reset must not undercut it and trigger an immediate re-throttled retry.
+        val e = error(
+            mapOf(
+                "retry-after" to listOf("10"),
+                "x-ratelimit-reset-requests" to listOf("500ms"),
+                "x-ratelimit-reset-tokens" to listOf("6m0s")
+            )
+        )
+        assertEquals(10.seconds, extractor.extract(e))
+    }
+
+    @Test
+    fun testZeroResetDurationDoesNotClobberRetryAfter() {
         val e = error(
             mapOf(
                 "retry-after" to listOf("10"),
@@ -120,24 +161,46 @@ class StandardHeaderRetryAfterExtractorTest {
     }
 
     @Test
-    fun testReturnsSmallestNonzeroWhenMultipleHeadersPresent() {
-        val e = error(
+    fun testSmallestResetDurationWinsWhenRetryAfterUnusable() {
+        // With retry-after absent or unusable, the smallest positive bucket reset is the
+        // earliest moment a retry can succeed.
+        val withoutRetryAfter = error(
             mapOf(
-                "retry-after" to listOf("10"),
                 "x-ratelimit-reset-requests" to listOf("500ms"),
                 "x-ratelimit-reset-tokens" to listOf("6m0s")
             )
         )
-        assertEquals(500.milliseconds, extractor.extract(e))
+        assertEquals(500.milliseconds, extractor.extract(withoutRetryAfter))
+
+        val withZeroRetryAfter = error(
+            mapOf(
+                "retry-after" to listOf("0"),
+                "x-ratelimit-reset-tokens" to listOf("2s")
+            )
+        )
+        assertEquals(2.seconds, extractor.extract(withZeroRetryAfter))
     }
 
     @Test
-    fun testIgnoresHeadersWithUppercaseKeysFromCaller() {
-        // Extractor looks headers up by lowercase key. KoogHttpClientException.headers is
-        // contractually lowercase; if a caller builds an exception with uppercase keys by
-        // mistake, the extractor simply finds nothing.
+    fun testNormalizesUppercaseKeysFromCaller() {
+        // KoogHttpClientException lowercases header keys in its constructor, so even an
+        // exception built directly with native-cased keys works with the extractor.
         val e = error(mapOf("Retry-After" to listOf("5")))
-        assertNull(extractor.extract(e))
+        assertEquals(5.seconds, extractor.extract(e))
+    }
+
+    @Test
+    fun testCustomHeaderNames() {
+        // Header names are configurable per provider and lowercased on construction.
+        val custom = StandardHeaderRetryAfterExtractor(
+            retryAfterHeaders = listOf("X-Custom-Retry"),
+            resetDurationHeaders = listOf("x-custom-reset")
+        )
+
+        assertEquals(7.seconds, custom.extract(error(mapOf("x-custom-retry" to listOf("7")))))
+        assertEquals(3.seconds, custom.extract(error(mapOf("x-custom-reset" to listOf("3s")))))
+        // The defaults are replaced, not extended.
+        assertNull(custom.extract(error(mapOf("retry-after" to listOf("5")))))
     }
 
     @Test
@@ -171,9 +234,5 @@ class StandardHeaderRetryAfterExtractorTest {
             headers = emptyMap()
         )
         assertEquals(99.seconds, composite.extract(withoutHeader))
-    }
-
-    private fun fixedClockAt(instant: Instant): Clock = object : Clock {
-        override fun now(): Instant = instant
     }
 }

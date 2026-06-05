@@ -1,15 +1,13 @@
 package ai.koog.prompt.executor.clients.retry
 
 import ai.koog.http.client.KoogHttpClientException
+import ai.koog.utils.time.KoogClock
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmOverloads
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 import kotlin.time.Instant
-import kotlin.time.toDuration
 
 /**
  * Configuration for retry behavior in LLM client operations.
@@ -243,26 +241,40 @@ public object DefaultRetryAfterExtractor : RetryAfterExtractor {
  * Extractor that reads structured rate-limit hints from HTTP response headers attached to a
  * [KoogHttpClientException].
  *
- * Recognized headers (case-insensitive; keys on [KoogHttpClientException.headers] are
- * already normalized to lowercase):
+ * Recognized headers (keys on [KoogHttpClientException.headers] are already normalized to
+ * lowercase; configured names are lowercased on construction):
  *
- * - `retry-after` — integer delta-seconds or an IMF-fixdate (RFC 9110 §10.2.3). Non-integer,
- *   non-date values are ignored.
- * - `x-ratelimit-reset-requests`, `x-ratelimit-reset-tokens` — OpenAI-style durations such as
- *   `1s`, `6m0s`, or `100ms` (RFC 9110 does not standardize these; the format is OpenAI's).
+ * - [retryAfterHeaders] (default `retry-after`) - integer delta-seconds or an IMF-fixdate
+ *   (RFC 9110 §10.2.3). Non-integer, non-date values are ignored.
+ * - [resetDurationHeaders] (default `x-ratelimit-reset-requests`, `x-ratelimit-reset-tokens`) -
+ *   Go-style durations such as `1s`, `6m0s`, or `100ms`, the format OpenAI uses (RFC 9110 does
+ *   not standardize these).
  *
- * When multiple hints are present, the smallest strictly-positive delay wins; otherwise the
- * extractor returns `null` so the caller can fall back to exponential backoff or a secondary
- * extractor (see [CompositeRetryAfterExtractor]).
+ * `retry-after` is authoritative (RFC 9110), so any usable value from [retryAfterHeaders] wins
+ * outright; only when none is present are [resetDurationHeaders] consulted, taking the smallest
+ * strictly-positive value so the client retries as soon as the first bucket refills. Every value
+ * of a repeated header is considered, not just the first. Non-positive, non-finite, and
+ * unparseable values count as "no hint", so the caller can fall back to exponential backoff or
+ * a secondary extractor (see [CompositeRetryAfterExtractor]).
  *
  * This extractor only consults headers; [extract] with a bare message always returns `null`.
  * Compose it with [DefaultRetryAfterExtractor] to retain message-based fallback behavior.
  *
  * @property clock Clock used to evaluate HTTP-date values relative to "now". Override in tests.
+ * @param retryAfterHeaders Names of headers carrying an authoritative delta-seconds or HTTP-date
+ *   delay, consulted first. Defaults to [DEFAULT_RETRY_AFTER_HEADERS].
+ * @param resetDurationHeaders Names of headers carrying informational Go-style reset durations,
+ *   consulted only when no retry-after hint is usable. Defaults to
+ *   [DEFAULT_RESET_DURATION_HEADERS].
  */
-public class StandardHeaderRetryAfterExtractor(
-    private val clock: Clock = Clock.System
+public class StandardHeaderRetryAfterExtractor @JvmOverloads constructor(
+    private val clock: KoogClock = KoogClock.System,
+    retryAfterHeaders: List<String> = DEFAULT_RETRY_AFTER_HEADERS,
+    resetDurationHeaders: List<String> = DEFAULT_RESET_DURATION_HEADERS,
 ) : RetryAfterExtractor {
+
+    private val retryAfterHeaders: List<String> = retryAfterHeaders.map { it.lowercase() }
+    private val resetDurationHeaders: List<String> = resetDurationHeaders.map { it.lowercase() }
 
     override fun extract(message: String): Duration? = null
 
@@ -270,25 +282,40 @@ public class StandardHeaderRetryAfterExtractor(
         val headers = error.headers
         if (headers.isEmpty()) return null
 
-        val candidates = buildList {
-            headers.firstValue("retry-after")?.let { parseRetryAfter(it)?.let(::add) }
-            headers.firstValue("x-ratelimit-reset-requests")?.let { parseOpenAIDuration(it)?.let(::add) }
-            headers.firstValue("x-ratelimit-reset-tokens")?.let { parseOpenAIDuration(it)?.let(::add) }
-        }
+        // retry-after is authoritative per RFC 9110, so it is honored outright; the reset
+        // durations are informational and only consulted when no retry-after value is usable.
+        retryAfterHeaders
+            .flatMap { name -> headers.usableHints(name, ::parseRetryAfter) }
+            .minOrNull()
+            ?.let { return it }
 
-        return candidates.filter { it > Duration.ZERO }.minOrNull()
+        return resetDurationHeaders
+            .flatMap { name -> headers.usableHints(name, ::parseResetDuration) }
+            .minOrNull()
     }
 
-    private fun Map<String, List<String>>.firstValue(name: String): String? =
-        this[name]?.firstOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+    // Considers every value of a (possibly repeated or case-merged) header, keeping only usable
+    // hints: parseable, strictly positive, and finite. Zero, negative, expired-date, and
+    // saturated-to-infinite values are all "no hint" rather than "retry immediately/never".
+    private fun Map<String, List<String>>.usableHints(
+        name: String,
+        parse: (String) -> Duration?
+    ): List<Duration> = this[name].orEmpty().mapNotNull { value ->
+        parse(value.trim())?.takeIf { it > Duration.ZERO && it.isFinite() }
+    }
 
     private fun parseRetryAfter(value: String): Duration? {
-        val trimmed = value.trim()
-        trimmed.toLongOrNull()?.let { return if (it >= 0) it.seconds else null }
-        val target = parseHttpDate(trimmed) ?: return null
-        val now = clock.now()
-        val delta = target - now
-        return if (delta > Duration.ZERO) delta else Duration.ZERO
+        if (value.isEmpty()) return null
+        value.toLongOrNull()?.let { return it.seconds }
+        parseHttpDate(value)?.let { return it - clock.now() }
+        // A proxy may fold repeated delta-seconds into one comma-separated value. An IMF-fixdate
+        // also contains a comma but was matched whole above, so splitting cannot corrupt it.
+        if ("," in value) {
+            return value.split(',')
+                .mapNotNull { part -> part.trim().toLongOrNull()?.seconds?.takeIf { it > Duration.ZERO } }
+                .minOrNull()
+        }
+        return null
     }
 
     /**
@@ -305,33 +332,34 @@ public class StandardHeaderRetryAfterExtractor(
         return runCatching { Instant.parse("$year-$month-${day}T${time}Z") }.getOrNull()
     }
 
-    private fun parseOpenAIDuration(value: String): Duration? {
-        val trimmed = value.trim()
-        if (trimmed.isEmpty()) return null
-        val tokens = DURATION_TOKEN.findAll(trimmed).toList()
-        if (tokens.isEmpty()) return null
-        if (tokens.sumOf { it.value.length } != trimmed.length) return null
-
-        var total = Duration.ZERO
-        for (token in tokens) {
-            val amount = token.groupValues[1].toDoubleOrNull() ?: return null
-            val unit = when (token.groupValues[2].lowercase()) {
-                "ms" -> DurationUnit.MILLISECONDS
-                "s" -> DurationUnit.SECONDS
-                "m" -> DurationUnit.MINUTES
-                "h" -> DurationUnit.HOURS
-                else -> return null
-            }
-            total += amount.toDuration(unit)
-        }
-        return total
-    }
+    /**
+     * Parses a Go-style duration (`1s`, `6m0s`, `100ms`, `7.66s`) the way OpenAI formats its
+     * reset headers. [Duration.parseOrNull] accepts exactly this grammar (plus harmless
+     * supersets such as `1d`); non-finite results like `Infinity` are discarded by the
+     * caller's finiteness guard.
+     */
+    private fun parseResetDuration(value: String): Duration? = Duration.parseOrNull(value)
 
     /**
-     * Companion exposing a shared default instance backed by [Clock.System].
+     * Companion exposing the default header names and a shared default instance backed by
+     * [KoogClock.System].
      */
     public companion object {
-        /** Shared instance using the system clock. */
+        // Note: DEFAULT must stay declared below the header-name lists; companion properties
+        // initialize top to bottom and its constructor defaults read both lists.
+
+        /** Default names of authoritative delay headers: the standard `retry-after` (RFC 9110). */
+        @JvmField
+        public val DEFAULT_RETRY_AFTER_HEADERS: List<String> = listOf("retry-after")
+
+        /** Default names of informational reset-duration headers (OpenAI's rate-limit buckets). */
+        @JvmField
+        public val DEFAULT_RESET_DURATION_HEADERS: List<String> = listOf(
+            "x-ratelimit-reset-requests",
+            "x-ratelimit-reset-tokens",
+        )
+
+        /** Shared instance using the system clock and the default header names. */
         @JvmField
         public val DEFAULT: StandardHeaderRetryAfterExtractor = StandardHeaderRetryAfterExtractor()
 
@@ -348,14 +376,12 @@ public class StandardHeaderRetryAfterExtractor(
             "May" to "05", "Jun" to "06", "Jul" to "07", "Aug" to "08",
             "Sep" to "09", "Oct" to "10", "Nov" to "11", "Dec" to "12"
         )
-
-        private val DURATION_TOKEN = Regex("(\\d+(?:\\.\\d+)?)(ms|h|m|s)", RegexOption.IGNORE_CASE)
     }
 }
 
 /**
  * Runs a list of [RetryAfterExtractor]s in order and returns the first non-null result. Useful
- * for stacking a header-aware extractor over a message-based fallback — the ordering models
+ * for stacking a header-aware extractor over a message-based fallback: the ordering models
  * the idea that structured hints are preferred when present.
  *
  * @param extractors Extractors to consult, in order.

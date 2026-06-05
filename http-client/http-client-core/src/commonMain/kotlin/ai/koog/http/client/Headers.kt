@@ -7,9 +7,9 @@ package ai.koog.http.client
  * a response containing e.g. both `Set-Cookie` and `set-cookie` becomes a single lowercase
  * entry with both values. Empty maps are returned as [emptyMap] to avoid allocation.
  *
- * This matches the contract documented on [KoogHttpClientException.headers] and lets
- * individual HTTP client implementations adapt their native header types without each
- * reinventing the normalization.
+ * [KoogHttpClientException] applies this normalization in its constructor, so HTTP client
+ * implementations can pass their native header maps through as-is; the helper stays public
+ * for consumers that need the same normalization elsewhere.
  */
 public fun Map<String, List<String>>.lowercaseHeaderKeys(): Map<String, List<String>> {
     if (isEmpty()) return emptyMap()
