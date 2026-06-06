@@ -44,9 +44,9 @@ search:
 | `safetyIdentifier` | String | A stable and unique user identifier that may be used to detect users who violate OpenAI policies. |
 # --8<-- [end:safetyIdentifier]
 
-# --8<-- [start:openAIServiceTier]
+# --8<-- [start:serviceTier]
 | `serviceTier` | ServiceTier | OpenAI processing tier selection that lets you prioritize performance over cost or vice versa. For more information, see the API documentation for [ServiceTier](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.ServiceTier). |
-# --8<-- [end:openAIServiceTier]
+# --8<-- [end:serviceTier]
 
 # --8<-- [start:store]
 | `store` | Boolean | If `true`, the provider may store outputs for later retrieval. |

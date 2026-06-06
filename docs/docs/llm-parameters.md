@@ -453,7 +453,7 @@ Here is the complete reference of provider-specific parameters in Koog:
     llm-parameters-snippets.md:promptCacheKey
     llm-parameters-snippets.md:reasoningEffort
     llm-parameters-snippets.md:safetyIdentifier
-    llm-parameters-snippets.md:openAIServiceTier
+    llm-parameters-snippets.md:serviceTier
     llm-parameters-snippets.md:stop
     llm-parameters-snippets.md:store
     llm-parameters-snippets.md:topLogprobs
@@ -473,7 +473,7 @@ Here is the complete reference of provider-specific parameters in Koog:
     llm-parameters-snippets.md:promptCacheKey
     llm-parameters-snippets.md:reasoning
     llm-parameters-snippets.md:safetyIdentifier
-    llm-parameters-snippets.md:openAIServiceTier
+    llm-parameters-snippets.md:serviceTier
     llm-parameters-snippets.md:store
     llm-parameters-snippets.md:topLogprobs
     llm-parameters-snippets.md:topP
