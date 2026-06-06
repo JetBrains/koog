@@ -44,9 +44,9 @@ search:
 | `safetyIdentifier` | String | A stable and unique user identifier that may be used to detect users who violate OpenAI policies. |
 # --8<-- [end:safetyIdentifier]
 
-# --8<-- [start:serviceTier]
+# --8<-- [start:openAIServiceTier]
 | `serviceTier` | ServiceTier | OpenAI processing tier selection that lets you prioritize performance over cost or vice versa. For more information, see the API documentation for [ServiceTier](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.ServiceTier). |
-# --8<-- [end:serviceTier]
+# --8<-- [end:openAIServiceTier]
 
 # --8<-- [start:store]
 | `store` | Boolean | If `true`, the provider may store outputs for later retrieval. |
@@ -128,9 +128,9 @@ search:
 | `mcpServers` | List&lt;AnthropicMCPServerURLDefinition&gt; | Definitions of MCP servers to be used in the request. Supports at most 20 servers. For more information, see the API reference for [AnthropicMCPServerURLDefinition](api:prompt-executor-anthropic-client::ai.koog.prompt.executor.clients.anthropic.models.AnthropicMCPServerURLDefinition). |
 # --8<-- [end:mcpServers]
 
-# --8<-- [start:serviceTier]
+# --8<-- [start:anthropicServiceTier]
 | `serviceTier` | AnthropicServiceTier | Determines whether to use priority capacity (if available) or standard capacity for the request. For more information, see the API reference for [AnthropicServiceTier](api:prompt-executor-anthropic-client::ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier) and Anthropic's [Service tiers](https://platform.claude.com/docs/en/api/service-tiers) documentation. |
-# --8<-- [end:serviceTier]
+# --8<-- [end:anthropicServiceTier]
 
 # --8<-- [start:thinking]
 | `thinking` | AnthropicThinking | Configuration for activating Claude's extended thinking. When activated, responses also include thinking content blocks. For more information, see the API reference for [AnthropicThinking](api:prompt-executor-anthropic-client::ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking). |
@@ -139,6 +139,10 @@ search:
 # --8<-- [start:thinkingConfig]
 | `thinkingConfig` | GoogleThinkingConfig | Controls whether the model should expose its chain-of-thought and how many tokens it may spend on it. For more information, see the API reference for [GoogleThinkingConfig](api:prompt-executor-google-client::ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig). |
 # --8<-- [end:thinkingConfig]
+
+# --8<-- [start:googleServiceTier]
+| `serviceTier` | GoogleServiceTier | Google processing tier selection that lets you balance cost and reliability for synchronous GenerateContent requests. For more information, see the API reference for [GoogleServiceTier](api:prompt-executor-google-client::ai.koog.prompt.executor.clients.google.models.GoogleServiceTier) and Google's [Gemini API optimization and inference](https://ai.google.dev/gemini-api/docs/optimization) documentation. |
+# --8<-- [end:googleServiceTier]
 
 # --8<-- [start:enableSearch]
 | `enableSearch` | Boolean | Specifies whether to enable web search functionality. For more information, see Alibaba's [Web search](https://www.alibabacloud.com/help/en/model-studio/web-search?spm=a2c63.p38356.0.i14) documentation. |
