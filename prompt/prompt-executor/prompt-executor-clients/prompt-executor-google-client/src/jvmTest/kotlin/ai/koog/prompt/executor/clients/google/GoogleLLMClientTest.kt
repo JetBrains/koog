@@ -264,7 +264,7 @@ class GoogleLLMClientTest {
         gen.candidateCount shouldBe 2
         gen.topP shouldBe 0.8
         gen.topK shouldBe 10
-        gen.serviceTier shouldBe GoogleServiceTier.FLEX
+        request.serviceTier shouldBe GoogleServiceTier.FLEX
         gen.thinkingConfig?.includeThoughts shouldBe true
         gen.thinkingConfig?.thinkingBudget shouldBe 99
         gen.additionalProperties shouldNotBe null

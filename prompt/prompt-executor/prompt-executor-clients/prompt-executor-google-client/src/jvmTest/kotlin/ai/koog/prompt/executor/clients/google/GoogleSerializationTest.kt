@@ -31,8 +31,7 @@ class GoogleSerializationTest {
                 temperature = 0.7,
                 candidateCount = 1,
                 topP = 0.9,
-                topK = 40,
-                serviceTier = GoogleServiceTier.PRIORITY
+                topK = 40
             )
 
             val jsonElement = json.encodeToJsonElement(request)
@@ -44,8 +43,26 @@ class GoogleSerializationTest {
             jsonObject["candidateCount"]?.jsonPrimitive?.intOrNull shouldBe 1
             jsonObject["topP"]?.jsonPrimitive?.doubleOrNull shouldBe 0.9
             jsonObject["topK"]?.jsonPrimitive?.intOrNull shouldBe 40
-            jsonObject["service_tier"]?.jsonPrimitive?.contentOrNull shouldBe "priority"
+            jsonObject["serviceTier"] shouldBe null
             jsonObject["additionalProperties"] shouldBe null
+        }
+
+    @Test
+    fun `test request serialization with serviceTier`() =
+        runWithBothJsonConfigurations("request serialization with serviceTier") { json ->
+            val request = GoogleRequest(
+                contents = emptyList(),
+                serviceTier = GoogleServiceTier.PRIORITY
+            )
+
+            json.encodeToString(GoogleRequest.serializer(), request) shouldEqualJson
+                // language=json
+                """
+            {
+                "contents": [],
+                "serviceTier": "priority"
+            }
+                """.trimIndent()
         }
 
     @Test
@@ -94,8 +111,7 @@ class GoogleSerializationTest {
                 "temperature": 0.7,
                 "candidateCount": 1,
                 "topP": 0.9,
-                "topK": 40,
-                "service_tier": "flex"
+                "topK": 40
             }
                 """.trimIndent()
 
@@ -110,8 +126,27 @@ class GoogleSerializationTest {
             request.candidateCount shouldBe 1
             request.topP shouldBe 0.9
             request.topK shouldBe 40
-            request.serviceTier shouldBe GoogleServiceTier.FLEX
             request.additionalProperties shouldBe null
+        }
+
+    @Test
+    fun `test request deserialization with serviceTier`() =
+        runWithBothJsonConfigurations("request deserialization with serviceTier") { json ->
+            val jsonString =
+                // language=json
+                """
+            {
+                "contents": [],
+                "serviceTier": "flex"
+            }
+                """.trimIndent()
+
+            val request: GoogleRequest = verifyDeserialization(
+                payload = jsonString,
+                json = json
+            )
+
+            request.serviceTier shouldBe GoogleServiceTier.FLEX
         }
 
     @Test

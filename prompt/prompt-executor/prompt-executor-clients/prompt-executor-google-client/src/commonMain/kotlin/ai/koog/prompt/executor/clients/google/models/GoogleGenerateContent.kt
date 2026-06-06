@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonObject
  * Supported `Tools` are `Function` and `codeExecution`.
  * @property systemInstruction Developer set system instruction(s). Text only.
  * @property generationConfig Configuration options for model generation and outputs.
+ * @property serviceTier Processing tier selection for cost/reliability trade-offs.
  */
 @Serializable
 internal class GoogleRequest(
@@ -33,6 +34,7 @@ internal class GoogleRequest(
     @Serializable(with = GoogleGenerationConfigSerializer::class)
     val generationConfig: GoogleGenerationConfig? = null,
     val toolConfig: GoogleToolConfig? = null,
+    val serviceTier: GoogleServiceTier? = null,
 )
 
 /**
@@ -305,7 +307,6 @@ internal class GoogleFunctionDeclaration(
  * @property candidateCount The number of reply choices to generate.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
- * @property serviceTier Processing tier selection for cost/reliability trade-offs.
  * @property thinkingConfig Controls whether the model should expose its chain-of-thought
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
  */
@@ -320,8 +321,6 @@ internal class GoogleGenerationConfig(
     val candidateCount: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
-    @SerialName("service_tier")
-    val serviceTier: GoogleServiceTier? = null,
     val thinkingConfig: GoogleThinkingConfig? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 )
