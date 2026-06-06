@@ -382,6 +382,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             candidateCount = if (model.supports(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
             topP = googleParams.topP,
             topK = googleParams.topK,
+            serviceTier = googleParams.serviceTier,
             thinkingConfig = googleParams.thinkingConfig,
             additionalProperties = googleParams.additionalProperties
         )

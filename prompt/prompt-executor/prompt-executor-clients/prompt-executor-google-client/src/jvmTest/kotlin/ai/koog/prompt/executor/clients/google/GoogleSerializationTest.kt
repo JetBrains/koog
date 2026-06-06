@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleServiceTier
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.test.utils.runWithBothJsonConfigurations
 import ai.koog.test.utils.verifyDeserialization
@@ -30,7 +31,8 @@ class GoogleSerializationTest {
                 temperature = 0.7,
                 candidateCount = 1,
                 topP = 0.9,
-                topK = 40
+                topK = 40,
+                serviceTier = GoogleServiceTier.PRIORITY
             )
 
             val jsonElement = json.encodeToJsonElement(request)
@@ -42,6 +44,7 @@ class GoogleSerializationTest {
             jsonObject["candidateCount"]?.jsonPrimitive?.intOrNull shouldBe 1
             jsonObject["topP"]?.jsonPrimitive?.doubleOrNull shouldBe 0.9
             jsonObject["topK"]?.jsonPrimitive?.intOrNull shouldBe 40
+            jsonObject["service_tier"]?.jsonPrimitive?.contentOrNull shouldBe "priority"
             jsonObject["additionalProperties"] shouldBe null
         }
 
@@ -91,7 +94,8 @@ class GoogleSerializationTest {
                 "temperature": 0.7,
                 "candidateCount": 1,
                 "topP": 0.9,
-                "topK": 40
+                "topK": 40,
+                "service_tier": "flex"
             }
                 """.trimIndent()
 
@@ -106,6 +110,7 @@ class GoogleSerializationTest {
             request.candidateCount shouldBe 1
             request.topP shouldBe 0.9
             request.topK shouldBe 40
+            request.serviceTier shouldBe GoogleServiceTier.FLEX
             request.additionalProperties shouldBe null
         }
 

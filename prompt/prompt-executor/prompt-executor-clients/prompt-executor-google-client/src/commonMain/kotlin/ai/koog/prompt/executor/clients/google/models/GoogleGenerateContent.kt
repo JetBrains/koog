@@ -305,6 +305,7 @@ internal class GoogleFunctionDeclaration(
  * @property candidateCount The number of reply choices to generate.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
+ * @property serviceTier Processing tier selection for cost/reliability trade-offs.
  * @property thinkingConfig Controls whether the model should expose its chain-of-thought
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
  */
@@ -319,9 +320,39 @@ internal class GoogleGenerationConfig(
     val candidateCount: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
+    @SerialName("service_tier")
+    val serviceTier: GoogleServiceTier? = null,
     val thinkingConfig: GoogleThinkingConfig? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 )
+
+/**
+ * Service tier used to process a Google GenerateContent request.
+ *
+ * - [STANDARD]: Standard pricing and reliability.
+ * - [FLEX]: Cost-optimized best-effort processing for latency-tolerant workloads.
+ * - [PRIORITY]: Reliability-optimized processing for critical workloads.
+ */
+@Serializable
+public enum class GoogleServiceTier {
+    /**
+     * Standard synchronous processing. Serialized as `"standard"`.
+     */
+    @SerialName("standard")
+    STANDARD,
+
+    /**
+     * Cost-optimized best-effort processing. Serialized as `"flex"`.
+     */
+    @SerialName("flex")
+    FLEX,
+
+    /**
+     * Reliability-optimized processing. Serialized as `"priority"`.
+     */
+    @SerialName("priority")
+    PRIORITY,
+}
 
 /**
  * Configuration for tool calling
