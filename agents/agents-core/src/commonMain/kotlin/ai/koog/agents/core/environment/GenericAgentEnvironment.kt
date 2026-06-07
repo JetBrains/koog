@@ -14,12 +14,17 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Represents base agent environment with generic abstractions.
+ *
+ * @param toolFailurePresenter Controls the text re-injected into the LLM context when a tool call fails
+ *        with a generic (non-[ToolException]) [Throwable]. Defaults to [ToolFailurePresenter.Default],
+ *        which preserves the legacy behavior of forwarding the raw [Throwable.message].
  */
 public class GenericAgentEnvironment(
     private val agentId: String,
     private val logger: KLogger,
     private val toolRegistry: ToolRegistry,
     private val serializer: JSONSerializer,
+    private val toolFailurePresenter: ToolFailurePresenter = ToolFailurePresenter.Default,
 ) : AIAgentEnvironment {
 
     override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult =
@@ -69,7 +74,7 @@ public class GenericAgentEnvironment(
                 tool = toolName,
                 toolArgs = JSONObject(emptyMap()),
                 toolDescription = null,
-                output = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                output = presentFailure(toolName, ToolFailureStage.ArgumentParsing, e),
                 resultKind = ToolResultKind.Failure(e),
                 result = null,
                 resultObject = null
@@ -105,7 +110,7 @@ public class GenericAgentEnvironment(
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
-                output = "Tool with name '$toolName' failed to parse arguments due to the error: ${e.message}",
+                output = presentFailure(toolName, ToolFailureStage.ArgumentParsing, e),
                 resultKind = ToolResultKind.Failure(e),
                 result = null,
                 resultObject = null
@@ -136,7 +141,7 @@ public class GenericAgentEnvironment(
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
-                output = "Tool with name '$toolName' failed to execute due to the error: ${e.message}!",
+                output = presentFailure(toolName, ToolFailureStage.Execution, e),
                 resultKind = ToolResultKind.Failure(e),
                 result = null,
                 resultObject = null
@@ -159,7 +164,7 @@ public class GenericAgentEnvironment(
                 tool = toolName,
                 toolArgs = toolArgsJson,
                 toolDescription = toolDescription,
-                output = "Tool with name '$toolName' failed to serialize result due to the error: ${e.message}!",
+                output = presentFailure(toolName, ToolFailureStage.ResultSerialization, e),
                 resultKind = ToolResultKind.Failure(e),
                 result = null,
                 resultObject = null
@@ -178,6 +183,9 @@ public class GenericAgentEnvironment(
             parts = parts,
         )
     }
+
+    private fun presentFailure(toolName: String, stage: ToolFailureStage, error: Throwable): String =
+        toolFailurePresenter.present(ToolFailure(toolName, stage, error))
 
     private fun formatLog(message: String): String =
         "(agent id: $agentId) $message"

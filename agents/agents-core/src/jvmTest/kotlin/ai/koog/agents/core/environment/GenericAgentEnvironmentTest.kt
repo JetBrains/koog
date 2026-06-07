@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -50,6 +51,16 @@ class GenericAgentEnvironmentTest {
     ) {
         override suspend fun execute(args: RequiredArgs): String {
             error("boom")
+        }
+    }
+
+    private class SecretLeakingTool : SimpleTool<RequiredArgs>(
+        argsType = typeToken<RequiredArgs>(),
+        name = "secret_leaking_tool",
+        description = "Tool that throws an exception carrying sensitive text in its message.",
+    ) {
+        override suspend fun execute(args: RequiredArgs): String {
+            throw IllegalStateException("secret=hunter2")
         }
     }
 
@@ -263,6 +274,111 @@ class GenericAgentEnvironmentTest {
 
         val messagePart = result.toMessagePart()
         assertEquals("ok:value", (messagePart.parts.single() as MessagePart.Text).text)
+    }
+
+    @Test
+    fun testDefaultPresenterForwardsRawExceptionMessage() = runTest {
+        val environment = GenericAgentEnvironment(
+            agentId = "test_agent",
+            logger = KotlinLogging.logger { },
+            toolRegistry = ToolRegistry { tool(SecretLeakingTool()) },
+            serializer = serializer,
+        )
+
+        val result = environment.executeTool(
+            MessagePart.Tool.Call(
+                id = "1",
+                tool = "secret_leaking_tool",
+                args = """{"required":"value"}""",
+            )
+        )
+
+        // Backward-compatible default: the raw exception message is re-injected verbatim.
+        assertTrue(result.resultKind is ToolResultKind.Failure)
+        assertTrue(result.output.contains("secret=hunter2"))
+    }
+
+    @Test
+    fun testCustomPresenterReplacesRawExceptionMessage() = runTest {
+        val environment = GenericAgentEnvironment(
+            agentId = "test_agent",
+            logger = KotlinLogging.logger { },
+            toolRegistry = ToolRegistry { tool(SecretLeakingTool()) },
+            serializer = serializer,
+            toolFailurePresenter = ToolFailurePresenter { failure ->
+                "The tool '${failure.toolName}' failed at stage ${failure.stage}."
+            },
+        )
+
+        val result = environment.executeTool(
+            MessagePart.Tool.Call(
+                id = "1",
+                tool = "secret_leaking_tool",
+                args = """{"required":"value"}""",
+            )
+        )
+
+        val failure = result.resultKind
+        assertTrue(failure is ToolResultKind.Failure)
+
+        // The model only sees the sanitized text...
+        assertEquals(
+            "The tool 'secret_leaking_tool' failed at stage ${ToolFailureStage.Execution}.",
+            result.output,
+        )
+        assertFalse(result.output.contains("secret=hunter2"))
+
+        // ...while the host still observes the original throwable through the result kind (and, in a full
+        // agent run, through the event-handler feature's onToolCallFailed event).
+        assertEquals("secret=hunter2", failure.error?.message)
+    }
+
+    @Test
+    fun testCustomPresenterCanReuseDefaultMessage() = runTest {
+        val environment = GenericAgentEnvironment(
+            agentId = "test_agent",
+            logger = KotlinLogging.logger { },
+            toolRegistry = ToolRegistry { tool(SecretLeakingTool()) },
+            serializer = serializer,
+            toolFailurePresenter = ToolFailurePresenter { it.defaultMessage },
+        )
+
+        val result = environment.executeTool(
+            MessagePart.Tool.Call(
+                id = "1",
+                tool = "secret_leaking_tool",
+                args = """{"required":"value"}""",
+            )
+        )
+
+        assertTrue(result.resultKind is ToolResultKind.Failure)
+        assertEquals(
+            "Tool with name 'secret_leaking_tool' failed to execute due to the error: secret=hunter2!",
+            result.output,
+        )
+    }
+
+    @Test
+    fun testCustomPresenterIsNotAppliedToToolValidationErrors() = runTest {
+        val environment = GenericAgentEnvironment(
+            agentId = "test_agent",
+            logger = KotlinLogging.logger { },
+            toolRegistry = ToolRegistry { tool(ValidationTool()) },
+            serializer = serializer,
+            toolFailurePresenter = ToolFailurePresenter { "redacted" },
+        )
+
+        val result = environment.executeTool(
+            MessagePart.Tool.Call(
+                id = "1",
+                tool = "validation_tool",
+                args = """{"required":"value"}""",
+            )
+        )
+
+        // ToolException messages are author-controlled validation guidance and bypass the presenter.
+        assertTrue(result.resultKind is ToolResultKind.ValidationError)
+        assertEquals("Invalid arguments", result.output)
     }
 
     @Test

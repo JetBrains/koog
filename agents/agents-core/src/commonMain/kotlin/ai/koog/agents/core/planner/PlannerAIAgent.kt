@@ -140,6 +140,7 @@ public class PlannerAIAgent<Input, Output>(
             logger = logger,
             toolRegistry = toolRegistry,
             serializer = agentConfig.serializer,
+            toolFailurePresenter = agentConfig.toolFailurePresenter,
         )
 
         return baseEnvironment

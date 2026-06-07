@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent.config
 
 import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.ToolFailurePresenter
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
@@ -26,6 +27,7 @@ public actual class AIAgentConfig actual constructor(
     public actual val missingToolsConversionStrategy: MissingToolsConversionStrategy,
     public actual val responseProcessor: ResponseProcessor?,
     public actual val serializer: JSONSerializer,
+    public actual val toolFailurePresenter: ToolFailurePresenter,
 ) : AIAgentConfigBase {
 
     /**
@@ -59,8 +61,17 @@ public actual class AIAgentConfig actual constructor(
         missingToolsConversionStrategy: MissingToolsConversionStrategy =
             MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
         responseProcessor: ResponseProcessor? = null,
-        serializer: JSONSerializer = JacksonSerializer()
-    ) : this(prompt, model, maxAgentIterations, missingToolsConversionStrategy, responseProcessor, serializer) {
+        serializer: JSONSerializer = JacksonSerializer(),
+        toolFailurePresenter: ToolFailurePresenter = ToolFailurePresenter.Default
+    ) : this(
+        prompt,
+        model,
+        maxAgentIterations,
+        missingToolsConversionStrategy,
+        responseProcessor,
+        serializer,
+        toolFailurePresenter
+    ) {
         strategyExecutor?.let { strategyDispatcher = it.asCoroutineDispatcher() }
         llmRequestExecutor?.let { llmRequestDispatcher = it.asCoroutineDispatcher() }
     }
@@ -75,14 +86,16 @@ public actual class AIAgentConfig actual constructor(
         maxAgentIterations: Int,
         missingToolsConversionStrategy: MissingToolsConversionStrategy,
         responseProcessor: ResponseProcessor?,
-        serializer: JSONSerializer
+        serializer: JSONSerializer,
+        toolFailurePresenter: ToolFailurePresenter
     ): AIAgentConfig = AIAgentConfig(
         prompt = prompt,
         model = model,
         maxAgentIterations = maxAgentIterations,
         missingToolsConversionStrategy = missingToolsConversionStrategy,
         responseProcessor = responseProcessor,
-        serializer = serializer
+        serializer = serializer,
+        toolFailurePresenter = toolFailurePresenter
     ).also {
         it.strategyDispatcher = this.strategyDispatcher
         it.llmRequestDispatcher = this.llmRequestDispatcher
@@ -145,7 +158,8 @@ public actual class AIAgentConfig actual constructor(
             public var responseProcessor: ResponseProcessor? = null,
             internal var strategyExecutor: Executor? = null,
             internal var llmRequestExecutor: Executor? = null,
-            internal var serializer: JSONSerializer = JacksonSerializer()
+            internal var serializer: JSONSerializer = JacksonSerializer(),
+            internal var toolFailurePresenter: ToolFailurePresenter = ToolFailurePresenter.Default
         ) {
             /**
              * Sets serializer for underlying tool calls and LLM requests
@@ -154,6 +168,15 @@ public actual class AIAgentConfig actual constructor(
              * */
             public fun serializer(serializer: JSONSerializer): AIAgentConfigBuilder =
                 apply { this.serializer = serializer }
+
+            /**
+             * Sets the presenter that decides what text is fed back to the LLM when a tool call fails with a
+             * generic (non-[ai.koog.agents.core.tools.ToolException]) exception.
+             *
+             * @param presenter The [ToolFailurePresenter] used to sanitize or replace tool-failure messages.
+             */
+            public fun toolFailurePresenter(presenter: ToolFailurePresenter): AIAgentConfigBuilder =
+                apply { this.toolFailurePresenter = presenter }
 
             /**
              * Sets the prompt configuration for the AI agent.
@@ -220,7 +243,8 @@ public actual class AIAgentConfig actual constructor(
                 responseProcessor = responseProcessor,
                 strategyExecutor = strategyExecutor,
                 llmRequestExecutor = llmRequestExecutor,
-                serializer = serializer
+                serializer = serializer,
+                toolFailurePresenter = toolFailurePresenter
             )
         }
     }

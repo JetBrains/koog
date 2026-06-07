@@ -65,7 +65,18 @@ public class ContextualAgentEnvironment(
 
             val tool = toolCall.tool
             val toolArgs = JSONObject(emptyMap())
-            val message = "Failed to parse tool arguments: ${e.message}"
+            // Route the model-facing text through the configured presenter so a host can sanitize the raw
+            // parser exception before it reaches the prompt. The legacy wording is supplied as the default so
+            // that ToolFailurePresenter.Default stays byte-for-byte backward compatible. The original
+            // throwable is still handed to onToolValidationFailed below, preserving host visibility.
+            val message = context.config.toolFailurePresenter.present(
+                ToolFailure(
+                    toolName = tool,
+                    stage = ToolFailureStage.ArgumentParsing,
+                    error = e,
+                    defaultMessageOverride = "Failed to parse tool arguments: ${e.message}",
+                )
+            )
             context.pipeline.onToolValidationFailed(
                 eventId = eventId,
                 executionInfo = context.executionInfo,
