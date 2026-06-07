@@ -191,6 +191,41 @@ class LangfuseSpanAdapterTest {
     }
 
     @Test
+    fun `onBeforeSpanFinished emits token usage as langfuse usage_details`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val inferenceSpan = createInferenceSpan(provider)
+
+        // endInferenceSpan sets these standard gen_ai.usage.* integer attributes before the
+        // adapter's onBeforeSpanFinished runs.
+        inferenceSpan.addAttribute(GenAIAttributes.Usage.InputTokens(25))
+        inferenceSpan.addAttribute(GenAIAttributes.Usage.OutputTokens(2))
+        inferenceSpan.addAttribute(GenAIAttributes.Usage.TotalTokens(27))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        // Token usage is re-emitted as the Langfuse-native usage_details JSON-object string...
+        assertEquals(
+            """{"input":25,"output":2,"total":27}""",
+            inferenceSpan.attributes.requireValue("langfuse.observation.usage_details"),
+        )
+        // ...while the OTel-standard integer attributes are left untouched for spec-compliant backends.
+        assertEquals(25, inferenceSpan.attributes.filterIsInstance<GenAIAttributes.Usage.InputTokens>().single().tokens)
+        assertEquals(2, inferenceSpan.attributes.filterIsInstance<GenAIAttributes.Usage.OutputTokens>().single().tokens)
+    }
+
+    @Test
+    fun `onBeforeSpanFinished adds no usage_details when usage attributes are absent`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        assertEquals(0, inferenceSpan.attributes.count { it.key == "langfuse.observation.usage_details" })
+    }
+
+    @Test
     fun `onBeforeSpanStarted adds langgraph metadata to node execute spans`() {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 

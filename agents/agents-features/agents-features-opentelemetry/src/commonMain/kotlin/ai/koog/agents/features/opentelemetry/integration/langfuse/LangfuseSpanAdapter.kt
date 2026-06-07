@@ -98,12 +98,47 @@ internal class LangfuseSpanAdapter(
                 outputMessagesAttr?.messages?.forEachIndexed { index, message ->
                     applyCompletionAttributes(span, index, message)
                 }
+
+                // Emit token usage in the Langfuse-native `langfuse.observation.usage_details` shape.
+                applyUsageDetails(span)
             }
             else -> {}
         }
     }
 
     //region Private Methods
+
+    /**
+     * Re-emits the standard `gen_ai.usage.*` token counts as Langfuse's native
+     * [`langfuse.observation.usage_details`](https://langfuse.com/integrations/native/opentelemetry)
+     * attribute (a JSON object string), so Langfuse records token usage and computes cost.
+     *
+     * Langfuse does not pick up the OTel-standard `gen_ai.usage.input_tokens` / `output_tokens`
+     * integer attributes that [endInferenceSpan][ai.koog.agents.features.opentelemetry.span.endInferenceSpan]
+     * sets (its OTLP/JSON ingestion does not decode the spec-mandated string-encoded `int64`
+     * `intValue` — see https://github.com/langfuse/langfuse/issues/14068), so without this the
+     * Langfuse exporter always reports 0 tokens / 0 cost. The standard `gen_ai.usage.*` attributes
+     * are left untouched for spec-compliant backends.
+     */
+    private fun applyUsageDetails(span: GenAIAgentSpan) {
+        val inputTokens = span.attributes.filterIsInstance<GenAIAttributes.Usage.InputTokens>().firstOrNull()?.tokens
+        val outputTokens = span.attributes.filterIsInstance<GenAIAttributes.Usage.OutputTokens>().firstOrNull()?.tokens
+        val totalTokens = span.attributes.filterIsInstance<GenAIAttributes.Usage.TotalTokens>().firstOrNull()?.tokens
+
+        if (inputTokens == null && outputTokens == null && totalTokens == null) {
+            return
+        }
+
+        val usageDetails = JsonObject(
+            buildMap {
+                inputTokens?.let { put("input", JsonPrimitive(it)) }
+                outputTokens?.let { put("output", JsonPrimitive(it)) }
+                totalTokens?.let { put("total", JsonPrimitive(it)) }
+            }
+        )
+
+        span.addAttribute(CustomAttribute("langfuse.observation.usage_details", usageDetails.toString()))
+    }
 
     private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
         when (message) {
