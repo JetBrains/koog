@@ -123,10 +123,12 @@ class JacksonSerializerTest {
     fun testDecodeFromJSONElementLosesGenericTypeParameters() {
         data class Person(val name: String, val age: Int)
 
-        val jsonElement = JSONArray(listOf(
-            JSONObject(mapOf("name" to JSONPrimitive("Alice"), "age" to JSONPrimitive(30))),
-            JSONObject(mapOf("name" to JSONPrimitive("Bob"), "age" to JSONPrimitive(25))),
-        ))
+        val jsonElement = JSONArray(
+            listOf(
+                JSONObject(mapOf("name" to JSONPrimitive("Alice"), "age" to JSONPrimitive(30))),
+                JSONObject(mapOf("name" to JSONPrimitive("Bob"), "age" to JSONPrimitive(25))),
+            )
+        )
 
         val fromElement: List<Person> = serializer.decodeFromJSONElement(jsonElement, typeToken<List<Person>>())
         fromElement.first().name shouldBe "Alice"
