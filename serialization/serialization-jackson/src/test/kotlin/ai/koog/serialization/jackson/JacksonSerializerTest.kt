@@ -4,6 +4,7 @@ import ai.koog.serialization.JSONArray
 import ai.koog.serialization.JSONLiteral
 import ai.koog.serialization.JSONNull
 import ai.koog.serialization.JSONObject
+import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.typeToken
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldEqualJson
@@ -117,6 +118,25 @@ class JacksonSerializerTest {
     data class Third(
         val baz: String
     )
+
+    @Test
+    fun testDecodeFromJSONElementLosesGenericTypeParameters() {
+        data class Person(val name: String, val age: Int)
+
+        val jsonElement = JSONArray(
+            listOf(
+                JSONObject(mapOf("name" to JSONPrimitive("Alice"), "age" to JSONPrimitive(30))),
+                JSONObject(mapOf("name" to JSONPrimitive("Bob"), "age" to JSONPrimitive(25))),
+            )
+        )
+
+        val fromElement: List<Person> = serializer.decodeFromJSONElement(jsonElement, typeToken<List<Person>>())
+        fromElement.first().name shouldBe "Alice"
+
+        val json = """[{"name":"Alice","age":30},{"name":"Bob","age":25}]"""
+        val fromString: List<Person> = serializer.decodeFromString(json, typeToken<List<Person>>())
+        fromString.first().name shouldBe "Alice"
+    }
 
     @Test
     fun testSerializeDeserializeGenericClassesWithManuallyConstructedTypeTokens() {
