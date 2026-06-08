@@ -439,16 +439,19 @@ sealed interface <#A: kotlin/Any?> ai.koog.agents.core.agent/AIAgentState { // a
 
 sealed interface ai.koog.agents.core.agent.entity/ToolSelectionStrategy { // ai.koog.agents.core.agent.entity/ToolSelectionStrategy|null[0]
     final class AutoSelectForTask : ai.koog.agents.core.agent.entity/ToolSelectionStrategy { // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask|null[0]
-        constructor <init>(kotlin/String, ai.koog.prompt.executor.model/StructureFixingParser? = ...) // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.<init>|<init>(kotlin.String;ai.koog.prompt.executor.model.StructureFixingParser?){}[0]
+        constructor <init>(kotlin/String, ai.koog.prompt.executor.model/StructureFixingParser? = ..., kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>? = ...) // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.<init>|<init>(kotlin.String;ai.koog.prompt.executor.model.StructureFixingParser?;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>?){}[0]
 
         final val fixingParser // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.fixingParser|{}fixingParser[0]
             final fun <get-fixingParser>(): ai.koog.prompt.executor.model/StructureFixingParser? // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.fixingParser.<get-fixingParser>|<get-fixingParser>(){}[0]
         final val subtaskDescription // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.subtaskDescription|{}subtaskDescription[0]
             final fun <get-subtaskDescription>(): kotlin/String // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.subtaskDescription.<get-subtaskDescription>|<get-subtaskDescription>(){}[0]
+        final val tools // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.tools|{}tools[0]
+            final fun <get-tools>(): kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>? // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.tools.<get-tools>|<get-tools>(){}[0]
 
         final fun component1(): kotlin/String // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.component1|component1(){}[0]
         final fun component2(): ai.koog.prompt.executor.model/StructureFixingParser? // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.component2|component2(){}[0]
-        final fun copy(kotlin/String = ..., ai.koog.prompt.executor.model/StructureFixingParser? = ...): ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.copy|copy(kotlin.String;ai.koog.prompt.executor.model.StructureFixingParser?){}[0]
+        final fun component3(): kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>? // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., ai.koog.prompt.executor.model/StructureFixingParser? = ..., kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>? = ...): ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.copy|copy(kotlin.String;ai.koog.prompt.executor.model.StructureFixingParser?;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>?){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.agents.core.agent.entity/ToolSelectionStrategy.AutoSelectForTask.toString|toString(){}[0]
