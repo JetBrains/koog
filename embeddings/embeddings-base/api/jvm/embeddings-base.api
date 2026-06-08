@@ -1,6 +1,11 @@
 public abstract interface class ai/koog/embeddings/base/Embedder {
 	public abstract fun diff (Lai/koog/embeddings/base/Vector;Lai/koog/embeddings/base/Vector;)D
 	public abstract fun embed (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/embeddings/base/Embedder$DefaultImpls {
+	public static fun embed (Lai/koog/embeddings/base/Embedder;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/embeddings/base/Vector {

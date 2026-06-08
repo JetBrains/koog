@@ -9,6 +9,7 @@
 abstract interface ai.koog.embeddings.base/Embedder { // ai.koog.embeddings.base/Embedder|null[0]
     abstract fun diff(ai.koog.embeddings.base/Vector, ai.koog.embeddings.base/Vector): kotlin/Double // ai.koog.embeddings.base/Embedder.diff|diff(ai.koog.embeddings.base.Vector;ai.koog.embeddings.base.Vector){}[0]
     abstract suspend fun embed(kotlin/String): ai.koog.embeddings.base/Vector // ai.koog.embeddings.base/Embedder.embed|embed(kotlin.String){}[0]
+    open suspend fun embed(kotlin.collections/List<kotlin/String>): kotlin.collections/List<ai.koog.embeddings.base/Vector> // ai.koog.embeddings.base/Embedder.embed|embed(kotlin.collections.List<kotlin.String>){}[0]
 }
 
 final class ai.koog.embeddings.base/Vector { // ai.koog.embeddings.base/Vector|null[0]

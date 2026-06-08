@@ -29,6 +29,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
+import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingBatchRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIModelsResponse
@@ -525,13 +526,38 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     }
 
     /**
-     * Batch embedding is not supported by the OpenAI API.
+     * Embeds the given batch of text using the OpenAI embeddings API.
      *
-     * @throws UnsupportedOperationException Always thrown.
+     * @param inputs The text to embed.
+     * @param model The model to use for embedding. Must have the Embed capability.
+     * @return A list of floating-point values representing the embedding.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
     override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> {
-        logger.warn { "Batch embedding is not supported by OpenAI API" }
-        throw UnsupportedOperationException("Batch embedding is not supported by OpenAI API.")
+        model.requireCapability(LLMCapability.Embed)
+
+        logger.debug { "Embedding text with model: ${model.id}" }
+
+        if (inputs.isEmpty()) return emptyList()
+
+        val request = OpenAIEmbeddingBatchRequest(model = model.id, input = inputs)
+
+        val openAIResponse = try {
+            httpClient.post(
+                path = settings.embeddingsPath,
+                requestBody = request,
+                requestBodyType = OpenAIEmbeddingBatchRequest::class,
+                responseType = OpenAIEmbeddingResponse::class,
+            )
+        } catch (e: Exception) {
+            throw LLMClientException(clientName = clientName, message = e.message, cause = e)
+        }
+
+        require(openAIResponse.data.size == inputs.size) {
+            "Expected ${inputs.size} embeddings but got ${openAIResponse.data.size}"
+        }
+
+        return openAIResponse.data.sortedBy { it.index }.map { it.embedding }
     }
 
     /**
