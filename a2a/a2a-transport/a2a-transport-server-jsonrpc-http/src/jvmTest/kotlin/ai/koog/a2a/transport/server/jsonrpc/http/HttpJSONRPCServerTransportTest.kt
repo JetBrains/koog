@@ -474,7 +474,7 @@ class HttpJSONRPCServerTransportTest {
         }
 
         testServerMethodStreaming(
-            method = A2AMethod.ResubscribeTask,
+            method = A2AMethod.SubscribeToTask,
             request = request,
             expectedResponses = expectedResponses,
         )
@@ -504,7 +504,7 @@ class HttpJSONRPCServerTransportTest {
         )
 
         testServerMethod(
-            method = A2AMethod.SetTaskPushNotificationConfig,
+            method = A2AMethod.CreateTaskPushNotificationConfig,
             request = request,
             expectedResponse = expectedResponse,
         )

@@ -126,7 +126,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
                 A2AMethod.CancelTask.value ->
                     requestHandler.onCancelTask(request.toRequest(), ctx).toJSONRPCSuccessResponse()
 
-                A2AMethod.SetTaskPushNotificationConfig.value ->
+                A2AMethod.CreateTaskPushNotificationConfig.value ->
                     requestHandler.onSetTaskPushNotificationConfig(request.toRequest(), ctx).toJSONRPCSuccessResponse()
 
                 A2AMethod.GetTaskPushNotificationConfig.value ->
@@ -158,7 +158,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
             A2AMethod.SendMessageStreaming.value ->
                 requestHandler.onSendMessageStreaming(request.toRequest(), ctx)
 
-            A2AMethod.ResubscribeTask.value ->
+            A2AMethod.SubscribeToTask.value ->
                 requestHandler.onResubscribeTask(request.toRequest(), ctx)
 
             else ->

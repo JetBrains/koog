@@ -1,33 +1,40 @@
 package ai.koog.a2a.transport.jsonrpc
 
 import ai.koog.a2a.exceptions.A2AException
-import ai.koog.a2a.exceptions.createA2AException
+import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.ResponseEvent
+import ai.koog.a2a.model.CancelTaskRequest
+import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetExtendedAgentCardRequest
+import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetTaskRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
+import ai.koog.a2a.model.ListTasksRequest
+import ai.koog.a2a.model.ListTasksResponse
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.SendMessageRequest
+import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
-import ai.koog.a2a.model.TaskPushNotificationConfigParams
-import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.ClientTransport
-import ai.koog.a2a.transport.Request
-import ai.koog.a2a.transport.RequestId
-import ai.koog.a2a.transport.Response
-import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
-import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
+import ai.koog.a2a.transport.jsonrpc.model.RequestId
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.serializer
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Abstract transport implementation for JSON-RPC-based client communication.
@@ -51,131 +58,137 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     ): Flow<JSONRPCResponse>
 
     /**
-     * Convert generic [Request] to [JSONRPCRequest].
+     * Convert generic request to [JSONRPCRequest].
+     * You can override this method to customize request conversion, e.g., custom request id generation.
+     *
+     * @param request Request to convert.
+     * @param serializer Serializer for the generic request.
+     * @param method JSON-RPC method name
      */
-    protected inline fun <reified T> Request<T>.toJSONRPCRequest(method: A2AMethod): JSONRPCRequest {
+    @OptIn(ExperimentalUuidApi::class)
+    protected open fun <T> toJSONRPCRequest(
+        request: T,
+        serializer: KSerializer<T>,
+        method: A2AMethod,
+    ): JSONRPCRequest {
         return JSONRPCRequest(
-            id = id,
+            id = RequestId.StringId(Uuid.random().toString()),
             method = method.value,
-            params = JSONRPCJson.encodeToJsonElement<T>(data),
+            params = JSONRPCJson.encodeToJsonElement(serializer, request),
             jsonrpc = JSONRPC_VERSION,
         )
     }
 
     /**
-     * Convert [JSONRPCResponse] to generic [Response].
+     * Convert [JSONRPCResponse] to generic response.
+     * You can override this method to customize response conversion, e.g., error handling.
      *
-     * @throws A2AException if server returned an error.
+     * @param response Response to convert.
+     * @param serializer Serializer for the generic response.
+     * @throws A2AException if server returned an error, i.e., [JSONRPCErrorResponse]
      */
-    protected inline fun <reified T> JSONRPCResponse.toResponse(): Response<T> {
-        return when (this) {
-            is JSONRPCSuccessResponse -> Response(
-                id = id,
-                data = JSONRPCJson.decodeFromJsonElement(result),
-            )
+    protected open fun <T> toResponse(
+        response: JSONRPCResponse,
+        serializer: KSerializer<T>,
+    ): T {
+        return when (response) {
+            is JSONRPCSuccessResponse ->
+                JSONRPCJson.decodeFromJsonElement(serializer, response.result)
 
-            is JSONRPCErrorResponse -> {
-                throw error.toA2AException(id)
+            is JSONRPCErrorResponse -> response.error.let {
+                val details = JSONRPCJson.decodeFromJsonElement(ListSerializer(ErrorData.serializer()), it.data)
+                throw A2AException.create(it.message, it.code, details)
             }
         }
     }
 
-    protected fun JSONRPCError.toA2AException(id: RequestId?): A2AException {
-        return createA2AException(message, code, id)
-    }
-
     /**
-     * Generic request processing.
+     * Generic request processing that uses [toJSONRPCRequest] and [toResponse].
      */
     protected suspend inline fun <reified TRequest, reified TResponse> request(
         method: A2AMethod,
-        request: Request<TRequest>,
+        request: TRequest,
         ctx: ClientCallContext
-    ): Response<TResponse> {
-        val jsonrpcRequest = request.toJSONRPCRequest(method)
+    ): TResponse {
+        val jsonrpcRequest = toJSONRPCRequest(request, serializer<TRequest>(), method)
         val jsonrpcResponse = request(jsonrpcRequest, ctx)
 
-        return jsonrpcResponse.toResponse<TResponse>()
+        return toResponse(jsonrpcResponse, serializer<TResponse>())
     }
 
     /**
-     * Generic streaming request processing.
+     * Generic streaming request processing that uses [toJSONRPCRequest] and [toResponse].
      */
     protected inline fun <reified TRequest, reified TResponse> requestStreaming(
         method: A2AMethod,
-        request: Request<TRequest>,
+        request: TRequest,
         ctx: ClientCallContext
-    ): Flow<Response<TResponse>> {
-        val jsonrpcRequest = request.toJSONRPCRequest(method)
+    ): Flow<TResponse> {
+        val jsonrpcRequest = toJSONRPCRequest(request, serializer<TRequest>(), method)
         val jsonrpcResponse = requestStreaming(jsonrpcRequest, ctx)
 
         return jsonrpcResponse
-            .map { it.toResponse<TResponse>() }
+            .map { toResponse(it, serializer<TResponse>()) }
             .onCompletion { thr ->
-                // Do not let wrap A2A exceptions, propagate them directly
+                // Do not wrap A2A exceptions, propagate them directly
                 if (thr?.cause is A2AException) {
                     throw thr.cause!!
                 }
             }
     }
 
-    override suspend fun getAuthenticatedExtendedAgentCard(
-        request: Request<Nothing?>,
+    override suspend fun getExtendedAgentCard(
+        request: GetExtendedAgentCardRequest,
         ctx: ClientCallContext
-    ): Response<AgentCard> =
-        request(A2AMethod.GetAuthenticatedExtendedAgentCard, request, ctx)
+    ): AgentCard = request(A2AMethod.GetAuthenticatedExtendedAgentCard, request, ctx)
 
     override suspend fun sendMessage(
-        request: Request<SendMessageRequest>,
+        request: SendMessageRequest,
         ctx: ClientCallContext
-    ): Response<ResponseEvent> =
-        request(A2AMethod.SendMessage, request, ctx)
+    ): ResponseEvent = request(A2AMethod.SendMessage, request, ctx)
 
     override fun sendMessageStreaming(
-        request: Request<SendMessageRequest>,
+        request: SendMessageRequest,
         ctx: ClientCallContext
-    ): Flow<Response<Event>> =
-        requestStreaming(A2AMethod.SendMessageStreaming, request, ctx)
+    ): Flow<Event> = requestStreaming(A2AMethod.SendMessageStreaming, request, ctx)
 
     override suspend fun getTask(
-        request: Request<TaskQueryParams>,
+        request: GetTaskRequest,
         ctx: ClientCallContext
-    ): Response<Task> =
-        request(A2AMethod.GetTask, request, ctx)
+    ): Task = request(A2AMethod.GetTask, request, ctx)
+
+    override suspend fun listTasks(
+        request: ListTasksRequest,
+        ctx: ClientCallContext
+    ): ListTasksResponse = request(A2AMethod.ListTasks, request, ctx)
 
     override suspend fun cancelTask(
-        request: Request<TaskIdParams>,
+        request: CancelTaskRequest,
         ctx: ClientCallContext
-    ): Response<Task> =
-        request(A2AMethod.CancelTask, request, ctx)
+    ): Task = request(A2AMethod.CancelTask, request, ctx)
 
-    override fun resubscribeTask(
-        request: Request<TaskIdParams>,
+    override fun subscribeToTask(
+        request: SubscribeToTaskRequest,
         ctx: ClientCallContext
-    ): Flow<Response<Event>> =
-        requestStreaming(A2AMethod.ResubscribeTask, request, ctx)
+    ): Flow<Event> = requestStreaming(A2AMethod.SubscribeToTask, request, ctx)
 
-    override suspend fun setTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfig>,
+    override suspend fun createTaskPushNotificationConfig(
+        request: TaskPushNotificationConfig,
         ctx: ClientCallContext
-    ): Response<TaskPushNotificationConfig> =
-        request(A2AMethod.SetTaskPushNotificationConfig, request, ctx)
+    ): TaskPushNotificationConfig = request(A2AMethod.CreateTaskPushNotificationConfig, request, ctx)
 
     override suspend fun getTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfigParams>,
+        request: GetTaskPushNotificationConfigRequest,
         ctx: ClientCallContext
-    ): Response<TaskPushNotificationConfig> =
-        request(A2AMethod.GetTaskPushNotificationConfig, request, ctx)
+    ): TaskPushNotificationConfig = request(A2AMethod.GetTaskPushNotificationConfig, request, ctx)
 
-    override suspend fun listTaskPushNotificationConfig(
-        request: Request<TaskIdParams>,
+    override suspend fun listTaskPushNotificationConfigs(
+        request: ListTaskPushNotificationConfigsRequest,
         ctx: ClientCallContext
-    ): Response<List<TaskPushNotificationConfig>> =
-        request(A2AMethod.ListTaskPushNotificationConfig, request, ctx)
+    ): ListTaskPushNotificationConfigsResponse = request(A2AMethod.ListTaskPushNotificationConfig, request, ctx)
 
     override suspend fun deleteTaskPushNotificationConfig(
-        request: Request<TaskPushNotificationConfigParams>,
+        request: DeleteTaskPushNotificationConfigRequest,
         ctx: ClientCallContext
-    ): Response<Nothing?> =
-        request(A2AMethod.DeleteTaskPushNotificationConfig, request, ctx)
+    ): Unit = request(A2AMethod.DeleteTaskPushNotificationConfig, request, ctx)
 }
