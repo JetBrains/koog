@@ -42,16 +42,23 @@ kotlin {
         val cap = target.targetName.replaceFirstChar { it.uppercase() } // e.g. IosArm64
         val outDir = layout.buildDirectory.dir("swiftShim/${target.targetName}")
 
+        // ios14.0 = K/N's default floor (minVersion.ios in konan.properties), so
+        // consumer links never warn about newer object files. FoundationModels is
+        // iOS-26-only: the shim #available-gates it and the .def weak-links it.
         val (sdk, triple) = when (target.konanTarget) {
-            KonanTarget.IOS_ARM64 -> "iphoneos" to "arm64-apple-ios26.0"
-            KonanTarget.IOS_SIMULATOR_ARM64 -> "iphonesimulator" to "arm64-apple-ios26.0-simulator"
-            KonanTarget.IOS_X64 -> "iphonesimulator" to "x86_64-apple-ios26.0-simulator"
+            KonanTarget.IOS_ARM64 -> "iphoneos" to "arm64-apple-ios14.0"
+            KonanTarget.IOS_SIMULATOR_ARM64 -> "iphonesimulator" to "arm64-apple-ios14.0-simulator"
+            KonanTarget.IOS_X64 -> "iphonesimulator" to "x86_64-apple-ios14.0-simulator"
             else -> error("Unexpected target ${target.konanTarget}")
         }
 
         val swiftcTask = tasks.register<Exec>("swiftc$cap") {
             onlyIf { OperatingSystem.current().isMacOsX }
             inputs.file(swiftSrc)
+            // doFirst assembles the command line (sdk path lookup), so Gradle cannot
+            // see it; track the varying parts so flag/triple changes invalidate the .a.
+            inputs.property("triple", triple)
+            inputs.property("runtimeCompatibility", "none+no-concurrency-autolink")
             outputs.dir(outDir)
             executable = "xcrun"
             doFirst {
@@ -68,6 +75,11 @@ kotlin {
                     "-module-name", "KoogFMBridge",
                     "-o", dir.resolve("libKoogFMBridge.a").absolutePath,
                     "-swift-version", "6", "-strict-concurrency=complete",
+                    // Below an iOS 15 target, swiftc autolinks Swift back-deploy compat
+                    // archives from the Xcode toolchain, where K/N's linker never looks.
+                    // Safe to opt out: the shim runs Swift only behind #available(iOS 26).
+                    "-runtime-compatibility-version", "none",
+                    "-Xfrontend", "-disable-autolinking-runtime-compatibility-concurrency",
                     swiftSrc.asFile.absolutePath,
                 )
             }
@@ -93,14 +105,6 @@ kotlin {
                 dependsOn(swiftcTask)
                 inputs.dir(outDir)
             }
-
-        // FoundationModels is iOS-26-only: raise the K/N deployment floor on the
-        // compilation so cinterop + compileKotlin*Native type the 26-only @objc symbol.
-        mainCompilation.compileTaskProvider.configure {
-            compilerOptions.freeCompilerArgs.add(
-                "-Xoverride-konan-properties=osVersionMin.${target.konanTarget.name}=26.0",
-            )
-        }
     }
 }
 

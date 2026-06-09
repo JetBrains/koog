@@ -10,10 +10,11 @@ import kotlin.coroutines.resumeWithException
 /**
  * Production [FoundationModelsSession] backed by the bundled `@objc` shim.
  *
- * The 26-only [KoogFMBridge] is constructed lazily so merely instantiating this class
- * on a sub-26 OS does not touch the gated Obj-C symbol; [availabilityToken] is the
- * first thing the client calls. Cancellation is one-sided in this POC: cancelling the
- * coroutine unsuspends the continuation, but the Swift `Task` keeps running.
+ * The shim class is un-gated and FoundationModels is weak-linked, so constructing
+ * [KoogFMBridge] (or calling [availabilityToken]) is safe on any OS version — pre-26
+ * systems get the stable `"osVersionTooOld"` token instead of a crash. Cancellation is
+ * one-sided in this POC: cancelling the coroutine unsuspends the continuation, but the
+ * Swift `Task` keeps running.
  */
 internal class CInteropFoundationModelsSession : FoundationModelsSession {
     private val bridge by lazy { KoogFMBridge() }

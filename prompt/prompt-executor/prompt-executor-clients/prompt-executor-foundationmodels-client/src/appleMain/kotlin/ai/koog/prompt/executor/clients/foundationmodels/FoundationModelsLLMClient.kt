@@ -29,7 +29,11 @@ public class FoundationModelsLLMClient internal constructor(
     /** Turnkey constructor: binds the bundled on-device Foundation Models session. */
     public constructor() : this(defaultFoundationModelsSession())
 
-    /** Reports whether the on-device model can run right now, without executing anything. */
+    /**
+     * Reports whether the on-device model can run right now, without executing anything.
+     * Safe to call on any OS version: pre-26 systems report
+     * [FoundationModelsAvailability.Unavailable.OSVersionTooOld].
+     */
     public fun availability(): FoundationModelsAvailability =
         foundationModelsAvailabilityFromToken(session.availabilityToken())
 

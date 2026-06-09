@@ -1,13 +1,22 @@
 import Foundation
 import FoundationModels
 
-@available(iOS 26.0, *)
+/// Un-gated `@objc` surface over the iOS-26-only FoundationModels framework.
+///
+/// The class itself carries no `@available` attribute and the framework is weak-linked
+/// (see the `.def` linkerOpts), so loading and constructing it is safe on any OS the
+/// consuming app supports. Every entry point gates internally with `#available` and
+/// reports pre-26 systems via the stable `"osVersionTooOld"` token instead of crashing.
 @objc public final class KoogFMBridge: NSObject {
     /// Returns nil when the on-device model is available, else a stable token consumed
     /// by the Kotlin side (`foundationModelsAvailabilityFromToken`):
     /// `"deviceNotEligible"`, `"appleIntelligenceNotEnabled"`, `"modelNotReady"`,
-    /// or `"unknown:<detail>"` for future framework cases.
+    /// `"osVersionTooOld"`, or `"unknown:<detail>"` for future framework cases.
     @objc public func availabilityToken() -> String? {
+        guard #available(iOS 26.0, *) else {
+            return "osVersionTooOld"
+        }
+
         switch SystemLanguageModel.default.availability {
         case .available:
             return nil
@@ -29,6 +38,11 @@ import FoundationModels
         instructions: String?,
         completion: @escaping @Sendable (String?, String?) -> Void
     ) {
+        guard #available(iOS 26.0, *) else {
+            completion(nil, "Foundation Models requires iOS 26 (osVersionTooOld)")
+            return
+        }
+
         Task {
             do {
                 let session =

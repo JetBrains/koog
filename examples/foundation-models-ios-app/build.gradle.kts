@@ -27,14 +27,6 @@ kotlin {
         target.binaries.framework {
             baseName = "FoundationModelsSmoke"
         }
-
-        // FoundationModels is iOS-26-only; mirror the FM client's K/N deployment-floor
-        // override on the main compilation.
-        target.compilations.getByName("main").compileTaskProvider.configure {
-            compilerOptions.freeCompilerArgs.add(
-                "-Xoverride-konan-properties=osVersionMin.${target.konanTarget.name}=26.0",
-            )
-        }
     }
 }
 
