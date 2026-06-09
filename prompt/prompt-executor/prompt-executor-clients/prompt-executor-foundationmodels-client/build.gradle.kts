@@ -30,29 +30,10 @@ kotlin {
 
     explicitApi()
 
-    // --- FoundationModels @objc Swift shim + hand-written cinterop wiring ---
-    // This is the repo's first cinterop/Swift integration. For each iOS target we:
-    //   1. compile src/appleInterop/swift/KoogFMBridge.swift with `swiftc` into a static
-    //      lib + Obj-C header (per-target SDK + triple),
-    //   2. feed that header to a hand-written cinterop (.def) to generate Kotlin bindings,
-    //   3. link the static lib + FoundationModels.framework into every binary.
-    // Verified on this machine (Xcode 26.3, Swift 6.2.4, iPhoneSimulator26.2 SDK): the
-    // simulator/device/x64 swiftc + cinterop + link all succeed with the flags below and need
-    // no extra Swift-runtime -L paths at LINK time. They do need one -rpath at RUNTIME so the
-    // statically-linked Swift shim can load libswift_Concurrency.dylib etc. — see the -rpath
-    // note on target.binaries.all{} below (first surfaces when a simulator test that links the
-    // shim is actually run, not at link time).
-    //
-    // NOTE for the integration author (Task 6): the `foundationModels` cinterop is created
-    // on each iOS target, so its generated bindings are visible ONLY from the leaf
-    // `iosArm64Main` / `iosSimulatorArm64Main` / `iosX64Main` source sets — NOT from shared
-    // `appleMain`. This is intentional: the cinterop-touching binding (CInteropFoundationModelsSession)
-    // lives in those three leaf source sets and is surfaced to appleMain via an
-    // `internal expect fun defaultFoundationModelsSession()` factory (actual per leaf target).
-    // All other client logic stays in appleMain and never references the binding directly.
-    // Do NOT enable `kotlin.mpp.enableCInteropCommonization` — the design (spec §5c) deliberately
-    // rejects that repo-global experimental flag for this first beta cinterop; the
-    // "CInterop Commonization Disabled" warning KGP prints is expected and benign.
+    // Per target: swiftc compiles the Swift shim into a static lib + Obj-C header;
+    // cinterop embeds the lib into the klib and carries the link flags, so downstream
+    // binaries link with no extra wiring. Bindings are leaf-source-set-only; appleMain
+    // reaches them via the expect/actual defaultFoundationModelsSession().
     val swiftSrc = layout.projectDirectory.file("src/appleInterop/swift/KoogFMBridge.swift")
 
     // iosArm64() / iosSimulatorArm64() / iosX64() are already registered by the
@@ -95,55 +76,30 @@ kotlin {
         val mainCompilation = target.compilations.getByName("main")
 
         mainCompilation.cinterops.create("foundationModels") {
-            // KGP 2.3.10 exposes the `definitionFile` Property (confirmed: `defFile` is the
-            // deprecated alias). The .def lists only `headers = KoogFMBridge.h`; the include
-            // dir for that header is injected here via compilerOpts so the .def stays
-            // machine-independent.
+            // The .def carries the machine-independent pieces; this block injects the
+            // per-target header/library search paths. Keep -rpath on /usr/lib/swift
+            // (the OS Swift runtime): the toolchain's swift-5.5 overlay loads a second
+            // runtime and duplicates objc classes.
             definitionFile.set(layout.projectDirectory.file("src/nativeInterop/cinterop/foundationModels.def"))
             compilerOpts("-I${outDir.get().asFile.absolutePath}")
+            extraOpts("-libraryPath", outDir.get().asFile.absolutePath)
         }
 
-        // The generated cinterop task is `cinteropFoundationModels<Target>`
-        // (e.g. cinteropFoundationModelsIosSimulatorArm64), confirmed during the spike.
-        // Use matching/configureEach so a name mismatch fails loudly rather than silently
-        // skipping the swiftc dependency.
+        // cinterop's built-in up-to-date inputs cover the .def only, not the header/.a
+        // it embeds from outDir; track them so a shim rebuild re-embeds instead of
+        // shipping a stale klib. dependsOn also guarantees the .a exists on first build.
         tasks.matching { it.name == "cinteropFoundationModels$cap" }
-            .configureEach { dependsOn(swiftcTask) }
+            .configureEach {
+                dependsOn(swiftcTask)
+                inputs.dir(outDir)
+            }
 
-        // Raise the iOS deployment floor to 26 (FoundationModels is iOS-26-only). This is a
-        // K/N COMPILER-property override and must apply during cinterop + compileKotlin*Native
-        // (which run before linking and first type the 26-only @objc symbol), so it goes on the
-        // COMPILATION, not on binaries.all{}. The per-target konan property key is
-        // osVersionMin.<konanTarget.name> (ios_arm64 / ios_simulator_arm64 / ios_x64).
+        // FoundationModels is iOS-26-only: raise the K/N deployment floor on the
+        // compilation so cinterop + compileKotlin*Native type the 26-only @objc symbol.
         mainCompilation.compileTaskProvider.configure {
             compilerOptions.freeCompilerArgs.add(
                 "-Xoverride-konan-properties=osVersionMin.${target.konanTarget.name}=26.0",
             )
-        }
-
-        // Link the static shim + the framework into every binary; the link must also wait for
-        // the .a so `-lKoogFMBridge` resolves.
-        //
-        // -rpath /usr/lib/swift: the static Swift shim references the Swift runtime
-        // (libswift_Concurrency.dylib etc. — KoogFMBridge uses `Task`/async). The OS ships those
-        // dylibs in `/usr/lib/swift`: on a real iOS-26 device that is the literal path, and on the
-        // simulator the loader reroots it under the runtime root via DYLD_ROOT_PATH
-        // (…/<runtime>.simruntime/Contents/Resources/RuntimeRoot/usr/lib/swift). This is the OS's
-        // own copy, so it loads exactly once. Do NOT point this at the Xcode toolchain's
-        // usr/lib/swift-5.5 overlay — that loads a second, back-deploy runtime alongside the OS
-        // one and triggers "Class … implemented in both …" objc duplicate-class warnings
-        // ("may cause spurious casting failures and mysterious crashes"). First surfaces when a
-        // simulator TEST that links the shim is actually run (Task 7), not at link time.
-        target.binaries.all {
-            linkerOpts(
-                "-L${outDir.get().asFile.absolutePath}",
-                "-lKoogFMBridge",
-                "-framework",
-                "FoundationModels",
-                "-rpath",
-                "/usr/lib/swift",
-            )
-            linkTaskProvider.configure { dependsOn(swiftcTask) }
         }
     }
 }

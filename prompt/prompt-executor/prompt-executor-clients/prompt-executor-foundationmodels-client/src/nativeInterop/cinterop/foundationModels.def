@@ -1,3 +1,5 @@
 package = foundationModels
 language = Objective-C
 headers = KoogFMBridge.h
+staticLibraries = libKoogFMBridge.a
+linkerOpts = -framework FoundationModels -rpath /usr/lib/swift
