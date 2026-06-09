@@ -5,7 +5,7 @@ package ai.koog.prompt.executor.clients.foundationmodels
  * logic runs green on the simulator with no model present.
  */
 internal class FakeFoundationModelsSession(
-    private val unavailableReason: String? = null,
+    private val unavailableToken: String? = null,
     private val response: String = "",
     private val error: String? = null,
 ) : FoundationModelsSession {
@@ -14,7 +14,7 @@ internal class FakeFoundationModelsSession(
     var lastInstructions: String? = null
         private set
 
-    override fun availabilityReason(): String? = unavailableReason
+    override fun availabilityToken(): String? = unavailableToken
 
     override suspend fun respond(prompt: String, instructions: String?): String {
         lastPrompt = prompt

@@ -15,9 +15,12 @@ import ai.koog.prompt.message.Message
  * write no Swift. Phase-1 supports single-shot [execute] with availability gating;
  * streaming, tools, structured output and moderation are not yet implemented.
  *
- * Construct with [AppleLLModels.SystemDefault] and register under [AppleLLMProvider]
- * in a `MultiLLMPromptExecutor` (ideally with a network fallback for when FM is
- * unavailable — [execute] throws [FoundationModelsException.Unavailable] then).
+ * Check [availability] before routing prompts here: `MultiLLMPromptExecutor` falls back
+ * only for providers with **no registered client**, so register this client (and select
+ * [AppleLLModels.SystemDefault]) only when [availability] reports
+ * [FoundationModelsAvailability.Available], and point `FallbackPromptExecutorSettings`
+ * at a cloud provider for the rest. Calling [execute] while unavailable throws
+ * [FoundationModelsException.Unavailable] carrying the same typed reason.
  */
 public class FoundationModelsLLMClient internal constructor(
     private val session: FoundationModelsSession,
@@ -26,16 +29,25 @@ public class FoundationModelsLLMClient internal constructor(
     /** Turnkey constructor: binds the bundled on-device Foundation Models session. */
     public constructor() : this(defaultFoundationModelsSession())
 
+    /** Reports whether the on-device model can run right now, without executing anything. */
+    public fun availability(): FoundationModelsAvailability =
+        foundationModelsAvailabilityFromToken(session.availabilityToken())
+
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
     ): Message.Assistant {
-        session.availabilityReason()?.let { throw FoundationModelsException.Unavailable(it) }
+        val availability = availability()
+        if (availability is FoundationModelsAvailability.Unavailable) {
+            throw FoundationModelsException.Unavailable(availability)
+        }
         val input = prompt.toFoundationModelsInput()
         val content = session.respond(input.text, input.instructions)
         return foundationModelsAssistantMessage(content)
     }
+
+    override suspend fun models(): List<LLModel> = AppleLLModels.models
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult =
         throw UnsupportedOperationException("Moderation is not supported for Apple Foundation Models")

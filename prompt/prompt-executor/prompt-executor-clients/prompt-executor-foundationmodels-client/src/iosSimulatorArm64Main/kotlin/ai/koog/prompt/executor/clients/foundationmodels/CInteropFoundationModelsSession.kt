@@ -11,14 +11,14 @@ import kotlin.coroutines.resumeWithException
  * Production [FoundationModelsSession] backed by the bundled `@objc` shim.
  *
  * The 26-only [KoogFMBridge] is constructed lazily so merely instantiating this class
- * on a sub-26 OS does not touch the gated Obj-C symbol; [availabilityReason] is the
+ * on a sub-26 OS does not touch the gated Obj-C symbol; [availabilityToken] is the
  * first thing the client calls. Cancellation is one-sided in this POC: cancelling the
  * coroutine unsuspends the continuation, but the Swift `Task` keeps running.
  */
 internal class CInteropFoundationModelsSession : FoundationModelsSession {
     private val bridge by lazy { KoogFMBridge() }
 
-    override fun availabilityReason(): String? = bridge.availabilityReason()
+    override fun availabilityToken(): String? = bridge.availabilityToken()
 
     override suspend fun respond(prompt: String, instructions: String?): String =
         suspendCancellableCoroutine { cont ->

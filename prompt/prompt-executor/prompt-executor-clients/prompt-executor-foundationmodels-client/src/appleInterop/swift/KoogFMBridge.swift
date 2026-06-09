@@ -3,13 +3,22 @@ import FoundationModels
 
 @available(iOS 26.0, *)
 @objc public final class KoogFMBridge: NSObject {
-    /// Returns nil when the on-device model is available, else a human-readable reason.
-    @objc public func availabilityReason() -> String? {
+    /// Returns nil when the on-device model is available, else a stable token consumed
+    /// by the Kotlin side (`foundationModelsAvailabilityFromToken`):
+    /// `"deviceNotEligible"`, `"appleIntelligenceNotEnabled"`, `"modelNotReady"`,
+    /// or `"unknown:<detail>"` for future framework cases.
+    @objc public func availabilityToken() -> String? {
         switch SystemLanguageModel.default.availability {
         case .available:
             return nil
+        case .unavailable(.deviceNotEligible):
+            return "deviceNotEligible"
+        case .unavailable(.appleIntelligenceNotEnabled):
+            return "appleIntelligenceNotEnabled"
+        case .unavailable(.modelNotReady):
+            return "modelNotReady"
         case .unavailable(let reason):
-            return "\(reason)"
+            return "unknown:\(reason)"
         }
     }
 
@@ -22,7 +31,8 @@ import FoundationModels
     ) {
         Task {
             do {
-                let session = instructions.map { LanguageModelSession(instructions: $0) }
+                let session =
+                    instructions.map { LanguageModelSession(instructions: $0) }
                     ?? LanguageModelSession()
                 let response = try await session.respond(to: prompt)
                 completion(response.content, nil)

@@ -7,8 +7,11 @@ package ai.koog.prompt.executor.clients.foundationmodels
  * shared `appleMain` source set without the commonizer).
  */
 internal interface FoundationModelsSession {
-    /** Null when the on-device model is available, else a human-readable reason. */
-    fun availabilityReason(): String?
+    /**
+     * Null when the on-device model is available, else a stable availability token
+     * (mapped by [foundationModelsAvailabilityFromToken]; not display text).
+     */
+    fun availabilityToken(): String?
 
     /** One-shot generation. Returns the model's text; throws [FoundationModelsException.Generation] on failure. */
     suspend fun respond(prompt: String, instructions: String?): String

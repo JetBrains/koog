@@ -36,13 +36,37 @@ class FoundationModelsLLMClientTest {
     }
 
     @Test
-    fun testExecuteThrowsWhenUnavailable() = runTest {
+    fun testExecuteThrowsTypedUnavailable() = runTest {
         val client = FoundationModelsLLMClient(
-            FakeFoundationModelsSession(unavailableReason = "Apple Intelligence is off"),
+            FakeFoundationModelsSession(unavailableToken = "appleIntelligenceNotEnabled"),
         )
-        assertFailsWith<FoundationModelsException.Unavailable> {
+        val exception = assertFailsWith<FoundationModelsException.Unavailable> {
             client.execute(p, AppleLLModels.SystemDefault, emptyList())
         }
+        assertEquals(
+            FoundationModelsAvailability.Unavailable.AppleIntelligenceNotEnabled,
+            exception.availability,
+        )
+    }
+
+    @Test
+    fun testAvailabilityReportsAvailableWhenSessionHasNoToken() {
+        val client = FoundationModelsLLMClient(FakeFoundationModelsSession())
+        assertEquals(FoundationModelsAvailability.Available, client.availability())
+    }
+
+    @Test
+    fun testAvailabilityReportsTypedUnavailableCase() {
+        val client = FoundationModelsLLMClient(
+            FakeFoundationModelsSession(unavailableToken = "modelNotReady"),
+        )
+        assertEquals(FoundationModelsAvailability.Unavailable.ModelNotReady, client.availability())
+    }
+
+    @Test
+    fun testModelsReturnsTheAppleCatalog() = runTest {
+        val client = FoundationModelsLLMClient(FakeFoundationModelsSession())
+        assertEquals(AppleLLModels.models, client.models())
     }
 
     @Test
