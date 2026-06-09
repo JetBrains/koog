@@ -1,5 +1,9 @@
 package ai.koog.a2a.serialization
 
+import ai.koog.a2a.exceptions.BadRequest
+import ai.koog.a2a.exceptions.ErrorData
+import ai.koog.a2a.exceptions.ErrorInfo
+import ai.koog.a2a.exceptions.GenericErrorData
 import ai.koog.a2a.model.APIKeySecurityScheme
 import ai.koog.a2a.model.AuthorizationCodeOAuthFlow
 import ai.koog.a2a.model.ClientCredentialsOAuthFlow
@@ -38,6 +42,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import kotlinx.serialization.serializer
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -211,3 +217,53 @@ public object OAuthFlowSerializer : PropertyWrappingPolymorphicSerializer<OAuthF
         DeviceCodeOAuthFlow.KIND to DeviceCodeOAuthFlow.serializer(),
     )
 )
+
+public object GenericErrorDataSerializer : KSerializer<GenericErrorData> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("GenericErrorData")
+
+    override fun deserialize(decoder: Decoder): GenericErrorData {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: throw SerializationException("Can only deserialize JSON")
+        val jsonObject = jsonDecoder.decodeJsonElement() as? JsonObject
+            ?: throw SerializationException("Expected JSON object")
+        val type = jsonObject[ErrorData.TYPE_KEY]?.jsonPrimitive?.content
+            ?: throw SerializationException("Missing ${ErrorData.TYPE_KEY}")
+
+        return GenericErrorData(
+            raw = jsonObject,
+            type = type,
+        )
+    }
+
+    override fun serialize(encoder: Encoder, value: GenericErrorData) {
+        val jsonEncoder = encoder as? JsonEncoder
+            ?: throw SerializationException("Can only serialize JSON")
+
+        val jsonObject = if (ErrorData.TYPE_KEY !in value.raw) {
+            JsonObject(
+                value.raw + buildJsonObject {
+                    put(ErrorData.TYPE_KEY, value.type)
+                }
+            )
+        } else {
+            value.raw
+        }
+
+        jsonEncoder.encodeJsonElement(jsonObject)
+    }
+}
+
+public object ErrorDataSerializer : JsonContentPolymorphicSerializer<ErrorData>(ErrorData::class) {
+    override fun selectDeserializer(element: JsonElement): KSerializer<out ErrorData> {
+        val jsonObject = element as? JsonObject
+            ?: throw SerializationException("Expected JSON object for polymorphic value")
+        val type = jsonObject[ErrorData.TYPE_KEY]?.jsonPrimitive?.content
+            ?: throw SerializationException("Missing ${ErrorData.TYPE_KEY}")
+
+        return when (type) {
+            ErrorInfo.TYPE -> ErrorInfo.serializer()
+            BadRequest.TYPE -> BadRequest.serializer()
+            else -> GenericErrorData.serializer()
+        }
+    }
+}
