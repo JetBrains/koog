@@ -36,16 +36,14 @@ kotlin {
     // reaches them via the expect/actual defaultFoundationModelsSession().
     val swiftSrc = layout.projectDirectory.file("src/appleInterop/swift/KoogFMBridge.swift")
 
-    // iosArm64() / iosSimulatorArm64() / iosX64() are already registered by the
-    // convention plugin; calling the accessors again returns the existing targets.
     listOf(iosArm64(), iosSimulatorArm64(), iosX64()).forEach { target ->
-        val cap = target.targetName.replaceFirstChar { it.uppercase() } // e.g. IosArm64
+        val cap = target.targetName.replaceFirstChar { it.uppercase() }
         val outDir = layout.buildDirectory.dir("swiftShim/${target.targetName}")
 
         // ios14.0 = K/N's default floor (minVersion.ios in konan.properties), so
         // consumer links never warn about newer object files. FoundationModels is
         // iOS-26-only: the shim #available-gates it and the .def weak-links it.
-        val (sdk, triple) = when (target.konanTarget) {
+        val (sdk, swiftTarget) = when (target.konanTarget) {
             KonanTarget.IOS_ARM64 -> "iphoneos" to "arm64-apple-ios14.0"
             KonanTarget.IOS_SIMULATOR_ARM64 -> "iphonesimulator" to "arm64-apple-ios14.0-simulator"
             KonanTarget.IOS_X64 -> "iphonesimulator" to "x86_64-apple-ios14.0-simulator"
@@ -54,13 +52,14 @@ kotlin {
 
         val swiftcTask = tasks.register<Exec>("swiftc$cap") {
             onlyIf { OperatingSystem.current().isMacOsX }
+
             inputs.file(swiftSrc)
-            // doFirst assembles the command line (sdk path lookup), so Gradle cannot
-            // see it; track the varying parts so flag/triple changes invalidate the .a.
-            inputs.property("triple", triple)
+            inputs.property("swiftTarget", swiftTarget)
             inputs.property("runtimeCompatibility", "none+no-concurrency-autolink")
+
             outputs.dir(outDir)
             executable = "xcrun"
+
             doFirst {
                 val sdkPath = providers.exec {
                     commandLine("xcrun", "--sdk", sdk, "--show-sdk-path")
@@ -68,7 +67,7 @@ kotlin {
                 val dir = outDir.get().asFile.also { it.mkdirs() }
                 args(
                     "--sdk", sdk, "swiftc",
-                    "-target", triple, "-sdk", sdkPath,
+                    "-target", swiftTarget, "-sdk", sdkPath,
                     "-emit-library", "-static",
                     "-emit-objc-header",
                     "-emit-objc-header-path", dir.resolve("KoogFMBridge.h").absolutePath,
