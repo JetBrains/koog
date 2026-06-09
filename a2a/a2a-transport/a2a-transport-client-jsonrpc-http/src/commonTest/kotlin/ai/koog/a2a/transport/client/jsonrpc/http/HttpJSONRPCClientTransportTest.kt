@@ -285,7 +285,7 @@ class HttpJSONRPCClientTransportTest {
         )
 
         testAPIMethod(
-            method = A2AMethod.SetTaskPushNotificationConfig,
+            method = A2AMethod.CreateTaskPushNotificationConfig,
             request = request,
             expectedResponse = expectedResponse,
             invoke = { createTaskPushNotificationConfig(it) }
