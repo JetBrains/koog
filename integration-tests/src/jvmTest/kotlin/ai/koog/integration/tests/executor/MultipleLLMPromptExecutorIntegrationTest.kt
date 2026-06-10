@@ -75,10 +75,22 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 LLMProvider.Anthropic
             ).map { provider -> Arguments.of(provider) }
         }
+
+        @JvmStatic
+        fun openAICompatibleToolResultRoundTripModels(): Stream<LLModel> {
+            return Stream.of(
+                Models.openAIModels(),
+                Models.openRouterModels(),
+                Models.mistralModels(),
+            ).flatMap { it }
+        }
     }
 
     private val executor: MultiLLMPromptExecutor = run {
-        val providers = Models.allCompletionModels().map { model -> Arguments.of(model) }
+        val providers = Stream.of(
+            Models.allCompletionModels(),
+        ).flatMap { it }
+            .map { model -> Arguments.of(model) }
             .toList()
             .map { it.get().single() as LLModel }
             .map { it.provider }
@@ -227,6 +239,17 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         )
 
         super.integration_testToolCallResultCorrelationById(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAICompatibleToolResultRoundTripModels")
+    override fun integration_testOpenAICompatibleNestedToolResultRoundTrip(model: LLModel) {
+        assumeTrue(
+            model.provider != LLMProvider.Bedrock,
+            "This regression targets OpenAI-compatible text tool-result request formats."
+        )
+
+        super.integration_testOpenAICompatibleNestedToolResultRoundTrip(model)
     }
 
     @ParameterizedTest
