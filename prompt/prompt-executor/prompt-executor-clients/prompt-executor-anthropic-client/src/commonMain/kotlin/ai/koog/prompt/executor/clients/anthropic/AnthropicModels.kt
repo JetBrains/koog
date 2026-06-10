@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Fable_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_4_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_1
@@ -21,6 +22,7 @@ import kotlin.jvm.JvmField
  *
  * | Name         | Speed           | Price (MTok) | Input                        | Output      |
  * |--------------|-----------------|--------------|------------------------------|-------------|
+ * | [Fable_5]    | Moderate        | $10-$50      | Text, Image, Tools, Document | Text, Tools |
  * | [Haiku_4_5]  | Fastest         | $1-$5        | Text, Image, Tools, Document | Text, Tools |
  * | [Sonnet_4]   | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  * | [Sonnet_4_5] | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
@@ -32,6 +34,37 @@ import kotlin.jvm.JvmField
  * | [Opus_4_7]   | Moderately fast | $5-$25       | Text, Image, Tools, Document | Text, Tools |
  */
 public object AnthropicModels : LLModelDefinitions {
+    /**
+     * Claude Fable 5 is Anthropic's most capable widely released model, built for the most demanding
+     * reasoning and long-horizon agentic work.
+     *
+     * 1M context window
+     * 128K max output tokens
+     * Reliable knowledge cutoff: January 2026
+     *
+     * @see <a href="https://www.anthropic.com/news/claude-fable-5-mythos-5">
+     * @see <a href="https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5">
+     */
+    @JvmField
+    public val Fable_5: LLModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-fable-5",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Vision.Image,
+            LLMCapability.Document,
+            LLMCapability.Completion,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Thinking,
+            LLMCapability.PromptCaching,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 128_000,
+    )
+
     /**
      * Claude Haiku 4.5 is Anthropic's fastest and most intelligent Haiku model.
      * It has the near-frontier intelligence at blazing speeds with extended thinking and exceptional cost-efficiency.
@@ -296,6 +329,7 @@ public object AnthropicModels : LLModelDefinitions {
      * List of the supported models by the Anthropic provider.
      */
     private val supportedModels: List<LLModel> = listOf(
+        Fable_5,
         Sonnet_4,
         Sonnet_4_5,
         Sonnet_4_6,
@@ -322,6 +356,7 @@ public object AnthropicModels : LLModelDefinitions {
 }
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
+    Fable_5 to "claude-fable-5",
     Haiku_4_5 to "claude-haiku-4-5-20251001",
     Sonnet_4 to "claude-sonnet-4-20250514",
     Sonnet_4_5 to "claude-sonnet-4-5-20250929",

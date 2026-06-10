@@ -30,6 +30,7 @@ class AnthropicModelsTest {
     @Test
     fun `Claude 4_5 and newer models should support structured output`() {
         val modelsWithSchema = listOf(
+            AnthropicModels.Fable_5,
             AnthropicModels.Haiku_4_5,
             AnthropicModels.Sonnet_4_5,
             AnthropicModels.Sonnet_4_6,
@@ -110,10 +111,23 @@ class AnthropicModelsTest {
     }
 
     @Test
-    fun `Anthropic extended thinking models should advertise thinking capability`() {
+    fun `Anthropic thinking-capable models should advertise thinking capability`() {
+        assertNotNull(AnthropicModels.Fable_5.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Haiku_4_5.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Sonnet_4.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Opus_4_6.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Opus_4_7.capabilities) shouldContain LLMCapability.Thinking
+    }
+
+    @Test
+    fun `Claude Fable 5 should expose documented model profile`() {
+        val model = AnthropicModels.Fable_5
+
+        assertEquals("claude-fable-5", model.id)
+        assertEquals(1_000_000, model.contextLength)
+        assertEquals(128_000, model.maxOutputTokens)
+        assertTrue(model.supports(LLMCapability.Vision.Image))
+        assertTrue(model.supports(LLMCapability.Tools))
+        assertTrue(model.supports(LLMCapability.ToolChoice))
     }
 }

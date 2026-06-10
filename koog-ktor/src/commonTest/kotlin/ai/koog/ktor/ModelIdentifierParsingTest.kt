@@ -224,6 +224,7 @@ class ModelIdentifierParsingTest {
     fun testAnthropicModels() = verifyModels(
         LLMProvider.Anthropic,
         mapOf(
+            "anthropic.fable_5" to AnthropicModels.Fable_5,
             "anthropic.opus_4" to AnthropicModels.Opus_4,
             "anthropic.opus_4_1" to AnthropicModels.Opus_4_1,
             "anthropic.opus_4_5" to AnthropicModels.Opus_4_5,
