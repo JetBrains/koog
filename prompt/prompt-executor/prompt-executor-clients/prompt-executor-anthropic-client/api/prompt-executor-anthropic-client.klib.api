@@ -261,6 +261,8 @@ open class ai.koog.prompt.executor.clients.anthropic/AnthropicLLMClient : ai.koo
 }
 
 final object ai.koog.prompt.executor.clients.anthropic/AnthropicModels : ai.koog.prompt.executor.clients/LLModelDefinitions { // ai.koog.prompt.executor.clients.anthropic/AnthropicModels|null[0]
+    final val Fable_5 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Fable_5|{}Fable_5[0]
+        final fun <get-Fable_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Fable_5.<get-Fable_5>|<get-Fable_5>(){}[0]
     final val Haiku_4_5 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Haiku_4_5|{}Haiku_4_5[0]
         final fun <get-Haiku_4_5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Haiku_4_5.<get-Haiku_4_5>|<get-Haiku_4_5>(){}[0]
     final val Opus_4 // ai.koog.prompt.executor.clients.anthropic/AnthropicModels.Opus_4|{}Opus_4[0]
