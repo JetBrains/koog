@@ -254,6 +254,7 @@ private val OPENAI_MODELS_MAP = mapOf(
 )
 
 private val ANTHROPIC_MODELS_MAP = mapOf(
+    "fable_5" to AnthropicModels.Fable_5,
     "opus_4" to AnthropicModels.Opus_4,
     "opus_4_1" to AnthropicModels.Opus_4_1,
     "opus_4_5" to AnthropicModels.Opus_4_5,

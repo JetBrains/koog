@@ -237,6 +237,7 @@ public final class ai/koog/prompt/executor/clients/bedrock/BedrockModels : ai/ko
 	public final fun getAnthropicClaude4_5Haiku ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4_5Sonnet ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4_6Sonnet ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaudeFable5 ()Lai/koog/prompt/llm/LLModel;
 	public final fun getGoogleGemma3_12BIt ()Lai/koog/prompt/llm/LLModel;
 	public final fun getGoogleGemma3_27BIt ()Lai/koog/prompt/llm/LLModel;
 	public final fun getGoogleGemma3_4BIt ()Lai/koog/prompt/llm/LLModel;

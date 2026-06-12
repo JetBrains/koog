@@ -1,10 +1,13 @@
 package ai.koog.prompt.executor.clients.bedrock
 
 import ai.koog.prompt.executor.clients.list
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class BedrockModelsTest {
 
@@ -32,5 +35,17 @@ class BedrockModelsTest {
         reflectionModels.forEach { model ->
             models shouldContain model
         }
+    }
+
+    @Test
+    fun `Claude Fable 5 Bedrock model should expose documented model profile`() {
+        val model = BedrockModels.AnthropicClaudeFable5
+
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals("us.anthropic.claude-fable-5", model.id)
+        assertEquals(1_000_000, model.contextLength)
+        assertEquals(128_000, model.maxOutputTokens)
+        assertTrue(model.supports(LLMCapability.Vision.Image))
+        assertTrue(model.supports(LLMCapability.Tools))
     }
 }
