@@ -41,6 +41,13 @@ public final class ai/koog/prompt/processor/ResponseProcessorConfig {
 	public final fun getSerializer ()Lai/koog/serialization/JSONSerializer;
 }
 
+public final class ai/koog/prompt/processor/ToolCallArgumentCoercionProcessor : ai/koog/prompt/processor/ResponseProcessor {
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun process (Lai/koog/prompt/executor/model/PromptExecutor;Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lai/koog/prompt/message/Message$Assistant;Lai/koog/serialization/JSONSerializer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class ai/koog/prompt/processor/ToolCallJsonConfig {
 	public static final field Companion Lai/koog/prompt/processor/ToolCallJsonConfig$Companion;
 	public fun <init> ()V
