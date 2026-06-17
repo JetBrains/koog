@@ -16,6 +16,7 @@ import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.executor.model.StructureFixingParser
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
@@ -41,8 +42,8 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param llmModel Optional [LLModel] override for the subgraph execution.
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  * @param responseProcessor Optional [ResponseProcessor] override for the subgraph execution.
- * @param freshHistory When true, the subgraph starts with an empty conversation history instead
- *  of inheriting the parent context's prompt. The subgraph's history is discarded upon completion.
+ * @param freshHistory When true, the subgraph starts with only the parent's system messages;
+ *  user/assistant conversation turns are not inherited. The subgraph's history is discarded upon completion.
  */
 public open class AIAgentSubgraphBase<TInput, TOutput>(
     override val name: String,
@@ -178,7 +179,8 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
 
             val effectiveParams = llmParams ?: context.llm.prompt.params
             val innerPrompt = context.llm.prompt.copy(
-                messages = if (freshHistory) emptyList() else context.llm.prompt.messages,
+                messages = if (freshHistory) context.llm.prompt.messages.filterIsInstance<Message.System>()
+                           else context.llm.prompt.messages,
                 params = effectiveParams,
             )
 

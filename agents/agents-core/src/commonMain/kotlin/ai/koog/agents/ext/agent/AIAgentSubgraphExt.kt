@@ -638,9 +638,9 @@ public inline fun <reified Input : Any> subgraphWithVerification(
  * @param parallelTools the mode in which tools are executed, e.g., parallel or sequential execution.
  * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
  *        determining that the task cannot be completed. If not provided, a default is used.
- * @param freshHistory when `true`, the string returned by [defineTask] is appended as a
- *        `system` message; when `false`, it is appended as a `user` message via the standard
- *        LLM request node.
+ * @param freshHistory when `true`, the subgraph starts with only the parent's system messages;
+ *        user/assistant turns are not inherited, and the subgraph's history is discarded on exit.
+ *        The string returned by [defineTask] is appended as a `user` message.
  * @param defineTask a suspend function defining the task description, executed within the
  *        context of an AI agent graph and based on the given input data.
  */
@@ -706,20 +706,7 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
     val nodeDecide by node<Message.Assistant, Message.Assistant> { it }
 
-    val nodeCallLLM by if (freshHistory) {
-        // When freshHistory is true, the defineTask result becomes a system message
-        // rather than a user message to serve as the subgraph's own instruction.
-        node<String, Message.Assistant> { message ->
-            llm.writeSession {
-                appendPrompt {
-                    system(message)
-                }
-                requestLLM()
-            }
-        }
-    } else {
-        nodeLLMRequest()
-    }
+    val nodeCallLLM by nodeLLMRequest()
 
     val callToolsHacked by node<ToolCalls, ReceivedToolResults> { message ->
         val (finishToolCalls, regularToolCalls) = message.toolCalls.partition { it.tool == finishTool.name }
@@ -820,9 +807,9 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
  * @param parallelTools the mode in which tools are executed, e.g., parallel or sequential execution.
  * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
  *        determining that the task cannot be completed. If not provided, a default is used.
- * @param freshHistory when `true`, the string returned by [defineTask] is appended as a
- *        `system` message; when `false`, it is appended as a `user` message via the standard
- *        LLM request node.
+ * @param freshHistory when `true`, the subgraph starts with only the parent's system messages;
+ *        user/assistant turns are not inherited, and the subgraph's history is discarded on exit.
+ *        The string returned by [defineTask] is appended as a `user` message.
  * @param defineTask a suspend function defining the task description, executed within the
  *        context of an AI agent graph and based on the given input data.
  */

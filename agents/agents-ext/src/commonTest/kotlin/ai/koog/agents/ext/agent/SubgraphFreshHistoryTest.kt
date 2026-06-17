@@ -66,8 +66,8 @@ class SubgraphFreshHistoryTest {
     }
 
     @Test
-    @JsName("testFreshHistorySubgraphStartsWithEmptyHistoryAndSystemMessage")
-    fun `test freshHistory subgraph starts with empty history and system message`() = runTest {
+    @JsName("testFreshHistorySubgraphKeepsParentSystemAndUsesUserMessageForTask")
+    fun `test freshHistory subgraph keeps parent system message and uses user message for task`() = runTest {
         val capturedPrompts = mutableListOf<Prompt>()
 
         val mockExecutor = getMockExecutor {
@@ -87,27 +87,32 @@ class SubgraphFreshHistoryTest {
         val firstPrompt = capturedPrompts.first()
         val messages = firstPrompt.messages
 
-        // With freshHistory=true, the subgraph should NOT have the parent's history.
-        // It should start fresh with only a system message from defineTask.
+        // With freshHistory=true: parent system message is retained, user/assistant turns are dropped.
         val systemMessages = messages.filterIsInstance<Message.System>()
         val userMessages = messages.filterIsInstance<Message.User>()
         val assistantMessages = messages.filterIsInstance<Message.Assistant>()
 
-        // defineTask result ("Instruction for: hello") should be a system message
-        assertEquals(1, systemMessages.size, "Expected exactly one system message from defineTask")
+        // Parent's system message should be preserved
+        assertEquals(1, systemMessages.size, "Expected exactly one system message (the parent's)")
         assertTrue(
-            systemMessages.first().textContent().contains("Instruction for: hello"),
-            "System message should contain defineTask result, got: ${systemMessages.first().textContent()}"
+            systemMessages.first().textContent().contains("You are a parent system prompt"),
+            "Parent system message should be retained, got: ${systemMessages.first().textContent()}"
         )
 
-        // Parent's user/assistant messages should NOT be present
+        // defineTask result ("Instruction for: hello") should be a user message
+        assertTrue(
+            userMessages.any { it.textContent().contains("Instruction for: hello") },
+            "defineTask result should be a user message, got user messages: ${userMessages.map { it.textContent() }}"
+        )
+
+        // Parent's user/assistant conversation turns should NOT be present
         assertTrue(
             userMessages.none { it.textContent().contains("Some prior conversation message") },
-            "Parent's user message should not be in fresh history"
+            "Parent's user conversation turn should not be inherited"
         )
         assertTrue(
             assistantMessages.none { it.textContent().contains("Some prior assistant response") },
-            "Parent's assistant message should not be in fresh history"
+            "Parent's assistant conversation turn should not be inherited"
         )
     }
 
@@ -158,16 +163,16 @@ class SubgraphFreshHistoryTest {
     }
 
     @Test
-    @JsName("testFreshHistoryDoesNotLeakSubgraphHistoryBackToParent")
-    fun `test freshHistory does not leak subgraph history back to parent`() = runTest {
+    @JsName("testFreshHistoryDoesNotLeakConversationTurnsToParentOrSiblings")
+    fun `test freshHistory does not leak conversation turns to parent or siblings`() = runTest {
         val capturedPrompts = mutableListOf<Prompt>()
 
         val mockExecutor = getMockExecutor {
             mockLLMToolCall(finishTool, TestFinishTool.Args()) onCondition { true }
         }
 
-        // Strategy with two sequential subgraphs — first fresh, then default.
-        // The second should NOT see the first subgraph's history.
+        // Two sequential subgraphs: first fresh, then default.
+        // The second (default) subgraph should NOT see the first subgraph's conversation turns.
         val strategy = strategy<String, String>("test-strategy") {
             val freshSubgraph by subgraphWithTask<String, TestFinishTool.Args, String>(
                 toolSelectionStrategy = ai.koog.agents.core.agent.entity.ToolSelectionStrategy.ALL,
@@ -214,19 +219,18 @@ class SubgraphFreshHistoryTest {
 
         assertTrue(capturedPrompts.size >= 2, "Expected at least two LLM calls (one per subgraph)")
 
-        // The second subgraph's prompt (captured second) should still have parent's system prompt
-        // but should NOT contain the fresh subgraph's system message
-        val secondPrompt = capturedPrompts[1]
-        val secondMessages = secondPrompt.messages
+        val secondMessages = capturedPrompts[1].messages
 
+        // Parent system prompt is preserved in both subgraphs
         assertTrue(
             secondMessages.filterIsInstance<Message.System>().any { it.textContent().contains("Parent system prompt") },
             "Second subgraph should see parent's system prompt"
         )
 
+        // Fresh subgraph's conversation turns must not leak into the second subgraph's prompt
         assertTrue(
             secondMessages.none { it.textContent().contains("Fresh instruction:") },
-            "Fresh subgraph's system message should not leak into the second subgraph"
+            "Fresh subgraph's conversation turns should not appear in the second subgraph's prompt"
         )
     }
 }
