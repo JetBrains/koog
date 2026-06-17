@@ -16,8 +16,8 @@ import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.executor.model.StructureFixingParser
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.structure.StructuredRequest
@@ -179,8 +179,11 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
 
             val effectiveParams = llmParams ?: context.llm.prompt.params
             val innerPrompt = context.llm.prompt.copy(
-                messages = if (freshHistory) context.llm.prompt.messages.filterIsInstance<Message.System>()
-                           else context.llm.prompt.messages,
+                messages = if (freshHistory) {
+                    context.llm.prompt.messages.filterIsInstance<Message.System>()
+                } else {
+                    context.llm.prompt.messages
+                },
                 params = effectiveParams,
             )
 
