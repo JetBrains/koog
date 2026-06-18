@@ -219,6 +219,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraph(
     name = name,
@@ -226,10 +227,11 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     val finishTool = FinishTool<Output>(typeToken<Output>())
 
-    setupSubgraphWithTask<Input, Output, Output>(
+    setupSubgraphWithTask(
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
@@ -268,6 +270,7 @@ public fun <Input : Any, Output : Any> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraph(
     name = name,
@@ -277,6 +280,7 @@ public fun <Input : Any, Output : Any> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     val finishTool = FinishTool<Output>(outputType)
 
@@ -313,6 +317,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
@@ -322,6 +327,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     parallelTools = parallelTools,
     assistantResponseRepeatMax = assistantResponseRepeatMax,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
     defineTask = defineTask
 )
 
@@ -354,6 +360,7 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph<Input, OutputTransformed>(
     inputType = inputType,
@@ -363,6 +370,7 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     setupSubgraphWithTask(
         finishTool = finishTool,
@@ -402,6 +410,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
     name = name,
@@ -409,6 +418,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     setupSubgraphWithTask<Input, Output, OutputTransformed>(
         finishTool = finishTool,
@@ -446,6 +456,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     parallelTools: Boolean = false,
     assistantResponseRepeatMax: Int? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
     name = name,
@@ -453,6 +464,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
 ) {
     setupSubgraphWithTask<Input, Output, OutputTransformed>(
         finishTool = finishTool,
