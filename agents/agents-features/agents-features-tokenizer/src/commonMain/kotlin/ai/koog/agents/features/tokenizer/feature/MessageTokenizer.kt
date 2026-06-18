@@ -54,7 +54,7 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
         AIAgentPlannerFeature<MessageTokenizerConfig, MessageTokenizer> {
 
         override val key: AIAgentStorageKey<MessageTokenizer> =
-            createStorageKey<MessageTokenizer>("agents-features-tracing")
+            createStorageKey<MessageTokenizer>("agents-features-message-tokenizer")
 
         override fun createInitialConfig(
             agentConfig: AIAgentConfig,
