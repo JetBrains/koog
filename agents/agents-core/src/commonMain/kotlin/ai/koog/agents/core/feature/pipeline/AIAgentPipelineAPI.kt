@@ -120,6 +120,7 @@ public interface AIAgentPipelineAPI {
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         strategy: AIAgentStrategy<*, *, *>,
+        input: Any?,
     )
 
     @InternalAgentsApi

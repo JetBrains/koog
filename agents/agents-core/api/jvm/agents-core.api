@@ -2972,11 +2972,12 @@ public abstract interface class ai/koog/agents/core/feature/handler/strategy/Str
 }
 
 public final class ai/koog/agents/core/feature/handler/strategy/StrategyStartingContext : ai/koog/agents/core/feature/handler/strategy/StrategyEventContext {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;)V
 	public fun getContext ()Lai/koog/agents/core/agent/context/AIAgentContext;
 	public fun getEventId ()Ljava/lang/String;
 	public fun getEventType ()Lai/koog/agents/core/feature/handler/AgentLifecycleEventType;
 	public fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public final fun getInput ()Ljava/lang/Object;
 	public fun getStrategy ()Lai/koog/agents/core/agent/entity/AIAgentStrategy;
 }
 

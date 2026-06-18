@@ -2685,7 +2685,7 @@ final class ai.koog.agents.core.feature.handler.strategy/StrategyCompletedContex
 }
 
 final class ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext : ai.koog.agents.core.feature.handler.strategy/StrategyEventContext { // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext|null[0]
-    constructor <init>(kotlin/String, ai.koog.agents.core.agent.execution/AgentExecutionInfo, ai.koog.agents.core.agent.context/AIAgentContext, ai.koog.agents.core.agent.entity/AIAgentStrategy<*, *, *>) // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.<init>|<init>(kotlin.String;ai.koog.agents.core.agent.execution.AgentExecutionInfo;ai.koog.agents.core.agent.context.AIAgentContext;ai.koog.agents.core.agent.entity.AIAgentStrategy<*,*,*>){}[0]
+    constructor <init>(kotlin/String, ai.koog.agents.core.agent.execution/AgentExecutionInfo, ai.koog.agents.core.agent.context/AIAgentContext, ai.koog.agents.core.agent.entity/AIAgentStrategy<*, *, *>, kotlin/Any?) // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.<init>|<init>(kotlin.String;ai.koog.agents.core.agent.execution.AgentExecutionInfo;ai.koog.agents.core.agent.context.AIAgentContext;ai.koog.agents.core.agent.entity.AIAgentStrategy<*,*,*>;kotlin.Any?){}[0]
 
     final val context // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.context|{}context[0]
         final fun <get-context>(): ai.koog.agents.core.agent.context/AIAgentContext // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.context.<get-context>|<get-context>(){}[0]
@@ -2695,6 +2695,8 @@ final class ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext
         final fun <get-eventType>(): ai.koog.agents.core.feature.handler/AgentLifecycleEventType // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.eventType.<get-eventType>|<get-eventType>(){}[0]
     final val executionInfo // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.executionInfo|{}executionInfo[0]
         final fun <get-executionInfo>(): ai.koog.agents.core.agent.execution/AgentExecutionInfo // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.executionInfo.<get-executionInfo>|<get-executionInfo>(){}[0]
+    final val input // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.input|{}input[0]
+        final fun <get-input>(): kotlin/Any? // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.input.<get-input>|<get-input>(){}[0]
     final val strategy // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.strategy|{}strategy[0]
         final fun <get-strategy>(): ai.koog.agents.core.agent.entity/AIAgentStrategy<*, *, *> // ai.koog.agents.core.feature.handler.strategy/StrategyStartingContext.strategy.<get-strategy>|<get-strategy>(){}[0]
 }
