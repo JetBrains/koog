@@ -1,0 +1,193 @@
+public abstract interface class ai/koog/prompt/executor/ollama/client/ContextWindowStrategy {
+	public static final field Companion Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion;
+	public abstract fun computeContextLength (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/lang/Long;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion {
+}
+
+public final class ai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$FitPrompt : ai/koog/prompt/executor/ollama/client/ContextWindowStrategy {
+	public fun <init> ()V
+	public fun <init> (Lai/koog/prompt/tokenizer/PromptTokenizer;JLjava/lang/Long;Ljava/lang/Long;)V
+	public synthetic fun <init> (Lai/koog/prompt/tokenizer/PromptTokenizer;JLjava/lang/Long;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/koog/prompt/tokenizer/PromptTokenizer;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/Long;
+	public final fun component4 ()Ljava/lang/Long;
+	public fun computeContextLength (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/lang/Long;
+	public final fun copy (Lai/koog/prompt/tokenizer/PromptTokenizer;JLjava/lang/Long;Ljava/lang/Long;)Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$FitPrompt;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$FitPrompt;Lai/koog/prompt/tokenizer/PromptTokenizer;JLjava/lang/Long;Ljava/lang/Long;ILjava/lang/Object;)Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$FitPrompt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContextChunkSize ()J
+	public final fun getMaximumChunkCount ()Ljava/lang/Long;
+	public final fun getMinimumChunkCount ()Ljava/lang/Long;
+	public final fun getPromptTokenizer ()Lai/koog/prompt/tokenizer/PromptTokenizer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$Fixed : ai/koog/prompt/executor/ollama/client/ContextWindowStrategy {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public fun computeContextLength (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/lang/Long;
+	public final fun copy (J)Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$Fixed;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$Fixed;JILjava/lang/Object;)Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$Fixed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContextLength ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$None : ai/koog/prompt/executor/ollama/client/ContextWindowStrategy {
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy$Companion$None;
+	public fun computeContextLength (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;)Ljava/lang/Long;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaClient : ai/koog/prompt/executor/clients/LLMClient {
+	public static final field Companion Lai/koog/prompt/executor/ollama/client/OllamaClient$Companion;
+	public static final field DEFAULT_BASE_URL Ljava/lang/String;
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;Lai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator;)V
+	public synthetic fun <init> (Lai/koog/http/client/KoogHttpClient$Factory;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;Lai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;)V
+	public fun <init> (Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;Lai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator;)V
+	public synthetic fun <init> (Lai/koog/http/client/KoogHttpClient;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;Lai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun embed (Ljava/lang/String;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun embed (Ljava/util/List;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+	public final fun getModelOrNull (Ljava/lang/String;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getModelOrNull$default (Lai/koog/prompt/executor/ollama/client/OllamaClient;Ljava/lang/String;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getModels (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun llmProvider ()Lai/koog/prompt/llm/LLMProvider;
+	public fun moderate (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaClient$Companion {
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaClientFactory {
+	public static final fun ollamaClient ()Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;Ljava/util/Map;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static final fun ollamaClient (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;Lai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+	public static synthetic fun ollamaClient$default (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Lai/koog/prompt/executor/clients/ConnectionTimeoutConfig;Lai/koog/utils/time/KoogClock;Lai/koog/prompt/executor/ollama/client/ContextWindowStrategy;Lai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator;ILjava/lang/Object;)Lai/koog/prompt/executor/ollama/client/OllamaClient;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaCustomModelConverters {
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaCustomModelConverters;
+	public final fun qwq (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModelCard {
+	public final fun getCapabilities ()Ljava/util/List;
+	public final fun getContextLength ()Ljava/lang/Long;
+	public final fun getEmbeddingLength ()Ljava/lang/Long;
+	public final fun getFamilies ()Ljava/util/List;
+	public final fun getFamily ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParameterCount ()Ljava/lang/Long;
+	public final fun getQuantizationLevel ()Ljava/lang/String;
+	public final fun getSize ()J
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModelCardKt {
+	public static final fun getNameWithoutTag (Lai/koog/prompt/executor/ollama/client/OllamaModelCard;)Ljava/lang/String;
+	public static final fun toLLModel (Lai/koog/prompt/executor/ollama/client/OllamaModelCard;)Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModelCardUtilsKt {
+	public static final fun findBestSuitedModels (Ljava/util/List;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/List;)Ljava/util/List;
+	public static synthetic fun findBestSuitedModels$default (Ljava/util/List;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Ljava/util/List;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun findByNameOrNull (Ljava/util/List;Ljava/lang/String;)Lai/koog/prompt/executor/ollama/client/OllamaModelCard;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels : ai/koog/prompt/executor/clients/LLModelDefinitions {
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels;
+	public fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
+	public fun getModels ()Ljava/util/List;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Alibaba {
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$Alibaba;
+	public static final field QWEN_2_5_05B Lai/koog/prompt/llm/LLModel;
+	public static final field QWEN_3_06B Lai/koog/prompt/llm/LLModel;
+	public static final field QWEN_3_5_9B Lai/koog/prompt/llm/LLModel;
+	public static final field QWEN_CODER_2_5_32B Lai/koog/prompt/llm/LLModel;
+	public static final field QWQ Lai/koog/prompt/llm/LLModel;
+	public static final field QWQ_32B Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$DeepSeek {
+	public static final field DEEPSEEK_R1_DISTILL_LLAMA_1_5B Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$DeepSeek;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Embeddings {
+	public static final field ALL_MINI_LM Lai/koog/prompt/llm/LLModel;
+	public static final field BGE_LARGE Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$Embeddings;
+	public static final field MULTILINGUAL_E5 Lai/koog/prompt/llm/LLModel;
+	public static final field MXBAI_EMBED_LARGE Lai/koog/prompt/llm/LLModel;
+	public static final field NOMIC_EMBED_TEXT Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Granite {
+	public static final field GRANITE_3_2_VISION Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$Granite;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Groq {
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$Groq;
+	public static final field LLAMA_3_GROK_TOOL_USE_70B Lai/koog/prompt/llm/LLModel;
+	public static final field LLAMA_3_GROK_TOOL_USE_8B Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Meta {
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$Meta;
+	public static final field LLAMA_3_2 Lai/koog/prompt/llm/LLModel;
+	public static final field LLAMA_3_2_3B Lai/koog/prompt/llm/LLModel;
+	public static final field LLAMA_4_LATEST Lai/koog/prompt/llm/LLModel;
+	public static final field LLAMA_GUARD_3 Lai/koog/prompt/llm/LLModel;
+	public final fun getLLAMA_4 ()Lai/koog/prompt/llm/LLModel;
+	public final fun getLLAMA_4_SCOUT ()Lai/koog/prompt/llm/LLModel;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaModels$OpenAI {
+	public static final field GPT_OSS_20B Lai/koog/prompt/llm/LLModel;
+	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$OpenAI;
+}
+
+public final class ai/koog/prompt/executor/ollama/client/OllamaParams : ai/koog/prompt/params/LLMParams {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;)Lai/koog/prompt/executor/ollama/client/OllamaParams;
+	public static synthetic fun copy$default (Lai/koog/prompt/executor/ollama/client/OllamaParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Boolean;ILjava/lang/Object;)Lai/koog/prompt/executor/ollama/client/OllamaParams;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getThink ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/prompt/executor/ollama/tools/json/OllamaToolDescriptorSchemaGenerator : ai/koog/agents/core/tools/serialization/ToolDescriptorSchemaGenerator {
+	public fun <init> ()V
+	public fun generate (Lai/koog/agents/core/tools/ToolDescriptor;)Lkotlinx/serialization/json/JsonObject;
+}
+

@@ -7,6 +7,8 @@ import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorOperation
+import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
@@ -35,7 +37,8 @@ public class CachedPromptExecutor(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Message.Assistant {
-        return getOrPut(prompt, tools, model)
+        val resolvedModel = nested.resolveModel(model, PromptExecutorOperation.Execute)
+        return getOrPut(prompt, tools, resolvedModel)
     }
 
     @JvmSynthetic
@@ -45,7 +48,8 @@ public class CachedPromptExecutor(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> =
         flow {
-            getOrPut(prompt, tools, model).toStreamFrames().forEach { emit(it) }
+            val resolvedModel = nested.resolveModel(model, PromptExecutorOperation.Streaming)
+            getOrPut(prompt, tools, resolvedModel).toStreamFrames().forEach { emit(it) }
         }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
@@ -55,12 +59,19 @@ public class CachedPromptExecutor(
             .also { cache.put(prompt, emptyList(), it) }
     }
 
-    private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): Message.Assistant {
+    private suspend fun getOrPut(
+        prompt: Prompt,
+        tools: List<ToolDescriptor>,
+        resolvedModel: ResolvedModel
+    ): Message.Assistant {
         return cache.get(prompt, tools, clock)
-            ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
+            ?: nested.execute(prompt, resolvedModel, tools).also { cache.put(prompt, tools, it) }
     }
 
-    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)
+    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        val resolvedModel = nested.resolveModel(model, PromptExecutorOperation.Moderate)
+        return nested.moderate(prompt, resolvedModel)
+    }
 
     override suspend fun models(): List<LLModel> = nested.models()
 

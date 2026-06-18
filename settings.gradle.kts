@@ -94,6 +94,7 @@ include(":http-client:http-client-test")
 include(":http-client:http-client-ktor")
 include(":http-client:http-client-okhttp")
 include(":http-client:http-client-java")
+include(":http-client:http-client-spring-webclient")
 
 include(":serialization:serialization-core")
 include(":serialization:serialization-test")
@@ -114,3 +115,5 @@ include(":test-utils")
 include(":utils")
 
 include(":agents:agents-planner")
+
+include("agents:agents-cli")

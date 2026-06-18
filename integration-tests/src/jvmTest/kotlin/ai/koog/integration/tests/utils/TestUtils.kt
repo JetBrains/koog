@@ -9,6 +9,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -40,6 +41,24 @@ object TestUtils {
         with(response) {
             parts.shouldForAny { (it is MessagePart.Tool.Call) && it.tool == toolName }
         }
+    }
+
+    fun assertResponseContainsTextAndToolCall(response: Message.Assistant, toolName: String): MessagePart.Tool.Call {
+        response.parts.shouldForAny { it is MessagePart.Text && it.text.isNotBlank() }
+        response.parts.shouldForAny { it is MessagePart.Tool.Call && it.tool == toolName }
+        return response.parts.filterIsInstance<MessagePart.Tool.Call>().first { it.tool == toolName }
+    }
+
+    fun assertToolResultCorrelatesWithCall(
+        toolCall: MessagePart.Tool.Call,
+        toolResult: MessagePart.Tool.Result,
+    ) {
+        toolResult.id shouldBe toolCall.id
+        toolResult.tool shouldBe toolCall.tool
+    }
+
+    fun assertResponseDoesNotLeakRequestAttachments(response: Message.Assistant) {
+        response.parts.any { it is MessagePart.Attachment } shouldBe false
     }
 
     fun isValidJson(str: String): Boolean = try {

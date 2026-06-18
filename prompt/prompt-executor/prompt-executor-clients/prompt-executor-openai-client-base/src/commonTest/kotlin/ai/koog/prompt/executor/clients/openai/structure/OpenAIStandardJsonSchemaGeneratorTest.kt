@@ -117,6 +117,137 @@ class OpenAIStandardJsonSchemaGeneratorTest {
         }
     }
 
+    @Serializable
+    @SerialName("Tag")
+    data class Tag(
+        val name: String
+    )
+
+    @Serializable
+    @SerialName("NullableListContainer")
+    data class NullableListContainer(
+        val name: String,
+        @property:LLMDescription("Optional list of tags")
+        val tags: List<String>? = null,
+        @property:LLMDescription("Optional list of complex tags")
+        val complexTags: List<Tag>? = null
+    )
+
+    @Test
+    fun testGenerateOpenAIStandardJsonSchemaForNullableLists() {
+        val result = fullGenerator.generate(
+            json,
+            "NullableListContainer",
+            serializer<NullableListContainer>(),
+            emptyMap()
+        )
+        val schema = json.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "${"$"}id": "NullableListContainer",
+              "${"$"}defs": {
+                "Tag": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                },
+                "NullableListContainer": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional list of tags"
+                    },
+                    "complexTags": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "${"$"}ref": "#/${"$"}defs/Tag"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional list of complex tags"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "tags",
+                    "complexTags"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "tags": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Optional list of tags"
+                },
+                "complexTags": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "${"$"}ref": "#/${"$"}defs/Tag"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Optional list of complex tags"
+                }
+              },
+              "required": [
+                "name",
+                "tags",
+                "complexTags"
+              ],
+              "additionalProperties": false
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
     @Test
     fun testGenerateOpenAIStandardJsonSchemaWeatherForecast() {
         val result = fullGenerator.generate(json, "WeatherForecast", serializer<WeatherForecast>(), emptyMap())

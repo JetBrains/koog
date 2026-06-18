@@ -553,7 +553,10 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         assertFalse(exception is CancellationException, "Unexpected cancellation exception")
 
         testData.collectedSpans = withTimeout(10.seconds) {
-            spanExporter.isCollected.first()
+            // Wait until the root create-agent span is exported (it ends last), so all child spans are
+            // present. `first()` would return the StateFlow's current value without waiting, racing the
+            // async export and intermittently leaving filterAgentInvokeSpans() empty (flaky on Windows CI).
+            spanExporter.isCollected.first { it }
             spanExporter.collectedSpans
         }
 

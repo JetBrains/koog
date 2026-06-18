@@ -8,6 +8,8 @@ import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.session.AdditionalInputs
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.agent.tools.agentContext
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.parallel
@@ -16,6 +18,7 @@ import ai.koog.agents.core.dsl.extension.Concept
 import ai.koog.agents.core.dsl.extension.FactType
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -23,8 +26,21 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestWithoutTools
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.tools.ToolBase
+import ai.koog.agents.core.tools.ToolCallMetadata
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.agents.ext.agent.reActStrategy
+import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -41,6 +57,8 @@ import ai.koog.integration.tests.utils.tools.CalculatorToolNoArgs
 import ai.koog.integration.tests.utils.tools.DelayTool
 import ai.koog.integration.tests.utils.tools.GetTransactionsTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
+import ai.koog.prompt.Prompt
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
@@ -52,6 +70,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -61,11 +80,13 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONPrimitive
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
 import io.kotest.assertions.withClue
+import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
@@ -82,7 +103,12 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -99,6 +125,20 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+
+@Tool
+@LLMDescription("Looks up evidence for the subgraph regression test.")
+fun lookupSubgraphEvidence(
+    @LLMDescription("Topic to look up.")
+    topic: String
+): String = "evidence:$topic"
+
+@Tool
+@LLMDescription("Finishes the subgraph regression test.")
+fun finishSubgraphWithEvidence(
+    @LLMDescription("Final result for the subgraph.")
+    result: String
+): String = "finished:$result"
 
 class AIAgentIntegrationTest : AIAgentTestBase() {
 
@@ -180,6 +220,135 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     val bankingToolsRegistry = ToolRegistry {
         tool(GetTransactionsTool)
         tool(CalculateSumTool)
+    }
+
+    @Serializable
+    private data class RawMetadataToolArgs(val value: String)
+
+    @Serializable
+    private data class RawMetadataToolResult(val echoed: String, val length: Int)
+
+    private class RawMetadataTool : ToolBase<RawMetadataToolArgs, RawMetadataToolResult>(
+        argsType = typeToken<RawMetadataToolArgs>(),
+        resultType = typeToken<RawMetadataToolResult>(),
+        name = "raw_metadata_tool",
+        description = "Echoes input and observes invocation metadata.",
+    ) {
+        val observedMetadata = mutableListOf<ToolCallMetadata>()
+
+        override suspend fun execute(
+            args: RawMetadataToolArgs,
+            metadata: ToolCallMetadata
+        ): RawMetadataToolResult {
+            observedMetadata += metadata
+            return RawMetadataToolResult(echoed = "echo:${args.value}", length = args.value.length)
+        }
+    }
+
+    private class StaticMetadataFeatureConfig : FeatureConfig()
+
+    private object StaticMetadataFeature : AIAgentGraphFeature<StaticMetadataFeatureConfig, Unit> {
+        override val key = createStorageKey<Unit>("integration-static-tool-metadata")
+
+        override fun createInitialConfig(agentConfig: AIAgentConfig): StaticMetadataFeatureConfig =
+            StaticMetadataFeatureConfig()
+
+        override fun install(config: StaticMetadataFeatureConfig, pipeline: AIAgentGraphPipeline) {
+            pipeline.provideToolCallMetadata(this) {
+                mapOf(
+                    "integration.trace.id" to "trace-from-feature",
+                    "integration.feature" to "static-metadata",
+                )
+            }
+        }
+    }
+
+    private object ThrowingPromptExecutor : PromptExecutor() {
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant = error("This test does not call the LLM")
+
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> = emptyFlow()
+
+        override suspend fun moderate(
+            prompt: Prompt,
+            model: LLModel
+        ): ModerationResult = error("This test does not call moderation")
+
+        override fun close() = Unit
+    }
+
+    private class SubgraphPromptCapturingExecutor : PromptExecutor() {
+        private var calls = 0
+        val prompts = mutableListOf<Prompt>()
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            prompts += prompt
+            calls += 1
+
+            return when (calls) {
+                1 -> {
+                    val lookupToolName = tools.single { it.name.contains("lookupSubgraphEvidence") }.name
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Tool.Call(
+                                id = "lookup-call",
+                                tool = lookupToolName,
+                                args = buildJsonObject { put("topic", "koog") },
+                            ),
+                        ),
+                        metaInfo = ResponseMetaInfo.create(KoogClock.System),
+                        id = "subgraph-lookup-call",
+                    )
+                }
+
+                2 -> {
+                    val finishToolName = tools.single { it.name.contains("finishSubgraphWithEvidence") }.name
+                    Message.Assistant(
+                        parts = listOf(
+                            MessagePart.Tool.Call(
+                                id = "finish-call",
+                                tool = finishToolName,
+                                args = buildJsonObject { put("result", "koog") },
+                            ),
+                        ),
+                        metaInfo = ResponseMetaInfo.create(KoogClock.System),
+                        id = "subgraph-finish-call",
+                    )
+                }
+
+                else -> {
+                    Message.Assistant(
+                        content = "All subgraph tool results are present.",
+                        metaInfo = ResponseMetaInfo.create(KoogClock.System),
+                        id = "after-subgraph-$calls",
+                    )
+                }
+            }
+        }
+
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> = emptyFlow()
+
+        override suspend fun moderate(
+            prompt: Prompt,
+            model: LLModel
+        ): ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap())
+
+        override fun close() = Unit
     }
 
     val twoToolsPrompt = """
@@ -313,6 +482,128 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     }
                 }
             }
+        }
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    @Test
+    fun integration_AIAgentToolExecutionKeepsMetadataEventsAndRawResultObject() = runTest(timeout = 30.seconds) {
+        val tool = RawMetadataTool()
+        val completedResults = mutableListOf<Any?>()
+        val completedToolCallIds = mutableListOf<String?>()
+        val strategy = strategy<ToolCalls, ReceivedToolResult>("raw-tool-result-object-strategy") {
+            val executeTool by nodeExecuteTools("execute_tool")
+
+            edge(nodeStart forwardTo executeTool)
+            edge(executeTool forwardTo nodeFinish transformed { it.toolResults.single() })
+        }
+
+        val agent = AIAgent(
+            promptExecutor = ThrowingPromptExecutor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("raw-tool-result-object-test") {
+                    system("No LLM calls are expected in this graph.")
+                },
+                model = OpenAIModels.Chat.GPT4_1,
+                maxAgentIterations = 3,
+            ),
+            toolRegistry = ToolRegistry {
+                tool(tool)
+            },
+            installFeatures = {
+                install(StaticMetadataFeature) {}
+                install(EventHandler.Feature) {
+                    onToolCallCompleted { eventContext ->
+                        completedToolCallIds += eventContext.toolCallId
+                        completedResults += eventContext.toolResult
+                    }
+                }
+            },
+        )
+
+        val result = agent.run(
+            ToolCalls(
+                listOf(
+                    MessagePart.Tool.Call(
+                        id = "metadata-call-1",
+                        tool = tool.name,
+                        args = """{"value":"koog"}""",
+                    )
+                )
+            )
+        )
+
+        result.resultKind shouldBe ToolResultKind.Success
+        result.resultObject shouldBe RawMetadataToolResult(echoed = "echo:koog", length = 4)
+        result.output shouldContain "echo:koog"
+        result.tool shouldBe tool.name
+        result.id shouldBe "metadata-call-1"
+
+        completedToolCallIds shouldContain "metadata-call-1"
+        completedResults.shouldNotBeEmpty()
+
+        tool.observedMetadata.single().shouldNotBeNull {
+            this["integration.trace.id"] shouldBe "trace-from-feature"
+            this["integration.feature"] shouldBe "static-metadata"
+            agentContext.shouldNotBeNull()
+        }
+    }
+
+    @OptIn(InternalAgentToolsApi::class)
+    @Test
+    fun integration_SubgraphWithTaskKeepsAllToolResultsBeforeNextPrompt() = runTest(timeout = 30.seconds) {
+        val executor = SubgraphPromptCapturingExecutor()
+        val lookupTool = ::lookupSubgraphEvidence.asTool()
+
+        val strategy = strategy<String, String>("subgraph-tool-result-prompt-regression") {
+            val subtask by subgraphWithTask<String, String>(
+                tools = listOf(lookupTool),
+                finishToolFunction = ::finishSubgraphWithEvidence,
+                llmParams = LLMParams(toolChoice = ToolChoice.Required),
+            ) { input ->
+                "Lookup evidence for '$input', then finish the subtask."
+            }
+            val verifyPrompt by nodeLLMRequest("verify_prompt")
+
+            nodeStart then subtask
+            edge(subtask forwardTo verifyPrompt transformed { "Verify subgraph results for: $it" })
+            edge(verifyPrompt forwardTo nodeFinish onTextMessage { true })
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("subgraph-tool-result-prompt-regression") {
+                    system("You execute subgraph regression tests.")
+                },
+                model = OpenAIModels.Chat.GPT4_1,
+                maxAgentIterations = 20,
+            ),
+            toolRegistry = ToolRegistry {
+                tool(lookupTool)
+                tool(::finishSubgraphWithEvidence)
+            },
+        )
+
+        val result = agent.run("koog")
+        result shouldBe "All subgraph tool results are present."
+
+        val promptAfterSubgraph = executor.prompts.last()
+        val toolResults = promptAfterSubgraph.messages
+            .flatMap { it.parts }
+            .filterIsInstance<MessagePart.Tool.Result>()
+
+        toolResults.shouldForAny {
+            it.id == "lookup-call" &&
+                it.tool == "lookupSubgraphEvidence" &&
+                it.output.contains("evidence:koog")
+        }
+        toolResults.shouldForAny {
+            it.id == "finish-call" &&
+                it.tool == "finishSubgraphWithEvidence" &&
+                it.output.contains("finished:koog")
         }
     }
 
@@ -847,8 +1138,15 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         )
         agent.run(testInput, agent.id)
 
-        with(checkpointStorageProvider.getCheckpoints(agent.id)) {
+        with(checkpointStorageProvider.getCheckpoints(agent.id).filter { !it.isTombstone() }) {
             size shouldBeGreaterThanOrEqual 3
+            shouldForAll {
+                it.llmModel shouldBe model
+                it.llmParams.shouldNotBeNull()
+                it.tools shouldBe emptyList()
+                it.storage.shouldNotBeNull()
+                it.agentIterations shouldBeGreaterThan 0
+            }
             mapNotNull { it.graphProperties?.nodePath }.toSet() shouldNotBeNull {
                 shouldForAny { it.shouldContain(hello) }
                 shouldForAny { it.shouldContain(world) }
@@ -1126,7 +1424,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                             }
                         },
                         model = model,
-                        maxAgentIterations = 10
+                        maxAgentIterations = 20
                     ),
                     toolRegistry = registry,
                     installFeatures = {
@@ -1151,7 +1449,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                         .shouldNotBeEmpty()
                         .shouldForAny { cp ->
                             cp.messageHistory.any { msg ->
-                                msg is MessagePart.Tool.Call && msg.tool == SimpleCalculatorTool.name
+                                msg.parts.any { part ->
+                                    part is MessagePart.Tool.Call && part.tool == SimpleCalculatorTool.name
+                                }
                             }
                         }
                 }
@@ -1245,7 +1545,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent<String, String>(
+                val agent = AIAgent(
                     promptExecutor = getExecutor(model),
                     strategy = parallelStrategy,
                     agentConfig = AIAgentConfig(
@@ -1300,7 +1600,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent<String, String>(
+                val agent = AIAgent(
                     promptExecutor = getExecutor(model),
                     strategy = selectionStrategy,
                     agentConfig = AIAgentConfig(
@@ -1347,7 +1647,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
             withRetry {
                 runWithTracking { eventHandlerConfig, state ->
-                    val agent = AIAgent<String, Pair<String, List<Message>>>(
+                    val agent = AIAgent(
                         promptExecutor = getExecutor(model),
                         strategy = historyCompressionStrategy,
                         agentConfig = AIAgentConfig(
@@ -1405,7 +1705,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent<String, Pair<String, List<Message>>>(
+                val agent = AIAgent(
                     promptExecutor = getExecutor(model),
                     strategy = historyCompressionStrategy,
                     agentConfig = AIAgentConfig(
@@ -1456,7 +1756,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
-                val agent = AIAgent<String, Pair<String, List<Message>>>(
+                val agent = AIAgent(
                     promptExecutor = getExecutor(model),
                     strategy = historyCompressionStrategy,
                     agentConfig = AIAgentConfig(
@@ -1557,8 +1857,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                                 "Forced tool request should return Tool.Call for model $model, but was ${response::class.simpleName}"
                             )
 
-                            val toolCallMessages = prompt.messages.flatMap { it.parts.filterIsInstance<MessagePart.Tool.Call>() }
-                                .filter { it.tool == testTool.name }
+                            val toolCallMessages =
+                                prompt.messages.flatMap { it.parts.filterIsInstance<MessagePart.Tool.Call>() }
+                                    .filter { it.tool == testTool.name }
                             toolCallMessages.shouldHaveSize(1)
                         }
 

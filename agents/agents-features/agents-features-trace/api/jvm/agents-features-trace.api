@@ -1,0 +1,64 @@
+public final class ai/koog/agents/features/tracing/feature/TraceFeatureConfig : ai/koog/agents/core/feature/config/FeatureConfig {
+	public fun <init> ()V
+}
+
+public final class ai/koog/agents/features/tracing/feature/Tracing {
+	public static final field Feature Lai/koog/agents/features/tracing/feature/Tracing$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/koog/agents/features/tracing/feature/Tracing$Feature : ai/koog/agents/core/feature/AIAgentGraphFeature {
+	public synthetic fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/core/feature/config/FeatureConfig;
+	public fun createInitialConfig (Lai/koog/agents/core/agent/config/AIAgentConfig;)Lai/koog/agents/features/tracing/feature/TraceFeatureConfig;
+	public fun getKey ()Lai/koog/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/koog/agents/core/feature/config/FeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Ljava/lang/Object;
+	public fun install (Lai/koog/agents/features/tracing/feature/TraceFeatureConfig;Lai/koog/agents/core/feature/pipeline/AIAgentGraphPipeline;)Lai/koog/agents/features/tracing/feature/Tracing;
+}
+
+public final class ai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter : ai/koog/agents/core/feature/writer/FeatureMessageFileWriter {
+	public static final field Companion Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter$Companion;
+	public fun <init> (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)V
+	public fun <init> (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun create (Ljava/nio/file/Path;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public static final fun create (Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public static final fun create (Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public fun toFileString (Lai/koog/agents/core/feature/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter$Companion {
+	public final fun create (Ljava/nio/file/Path;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public final fun create (Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public final fun create (Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public final fun create (Lkotlinx/io/files/Path;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public static synthetic fun create$default (Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter$Companion;Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+	public static synthetic fun create$default (Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter$Companion;Lkotlinx/io/files/Path;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageFileWriter;
+}
+
+public final class ai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter : ai/koog/agents/core/feature/writer/FeatureMessageLogWriter {
+	public static final field Companion Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter$Companion;
+	public fun <init> (Lio/github/oshai/kotlinlogging/KLogger;)V
+	public fun <init> (Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;)V
+	public fun <init> (Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun create (Lorg/slf4j/Logger;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public static final fun create (Lorg/slf4j/Logger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public static final fun create (Lorg/slf4j/Logger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public fun toLoggerMessage (Lai/koog/agents/core/feature/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter$Companion {
+	public final fun create (Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public final fun create (Lorg/slf4j/Logger;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public final fun create (Lorg/slf4j/Logger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public final fun create (Lorg/slf4j/Logger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public static synthetic fun create$default (Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter$Companion;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+	public static synthetic fun create$default (Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter$Companion;Lorg/slf4j/Logger;Lai/koog/agents/core/feature/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/koog/agents/features/tracing/writer/TraceFeatureMessageLogWriter;
+}
+
+public final class ai/koog/agents/features/tracing/writer/TraceFeatureMessageRemoteWriter : ai/koog/agents/core/feature/writer/FeatureMessageRemoteWriter {
+	public fun <init> ()V
+	public fun <init> (Lai/koog/agents/core/feature/remote/server/config/ServerConnectionConfig;)V
+	public synthetic fun <init> (Lai/koog/agents/core/feature/remote/server/config/ServerConnectionConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+

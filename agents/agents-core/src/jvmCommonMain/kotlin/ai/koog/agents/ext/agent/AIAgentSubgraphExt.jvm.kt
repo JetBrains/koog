@@ -35,6 +35,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
@@ -42,6 +43,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
     defineTask = defineTask
 )
 
@@ -67,6 +69,7 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     tools = tools,
@@ -74,5 +77,6 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
     llmModel = llmModel,
     llmParams = llmParams,
     responseProcessor = responseProcessor,
+    freshHistory = freshHistory,
     defineTask = defineTask
 )

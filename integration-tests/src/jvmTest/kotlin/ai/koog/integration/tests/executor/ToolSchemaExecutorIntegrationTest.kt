@@ -16,10 +16,13 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldEndWith
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -31,6 +34,11 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.seconds
 
 class ToolSchemaExecutorIntegrationTest {
+    @OptIn(ExperimentalSerializationApi::class)
+    private val toolCallJson = Json {
+        decodeEnumsCaseInsensitive = true
+    }
+
     companion object {
         @JvmStatic
         fun openAIModels(): Stream<LLModel> {
@@ -122,6 +130,96 @@ class ToolSchemaExecutorIntegrationTest {
         val overwrite: Boolean = false
     )
 
+    @Serializable
+    data class NullableDeliveryRequest(
+        val recipient: NullableRecipient,
+        val requestedSlots: List<NullableDeliverySlot?>,
+        val fallbackAddress: NullableAddress? = null,
+    )
+
+    @Serializable
+    data class NullableRecipient(
+        val name: String,
+        val contact: NullableContact? = null,
+    )
+
+    @Serializable
+    data class NullableContact(
+        val email: String? = null,
+        val phone: String? = null,
+    )
+
+    @Serializable
+    data class NullableDeliverySlot(
+        val day: NullableDeliveryDay,
+        val address: NullableAddress? = null,
+    )
+
+    @Serializable
+    data class NullableAddress(
+        val city: String,
+        val street: String? = null,
+    )
+
+    @Serializable
+    enum class NullableDeliveryDay {
+        MONDAY,
+        TUESDAY,
+        WEDNESDAY,
+    }
+
+    private val nullableDeliveryTool = ToolDescriptor(
+        name = "schedule_nullable_delivery",
+        description = "Schedules a delivery with nullable nested address and contact fields.",
+        requiredParameters = listOf(
+            ToolParameterDescriptor(
+                name = "recipient",
+                description = "The recipient for the delivery.",
+                type = ToolParameterType.Object(
+                    properties = listOf(
+                        ToolParameterDescriptor("name", "Recipient name.", ToolParameterType.String),
+                        ToolParameterDescriptor(
+                            "contact",
+                            "Optional contact details.",
+                            nullableObject(
+                                ToolParameterDescriptor(
+                                    "email",
+                                    "Optional email address.",
+                                    nullableScalar(ToolParameterType.String)
+                                ),
+                                ToolParameterDescriptor(
+                                    "phone",
+                                    "Optional phone number.",
+                                    nullableScalar(ToolParameterType.String)
+                                ),
+                            )
+                        ),
+                    ),
+                    requiredProperties = listOf("name"),
+                )
+            ),
+            ToolParameterDescriptor(
+                name = "requestedSlots",
+                description = "Requested delivery slots. Include a null item when a slot is intentionally unknown.",
+                type = ToolParameterType.List(
+                    ToolParameterType.AnyOf(
+                        arrayOf(
+                            ToolParameterDescriptor("slot", "Known slot.", deliverySlotType()),
+                            ToolParameterDescriptor("null", "Unknown slot.", ToolParameterType.Null),
+                        )
+                    )
+                )
+            ),
+        ),
+        optionalParameters = listOf(
+            ToolParameterDescriptor(
+                name = "fallbackAddress",
+                description = "Optional fallback address.",
+                type = nullableAddressType(),
+            )
+        )
+    )
+
     @ParameterizedTest
     @MethodSource(
         "anthropicModels",
@@ -134,6 +232,7 @@ class ToolSchemaExecutorIntegrationTest {
     fun integration_testToolSchemaExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
 
         val fileTools = FileTools()
 
@@ -161,6 +260,47 @@ class ToolSchemaExecutorIntegrationTest {
     }
 
     @ParameterizedTest
+    @MethodSource("anthropicModels", "googleModels", "openAIModels", "openRouterModels")
+    fun integration_testNestedNullableToolSchemaExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+
+        val prompt = prompt("test-nested-nullable-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
+            system(
+                """
+                You are a scheduler. You MUST call schedule_nullable_delivery exactly once.
+                Use recipient name Ada Lovelace. Set contact email to null and phone to +1-555-0100.
+                Requested slots must contain one known WEDNESDAY slot in Paris and one null slot.
+                Set fallbackAddress to null.
+                """.trimIndent()
+            )
+            user("Schedule the delivery now.")
+        }
+
+        withRetry(times = 3, testName = "integration_testNestedNullableToolSchemaExecutor[${model.id}]") {
+            val response = getLLMClientForProvider(model.provider).execute(prompt, model, listOf(nullableDeliveryTool))
+            val toolCall = response.parts.filterIsInstance<MessagePart.Tool.Call>().firstOrNull()
+
+            toolCall.shouldNotBeNull {
+                tool shouldContain nullableDeliveryTool.name
+                val request = toolCallJson.decodeFromString<NullableDeliveryRequest>(args)
+
+                request.recipient.name shouldContain "Ada"
+                request.recipient.contact.shouldNotBeNull {
+                    phone shouldContain "555"
+                    email shouldBe null
+                }
+                request.requestedSlots.shouldContain(null)
+                request.requestedSlots.filterNotNull().first().day shouldBe NullableDeliveryDay.WEDNESDAY
+                request.requestedSlots.filterNotNull().first().address.shouldNotBeNull {
+                    city shouldContain "Paris"
+                }
+                request.fallbackAddress shouldBe null
+            }
+        }
+    }
+
+    @ParameterizedTest
     @MethodSource("invalidToolDescriptors")
     fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor, message: String) =
         runTest(timeout = 300.seconds) {
@@ -181,4 +321,57 @@ class ToolSchemaExecutorIntegrationTest {
                 )
             }
         }
+
+    private fun nullableScalar(type: ToolParameterType): ToolParameterType =
+        ToolParameterType.AnyOf(
+            arrayOf(
+                ToolParameterDescriptor("value", "Present value.", type),
+                ToolParameterDescriptor("null", "Absent value.", ToolParameterType.Null),
+            )
+        )
+
+    private fun nullableObject(vararg properties: ToolParameterDescriptor): ToolParameterType =
+        ToolParameterType.AnyOf(
+            arrayOf(
+                ToolParameterDescriptor(
+                    "value",
+                    "Present object.",
+                    ToolParameterType.Object(
+                        properties = properties.toList(),
+                        requiredProperties = emptyList(),
+                    )
+                ),
+                ToolParameterDescriptor("null", "Absent object.", ToolParameterType.Null),
+            )
+        )
+
+    private fun nullableAddressType(): ToolParameterType =
+        ToolParameterType.AnyOf(
+            arrayOf(
+                ToolParameterDescriptor("value", "Known address.", addressType()),
+                ToolParameterDescriptor("null", "Unknown address.", ToolParameterType.Null),
+            )
+        )
+
+    private fun addressType(): ToolParameterType.Object =
+        ToolParameterType.Object(
+            properties = listOf(
+                ToolParameterDescriptor("city", "Address city.", ToolParameterType.String),
+                ToolParameterDescriptor("street", "Optional street.", nullableScalar(ToolParameterType.String)),
+            ),
+            requiredProperties = listOf("city"),
+        )
+
+    private fun deliverySlotType(): ToolParameterType.Object =
+        ToolParameterType.Object(
+            properties = listOf(
+                ToolParameterDescriptor(
+                    "day",
+                    "Delivery day.",
+                    ToolParameterType.Enum(NullableDeliveryDay.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor("address", "Optional slot address.", nullableAddressType()),
+            ),
+            requiredProperties = listOf("day"),
+        )
 }

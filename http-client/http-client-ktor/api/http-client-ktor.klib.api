@@ -1,0 +1,30 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:http-client-ktor>
+final class ai.koog.http.client.ktor/KtorKoogHttpClient : ai.koog.http.client/KoogHttpClient { // ai.koog.http.client.ktor/KtorKoogHttpClient|null[0]
+    constructor <init>(kotlin/String, io.github.oshai.kotlinlogging/KLogger, io.ktor.client/HttpClient = ..., kotlin/Function1<io.ktor.client/HttpClientConfig<out io.ktor.client.engine/HttpClientEngineConfig>, kotlin/Unit>) // ai.koog.http.client.ktor/KtorKoogHttpClient.<init>|<init>(kotlin.String;io.github.oshai.kotlinlogging.KLogger;io.ktor.client.HttpClient;kotlin.Function1<io.ktor.client.HttpClientConfig<out|io.ktor.client.engine.HttpClientEngineConfig>,kotlin.Unit>){}[0]
+
+    final val clientName // ai.koog.http.client.ktor/KtorKoogHttpClient.clientName|{}clientName[0]
+        final fun <get-clientName>(): kotlin/String // ai.koog.http.client.ktor/KtorKoogHttpClient.clientName.<get-clientName>|<get-clientName>(){}[0]
+    final val ktorClient // ai.koog.http.client.ktor/KtorKoogHttpClient.ktorClient|{}ktorClient[0]
+        final fun <get-ktorClient>(): io.ktor.client/HttpClient // ai.koog.http.client.ktor/KtorKoogHttpClient.ktorClient.<get-ktorClient>|<get-ktorClient>(){}[0]
+
+    final fun <#A1: kotlin/Any, #B1: kotlin/Any, #C1: kotlin/Any> sse(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin/Function1<kotlin/String?, kotlin/Boolean>, kotlin/Function1<kotlin/String, #B1>, kotlin/Function1<#B1, #C1?>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): kotlinx.coroutines.flow/Flow<#C1> // ai.koog.http.client.ktor/KtorKoogHttpClient.sse|sse(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.Function1<kotlin.String?,kotlin.Boolean>;kotlin.Function1<kotlin.String,0:1>;kotlin.Function1<0:1,0:2?>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>;2§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> lines(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.koog.http.client.ktor/KtorKoogHttpClient.lines|lines(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+    final fun close() // ai.koog.http.client.ktor/KtorKoogHttpClient.close|close(){}[0]
+    final suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> post(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin.reflect/KClass<#B1>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): #B1 // ai.koog.http.client.ktor/KtorKoogHttpClient.post|post(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.reflect.KClass<0:1>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    final suspend fun <#A1: kotlin/Any> get(kotlin/String, kotlin.reflect/KClass<#A1>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>): #A1 // ai.koog.http.client.ktor/KtorKoogHttpClient.get|get(kotlin.String;kotlin.reflect.KClass<0:0>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+
+    final class Factory : ai.koog.http.client/KoogHttpClient.Factory { // ai.koog.http.client.ktor/KtorKoogHttpClient.Factory|null[0]
+        constructor <init>(io.ktor.client/HttpClient = ..., kotlin/Boolean = ..., io.github.oshai.kotlinlogging/KLogger = ...) // ai.koog.http.client.ktor/KtorKoogHttpClient.Factory.<init>|<init>(io.ktor.client.HttpClient;kotlin.Boolean;io.github.oshai.kotlinlogging.KLogger){}[0]
+
+        final fun create(kotlin/String, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin/Long, kotlin/Long, kotlin/Long, kotlinx.serialization.json/Json): ai.koog.http.client.ktor/KtorKoogHttpClient // ai.koog.http.client.ktor/KtorKoogHttpClient.Factory.create|create(kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Long;kotlin.Long;kotlin.Long;kotlinx.serialization.json.Json){}[0]
+    }
+}
+
+final fun (ai.koog.http.client/KoogHttpClient.Companion).ai.koog.http.client.ktor/fromKtorClient(kotlin/String, io.github.oshai.kotlinlogging/KLogger, io.ktor.client/HttpClient = ..., kotlin/Function1<io.ktor.client/HttpClientConfig<out io.ktor.client.engine/HttpClientEngineConfig>, kotlin/Unit> = ...): ai.koog.http.client/KoogHttpClient // ai.koog.http.client.ktor/fromKtorClient|fromKtorClient@ai.koog.http.client.KoogHttpClient.Companion(kotlin.String;io.github.oshai.kotlinlogging.KLogger;io.ktor.client.HttpClient;kotlin.Function1<io.ktor.client.HttpClientConfig<out|io.ktor.client.engine.HttpClientEngineConfig>,kotlin.Unit>){}[0]

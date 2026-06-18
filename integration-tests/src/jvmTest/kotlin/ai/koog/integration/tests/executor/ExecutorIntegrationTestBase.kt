@@ -14,7 +14,10 @@ import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoning
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoningWithEncryption
+import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsTextAndToolCall
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsToolCall
+import ai.koog.integration.tests.utils.TestUtils.assertResponseDoesNotLeakRequestAttachments
+import ai.koog.integration.tests.utils.TestUtils.assertToolResultCorrelatesWithCall
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.structuredOutput.Country
 import ai.koog.integration.tests.utils.structuredOutput.checkWeatherStructuredOutputResponse
@@ -54,6 +57,7 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.executeStructured
 import ai.koog.prompt.llm.AnthropicLLMProvider
+import ai.koog.prompt.llm.BedrockLLMProvider
 import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -64,7 +68,6 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
-import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
@@ -81,6 +84,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
@@ -183,6 +187,37 @@ abstract class ExecutorIntegrationTestBase {
         else -> LLMParams(maxTokens = basicLimit)
     }
 
+    private fun toolRoundTripParams(model: LLModel): LLMParams = when (model.provider) {
+        is OpenAILLMProvider ->
+            if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
+                OpenAIResponsesParams(toolChoice = ToolChoice.Required, maxTokens = extendedLimit)
+            } else {
+                OpenAIChatParams(toolChoice = ToolChoice.Required, maxTokens = extendedLimit)
+            }
+
+        else -> LLMParams(toolChoice = ToolChoice.Required, maxTokens = extendedLimit)
+    }
+
+    private fun noToolFollowUpParams(model: LLModel): LLMParams = when (model.provider) {
+        is OpenAILLMProvider ->
+            if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
+                OpenAIResponsesParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
+            } else {
+                OpenAIChatParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
+            }
+
+        is BedrockLLMProvider -> LLMParams(maxTokens = extendedLimit)
+
+        else -> LLMParams(toolChoice = ToolChoice.None, maxTokens = extendedLimit)
+    }
+
+    private fun calculatorToolResultFor(toolCall: MessagePart.Tool.Call): MessagePart.Tool.Result =
+        MessagePart.Tool.Result(
+            id = toolCall.id,
+            tool = toolCall.tool,
+            output = "579"
+        )
+
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -208,7 +243,7 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(
-            model != GoogleModels.Gemini3_Pro_Preview,
+            model != GoogleModels.Gemini3_1Pro_Preview,
             "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
         )
 
@@ -223,6 +258,7 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
             val endFrames = mutableListOf<StreamFrame.End>()
             val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val textCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
             val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
             val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
 
@@ -230,6 +266,7 @@ abstract class ExecutorIntegrationTestBase {
                 prompt = prompt,
                 model = model,
                 textDeltaFrames = textDeltaFrames,
+                textCompleteFrames = textCompleteFrames,
                 toolDeltaFrames = toolDeltaFrames,
                 toolCompleteFrames = toolCompleteFrames,
                 endFrame = endFrames,
@@ -237,6 +274,11 @@ abstract class ExecutorIntegrationTestBase {
 
             toolDeltaFrames.shouldBeEmpty()
             toolCompleteFrames.shouldBeEmpty()
+            textCompleteFrames.forEach { complete ->
+                withClue("Streaming should not emit empty text-complete frames for ${model.id}") {
+                    complete.text.shouldNotBeBlank()
+                }
+            }
             when (model.provider) {
                 is OllamaLLMProvider -> endFrames.size shouldBe 0
 
@@ -398,6 +440,75 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
             with(getExecutor(model).execute(prompt, model, listOf(PriceCalculatorTool.descriptor))) {
                 assertResponseContainsToolCall(this, PriceCalculatorTool.name)
+            }
+        }
+    }
+
+    open fun integration_testAssistantMultiPartRoundTrip(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
+
+        val firstPrompt = Prompt.build("assistant-multipart-roundtrip-1", toolRoundTripParams(model)) {
+            system(
+                "You are a tool-calling assistant. Before calling a tool, include a brief text note. " +
+                    "Then call the calculator tool. Do not answer the calculation yourself."
+            )
+            user("Say that you will calculate it, then call the calculator tool for 123 + 456.")
+        }
+
+        val firstResponse =
+            withRetry(times = 3, testName = "integration_testAssistantMultiPartRoundTrip_Turn1[${model.id}]") {
+                getExecutor(model).execute(firstPrompt, model, listOf(CalculatorTool.descriptor))
+            }
+
+        val toolCall = assertResponseContainsTextAndToolCall(firstResponse, CalculatorTool.name)
+        val toolResult = calculatorToolResultFor(toolCall)
+        assertToolResultCorrelatesWithCall(toolCall, toolResult)
+
+        val secondPrompt = Prompt(
+            id = "assistant-multipart-roundtrip-2",
+            messages = firstPrompt.messages + firstResponse + Message.User(toolResult, RequestMetaInfo.Empty),
+            params = noToolFollowUpParams(model)
+        )
+
+        withRetry(times = 3, testName = "integration_testAssistantMultiPartRoundTrip_Turn2[${model.id}]") {
+            val secondResponse = getExecutor(model).execute(secondPrompt, model, listOf(CalculatorTool.descriptor))
+            secondResponse.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.shouldContain("579")
+            }
+        }
+    }
+
+    open fun integration_testToolCallResultCorrelationById(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
+
+        val firstPrompt = Prompt.build("tool-result-correlation-1", toolRoundTripParams(model)) {
+            system("You are a helpful assistant. Call the calculator tool for arithmetic requests.")
+            user("Use the calculator tool to compute 123 + 456.")
+        }
+
+        val firstResponse =
+            withRetry(times = 3, testName = "integration_testToolCallResultCorrelationById_Turn1[${model.id}]") {
+                getExecutor(model).execute(firstPrompt, model, listOf(CalculatorTool.descriptor))
+            }
+
+        val toolCall = firstResponse.parts.filterIsInstance<MessagePart.Tool.Call>().firstOrNull().shouldNotBeNull()
+        val toolResult = calculatorToolResultFor(toolCall)
+        assertToolResultCorrelatesWithCall(toolCall, toolResult)
+
+        val secondPrompt = Prompt(
+            id = "tool-result-correlation-2",
+            messages = firstPrompt.messages + firstResponse + Message.User(toolResult, RequestMetaInfo.Empty),
+            params = noToolFollowUpParams(model)
+        )
+
+        withRetry(times = 3, testName = "integration_testToolCallResultCorrelationById_Turn2[${model.id}]") {
+            val secondResponse = getExecutor(model).execute(secondPrompt, model, listOf(CalculatorTool.descriptor))
+            secondResponse.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.shouldContain("579")
             }
         }
     }
@@ -1003,9 +1114,6 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    private fun List<Message.Assistant>.toSingleMessage(): Message.Assistant =
-        Message.Assistant(parts = flatMap { it.parts }, metaInfo = ResponseMetaInfo.Empty)
-
     open fun integration_testReasoningCapability(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1091,6 +1199,123 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
+    open fun integration_testReasoningPreservationRoundTrip(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val params = createReasoningParams(model)
+        val prompt1 = Prompt.build("reasoning-preservation-roundtrip-1", params = params) {
+            system("You are a helpful assistant. Think step by step.")
+            user("What is 11 + 9? Think step by step, then answer.")
+        }
+
+        val response1 =
+            withRetry(times = 3, testName = "integration_testReasoningPreservationRoundTrip_Turn1[${model.id}]") {
+                getLLMClient(model).execute(prompt1, model)
+            }
+
+        assertResponseContainsReasoning(response1, model.provider != LLMProvider.Google)
+
+        val prompt2 = Prompt(
+            id = "reasoning-preservation-roundtrip-2",
+            messages = prompt1.messages + response1 + Message.User(
+                MessagePart.Text("Now multiply that result by 2. Answer with the number."),
+                metaInfo = RequestMetaInfo.Empty
+            ),
+            params = params
+        )
+
+        withRetry(times = 3, testName = "integration_testReasoningPreservationRoundTrip_Turn2[${model.id}]") {
+            val response2 = getLLMClient(model).execute(prompt2, model)
+            response2.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.shouldContain("40")
+            }
+        }
+    }
+
+    open fun integration_testEncryptedReasoningRoundTrip(model: LLModel) = runTest(timeout = 300.seconds) {
+        with(model.provider) {
+            Models.assumeAvailable(this)
+            assumeTrue(
+                this != LLMProvider.Bedrock,
+                "Bedrock API doesn't support thinking budget parameters required for reasoning encryption"
+            )
+            assumeTrue(
+                this != LLMProvider.Google,
+                "Google API doesn't consistently return encrypted thoughtSignature values"
+            )
+        }
+
+        val params = createReasoningParams(model)
+        val prompt1 = Prompt.build("encrypted-reasoning-roundtrip-1", params = params) {
+            system("You are a helpful assistant. Think carefully about the problem.")
+            user("What is 8 * 9? Think step by step, then answer.")
+        }
+
+        val response1 =
+            withRetry(times = 3, testName = "integration_testEncryptedReasoningRoundTrip_Turn1[${model.id}]") {
+                getLLMClient(model).execute(prompt1, model)
+            }
+
+        assertResponseContainsReasoningWithEncryption(response1)
+
+        val prompt2 = Prompt(
+            id = "encrypted-reasoning-roundtrip-2",
+            messages = prompt1.messages + response1 + Message.User(
+                MessagePart.Text("Now add 1 to that result. Answer with the number."),
+                metaInfo = RequestMetaInfo.Empty
+            ),
+            params = params
+        )
+
+        withRetry(times = 3, testName = "integration_testEncryptedReasoningRoundTrip_Turn2[${model.id}]") {
+            val response2 = getLLMClient(model).execute(prompt2, model)
+            response2.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.shouldContain("73")
+            }
+        }
+    }
+
+    open fun integration_testAttachmentTextRoundTrip(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.supports(LLMCapability.Vision.Image),
+            "Model must support vision capability"
+        )
+
+        val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
+        val prompt1 = prompt("attachment-text-roundtrip-1", params = createNoReasoningParams(model)) {
+            system("You are a helpful assistant that can analyze images.")
+            user {
+                text("Look at this image. Identify its visible content in one short sentence.")
+                image(KtPath(imageFile.pathString))
+            }
+        }
+
+        val response1 = withRetry(times = 3, testName = "integration_testAttachmentTextRoundTrip_Turn1[${model.id}]") {
+            getExecutor(model).execute(prompt1, model)
+        }
+
+        checkExecutorMediaResponse(response1)
+        assertResponseDoesNotLeakRequestAttachments(response1)
+
+        val prompt2 = Prompt(
+            id = "attachment-text-roundtrip-2",
+            messages = prompt1.messages + response1 + Message.User(
+                MessagePart.Text("Based on the image you just saw, name one color visible in it."),
+                metaInfo = RequestMetaInfo.Empty
+            ),
+            params = createNoReasoningParams(model)
+        )
+
+        withRetry(times = 3, testName = "integration_testAttachmentTextRoundTrip_Turn2[${model.id}]") {
+            val response2 = getExecutor(model).execute(prompt2, model)
+            response2.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text.shouldNotBeBlank()
+            }
+            assertResponseDoesNotLeakRequestAttachments(response2)
+        }
+    }
+
     open fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1169,7 +1394,7 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(
-            model != GoogleModels.Gemini3_Pro_Preview,
+            model != GoogleModels.Gemini3_1Pro_Preview,
             "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
         )
 

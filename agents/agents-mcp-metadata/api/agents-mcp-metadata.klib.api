@@ -1,0 +1,48 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:agents-mcp-metadata>
+final enum class ai.koog.agents.mcp.metadata/McpTransportType : kotlin/Enum<ai.koog.agents.mcp.metadata/McpTransportType> { // ai.koog.agents.mcp.metadata/McpTransportType|null[0]
+    enum entry Stdio // ai.koog.agents.mcp.metadata/McpTransportType.Stdio|null[0]
+    enum entry StreamableHttp // ai.koog.agents.mcp.metadata/McpTransportType.StreamableHttp|null[0]
+    enum entry Tcp // ai.koog.agents.mcp.metadata/McpTransportType.Tcp|null[0]
+    enum entry Unknown // ai.koog.agents.mcp.metadata/McpTransportType.Unknown|null[0]
+
+    final val entries // ai.koog.agents.mcp.metadata/McpTransportType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.mcp.metadata/McpTransportType> // ai.koog.agents.mcp.metadata/McpTransportType.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // ai.koog.agents.mcp.metadata/McpTransportType.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.koog.agents.mcp.metadata/McpTransportType.value.<get-value>|<get-value>(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.agents.mcp.metadata/McpTransportType // ai.koog.agents.mcp.metadata/McpTransportType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.agents.mcp.metadata/McpTransportType> // ai.koog.agents.mcp.metadata/McpTransportType.values|values#static(){}[0]
+}
+
+final class ai.koog.agents.mcp.metadata/McpServerInfo { // ai.koog.agents.mcp.metadata/McpServerInfo|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // ai.koog.agents.mcp.metadata/McpServerInfo.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+
+    final val command // ai.koog.agents.mcp.metadata/McpServerInfo.command|{}command[0]
+        final fun <get-command>(): kotlin/String? // ai.koog.agents.mcp.metadata/McpServerInfo.command.<get-command>|<get-command>(){}[0]
+    final val url // ai.koog.agents.mcp.metadata/McpServerInfo.url|{}url[0]
+        final fun <get-url>(): kotlin/String? // ai.koog.agents.mcp.metadata/McpServerInfo.url.<get-url>|<get-url>(){}[0]
+}
+
+final object ai.koog.agents.mcp.metadata/McpMetadataKeys { // ai.koog.agents.mcp.metadata/McpMetadataKeys|null[0]
+    final const val Instructions // ai.koog.agents.mcp.metadata/McpMetadataKeys.Instructions|{}Instructions[0]
+        final fun <get-Instructions>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.Instructions.<get-Instructions>|<get-Instructions>(){}[0]
+    final const val McpProtocolVersion // ai.koog.agents.mcp.metadata/McpMetadataKeys.McpProtocolVersion|{}McpProtocolVersion[0]
+        final fun <get-McpProtocolVersion>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.McpProtocolVersion.<get-McpProtocolVersion>|<get-McpProtocolVersion>(){}[0]
+    final const val McpSessionId // ai.koog.agents.mcp.metadata/McpMetadataKeys.McpSessionId|{}McpSessionId[0]
+        final fun <get-McpSessionId>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.McpSessionId.<get-McpSessionId>|<get-McpSessionId>(){}[0]
+    final const val McpTransportType // ai.koog.agents.mcp.metadata/McpMetadataKeys.McpTransportType|{}McpTransportType[0]
+        final fun <get-McpTransportType>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.McpTransportType.<get-McpTransportType>|<get-McpTransportType>(){}[0]
+    final const val ServerPort // ai.koog.agents.mcp.metadata/McpMetadataKeys.ServerPort|{}ServerPort[0]
+        final fun <get-ServerPort>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.ServerPort.<get-ServerPort>|<get-ServerPort>(){}[0]
+    final const val ServerUrl // ai.koog.agents.mcp.metadata/McpMetadataKeys.ServerUrl|{}ServerUrl[0]
+        final fun <get-ServerUrl>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.ServerUrl.<get-ServerUrl>|<get-ServerUrl>(){}[0]
+    final const val ToolId // ai.koog.agents.mcp.metadata/McpMetadataKeys.ToolId|{}ToolId[0]
+        final fun <get-ToolId>(): kotlin/String // ai.koog.agents.mcp.metadata/McpMetadataKeys.ToolId.<get-ToolId>|<get-ToolId>(){}[0]
+}

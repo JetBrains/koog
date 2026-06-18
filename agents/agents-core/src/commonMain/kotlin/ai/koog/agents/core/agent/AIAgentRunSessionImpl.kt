@@ -83,7 +83,7 @@ internal class AIAgentRunSessionImpl<Input, Output, TContext : AIAgentContext>(
                             state = AIAgentState.Running(context.parentContext ?: context)
 
                             @OptIn(InternalAgentsApi::class)
-                            context.pipeline.onStrategyStarting(eventId, executionInfo, context, strategy)
+                            context.pipeline.onStrategyStarting(eventId, executionInfo, context, strategy, input)
 
                             val result = strategy.execute(context = context, input = input)
 

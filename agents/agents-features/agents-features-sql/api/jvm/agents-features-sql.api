@@ -1,0 +1,151 @@
+public class ai/koog/agents/features/sql/providers/CheckpointsTable : org/jetbrains/exposed/sql/Table {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getCheckpointId ()Lorg/jetbrains/exposed/sql/Column;
+	public final fun getCheckpointJson ()Lorg/jetbrains/exposed/sql/Column;
+	public final fun getCreatedAt ()Lorg/jetbrains/exposed/sql/Column;
+	public final fun getPersistenceId ()Lorg/jetbrains/exposed/sql/Column;
+	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
+	public final fun getTtlTimestamp ()Lorg/jetbrains/exposed/sql/Column;
+	public final fun getVersion ()Lorg/jetbrains/exposed/sql/Column;
+}
+
+public final class ai/koog/agents/features/sql/providers/CleanupConfig {
+	public static final field Companion Lai/koog/agents/features/sql/providers/CleanupConfig$Companion;
+	public fun <init> ()V
+	public fun <init> (ZJ)V
+	public synthetic fun <init> (ZJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()J
+	public final fun copy (ZJ)Lai/koog/agents/features/sql/providers/CleanupConfig;
+	public static synthetic fun copy$default (Lai/koog/agents/features/sql/providers/CleanupConfig;ZJILjava/lang/Object;)Lai/koog/agents/features/sql/providers/CleanupConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnabled ()Z
+	public final fun getIntervalMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/koog/agents/features/sql/providers/CleanupConfig$Companion {
+	public final fun default ()Lai/koog/agents/features/sql/providers/CleanupConfig;
+	public final fun disabled ()Lai/koog/agents/features/sql/providers/CleanupConfig;
+}
+
+public abstract interface class ai/koog/agents/features/sql/providers/ExposedPersistenceFilter {
+	public abstract fun query (Lai/koog/agents/features/sql/providers/CheckpointsTable;)Lorg/jetbrains/exposed/sql/Query;
+}
+
+public abstract class ai/koog/agents/features/sql/providers/ExposedPersistenceStorageProvider : ai/koog/agents/features/sql/providers/SQLPersistenceStorageProvider {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cleanupExpired (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun conditionalCleanup (Lai/koog/agents/features/sql/providers/CleanupConfig;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun conditionalCleanup (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun conditionalCleanup$default (Lai/koog/agents/features/sql/providers/ExposedPersistenceStorageProvider;Lai/koog/agents/features/sql/providers/CleanupConfig;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun deleteAllCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteCheckpoint (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpointCount (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lai/koog/agents/features/sql/providers/ExposedPersistenceFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getCheckpoints (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun getCheckpointsTable ()Lai/koog/agents/features/sql/providers/CheckpointsTable;
+	protected final fun getDatabase ()Lorg/jetbrains/exposed/sql/Database;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lai/koog/agents/features/sql/providers/ExposedPersistenceFilter;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun getLatestCheckpoint (Ljava/lang/String;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun saveCheckpoint (Ljava/lang/String;Lai/koog/agents/snapshot/feature/AgentCheckpointData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/sql/providers/H2PersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/sql/providers/H2PersistenceStorageProvider : ai/koog/agents/features/sql/providers/ExposedPersistenceStorageProvider {
+	public static final field Companion Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun transaction (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/sql/providers/H2PersistenceStorageProvider$Companion {
+	public final fun fileBased (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider;
+	public static synthetic fun fileBased$default (Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILjava/lang/Object;)Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider;
+	public final fun inMemory (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider;
+	public static synthetic fun inMemory$default (Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILjava/lang/Object;)Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider;
+	public final fun postgresCompatible (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider;
+	public static synthetic fun postgresCompatible$default (Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILjava/lang/Object;)Lai/koog/agents/features/sql/providers/H2PersistenceStorageProvider;
+}
+
+public final class ai/koog/agents/features/sql/providers/MySQLPersistenceStorageProvider : ai/koog/agents/features/sql/providers/ExposedPersistenceStorageProvider {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/koog/agents/features/sql/providers/MySqlPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/sql/providers/NoOpSQLPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public static final field INSTANCE Lai/koog/agents/features/sql/providers/NoOpSQLPersistenceSchemaMigrator;
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/sql/providers/PostgresPersistenceSchemaMigrator : ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider : ai/koog/agents/features/sql/providers/ExposedPersistenceStorageProvider {
+	public static final field Companion Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Companion;
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+	public synthetic fun getCheckpointsTable ()Lai/koog/agents/features/sql/providers/CheckpointsTable;
+}
+
+public final class ai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder {
+	public final fun build ()Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider;
+	public final fun database (Lorg/jetbrains/exposed/sql/Database;)Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+	public final fun json (Lkotlinx/serialization/json/Json;)Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+	public final fun migrator (Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+	public final fun tableName (Ljava/lang/String;)Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+	public final fun ttlSeconds (J)Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+}
+
+public final class ai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Companion {
+	public final fun builder ()Lai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$Builder;
+}
+
+public final class ai/koog/agents/features/sql/providers/PostgresPersistenceStorageProvider$PostgresCheckpointsTable : ai/koog/agents/features/sql/providers/CheckpointsTable {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class ai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator {
+	public abstract fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class ai/koog/agents/features/sql/providers/SQLPersistenceStorageProvider : ai/koog/agents/snapshot/providers/PersistenceStorageProvider {
+	public fun <init> (Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun calculateTtlTimestamp (Lkotlin/time/Instant;)Ljava/lang/Long;
+	public abstract fun cleanupExpired (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteAllCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteCheckpoint (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCheckpointCount (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getCheckpoints (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getLatestCheckpoint (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getMigrator ()Lai/koog/agents/features/sql/providers/SQLPersistenceSchemaMigrator;
+	protected final fun getTableName ()Ljava/lang/String;
+	protected final fun getTtlSeconds ()Ljava/lang/Long;
+	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun transaction (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

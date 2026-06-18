@@ -17,6 +17,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.structure.StructuredRequest
@@ -41,6 +42,8 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param llmModel Optional [LLModel] override for the subgraph execution.
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  * @param responseProcessor Optional [ResponseProcessor] override for the subgraph execution.
+ * @param freshHistory When true, the subgraph starts with only the parent's system messages;
+ *  user/assistant conversation turns are not inherited. The subgraph's history is discarded upon completion.
  */
 public open class AIAgentSubgraphBase<TInput, TOutput>(
     override val name: String,
@@ -50,6 +53,7 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
     private val responseProcessor: ResponseProcessor? = null,
+    private val freshHistory: Boolean = false,
 ) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
     override val inputType: TypeToken = start.inputType
     override val outputType: TypeToken = finish.outputType
@@ -173,12 +177,22 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
             // Copy inner context with new tools, model and LLM params.
             val initialLLMContext = context.llm
 
+            val effectiveParams = llmParams ?: context.llm.prompt.params
+            val innerPrompt = context.llm.prompt.copy(
+                messages = if (freshHistory) {
+                    context.llm.prompt.messages.filterIsInstance<Message.System>()
+                } else {
+                    context.llm.prompt.messages
+                },
+                params = effectiveParams,
+            )
+
             context.replace(
                 context.copy(
                     llm = context.llm.copy(
                         tools = newTools,
                         model = llmModel ?: context.llm.model,
-                        prompt = context.llm.prompt.copy(params = llmParams ?: context.llm.prompt.params),
+                        prompt = innerPrompt,
                         responseProcessor = responseProcessor ?: context.llm.responseProcessor,
                     ),
                 ),
@@ -216,12 +230,17 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                 throw e
             }
 
-            // Restore original LLM context with updated message history.
+            // Restore original LLM context. When freshHistory is enabled, the subgraph's
+            // conversation is self-contained — discard it and restore the original prompt.
+            val restoredPrompt = if (freshHistory) {
+                initialLLMContext.prompt
+            } else {
+                context.llm.prompt.copy(params = initialLLMContext.prompt.params)
+            }
+
             context.replace(
                 context.copy(
-                    llm = initialLLMContext.copy(
-                        prompt = context.llm.prompt.copy(params = initialLLMContext.prompt.params)
-                    ),
+                    llm = initialLLMContext.copy(prompt = restoredPrompt),
                 ),
             )
 
@@ -401,6 +420,7 @@ public expect class AIAgentSubgraph<TInput, TOutput> constructor(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
 ) : AIAgentSubgraphBase<TInput, TOutput>
 
 /**

@@ -224,6 +224,7 @@ class ModelIdentifierParsingTest {
     fun testAnthropicModels() = verifyModels(
         LLMProvider.Anthropic,
         mapOf(
+            "anthropic.fable_5" to AnthropicModels.Fable_5,
             "anthropic.opus_4" to AnthropicModels.Opus_4,
             "anthropic.opus_4_1" to AnthropicModels.Opus_4_1,
             "anthropic.opus_4_5" to AnthropicModels.Opus_4_5,
@@ -245,7 +246,10 @@ class ModelIdentifierParsingTest {
             "google.gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
             "google.gemini2_5pro" to GoogleModels.Gemini2_5Pro,
             "google.gemini3flashpreview" to GoogleModels.Gemini3_Flash_Preview,
-            "google.gemini3propreview" to GoogleModels.Gemini3_Pro_Preview,
+            "google.gemini3_1propreview" to GoogleModels.Gemini3_1Pro_Preview,
+            "google.gemini3_1flashlitepreview" to GoogleModels.Gemini3_1FlashLite_Preview,
+            "google.gemini3_1flashlite" to GoogleModels.Gemini3_1FlashLite,
+            "google.gemini3_5flash" to GoogleModels.Gemini3_5Flash,
             "google.gemini_embedding001" to GoogleModels.Embeddings.GeminiEmbedding001,
         )
     )

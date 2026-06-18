@@ -6,6 +6,7 @@ import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailVe
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestDeepSeekKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestMistralAiKeyFromEnv
 import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
@@ -16,6 +17,7 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockAPIMethod
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -38,6 +40,10 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
 
         LLMProvider.OpenRouter -> OpenRouterLLMClient(
             readTestOpenRouterKeyFromEnv()
+        )
+
+        LLMProvider.DeepSeek -> DeepSeekLLMClient(
+            readTestDeepSeekKeyFromEnv()
         )
 
         LLMProvider.Bedrock -> BedrockLLMClient(

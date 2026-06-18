@@ -20,7 +20,8 @@ public actual class AIAgentSubgraph<TInput, TOutput> actual constructor(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel?,
     llmParams: LLMParams?,
-    responseProcessor: ResponseProcessor?
+    responseProcessor: ResponseProcessor?,
+    freshHistory: Boolean,
 ) : AIAgentSubgraphBase<TInput, TOutput>(
     name,
     start,
@@ -28,7 +29,8 @@ public actual class AIAgentSubgraph<TInput, TOutput> actual constructor(
     toolSelectionStrategy,
     llmModel,
     llmParams,
-    responseProcessor
+    responseProcessor,
+    freshHistory,
 ) {
     /**
      * Companion object for [AIAgentSubgraph].

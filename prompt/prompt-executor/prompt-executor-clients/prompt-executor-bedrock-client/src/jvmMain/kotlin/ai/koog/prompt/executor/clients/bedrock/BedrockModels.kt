@@ -201,6 +201,17 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude Fable 5 is Anthropic's most capable widely released model, built for the most demanding
+     * reasoning and long-horizon agentic work.
+     *
+     * @see <a href="https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5">
+     */
+    public val AnthropicClaudeFable5: LLModel = BedrockModel(
+        AnthropicModels.Fable_5,
+        "anthropic.claude-fable-5",
+    ).effectiveModel
+
+    /**
      * Claude 4 Sonnet - High-performance model with exceptional reasoning and efficiency
      *
      * This model offers:
@@ -854,6 +865,7 @@ public object BedrockModels : LLModelDefinitions {
         AnthropicClaude45Opus,
         AnthropicClaude46Opus,
         AnthropicClaude47Opus,
+        AnthropicClaudeFable5,
         AnthropicClaude4Sonnet,
         AnthropicClaude4_5Sonnet,
         AnthropicClaude4_6Sonnet,

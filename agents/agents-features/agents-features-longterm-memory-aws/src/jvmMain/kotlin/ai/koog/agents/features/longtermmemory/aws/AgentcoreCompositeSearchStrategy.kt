@@ -82,6 +82,7 @@ public class AgentcoreCompositeSearchStrategy(
              * The [query] passed to [AgentcoreCompositeSearchStrategy.create] is used
              * as `queryText`.
              */
+            @JvmStatic
             public fun similarity(
                 strategyType: AgentcoreMemoryStrategy,
                 memoryStrategyId: String,
@@ -102,6 +103,7 @@ public class AgentcoreCompositeSearchStrategy(
              * Build a listing subrequest against [memoryStrategyId] in [namespace]. The query
              * is ignored.
              */
+            @JvmStatic
             public fun listing(
                 strategyType: AgentcoreMemoryStrategy,
                 memoryStrategyId: String,

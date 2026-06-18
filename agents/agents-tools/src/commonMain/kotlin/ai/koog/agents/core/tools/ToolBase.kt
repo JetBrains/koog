@@ -3,6 +3,7 @@ package ai.koog.agents.core.tools
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.schema.defaultJsonSchemaConfig
 import ai.koog.agents.core.tools.schema.getToolDescriptor
+import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONElement
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.JSONSerializer
@@ -247,6 +248,40 @@ public abstract class ToolBase<TArgs, TResult>(
             result,
             "encodeResultToStringUnsafe argument must be castable to TResult",
         ) { encodeResultToString(it, serializer) }
+    }
+
+    /**
+     * Encodes the given result as a list of [MessagePart.ContentPart] to be sent to the LLM.
+     *
+     * Override this to return non-text content (images, files, etc.) alongside or instead of the
+     * default text representation. The default wraps [encodeResultToString] in a single [MessagePart.Text].
+     *
+     * Note: not all LLM providers support non-text content in tool results. Clients will log a warning
+     * and fall back gracefully when an unsupported part type is encountered.
+     *
+     * @param result The result returned by [execute].
+     * @param serializer The JSON serializer available for encoding structured data.
+     * @return A list of content parts representing the tool result.
+     */
+    public open fun encodeResultToParts(
+        result: TResult,
+        serializer: JSONSerializer,
+    ): List<MessagePart.ContentPart> = listOf(MessagePart.Text(encodeResultToString(result, serializer)))
+
+    /**
+     * Encodes the given result as content parts without type safety checks.
+     *
+     * @throws ClassCastException If the provided result cannot be cast to the expected type TResult.
+     */
+    @InternalAgentToolsApi
+    public fun encodeResultToPartsUnsafe(
+        result: Any?,
+        serializer: JSONSerializer,
+    ): List<MessagePart.ContentPart> {
+        return withUnsafeCast<TResult, List<MessagePart.ContentPart>>(
+            result,
+            "encodeResultToPartsUnsafe argument must be castable to TResult",
+        ) { encodeResultToParts(it, serializer) }
     }
 
     /**

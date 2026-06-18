@@ -1,0 +1,49 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.koog:http-client-core>
+abstract interface ai.koog.http.client/KoogHttpClient : kotlin/AutoCloseable { // ai.koog.http.client/KoogHttpClient|null[0]
+    abstract val clientName // ai.koog.http.client/KoogHttpClient.clientName|{}clientName[0]
+        abstract fun <get-clientName>(): kotlin/String // ai.koog.http.client/KoogHttpClient.clientName.<get-clientName>|<get-clientName>(){}[0]
+
+    abstract fun <#A1: kotlin/Any, #B1: kotlin/Any, #C1: kotlin/Any> sse(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin/Function1<kotlin/String?, kotlin/Boolean> = ..., kotlin/Function1<kotlin/String, #B1>, kotlin/Function1<#B1, #C1?>, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<#C1> // ai.koog.http.client/KoogHttpClient.sse|sse(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.Function1<kotlin.String?,kotlin.Boolean>;kotlin.Function1<kotlin.String,0:1>;kotlin.Function1<0:1,0:2?>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>;2§<kotlin.Any>}[0]
+    abstract fun <#A1: kotlin/Any> lines(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.koog.http.client/KoogHttpClient.lines|lines(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any, #B1: kotlin/Any> post(kotlin/String, #A1, kotlin.reflect/KClass<#A1>, kotlin.reflect/KClass<#B1>, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): #B1 // ai.koog.http.client/KoogHttpClient.post|post(kotlin.String;0:0;kotlin.reflect.KClass<0:0>;kotlin.reflect.KClass<0:1>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+    abstract suspend fun <#A1: kotlin/Any> get(kotlin/String, kotlin.reflect/KClass<#A1>, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): #A1 // ai.koog.http.client/KoogHttpClient.get|get(kotlin.String;kotlin.reflect.KClass<0:0>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+
+    abstract interface Factory { // ai.koog.http.client/KoogHttpClient.Factory|null[0]
+        abstract fun create(kotlin/String, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlinx.serialization.json/Json = ...): ai.koog.http.client/KoogHttpClient // ai.koog.http.client/KoogHttpClient.Factory.create|create(kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Long;kotlin.Long;kotlin.Long;kotlinx.serialization.json.Json){}[0]
+
+        final object Companion { // ai.koog.http.client/KoogHttpClient.Factory.Companion|null[0]
+            final val DEFAULT_CONNECT_TIMEOUT_MS // ai.koog.http.client/KoogHttpClient.Factory.Companion.DEFAULT_CONNECT_TIMEOUT_MS|{}DEFAULT_CONNECT_TIMEOUT_MS[0]
+                final fun <get-DEFAULT_CONNECT_TIMEOUT_MS>(): kotlin/Long // ai.koog.http.client/KoogHttpClient.Factory.Companion.DEFAULT_CONNECT_TIMEOUT_MS.<get-DEFAULT_CONNECT_TIMEOUT_MS>|<get-DEFAULT_CONNECT_TIMEOUT_MS>(){}[0]
+            final val DEFAULT_REQUEST_TIMEOUT_MS // ai.koog.http.client/KoogHttpClient.Factory.Companion.DEFAULT_REQUEST_TIMEOUT_MS|{}DEFAULT_REQUEST_TIMEOUT_MS[0]
+                final fun <get-DEFAULT_REQUEST_TIMEOUT_MS>(): kotlin/Long // ai.koog.http.client/KoogHttpClient.Factory.Companion.DEFAULT_REQUEST_TIMEOUT_MS.<get-DEFAULT_REQUEST_TIMEOUT_MS>|<get-DEFAULT_REQUEST_TIMEOUT_MS>(){}[0]
+            final val DEFAULT_SOCKET_TIMEOUT_MS // ai.koog.http.client/KoogHttpClient.Factory.Companion.DEFAULT_SOCKET_TIMEOUT_MS|{}DEFAULT_SOCKET_TIMEOUT_MS[0]
+                final fun <get-DEFAULT_SOCKET_TIMEOUT_MS>(): kotlin/Long // ai.koog.http.client/KoogHttpClient.Factory.Companion.DEFAULT_SOCKET_TIMEOUT_MS.<get-DEFAULT_SOCKET_TIMEOUT_MS>|<get-DEFAULT_SOCKET_TIMEOUT_MS>(){}[0]
+        }
+    }
+
+    final object Companion // ai.koog.http.client/KoogHttpClient.Companion|null[0]
+}
+
+final class ai.koog.http.client/KoogHttpClientException : kotlin/Exception { // ai.koog.http.client/KoogHttpClientException|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Throwable? = ...) // ai.koog.http.client/KoogHttpClientException.<init>|<init>(kotlin.String?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.Throwable?){}[0]
+
+    final val clientName // ai.koog.http.client/KoogHttpClientException.clientName|{}clientName[0]
+        final fun <get-clientName>(): kotlin/String? // ai.koog.http.client/KoogHttpClientException.clientName.<get-clientName>|<get-clientName>(){}[0]
+    final val errorBody // ai.koog.http.client/KoogHttpClientException.errorBody|{}errorBody[0]
+        final fun <get-errorBody>(): kotlin/String? // ai.koog.http.client/KoogHttpClientException.errorBody.<get-errorBody>|<get-errorBody>(){}[0]
+    final val statusCode // ai.koog.http.client/KoogHttpClientException.statusCode|{}statusCode[0]
+        final fun <get-statusCode>(): kotlin/Int? // ai.koog.http.client/KoogHttpClientException.statusCode.<get-statusCode>|<get-statusCode>(){}[0]
+}
+
+final fun ai.koog.http.client/mergeHeaders(kotlin/Array<out kotlin.collections/Map<kotlin/String, kotlin/String>>...): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.koog.http.client/mergeHeaders|mergeHeaders(kotlin.Array<out|kotlin.collections.Map<kotlin.String,kotlin.String>>...){}[0]
+final inline fun <#A: reified kotlin/Any, #B: reified kotlin/Any, #C: kotlin/Any> (ai.koog.http.client/KoogHttpClient).ai.koog.http.client/sse(kotlin/String, #A, noinline kotlin/Function1<kotlin/String?, kotlin/Boolean> = ..., noinline kotlin/Function1<kotlin/String, #B>, noinline kotlin/Function1<#B, #C?>, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<#C> // ai.koog.http.client/sse|sse@ai.koog.http.client.KoogHttpClient(kotlin.String;0:0;kotlin.Function1<kotlin.String?,kotlin.Boolean>;kotlin.Function1<kotlin.String,0:1>;kotlin.Function1<0:1,0:2?>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>;2§<kotlin.Any>}[0]
+final inline fun <#A: reified kotlin/Any> (ai.koog.http.client/KoogHttpClient).ai.koog.http.client/lines(kotlin/String, #A, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.koog.http.client/lines|lines@ai.koog.http.client.KoogHttpClient(kotlin.String;0:0;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]
+final suspend inline fun <#A: reified kotlin/Any, #B: reified kotlin/Any> (ai.koog.http.client/KoogHttpClient).ai.koog.http.client/post(kotlin/String, #A, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): #B // ai.koog.http.client/post|post@ai.koog.http.client.KoogHttpClient(kotlin.String;0:0;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>}[0]
+final suspend inline fun <#A: reified kotlin/Any> (ai.koog.http.client/KoogHttpClient).ai.koog.http.client/get(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): #A // ai.koog.http.client/get|get@ai.koog.http.client.KoogHttpClient(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]

@@ -379,18 +379,27 @@ public sealed interface MessagePart {
          *
          * @property id The unique identifier of the tool result.
          * @property tool The name of the tool that provided the result.
-         * @property output The output of the tool.
+         * @property parts The parts of the tool result. May contain text and attachment parts such as images or files.
+         *   Note that not all LLM providers support non-text content in tool results.
          * @property isError Whether this tool result represents an error. Defaults to false.
          */
         @Serializable
-        public data class Result @JvmOverloads constructor(
+        public data class Result constructor(
             public val id: String? = null,
             override val tool: String,
-            public val output: String,
+            public val parts: List<ContentPart>,
             public val isError: Boolean = false,
         ) : Tool, RequestPart {
             // Tool result does not support cache control
             override val cacheControl: CacheControl? = null
+
+            /** Convenience constructor for a single text output. */
+            public constructor(id: String? = null, tool: String, output: String, isError: Boolean = false) :
+                this(id, tool, listOf(Text(output)), isError)
+
+            /** Returns the concatenated text content of all text parts. */
+            public val output: String
+                get() = parts.filterIsInstance<Text>().joinToString("") { it.text }
         }
     }
 }
