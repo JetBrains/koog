@@ -194,6 +194,7 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
     private val responseProcessor: ResponseProcessor? = null,
+    private val freshHistory: Boolean = false,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
     override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
@@ -211,7 +212,8 @@ public class AIAgentSubgraphBuilder<Input, Output>(
             toolSelectionStrategy,
             llmModel,
             llmParams,
-            responseProcessor
+            responseProcessor,
+            freshHistory,
         )
     }
 }
@@ -245,6 +247,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
     private val responseProcessor: ResponseProcessor? = null,
+    private val freshHistory: Boolean = false,
 ) {
     private var subgraph: AIAgentSubgraph<Input, Output>? = null
 
@@ -271,6 +274,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
                 llmModel = llmModel,
                 llmParams = llmParams,
                 responseProcessor = responseProcessor,
+                freshHistory = freshHistory,
             )
         }
 
@@ -358,6 +362,7 @@ public inline fun <reified Input, reified Output> subgraph(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
 ): AIAgentSubgraphDelegate<Input, Output> {
     return AIAgentSubgraphBuilder<Input, Output>(
@@ -368,6 +373,7 @@ public inline fun <reified Input, reified Output> subgraph(
         llmModel = llmModel,
         llmParams = llmParams,
         responseProcessor = responseProcessor,
+        freshHistory = freshHistory,
     ).also { it.define() }.build()
 }
 
@@ -389,6 +395,7 @@ public fun <Input : Any, Output : Any> subgraph(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
 ): AIAgentSubgraphDelegate<Input, Output> {
     return AIAgentSubgraphBuilder<Input, Output>(
@@ -399,6 +406,7 @@ public fun <Input : Any, Output : Any> subgraph(
         llmModel = llmModel,
         llmParams = llmParams,
         responseProcessor = responseProcessor,
+        freshHistory = freshHistory,
     ).also { it.define() }.build()
 }
 
@@ -417,6 +425,7 @@ public inline fun <reified Input, reified Output> subgraph(
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
+    freshHistory: Boolean = false,
     define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
 ): AIAgentSubgraphDelegate<Input, Output> {
     return subgraph(
@@ -425,6 +434,7 @@ public inline fun <reified Input, reified Output> subgraph(
         llmModel = llmModel,
         llmParams = llmParams,
         responseProcessor = responseProcessor,
+        freshHistory = freshHistory,
         define = define
     )
 }
