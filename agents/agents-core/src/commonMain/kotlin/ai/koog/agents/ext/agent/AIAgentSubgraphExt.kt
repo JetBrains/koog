@@ -235,7 +235,6 @@ public inline fun <reified Input, reified Output> subgraphWithTask(
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
-        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -291,7 +290,6 @@ public fun <Input : Any, Output : Any> subgraphWithTask(
         outputTransformedType = outputType,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
-        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -380,7 +378,6 @@ public fun <Input : Any, OutputTransformed : Any> subgraphWithTask(
         outputTransformedType = finishTool.resultType,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
-        freshHistory = freshHistory,
         defineTask = defineTask,
     )
 }
@@ -427,7 +424,6 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
-        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -474,7 +470,6 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> sub
         finishTool = finishTool,
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
-        freshHistory = freshHistory,
         defineTask = defineTask
     )
 }
@@ -638,9 +633,6 @@ public inline fun <reified Input : Any> subgraphWithVerification(
  * @param parallelTools the mode in which tools are executed, e.g., parallel or sequential execution.
  * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
  *        determining that the task cannot be completed. If not provided, a default is used.
- * @param freshHistory when `true`, the subgraph starts with only the parent's system messages;
- *        user/assistant turns are not inherited, and the subgraph's history is discarded on exit.
- *        The string returned by [defineTask] is appended as a `user` message.
  * @param defineTask a suspend function defining the task description, executed within the
  *        context of an AI agent graph and based on the given input data.
  */
@@ -651,7 +643,6 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
     outputTransformedType: TypeToken,
     parallelTools: Boolean,
     assistantResponseRepeatMax: Int? = null,
-    freshHistory: Boolean = false,
     defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
     val originalToolsKey = createStorageKey<List<ToolDescriptor>>("all-available-tools")
@@ -807,9 +798,6 @@ public fun <Input, Output, OutputTransformed> AIAgentSubgraphBuilderBase<Input, 
  * @param parallelTools the mode in which tools are executed, e.g., parallel or sequential execution.
  * @param assistantResponseRepeatMax the maximum number of assistant responses allowed before
  *        determining that the task cannot be completed. If not provided, a default is used.
- * @param freshHistory when `true`, the subgraph starts with only the parent's system messages;
- *        user/assistant turns are not inherited, and the subgraph's history is discarded on exit.
- *        The string returned by [defineTask] is appended as a `user` message.
  * @param defineTask a suspend function defining the task description, executed within the
  *        context of an AI agent graph and based on the given input data.
  */
@@ -818,7 +806,6 @@ public inline fun <reified Input, Output, reified OutputTransformed> AIAgentSubg
     finishTool: Tool<Output, OutputTransformed>,
     parallelTools: Boolean,
     assistantResponseRepeatMax: Int? = null,
-    freshHistory: Boolean = false,
     noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
     setupSubgraphWithTask(
@@ -827,7 +814,6 @@ public inline fun <reified Input, Output, reified OutputTransformed> AIAgentSubg
         outputTransformedType = typeToken<OutputTransformed>(),
         parallelTools = parallelTools,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
-        freshHistory = freshHistory,
         defineTask = defineTask,
     )
 }
