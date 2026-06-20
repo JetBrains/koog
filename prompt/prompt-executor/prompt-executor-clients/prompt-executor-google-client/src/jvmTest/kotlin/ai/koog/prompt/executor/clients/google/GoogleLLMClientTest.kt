@@ -523,6 +523,29 @@ class GoogleLLMClientTest {
     }
 
     @Test
+    fun `processGoogleCandidate handles FunctionCall with no args`() {
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(name = "noArgsTool")
+                    )
+                )
+            ),
+            finishReason = "STOP"
+        )
+
+        val response = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        response.parts shouldHaveSize 1
+        val call = response.parts[0].shouldBeInstanceOf<MessagePart.Tool.Call>()
+        call.tool shouldBe "noArgsTool"
+        call.args shouldBe "{}"
+    }
+
+    @Test
     fun `processGoogleCandidate creates Reasoning from Text with thought=true`() {
         val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "test")
         val candidate = GoogleCandidate(

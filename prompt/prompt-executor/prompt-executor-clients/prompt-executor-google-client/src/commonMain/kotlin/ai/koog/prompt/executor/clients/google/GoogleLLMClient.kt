@@ -716,8 +716,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                             MessagePart.Tool.Call(
                                 id = Uuid.random().toString(),
                                 tool = part.functionCall.name,
-                                args = part.functionCall.args
-                                    ?: throw IllegalArgumentException("Function call args must not be null")
+                                args = part.functionCall.args ?: JsonObject(emptyMap())
                             )
                         )
                     }
