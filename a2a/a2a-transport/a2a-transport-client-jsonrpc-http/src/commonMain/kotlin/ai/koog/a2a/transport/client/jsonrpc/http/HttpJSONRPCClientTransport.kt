@@ -2,9 +2,9 @@ package ai.koog.a2a.transport.client.jsonrpc.http
 
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCClientTransport
-import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

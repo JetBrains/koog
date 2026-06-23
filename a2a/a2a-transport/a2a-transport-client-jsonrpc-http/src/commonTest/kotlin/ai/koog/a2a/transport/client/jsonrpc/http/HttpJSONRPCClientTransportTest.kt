@@ -2,26 +2,32 @@ package ai.koog.a2a.transport.client.jsonrpc.http
 
 import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
+import ai.koog.a2a.exceptions.ErrorData
+import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
+import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.AgentSkill
-import ai.koog.a2a.model.ResponseEvent
+import ai.koog.a2a.model.CancelTaskRequest
+import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetExtendedAgentCardRequest
+import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetTaskRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
+import ai.koog.a2a.model.ListTasksRequest
+import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.PushNotificationConfig
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
-import ai.koog.a2a.model.TaskPushNotificationConfigParams
-import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.ClientTransport
-import ai.koog.a2a.transport.Request
-import ai.koog.a2a.transport.RequestId
-import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
@@ -54,9 +60,9 @@ class HttpJSONRPCClientTransportTest {
 
     private suspend inline fun <reified TRequest, reified TResponse> testAPIMethod(
         method: A2AMethod,
-        request: Request<TRequest>,
-        expectedResponse: Response<TResponse>,
-        noinline invoke: suspend ClientTransport.(Request<TRequest>) -> Response<TResponse>,
+        request: TRequest,
+        expectedResponse: TResponse,
+        noinline invoke: suspend ClientTransport.(TRequest) -> TResponse,
     ) {
         val mockEngine = MockEngine { receivedRequest ->
             assertEquals(HttpMethod.Post, receivedRequest.method)
@@ -66,12 +72,11 @@ class HttpJSONRPCClientTransportTest {
             val jsonRpcRequest = json.decodeFromString<JSONRPCRequest>(requestBodyText)
 
             assertEquals(method.value, jsonRpcRequest.method)
-            assertEquals(request.id, jsonRpcRequest.id)
-            assertEquals(request.data, json.decodeFromJsonElement(jsonRpcRequest.params))
+            assertEquals(request, json.decodeFromJsonElement<TRequest>(jsonRpcRequest.params))
 
             val jsonRpcResponse = JSONRPCSuccessResponse(
-                id = expectedResponse.id,
-                result = json.encodeToJsonElement(expectedResponse.data),
+                id = jsonRpcRequest.id,
+                result = json.encodeToJsonElement<TResponse>(expectedResponse),
                 jsonrpc = JSONRPC_VERSION,
             )
 
@@ -86,38 +91,35 @@ class HttpJSONRPCClientTransportTest {
 
         val actualResponse = transport.invoke(request)
 
-        assertEquals(expectedResponse.id, actualResponse.id)
-        assertEquals(expectedResponse.data, actualResponse.data)
+        assertEquals(expectedResponse, actualResponse)
 
         transport.close()
     }
 
     @Test
-    fun testGetAuthenticatedExtendedAgentCard() = runTest {
-        val id = RequestId.StringId("test-1")
+    fun testGetExtendedAgentCard() = runTest {
+        val request = GetExtendedAgentCardRequest()
 
-        val request = Request(
-            id = id,
-            data = null,
-        )
-
-        val expectedResponse = Response(
-            id = id,
-            data = AgentCard(
-                name = "Test Agent",
-                description = "A test agent",
-                url = "https://api.example.com/a2a",
-                version = "1.0.0",
-                capabilities = AgentCapabilities(),
-                defaultInputModes = listOf("text/plain"),
-                defaultOutputModes = listOf("text/plain"),
-                skills = listOf(
-                    AgentSkill(
-                        id = "test-skill",
-                        name = "Test Skill",
-                        description = "A test skill",
-                        tags = listOf("test")
-                    )
+        val expectedResponse = AgentCard(
+            name = "Test Agent",
+            description = "A test agent",
+            supportedInterfaces = listOf(
+                AgentInterface(
+                    url = "https://api.example.com/a2a",
+                    protocolBinding = TransportProtocol.JSONRPC,
+                    protocolVersion = "1.0.1",
+                )
+            ),
+            version = "1.0.0",
+            capabilities = AgentCapabilities(),
+            defaultInputModes = listOf("text/plain"),
+            defaultOutputModes = listOf("text/plain"),
+            skills = listOf(
+                AgentSkill(
+                    id = "test-skill",
+                    name = "Test Skill",
+                    description = "A test skill",
+                    tags = listOf("test")
                 )
             )
         )
@@ -132,8 +134,6 @@ class HttpJSONRPCClientTransportTest {
 
     @Test
     fun testSendMessage() = runTest {
-        val id = RequestId.StringId("test-2")
-
         val testMessage = Message(
             messageId = Uuid.random().toString(),
             role = Role.ROLE_USER,
@@ -141,23 +141,15 @@ class HttpJSONRPCClientTransportTest {
             taskId = "task-123"
         )
 
-        val sendMessageRequest = SendMessageRequest(
+        val request = SendMessageRequest(
             message = testMessage
         )
 
-        val request = Request(
-            id = id,
-            data = sendMessageRequest,
-        )
-
-        val expectedResponse: Response<ResponseEvent> = Response(
-            id = id,
-            data = Message(
-                messageId = "msg-456",
-                role = Role.ROLE_AGENT,
-                parts = listOf(TextPart("Hello, user! How can I help you?")),
-                taskId = "task-123"
-            )
+        val expectedResponse: ResponseEvent = Message(
+            messageId = "msg-456",
+            role = Role.ROLE_AGENT,
+            parts = listOf(TextPart("Hello, user! How can I help you?")),
+            taskId = "task-123"
         )
 
         testAPIMethod(
@@ -176,38 +168,28 @@ class HttpJSONRPCClientTransportTest {
 
     @Test
     fun testGetTask() = runTest {
-        val id = RequestId.StringId("test-3")
-
-        val taskQueryParams = TaskQueryParams(
+        val request = GetTaskRequest(
             id = "task-123",
             historyLength = 10
         )
 
-        val request = Request(
-            id = id,
-            data = taskQueryParams,
-        )
-
-        val expectedResponse = Response(
-            id = id,
-            data = Task(
-                id = "task-123",
-                contextId = "context-456",
-                status = TaskStatus(
-                    state = TaskState.TASK_STATE_WORKING,
-                    message = Message(
-                        messageId = Uuid.random().toString(),
-                        role = Role.ROLE_AGENT,
-                        parts = listOf(TextPart("Working on your request..."))
-                    )
-                ),
-                history = listOf(
-                    Message(
-                        messageId = Uuid.random().toString(),
-                        role = Role.ROLE_USER,
-                        parts = listOf(TextPart("Hello, agent!")),
-                        taskId = "task-123"
-                    )
+        val expectedResponse = Task(
+            id = "task-123",
+            contextId = "context-456",
+            status = TaskStatus(
+                state = TaskState.TASK_STATE_WORKING,
+                message = Message(
+                    messageId = Uuid.random().toString(),
+                    role = Role.ROLE_AGENT,
+                    parts = listOf(TextPart("Working on your request..."))
+                )
+            ),
+            history = listOf(
+                Message(
+                    messageId = Uuid.random().toString(),
+                    role = Role.ROLE_USER,
+                    parts = listOf(TextPart("Hello, agent!")),
+                    taskId = "task-123"
                 )
             )
         )
@@ -221,28 +203,66 @@ class HttpJSONRPCClientTransportTest {
     }
 
     @Test
-    fun testCancelTask() = runTest {
-        val id = RequestId.StringId("test-4")
-
-        val taskIdParams = TaskIdParams(id = "task-123")
-
-        val request = Request(
-            id = id,
-            data = taskIdParams,
+    fun testListTasks() = runTest {
+        val request = ListTasksRequest(
+            contextId = "context-456",
+            status = TaskState.TASK_STATE_WORKING,
+            pageSize = 10,
         )
 
-        val expectedResponse = Response(
-            id = id,
-            data = Task(
-                id = "task-123",
-                contextId = "context-456",
-                status = TaskStatus(
-                    state = TaskState.TASK_STATE_CANCELED,
-                    message = Message(
-                        messageId = Uuid.random().toString(),
-                        role = Role.ROLE_AGENT,
-                        parts = listOf(TextPart("Task has been canceled."))
+        val expectedResponse = ListTasksResponse(
+            tasks = listOf(
+                Task(
+                    id = "task-123",
+                    contextId = "context-456",
+                    status = TaskStatus(
+                        state = TaskState.TASK_STATE_WORKING,
+                        message = Message(
+                            messageId = Uuid.random().toString(),
+                            role = Role.ROLE_AGENT,
+                            parts = listOf(TextPart("Working on your request..."))
+                        )
                     )
+                ),
+                Task(
+                    id = "task-789",
+                    contextId = "context-456",
+                    status = TaskStatus(
+                        state = TaskState.TASK_STATE_WORKING,
+                        message = Message(
+                            messageId = Uuid.random().toString(),
+                            role = Role.ROLE_AGENT,
+                            parts = listOf(TextPart("Still working..."))
+                        )
+                    )
+                )
+            ),
+            nextPageToken = "next-page-token",
+            pageSize = 10,
+            totalSize = 2,
+        )
+
+        testAPIMethod(
+            method = A2AMethod.ListTasks,
+            request = request,
+            expectedResponse = expectedResponse,
+            invoke = { listTasks(it) }
+        )
+    }
+
+    @Test
+    fun testCancelTask() = runTest {
+        val request = CancelTaskRequest(id = "task-123")
+
+        val expectedResponse = Task(
+            id = "task-123",
+            contextId = "context-456",
+            status = TaskStatus(
+                state = TaskState.TASK_STATE_CANCELED,
+                message = Message(
+                    messageId = Uuid.random().toString(),
+                    role = Role.ROLE_AGENT,
+                    parts = listOf(TextPart("Task has been canceled."))
                 )
             )
         )
@@ -257,65 +277,39 @@ class HttpJSONRPCClientTransportTest {
 
     @Ignore
     @Test
-    fun testResubscribeTask() = runTest {
+    fun testSubscribeToTask() = runTest {
         // FIXME Can't test it, MockEngine doesn't support SSE capability
     }
 
     @Test
     fun testCreateTaskPushNotificationConfig() = runTest {
-        val id = RequestId.StringId("test-5")
-
-        val pushNotificationConfig = TaskPushNotificationConfig(
+        val request = TaskPushNotificationConfig(
             taskId = "task-123",
-            pushNotificationConfig = PushNotificationConfig(
-                id = "notification-config-1",
-                url = "https://webhook.example.com/notifications",
-                token = "webhook-token-123"
-            )
-        )
-
-        val request = Request(
-            id = id,
-            data = pushNotificationConfig,
-        )
-
-        val expectedResponse = Response(
-            id = id,
-            data = pushNotificationConfig
+            id = "notification-config-1",
+            url = "https://webhook.example.com/notifications",
+            token = "webhook-token-123"
         )
 
         testAPIMethod(
             method = A2AMethod.CreateTaskPushNotificationConfig,
             request = request,
-            expectedResponse = expectedResponse,
+            expectedResponse = request,
             invoke = { createTaskPushNotificationConfig(it) }
         )
     }
 
     @Test
     fun testGetTaskPushNotificationConfig() = runTest {
-        val id = RequestId.StringId("test-6")
-
-        val configParams = TaskPushNotificationConfigParams(
-            id = "task-123",
-            pushNotificationConfigId = "notification-config-1"
+        val request = GetTaskPushNotificationConfigRequest(
+            taskId = "task-123",
+            id = "notification-config-1"
         )
 
-        val request = Request(
-            id = id,
-            data = configParams,
-        )
-
-        val expectedResponse = Response(
-            id = id,
-            data = TaskPushNotificationConfig(
-                taskId = "task-123",
-                pushNotificationConfig = PushNotificationConfig(
-                    id = "notification-config-1",
-                    url = "https://webhook.example.com/notifications",
-                    token = "webhook-token-123"
-                )
-            )
+        val expectedResponse = TaskPushNotificationConfig(
+            taskId = "task-123",
+            id = "notification-config-1",
+            url = "https://webhook.example.com/notifications",
+            token = "webhook-token-123"
         )
 
         testAPIMethod(
@@ -328,35 +322,24 @@ class HttpJSONRPCClientTransportTest {
 
     @Test
     fun testListTaskPushNotificationConfigs() = runTest {
-        val id = RequestId.StringId("test-7")
+        val request = ListTaskPushNotificationConfigsRequest(taskId = "task-123")
 
-        val taskIdParams = TaskIdParams(id = "task-123")
-
-        val request = Request(
-            id = id,
-            data = taskIdParams,
-        )
-
-        val expectedResponse = Response(
-            id = id,
-            data = listOf(
+        val expectedResponse = ListTaskPushNotificationConfigsResponse(
+            configs = listOf(
                 TaskPushNotificationConfig(
                     taskId = "task-123",
-                    pushNotificationConfig = PushNotificationConfig(
-                        id = "notification-config-1",
-                        url = "https://webhook.example.com/notifications",
-                        token = "webhook-token-123"
-                    )
+                    id = "notification-config-1",
+                    url = "https://webhook.example.com/notifications",
+                    token = "webhook-token-123"
                 ),
                 TaskPushNotificationConfig(
                     taskId = "task-123",
-                    pushNotificationConfig = PushNotificationConfig(
-                        id = "notification-config-2",
-                        url = "https://webhook2.example.com/notifications",
-                        token = "webhook-token-456"
-                    )
+                    id = "notification-config-2",
+                    url = "https://webhook2.example.com/notifications",
+                    token = "webhook-token-456"
                 )
-            )
+            ),
+            nextPageToken = "",
         )
 
         testAPIMethod(
@@ -369,35 +352,21 @@ class HttpJSONRPCClientTransportTest {
 
     @Test
     fun testDeleteTaskPushNotificationConfig() = runTest {
-        val id = RequestId.StringId("test-8")
-
-        val configParams = TaskPushNotificationConfigParams(
-            id = "task-123",
-            pushNotificationConfigId = "notification-config-1"
-        )
-
-        val request = Request(
-            id = id,
-            data = configParams,
-        )
-
-        val expectedResponse = Response(
-            id = id,
-            data = null
+        val request = DeleteTaskPushNotificationConfigRequest(
+            taskId = "task-123",
+            id = "notification-config-1"
         )
 
         testAPIMethod(
             method = A2AMethod.DeleteTaskPushNotificationConfig,
             request = request,
-            expectedResponse = expectedResponse,
+            expectedResponse = Unit,
             invoke = { deleteTaskPushNotificationConfig(it) }
         )
     }
 
     @Test
     fun testSendMessageError() = runTest {
-        val id = RequestId.StringId("test-error-1")
-
         val testMessage = Message(
             messageId = Uuid.random().toString(),
             role = Role.ROLE_USER,
@@ -405,13 +374,12 @@ class HttpJSONRPCClientTransportTest {
             taskId = "invalid-task-id"
         )
 
-        val sendMessageRequest = SendMessageRequest(
+        val request = SendMessageRequest(
             message = testMessage
         )
 
-        val request = Request(
-            id = id,
-            data = sendMessageRequest,
+        val expectedDetails = listOf<ErrorData>(
+            ErrorInfo(reason = "INVALID_PARAMETERS", metadata = mapOf("field" to "message"))
         )
 
         val mockEngine = MockEngine { receivedRequest ->
@@ -422,15 +390,14 @@ class HttpJSONRPCClientTransportTest {
             val jsonRpcRequest = json.decodeFromString<JSONRPCRequest>(requestBodyText)
 
             assertEquals(A2AMethod.SendMessage.value, jsonRpcRequest.method)
-            assertEquals(request.id, jsonRpcRequest.id)
-            assertEquals(request.data, json.decodeFromJsonElement(jsonRpcRequest.params))
+            assertEquals(request, json.decodeFromJsonElement<SendMessageRequest>(jsonRpcRequest.params))
 
             val jsonRpcErrorResponse = JSONRPCErrorResponse(
-                id = id,
+                id = jsonRpcRequest.id,
                 error = JSONRPCError(
                     code = A2AErrorCodes.INVALID_PARAMS,
                     message = "Invalid method parameters",
-                    data = json.encodeToJsonElement("The message parameters are invalid")
+                    data = json.encodeToJsonElement(expectedDetails)
                 ),
                 jsonrpc = JSONRPC_VERSION,
             )
@@ -449,7 +416,8 @@ class HttpJSONRPCClientTransportTest {
             fail("Expected A2AInvalidParamsException to be thrown")
         } catch (e: A2AInvalidParamsException) {
             assertEquals("Invalid method parameters", e.message)
-            assertEquals(-32602, e.errorCode)
+            assertEquals(A2AErrorCodes.INVALID_PARAMS, e.errorCode)
+            assertEquals(expectedDetails, e.details)
         }
 
         transport.close()
