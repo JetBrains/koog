@@ -190,5 +190,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override suspend fun deleteTaskPushNotificationConfig(
         request: DeleteTaskPushNotificationConfigRequest,
         ctx: ClientCallContext
-    ): Unit = request(A2AMethod.DeleteTaskPushNotificationConfig, request, ctx)
+    ) {
+        request<DeleteTaskPushNotificationConfigRequest, Unit?>(A2AMethod.DeleteTaskPushNotificationConfig, request, ctx)
+    }
 }

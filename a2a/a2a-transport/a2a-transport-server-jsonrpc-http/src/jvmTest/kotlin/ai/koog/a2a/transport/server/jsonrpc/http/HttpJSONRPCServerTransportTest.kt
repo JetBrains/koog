@@ -3,32 +3,38 @@ package ai.koog.a2a.transport.server.jsonrpc.http
 import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
+import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.AgentSkill
-import ai.koog.a2a.model.ResponseEvent
+import ai.koog.a2a.model.CancelTaskRequest
+import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetExtendedAgentCardRequest
+import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetTaskRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
+import ai.koog.a2a.model.ListTasksRequest
+import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.PushNotificationConfig
+import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SendMessageRequest
+import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
-import ai.koog.a2a.model.TaskPushNotificationConfigParams
-import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.transport.Request
+import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.RequestHandler
-import ai.koog.a2a.transport.RequestId
-import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
-import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
+import ai.koog.a2a.transport.jsonrpc.model.RequestId
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -56,7 +62,13 @@ class HttpJSONRPCServerTransportTest {
         val agentCard = AgentCard(
             name = "Test Agent",
             description = "A test agent",
-            url = "https://api.example.com/a2a",
+            supportedInterfaces = listOf(
+                AgentInterface(
+                    url = "https://api.example.com/a2a",
+                    protocolBinding = TransportProtocol.JSONRPC,
+                    protocolVersion = "1.0.1",
+                )
+            ),
             version = "1.0.0",
             capabilities = AgentCapabilities(),
             defaultInputModes = listOf("text/plain"),
@@ -75,14 +87,14 @@ class HttpJSONRPCServerTransportTest {
             )
         )
 
-        val communicationEvent = Message(
+        val responseEvent: ResponseEvent = Message(
             messageId = "message-1",
             role = Role.ROLE_AGENT,
             parts = listOf(TextPart("Response message.")),
             taskId = "task-1"
         )
 
-        val updateEvents = listOf(
+        val updateEvents: List<Event> = listOf(
             Message(
                 messageId = "message-stream-1",
                 role = Role.ROLE_AGENT,
@@ -113,132 +125,88 @@ class HttpJSONRPCServerTransportTest {
             )
         )
 
-        val taskPushNotificationConfig = TaskPushNotificationConfig(
-            taskId = "task-1",
-            pushNotificationConfig = PushNotificationConfig(
-                id = "notification-config-1",
-                url = "https://webhook.example.com",
-                token = "webhook-token-123"
-            )
+        val listTasksResponse = ListTasksResponse(
+            tasks = listOf(taskGet),
+            nextPageToken = "",
+            pageSize = 50,
+            totalSize = 1,
         )
 
-        val taskPushNotificationConfigList = listOf(taskPushNotificationConfig)
+        val taskPushNotificationConfig = TaskPushNotificationConfig(
+            taskId = "task-1",
+            id = "notification-config-1",
+            url = "https://webhook.example.com",
+            token = "webhook-token-123"
+        )
 
-        override suspend fun onGetAuthenticatedExtendedAgentCard(
-            request: Request<Nothing?>,
+        val listConfigsResponse = ListTaskPushNotificationConfigsResponse(
+            configs = listOf(taskPushNotificationConfig),
+            nextPageToken = "",
+        )
+
+        override suspend fun onGetExtendedAgentCard(
+            request: GetExtendedAgentCardRequest,
             ctx: ServerCallContext
-        ): Response<AgentCard> {
-            return Response(
-                id = request.id,
-                data = agentCard
-            )
-        }
+        ): AgentCard = agentCard
 
         override suspend fun onSendMessage(
-            request: Request<SendMessageRequest>,
+            request: SendMessageRequest,
             ctx: ServerCallContext
-        ): Response<ResponseEvent> {
-            return Response(
-                id = request.id,
-                data = communicationEvent
-            )
-        }
+        ): ResponseEvent = responseEvent
 
         override fun onSendMessageStreaming(
-            request: Request<SendMessageRequest>,
+            request: SendMessageRequest,
             ctx: ServerCallContext
-        ): Flow<Response<Event>> {
-            return updateEvents
-                .asFlow()
-                .map {
-                    Response(
-                        id = request.id,
-                        data = it
-                    )
-                }
-        }
+        ): Flow<Event> = updateEvents.asFlow()
 
         override suspend fun onGetTask(
-            request: Request<TaskQueryParams>,
+            request: GetTaskRequest,
             ctx: ServerCallContext
-        ): Response<Task> {
-            return Response(
-                id = request.id,
-                data = taskGet
-            )
-        }
+        ): Task = taskGet
+
+        override suspend fun onListTasks(
+            request: ListTasksRequest,
+            ctx: ServerCallContext
+        ): ListTasksResponse = listTasksResponse
 
         override suspend fun onCancelTask(
-            request: Request<TaskIdParams>,
+            request: CancelTaskRequest,
             ctx: ServerCallContext
-        ): Response<Task> {
-            return Response(
-                id = request.id,
-                data = taskCancel
-            )
-        }
+        ): Task = taskCancel
 
-        override fun onResubscribeTask(
-            request: Request<TaskIdParams>,
+        override fun onSubscribeToTask(
+            request: SubscribeToTaskRequest,
             ctx: ServerCallContext
-        ): Flow<Response<Event>> {
-            return updateEvents
-                .asFlow()
-                .map {
-                    Response(
-                        id = request.id,
-                        data = it
-                    )
-                }
-        }
+        ): Flow<Event> = updateEvents.asFlow()
 
-        override suspend fun onSetTaskPushNotificationConfig(
-            request: Request<TaskPushNotificationConfig>,
+        override suspend fun onCreateTaskPushNotificationConfig(
+            request: TaskPushNotificationConfig,
             ctx: ServerCallContext
-        ): Response<TaskPushNotificationConfig> {
-            return Response(
-                id = request.id,
-                data = request.data
-            )
-        }
+        ): TaskPushNotificationConfig = request
 
         override suspend fun onGetTaskPushNotificationConfig(
-            request: Request<TaskPushNotificationConfigParams>,
+            request: GetTaskPushNotificationConfigRequest,
             ctx: ServerCallContext
-        ): Response<TaskPushNotificationConfig> {
-            return Response(
-                id = request.id,
-                data = taskPushNotificationConfig
-            )
-        }
+        ): TaskPushNotificationConfig = taskPushNotificationConfig
 
-        override suspend fun onListTaskPushNotificationConfig(
-            request: Request<TaskIdParams>,
+        override suspend fun onListTaskPushNotificationConfigs(
+            request: ListTaskPushNotificationConfigsRequest,
             ctx: ServerCallContext
-        ): Response<List<TaskPushNotificationConfig>> {
-            return Response(
-                id = request.id,
-                data = taskPushNotificationConfigList
-            )
-        }
+        ): ListTaskPushNotificationConfigsResponse = listConfigsResponse
 
         override suspend fun onDeleteTaskPushNotificationConfig(
-            request: Request<TaskPushNotificationConfigParams>,
+            request: DeleteTaskPushNotificationConfigRequest,
             ctx: ServerCallContext
-        ): Response<Nothing?> {
-            return Response(
-                id = request.id,
-                data = null
-            )
-        }
+        ) {}
     }
 
     private val json = JSONRPCJson
 
     private inline fun <reified TRequest, reified TResponse> testServerMethod(
         method: A2AMethod,
-        request: Request<TRequest>,
-        expectedResponse: Response<TResponse>,
+        requestId: RequestId,
+        request: TRequest,
+        expectedResponse: TResponse,
     ) {
         testApplication {
             install(SSE)
@@ -246,13 +214,13 @@ class HttpJSONRPCServerTransportTest {
             val transport = HttpJSONRPCServerTransport(MockRequestHandler)
 
             routing {
-                transport.transportRoutes(this, "/a2a")
+                a2aJsonRpcTransportRoute("/a2a", transport)
             }
 
             val jsonRpcRequest = JSONRPCRequest(
-                id = request.id,
+                id = requestId,
                 method = method.value,
-                params = json.encodeToJsonElement(request.data),
+                params = json.encodeToJsonElement(request),
                 jsonrpc = JSONRPC_VERSION,
             )
 
@@ -264,20 +232,17 @@ class HttpJSONRPCServerTransportTest {
             assertEquals(HttpStatusCode.OK, response.status)
 
             val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(response.bodyAsText())
-            val actualResponse = Response(
-                id = jsonRpcResponse.id,
-                data = json.decodeFromJsonElement<TResponse>(jsonRpcResponse.result)
-            )
 
-            assertEquals(expectedResponse.id, actualResponse.id)
-            assertEquals(expectedResponse.data, actualResponse.data)
+            assertEquals(requestId, jsonRpcResponse.id)
+            assertEquals(expectedResponse, json.decodeFromJsonElement<TResponse>(jsonRpcResponse.result))
         }
     }
 
     private inline fun <reified TRequest, reified TResponse> testServerMethodStreaming(
         method: A2AMethod,
-        request: Request<TRequest>,
-        expectedResponses: List<Response<TResponse>>,
+        requestId: RequestId,
+        request: TRequest,
+        expectedResponses: List<TResponse>,
     ) {
         testApplication {
             install(SSE)
@@ -289,13 +254,13 @@ class HttpJSONRPCServerTransportTest {
             val transport = HttpJSONRPCServerTransport(MockRequestHandler)
 
             routing {
-                transport.transportRoutes(this, "/a2a")
+                a2aJsonRpcTransportRoute("/a2a", transport)
             }
 
             val jsonRpcRequest = JSONRPCRequest(
-                id = request.id,
+                id = requestId,
                 method = method.value,
-                params = json.encodeToJsonElement(request.data),
+                params = json.encodeToJsonElement(request),
                 jsonrpc = JSONRPC_VERSION,
             )
 
@@ -317,44 +282,28 @@ class HttpJSONRPCServerTransportTest {
                 }
             }
 
-            val actualResponses = jsonrpcResponses.map {
-                Response(
-                    id = it.id,
-                    data = json.decodeFromJsonElement<TResponse>(it.result)
-                )
-            }
-
-            assertEquals(expectedResponses.map { it.id }, actualResponses.map { it.id })
-            assertEquals(expectedResponses.map { it.data }, actualResponses.map { it.data })
+            assertEquals(expectedResponses.size, jsonrpcResponses.size)
+            assertEquals(List(jsonrpcResponses.size) { requestId }, jsonrpcResponses.map { it.id })
+            assertEquals(
+                expectedResponses,
+                jsonrpcResponses.map { json.decodeFromJsonElement<TResponse>(it.result) }
+            )
         }
     }
 
     @Test
-    fun testGetAuthenticatedExtendedAgentCard() = runTest {
-        val requestId = RequestId.StringId("test-1")
-
-        val request = Request(
-            id = requestId,
-            data = null,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = MockRequestHandler.agentCard,
-        )
-
+    fun testGetExtendedAgentCard() = runTest {
         testServerMethod(
             method = A2AMethod.GetAuthenticatedExtendedAgentCard,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-1"),
+            request = GetExtendedAgentCardRequest(),
+            expectedResponse = MockRequestHandler.agentCard,
         )
     }
 
     @Test
     fun testSendMessage() = runTest {
-        val requestId = RequestId.StringId("test-2")
-
-        val sendMessageRequest = SendMessageRequest(
+        val request = SendMessageRequest(
             message = Message(
                 messageId = "msg-1",
                 role = Role.ROLE_USER,
@@ -363,28 +312,17 @@ class HttpJSONRPCServerTransportTest {
             )
         )
 
-        val request = Request(
-            id = requestId,
-            data = sendMessageRequest,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = MockRequestHandler.communicationEvent,
-        )
-
         testServerMethod(
             method = A2AMethod.SendMessage,
+            requestId = RequestId.StringId("test-2"),
             request = request,
-            expectedResponse = expectedResponse,
+            expectedResponse = MockRequestHandler.responseEvent,
         )
     }
 
     @Test
     fun testSendMessageStreaming() = runTest {
-        val requestId = RequestId.StringId("test-2")
-
-        val sendMessageRequest = SendMessageRequest(
+        val request = SendMessageRequest(
             message = Message(
                 messageId = "msg-1",
                 role = Role.ROLE_USER,
@@ -393,194 +331,104 @@ class HttpJSONRPCServerTransportTest {
             )
         )
 
-        val request = Request(
-            id = requestId,
-            data = sendMessageRequest,
-        )
-
-        val expectedResponses = MockRequestHandler.updateEvents.map {
-            Response(
-                id = requestId,
-                data = it,
-            )
-        }
-
         testServerMethodStreaming(
             method = A2AMethod.SendMessageStreaming,
+            requestId = RequestId.StringId("test-2"),
             request = request,
-            expectedResponses = expectedResponses,
+            expectedResponses = MockRequestHandler.updateEvents,
         )
     }
 
     @Test
     fun testGetTask() = runTest {
-        val requestId = RequestId.StringId("test-3")
-        val taskQueryParams = TaskQueryParams(id = "task-1")
-
-        val request = Request(
-            id = requestId,
-            data = taskQueryParams,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = MockRequestHandler.taskGet,
-        )
-
         testServerMethod(
             method = A2AMethod.GetTask,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-3"),
+            request = GetTaskRequest(id = "task-1"),
+            expectedResponse = MockRequestHandler.taskGet,
+        )
+    }
+
+    @Test
+    fun testListTasks() = runTest {
+        testServerMethod(
+            method = A2AMethod.ListTasks,
+            requestId = RequestId.StringId("test-list-tasks"),
+            request = ListTasksRequest(contextId = "test-context-1", status = TaskState.TASK_STATE_WORKING),
+            expectedResponse = MockRequestHandler.listTasksResponse,
         )
     }
 
     @Test
     fun testCancelTask() = runTest {
-        val requestId = RequestId.StringId("test-4")
-        val taskIdParams = TaskIdParams(id = "task-1")
-
-        val request = Request(
-            id = requestId,
-            data = taskIdParams,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = MockRequestHandler.taskCancel,
-        )
-
         testServerMethod(
             method = A2AMethod.CancelTask,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-4"),
+            request = CancelTaskRequest(id = "task-1"),
+            expectedResponse = MockRequestHandler.taskCancel,
         )
     }
 
     @Test
-    fun testResubscribeTask() = runTest {
-        val requestId = RequestId.StringId("test-7")
-        val taskIdParams = TaskIdParams(id = "task-1")
-
-        val request = Request(
-            id = requestId,
-            data = taskIdParams,
-        )
-
-        val expectedResponses = MockRequestHandler.updateEvents.map {
-            Response(
-                id = requestId,
-                data = it,
-            )
-        }
-
+    fun testSubscribeToTask() = runTest {
         testServerMethodStreaming(
             method = A2AMethod.SubscribeToTask,
-            request = request,
-            expectedResponses = expectedResponses,
+            requestId = RequestId.StringId("test-7"),
+            request = SubscribeToTaskRequest(id = "task-1"),
+            expectedResponses = MockRequestHandler.updateEvents,
         )
     }
 
     @Test
-    fun testSetTaskPushNotificationConfig() = runTest {
-        val requestId = RequestId.StringId("test-5")
-
-        val pushNotificationConfig = TaskPushNotificationConfig(
+    fun testCreateTaskPushNotificationConfig() = runTest {
+        val config = TaskPushNotificationConfig(
             taskId = "task-123",
-            pushNotificationConfig = PushNotificationConfig(
-                id = "notification-config-1",
-                url = "https://webhook.example.com/notifications",
-                token = "webhook-token-123"
-            )
-        )
-
-        val request = Request(
-            id = requestId,
-            data = pushNotificationConfig,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = pushNotificationConfig,
+            id = "notification-config-1",
+            url = "https://webhook.example.com/notifications",
+            token = "webhook-token-123"
         )
 
         testServerMethod(
             method = A2AMethod.CreateTaskPushNotificationConfig,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-5"),
+            request = config,
+            expectedResponse = config,
         )
     }
 
     @Test
     fun testGetTaskPushNotificationConfig() = runTest {
-        val requestId = RequestId.StringId("test-6")
-
-        val configParams = TaskPushNotificationConfigParams(
-            id = "task-123",
-            pushNotificationConfigId = "notification-config-1"
-        )
-
-        val request = Request(
-            id = requestId,
-            data = configParams,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = MockRequestHandler.taskPushNotificationConfig,
-        )
-
         testServerMethod(
             method = A2AMethod.GetTaskPushNotificationConfig,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-6"),
+            request = GetTaskPushNotificationConfigRequest(
+                taskId = "task-1",
+                id = "notification-config-1"
+            ),
+            expectedResponse = MockRequestHandler.taskPushNotificationConfig,
         )
     }
 
     @Test
-    fun testListTaskPushNotificationConfig() = runTest {
-        val requestId = RequestId.StringId("test-7")
-        val taskIdParams = TaskIdParams(id = "task-1")
-
-        val request = Request(
-            id = requestId,
-            data = taskIdParams,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = MockRequestHandler.taskPushNotificationConfigList,
-        )
-
+    fun testListTaskPushNotificationConfigs() = runTest {
         testServerMethod(
             method = A2AMethod.ListTaskPushNotificationConfig,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-7"),
+            request = ListTaskPushNotificationConfigsRequest(taskId = "task-1"),
+            expectedResponse = MockRequestHandler.listConfigsResponse,
         )
     }
 
     @Test
     fun testDeleteTaskPushNotificationConfig() = runTest {
-        val requestId = RequestId.StringId("test-8")
-
-        val configParams = TaskPushNotificationConfigParams(
-            id = "task-123",
-            pushNotificationConfigId = "notification-config-1"
-        )
-
-        val request = Request(
-            id = requestId,
-            data = configParams,
-        )
-
-        val expectedResponse = Response(
-            id = requestId,
-            data = null,
-        )
-
-        testServerMethod(
+        testServerMethod<DeleteTaskPushNotificationConfigRequest, Unit>(
             method = A2AMethod.DeleteTaskPushNotificationConfig,
-            request = request,
-            expectedResponse = expectedResponse,
+            requestId = RequestId.StringId("test-8"),
+            request = DeleteTaskPushNotificationConfigRequest(
+                taskId = "task-1",
+                id = "notification-config-1"
+            ),
+            expectedResponse = Unit,
         )
     }
 
@@ -592,7 +440,7 @@ class HttpJSONRPCServerTransportTest {
             val transport = HttpJSONRPCServerTransport(MockRequestHandler)
 
             routing {
-                transport.transportRoutes(this, "/a2a")
+                a2aJsonRpcTransportRoute("/a2a", transport)
             }
 
             val requestId = RequestId.StringId("test-9")
@@ -624,7 +472,7 @@ class HttpJSONRPCServerTransportTest {
             val transport = HttpJSONRPCServerTransport(MockRequestHandler)
 
             routing {
-                transport.transportRoutes(this, "/a2a")
+                a2aJsonRpcTransportRoute("/a2a", transport)
             }
 
             val response = client.post("/a2a") {
