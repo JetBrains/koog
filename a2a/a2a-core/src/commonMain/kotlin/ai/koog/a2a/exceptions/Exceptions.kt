@@ -5,11 +5,14 @@ package ai.koog.a2a.exceptions
  */
 @Suppress("MissingKDocForPublicAPI")
 public object A2AErrorCodes {
+    // Inherited from JSON-RPC
     public const val PARSE_ERROR: Int = -32700
     public const val INVALID_REQUEST: Int = -32600
     public const val METHOD_NOT_FOUND: Int = -32601
     public const val INVALID_PARAMS: Int = -32602
     public const val INTERNAL_ERROR: Int = -32603
+
+    // A2A protocol specific
     public const val TASK_NOT_FOUND: Int = -32001
     public const val TASK_NOT_CANCELABLE: Int = -32002
     public const val PUSH_NOTIFICATION_NOT_SUPPORTED: Int = -32003
