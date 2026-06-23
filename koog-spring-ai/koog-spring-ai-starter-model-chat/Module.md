@@ -11,8 +11,9 @@ It auto-configures:
 - A `PromptExecutor` (`MultiLLMPromptExecutor`) assembled from all available `LLMClient` beans
 
 Tools are always executed by the Koog agent framework — Spring AI receives only tool
-definitions/schema. The `internalToolExecutionEnabled` flag is set to `false` on all
-tool-carrying requests.
+definitions/schema. Because the `ChatModel` is invoked directly (without a
+`ToolCallingAdvisor`/`ChatClient`), Spring AI 2.0 does not run its tool-execution loop and
+simply returns the requested tool calls in the response.
 
 ### Using in your project
 

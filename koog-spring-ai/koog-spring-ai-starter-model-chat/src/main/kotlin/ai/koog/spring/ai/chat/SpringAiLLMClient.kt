@@ -37,8 +37,9 @@ import org.springframework.ai.chat.prompt.Prompt as SpringPrompt
  * (Anthropic, OpenAI, Google, Ollama, etc.) as their underlying LLM backend.
  *
  * Tool execution is always owned by the Koog agent framework. Spring AI receives only
- * tool definitions (via [org.springframework.ai.tool.ToolCallback] with a throwing `call()`)
- * and `internalToolExecutionEnabled=false`, so Spring never attempts to execute tools.
+ * tool definitions (via [org.springframework.ai.tool.ToolCallback] with a throwing `call()`).
+ * Because the [ChatModel] is invoked directly (without a `ToolCallingAdvisor`), Spring AI
+ * never attempts to execute tools and simply returns the requested tool calls in the response.
  *
  * @param chatModel the Spring AI chat model to delegate to
  * @param provider the [LLMProvider] to report for this client
@@ -279,7 +280,8 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ModerationModel.call() failed: ${e.message}", e)
         }
-        springModerationResultToKoogModerationResult(response.result.output)
+        val result = response.result ?: throw LLMClientException(clientName, "Moderation result is null")
+        springModerationResultToKoogModerationResult(result.output)
     }
 
     override fun close() {
@@ -308,7 +310,6 @@ public class SpringAiLLMClient(
                 .temperature(params.temperature)
                 .maxTokens(params.maxTokens)
                 .toolCallbacks(toolCallbacks)
-                .internalToolExecutionEnabled(false)
                 .build()
         } else {
             ChatOptions.builder()

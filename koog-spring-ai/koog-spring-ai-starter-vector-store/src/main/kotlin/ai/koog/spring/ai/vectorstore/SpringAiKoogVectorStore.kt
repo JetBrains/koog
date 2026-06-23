@@ -32,7 +32,7 @@ public class SpringAiKoogVectorStore(
             try {
                 val springDocs = documents.map { document ->
                     if (document.id != null) {
-                        Document(document.id, document.content, document.metadata)
+                        Document(document.id!!, document.content, document.metadata)
                     } else {
                         Document(document.content, document.metadata)
                     }

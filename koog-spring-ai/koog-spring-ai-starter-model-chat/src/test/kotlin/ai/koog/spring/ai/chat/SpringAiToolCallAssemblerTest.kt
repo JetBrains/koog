@@ -37,7 +37,7 @@ class SpringAiToolCallAssemblerTest {
     fun testOpenAIBuffersPartialArgumentChunksUntilFlush() = runBlocking {
         val assembler = SpringAiToolCallAssembler.forProvider(LLMProvider.OpenAI)
         val firstChunk = AssistantMessage.ToolCall("call-1", "function", "search", """{"q":""")
-        val secondChunk = AssistantMessage.ToolCall(null, "function", null, """"test"}""")
+        val secondChunk = AssistantMessage.ToolCall("", "function", "", """"test"}""")
 
         val frames = buildStreamFrameFlow {
             assembler.accept(listOf(firstChunk), generationIndex = 0, out = this)
@@ -86,8 +86,8 @@ class SpringAiToolCallAssemblerTest {
         // OpenAI streams two tool calls: each chunk list has both tool calls at their respective positions
         val tool0chunk1 = AssistantMessage.ToolCall("call-1", "function", "search", """{"q":""")
         val tool1chunk1 = AssistantMessage.ToolCall("call-2", "function", "fetch", """{"url":""")
-        val tool0chunk2 = AssistantMessage.ToolCall(null, "function", null, """"test"}""")
-        val tool1chunk2 = AssistantMessage.ToolCall(null, "function", null, """"http://x"}""")
+        val tool0chunk2 = AssistantMessage.ToolCall("", "function", "", """"test"}""")
+        val tool1chunk2 = AssistantMessage.ToolCall("", "function", "", """"http://x"}""")
 
         val frames = buildStreamFrameFlow {
             assembler.accept(listOf(tool0chunk1, tool1chunk1), generationIndex = 0, out = this)
