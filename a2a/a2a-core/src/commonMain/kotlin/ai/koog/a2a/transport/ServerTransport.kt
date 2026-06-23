@@ -151,7 +151,7 @@ public interface RequestHandler {
     public suspend fun onDeleteTaskPushNotificationConfig(
         request: DeleteTaskPushNotificationConfigRequest,
         ctx: ServerCallContext
-    ): Nothing?
+    )
 }
 
 /**
