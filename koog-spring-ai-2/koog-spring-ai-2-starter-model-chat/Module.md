@@ -1,4 +1,4 @@
-# Module koog-spring-ai-starter-model-chat
+# Module koog-spring-ai-2-starter-model-chat
 
 Adapts a Spring AI `ChatModel` (with optional `ModerationModel`) into a Koog `LLMClient` and `PromptExecutor`.
 
@@ -23,7 +23,7 @@ Add the dependency alongside any Spring AI model starter (e.g., for Ollama):
 // build.gradle.kts
 dependencies {
     implementation("ai.koog:koog-agents-jvm:$koogVersion")
-    implementation("ai.koog:koog-spring-ai-starter-model-chat:$koogVersion")
+    implementation("ai.koog:koog-spring-ai-2-starter-model-chat:$koogVersion")
     implementation("org.springframework.ai:spring-ai-starter-model-ollama")
 }
 ```

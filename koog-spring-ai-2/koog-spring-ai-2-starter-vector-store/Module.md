@@ -1,4 +1,4 @@
-# Module koog-spring-ai-starter-vector-store
+# Module koog-spring-ai-2-starter-vector-store
 
 Adapts a Spring AI `VectorStore` into Koog's `KoogVectorStore`, providing ingestion, retrieval, and deletion capabilities.
 
@@ -24,7 +24,7 @@ Add the dependency alongside any Spring AI VectorStore starter (e.g., PgVector):
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("ai.koog:koog-spring-ai-starter-vector-store:$koogVersion")
+    implementation("ai.koog:koog-spring-ai-2-starter-vector-store:$koogVersion")
     implementation("org.springframework.ai:spring-ai-starter-vector-store-pgvector")
 }
 ```

@@ -1,4 +1,4 @@
-# Module koog-spring-ai-starter-chat-memory
+# Module koog-spring-ai-2-starter-chat-memory
 
 Adapts a Spring AI `ChatMemoryRepository` into a Koog `ChatHistoryProvider` for **conversation text memory**.
 
@@ -42,7 +42,7 @@ Add the dependency alongside any Spring AI chat memory repository implementation
 // build.gradle.kts
 dependencies {
     implementation("ai.koog:koog-agents-jvm:$koogVersion")
-    implementation("ai.koog:koog-spring-ai-starter-chat-memory:$koogVersion")
+    implementation("ai.koog:koog-spring-ai-2-starter-chat-memory:$koogVersion")
     // e.g. JDBC-backed chat memory
     implementation("org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc")
 }
