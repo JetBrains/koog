@@ -49,20 +49,20 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
             baseHttpClient = httpClient
         )
 
-        client = A2AClient(
-            transport = transport,
-            agentCardResolver = UrlAgentCardResolver(
-                baseUrl = agentUrl,
-                baseHttpClient = httpClient,
-            ),
+        val cardResolver = UrlAgentCardResolver(
+            baseUrl = agentUrl,
+            baseHttpClient = httpClient,
         )
 
-        client.connect()
+        client = A2AClient(
+            transport = transport,
+            card = cardResolver.resolve(),
+        )
     }
 
     @AfterAll
     fun tearDown() {
-        transport.close()
+        client.close()
         testA2AServer.shutdown()
     }
 

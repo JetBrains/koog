@@ -1,5 +1,7 @@
 package ai.koog.a2a.client
 
+import ai.koog.a2a.consts.A2AHeaders
+import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CancelTaskRequest
@@ -25,40 +27,27 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * A2A client responsible for sending requests to A2A server.
+ *
+ * @param card The initial [AgentCard].
+ * @param transport The transport implementation to be used for sending requests.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public open class A2AClient(
+    card: AgentCard,
     private val transport: ClientTransport,
-    private val agentCardResolver: AgentCardResolver,
-) {
-    protected var agentCard: AtomicReference<AgentCard?> = AtomicReference(null)
+) : AutoCloseable {
+    /**
+     * Backing field containing the actual cached [AgentCard]
+     */
+    @Suppress("PropertyName")
+    protected open val _card: AtomicReference<AgentCard> = AtomicReference(card)
 
     /**
-     * Performs initialization logic.
-     * Currently only retrieves the [AgentCard].
+     * The currently cached [AgentCard].
+     * Initially set to the card provided during initialization.
+     * Updated by calls to [getExtendedAgentCard].
      */
-    public open suspend fun connect() {
-        getAgentCard()
-    }
-
-    /**
-     * Retrieves [AgentCard] by calling [AgentCardResolver.resolve].
-     * Saves it to the cache.
-     */
-    public open suspend fun getAgentCard(): AgentCard {
-        return agentCardResolver.resolve().also {
-            agentCard.exchange(it)
-        }
-    }
-
-    /**
-     * Retrieves currently cached [AgentCard]
-     *
-     * @throws [IllegalStateException] if it's not initialized
-     */
-    public open fun cachedAgentCard(): AgentCard {
-        return checkNotNull(agentCard.load()) { "Agent card is not initialized." }
-    }
+    public val card: AgentCard get() = _card.load()
 
     /**
      * Calls [GetExtendedAgentCard](https://a2a-protocol.org/v1.0.1/specification/#3111-get-extended-agent-card).
@@ -66,16 +55,14 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun getExtendedAgentCard(
+    public open suspend fun getExtendedAgentCard(
         request: GetExtendedAgentCardRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): AgentCard {
-        check(cachedAgentCard().capabilities.extendedAgentCard == true) {
-            "Agent card reports that authenticated extended agent card is not supported."
-        }
+        checkExtendedAgentCardSupported()
 
-        return transport.getExtendedAgentCard(request, ctx).also {
-            agentCard.exchange(it)
+        return transport.getExtendedAgentCard(request, prepareContext(ctx)).also {
+            _card.exchange(it)
         }
     }
 
@@ -84,11 +71,11 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun sendMessage(
+    public open suspend fun sendMessage(
         request: SendMessageRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): ResponseEvent {
-        return transport.sendMessage(request, ctx)
+        return transport.sendMessage(request, prepareContext(ctx))
     }
 
     /**
@@ -96,15 +83,13 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public fun sendMessageStreaming(
+    public open fun sendMessageStreaming(
         request: SendMessageRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Event> {
-        check(cachedAgentCard().capabilities.streaming == true) {
-            "Agent card reports that streaming is not supported."
-        }
+        checkStreamingSupported()
 
-        return transport.sendMessageStreaming(request, ctx)
+        return transport.sendMessageStreaming(request, prepareContext(ctx))
     }
 
     /**
@@ -112,11 +97,11 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun getTask(
+    public open suspend fun getTask(
         request: GetTaskRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Task {
-        return transport.getTask(request, ctx)
+        return transport.getTask(request, prepareContext(ctx))
     }
 
     /**
@@ -124,11 +109,11 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun listTasks(
+    public open suspend fun listTasks(
         request: ListTasksRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): ListTasksResponse {
-        return transport.listTasks(request, ctx)
+        return transport.listTasks(request, prepareContext(ctx))
     }
 
     /**
@@ -136,11 +121,11 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun cancelTask(
+    public open suspend fun cancelTask(
         request: CancelTaskRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Task {
-        return transport.cancelTask(request, ctx)
+        return transport.cancelTask(request, prepareContext(ctx))
     }
 
     /**
@@ -148,11 +133,11 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public fun subscribeToTask(
+    public open fun subscribeToTask(
         request: SubscribeToTaskRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Event> {
-        return transport.subscribeToTask(request, ctx)
+        return transport.subscribeToTask(request, prepareContext(ctx))
     }
 
     /**
@@ -160,13 +145,13 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun createTaskPushNotificationConfig(
+    public open suspend fun createTaskPushNotificationConfig(
         request: TaskPushNotificationConfig,
         ctx: ClientCallContext = ClientCallContext.Default
     ): TaskPushNotificationConfig {
         checkPushNotificationsSupported()
 
-        return transport.createTaskPushNotificationConfig(request, ctx)
+        return transport.createTaskPushNotificationConfig(request, prepareContext(ctx))
     }
 
     /**
@@ -174,13 +159,13 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun getTaskPushNotificationConfig(
+    public open suspend fun getTaskPushNotificationConfig(
         request: GetTaskPushNotificationConfigRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): TaskPushNotificationConfig {
         checkPushNotificationsSupported()
 
-        return transport.getTaskPushNotificationConfig(request, ctx)
+        return transport.getTaskPushNotificationConfig(request, prepareContext(ctx))
     }
 
     /**
@@ -188,13 +173,13 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun listTaskPushNotificationConfigs(
+    public open suspend fun listTaskPushNotificationConfigs(
         request: ListTaskPushNotificationConfigsRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): ListTaskPushNotificationConfigsResponse {
         checkPushNotificationsSupported()
 
-        return transport.listTaskPushNotificationConfigs(request, ctx)
+        return transport.listTaskPushNotificationConfigs(request, prepareContext(ctx))
     }
 
     /**
@@ -202,17 +187,49 @@ public open class A2AClient(
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun deleteTaskPushNotificationConfig(
+    public open suspend fun deleteTaskPushNotificationConfig(
         request: DeleteTaskPushNotificationConfigRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ) {
         checkPushNotificationsSupported()
 
-        transport.deleteTaskPushNotificationConfig(request, ctx)
+        transport.deleteTaskPushNotificationConfig(request, prepareContext(ctx))
+    }
+
+    override fun close() {
+        transport.close()
+    }
+
+    /**
+     * Updates [ClientCallContext] with additional info before each request, e.g., version header.
+     */
+    protected open fun prepareContext(ctx: ClientCallContext): ClientCallContext {
+        val updatedHeaders = ctx.headers.toMutableMap()
+
+        // Append current version header, if the version header is missing
+        if (A2AHeaders.A2A_VERSION !in ctx.headers) {
+            updatedHeaders += (A2AHeaders.A2A_VERSION to listOf(A2AVersions.CURRENT_VERSION))
+        }
+
+        return ctx.copy(
+            headers = updatedHeaders
+        )
+    }
+
+    protected fun checkExtendedAgentCardSupported() {
+        check(card.capabilities.extendedAgentCard == true) {
+            "Agent card reports that authenticated extended agent card is not supported."
+        }
+    }
+
+    protected fun checkStreamingSupported() {
+        check(card.capabilities.streaming == true) {
+            "Agent card reports that streaming is not supported."
+        }
     }
 
     protected fun checkPushNotificationsSupported() {
-        check(cachedAgentCard().capabilities.pushNotifications == true) {
+        check(card.capabilities.pushNotifications == true) {
             "Agent card reports that push notifications are not supported."
         }
     }
