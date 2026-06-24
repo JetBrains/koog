@@ -3,22 +3,14 @@ import asyncio
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.types import (
-    Message,
     TaskStatusUpdateEvent,
     TaskStatus,
     TaskState,
-    Task,
 )
-from a2a.utils import (
-    new_agent_text_message,
-    new_task
+from a2a.helpers import (
+    new_text_message,
+    new_task,
 )
-from datetime import datetime, timezone
-
-
-def get_current_timestamp():
-    """Get current timestamp in ISO 8601 format (UTC)"""
-    return datetime.now(timezone.utc).isoformat()
 
 
 async def say_hello(
@@ -28,10 +20,10 @@ async def say_hello(
     message = context.message
 
     await event_queue.enqueue_event(
-        new_agent_text_message(
+        new_text_message(
             text="Hello World",
             context_id=message.context_id,
-            task_id=message.task_id
+            task_id=message.task_id,
         )
     )
 
@@ -42,18 +34,13 @@ async def do_task(
 ) -> None:
     message = context.message
 
-    # noinspection PyTypeChecker
-    task = Task(
-        id=message.task_id,
+    task = new_task(
+        task_id=message.task_id,
         context_id=message.context_id,
-        status=TaskStatus(
-            state=TaskState.submitted,
-            timestamp=get_current_timestamp()
-        ),
-        history=[message]
+        state=TaskState.TASK_STATE_SUBMITTED,
+        history=[message],
     )
 
-    # noinspection PyTypeChecker
     events = [
         task,
 
@@ -61,28 +48,26 @@ async def do_task(
             context_id=task.context_id,
             task_id=task.id,
             status=TaskStatus(
-                state=TaskState.working,
-                message=new_agent_text_message(
+                state=TaskState.TASK_STATE_WORKING,
+                message=new_text_message(
                     text="Working on task",
                     context_id=task.context_id,
-                    task_id=task.id
-                )
+                    task_id=task.id,
+                ),
             ),
-            final=False
         ),
 
         TaskStatusUpdateEvent(
             context_id=task.context_id,
             task_id=task.id,
             status=TaskStatus(
-                state=TaskState.completed,
-                message=new_agent_text_message(
+                state=TaskState.TASK_STATE_COMPLETED,
+                message=new_text_message(
                     text="Task completed",
                     context_id=task.context_id,
-                    task_id=task.id
-                )
+                    task_id=task.id,
+                ),
             ),
-            final=True
         )
     ]
 
@@ -96,15 +81,11 @@ async def do_cancelable_task(
 ):
     message = context.message
 
-    # noinspection PyTypeChecker
-    task = Task(
-        id=message.task_id,
+    task = new_task(
+        task_id=message.task_id,
         context_id=message.context_id,
-        status=TaskStatus(
-            state=TaskState.submitted,
-            timestamp=get_current_timestamp()
-        ),
-        history=[message]
+        state=TaskState.TASK_STATE_SUBMITTED,
+        history=[message],
     )
     await event_queue.enqueue_event(task)
 
@@ -115,15 +96,11 @@ async def do_long_running_task(
 ):
     message = context.message
 
-    # noinspection PyTypeChecker
-    task = Task(
-        id=message.task_id,
+    task = new_task(
+        task_id=message.task_id,
         context_id=message.context_id,
-        status=TaskStatus(
-            state=TaskState.submitted,
-            timestamp=get_current_timestamp()
-        ),
-        history=[message]
+        state=TaskState.TASK_STATE_SUBMITTED,
+        history=[message],
     )
 
     await event_queue.enqueue_event(task)
@@ -132,20 +109,18 @@ async def do_long_running_task(
     for i in range(4):
         await asyncio.sleep(0.2)
 
-        # noinspection PyTypeChecker
         await event_queue.enqueue_event(
             TaskStatusUpdateEvent(
                 task_id=task.id,
                 context_id=task.context_id,
                 status=TaskStatus(
-                    state=TaskState.working,
-                    message=new_agent_text_message(
+                    state=TaskState.TASK_STATE_WORKING,
+                    message=new_text_message(
                         text=f"Still working {i}",
                         context_id=task.context_id,
-                        task_id=task.id
-                    )
+                        task_id=task.id,
+                    ),
                 ),
-                final=False
             )
         )
 
@@ -175,7 +150,7 @@ class HelloWorldAgentExecutor(AgentExecutor):
 
         else:
             await event_queue.enqueue_event(
-                new_agent_text_message("Sorry, I don't understand you")
+                new_text_message("Sorry, I don't understand you")
             )
 
     async def cancel(
@@ -183,19 +158,17 @@ class HelloWorldAgentExecutor(AgentExecutor):
         context: RequestContext,
         event_queue: EventQueue
     ) -> None:
-        # noinspection PyTypeChecker
         await event_queue.enqueue_event(
             TaskStatusUpdateEvent(
                 context_id=context.context_id,
                 task_id=context.task_id,
                 status=TaskStatus(
-                    state=TaskState.canceled,
-                    message=new_agent_text_message(
+                    state=TaskState.TASK_STATE_CANCELED,
+                    message=new_text_message(
                         text="Task canceled",
                         context_id=context.context_id,
-                        task_id=context.task_id
-                    )
+                        task_id=context.task_id,
+                    ),
                 ),
-                final=True,
             )
         )

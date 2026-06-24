@@ -1,15 +1,27 @@
+from copy import deepcopy
+
 import uvicorn
 
-from a2a.server.apps import A2AStarletteApplication
+from starlette.applications import Starlette
+
 from a2a.server.request_handlers import DefaultRequestHandler
+from a2a.server.routes import (
+    create_agent_card_routes,
+    create_jsonrpc_routes,
+)
 from a2a.server.tasks import (
     InMemoryTaskStore,
-    InMemoryPushNotificationConfigStore
+    InMemoryPushNotificationConfigStore,
 )
 from a2a.types import (
     AgentCapabilities,
     AgentCard,
+    AgentInterface,
     AgentSkill,
+)
+from a2a.utils.constants import (
+    DEFAULT_RPC_URL,
+    TransportProtocol,
 )
 from agent_executor import (
     HelloWorldAgentExecutor,
@@ -36,44 +48,57 @@ if __name__ == '__main__':
     public_agent_card = AgentCard(
         name='Hello World Agent',
         description='Just a hello world agent',
-        url='http://localhost:9999/',
+        # In A2A v1.0 the single `url`/`preferred_transport` pair is replaced by
+        # a list of supported interfaces describing each transport endpoint.
+        supported_interfaces=[
+            AgentInterface(
+                url='http://localhost:9999/',
+                protocol_binding=TransportProtocol.JSONRPC.value,
+            ),
+        ],
         version='1.0.0',
         default_input_modes=['text'],
         default_output_modes=['text'],
         capabilities=AgentCapabilities(
             streaming=True,
             push_notifications=True,
+            # In A2A v1.0 `supports_authenticated_extended_card` moved here as
+            # `extended_agent_card`.
+            extended_agent_card=True,
         ),
         skills=[skill],  # Only the basic skill for the public card
-        supports_authenticated_extended_card=True,
     )
 
-    # This will be the authenticated extended agent card
-    # It includes the additional 'extended_skill'
-    specific_extended_agent_card = public_agent_card.model_copy(
-        update={
-            'name': 'Hello World Agent - Extended Edition',  # Different name for clarity
-            'description': 'The full-featured hello world agent for authenticated users.',
-            'version': '1.0.1',  # Could even be a different version
-            # Capabilities and other fields like url, default_input_modes, default_output_modes,
-            # supports_authenticated_extended_card are inherited from public_agent_card unless specified here.
-            'skills': [
-                skill,
-                extended_skill,
-            ],  # Both skills for the extended card
-        }
+    # This will be the authenticated extended agent card.
+    # It includes the additional 'extended_skill'. Protobuf messages don't
+    # provide `model_copy`, so we deep-copy the public card and override fields.
+    specific_extended_agent_card = deepcopy(public_agent_card)
+    specific_extended_agent_card.name = 'Hello World Agent - Extended Edition'
+    specific_extended_agent_card.description = (
+        'The full-featured hello world agent for authenticated users.'
     )
+    specific_extended_agent_card.version = '1.0.1'
+    # Both skills for the extended card.
+    del specific_extended_agent_card.skills[:]
+    specific_extended_agent_card.skills.extend([skill, extended_skill])
 
     request_handler = DefaultRequestHandler(
         agent_executor=HelloWorldAgentExecutor(),
         task_store=InMemoryTaskStore(),
-        push_config_store=InMemoryPushNotificationConfigStore()
-    )
-
-    server = A2AStarletteApplication(
         agent_card=public_agent_card,
-        http_handler=request_handler,
+        push_config_store=InMemoryPushNotificationConfigStore(),
         extended_agent_card=specific_extended_agent_card,
     )
 
-    uvicorn.run(server.build(), host='0.0.0.0', port=9999)
+    # In A2A v1.0 `A2AStarletteApplication` is removed in favor of composable
+    # route factories that are mounted onto a plain Starlette application.
+    routes = create_agent_card_routes(
+        agent_card=public_agent_card,
+    ) + create_jsonrpc_routes(
+        request_handler=request_handler,
+        rpc_url=DEFAULT_RPC_URL,
+    )
+
+    server = Starlette(routes=routes)
+
+    uvicorn.run(server, host='0.0.0.0', port=9999)
