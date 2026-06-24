@@ -4,26 +4,31 @@ import ai.koog.a2a.client.A2AClient
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
+import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.AuthenticationInfo
+import ai.koog.a2a.model.CancelTaskRequest
+import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetExtendedAgentCardRequest
+import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetTaskRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
+import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
 import ai.koog.a2a.model.SendMessageRequest
+import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
-import ai.koog.a2a.model.TaskPushNotificationConfigParams
-import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
-import ai.koog.a2a.transport.Request
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.inspectors.shouldForAll
+import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -60,12 +65,15 @@ abstract class BaseA2AProtocolTest {
 
         // Assert on the full AgentCard structure
         val expectedAgentCard = AgentCard(
-            protocolVersion = "0.3.0",
             name = "Hello World Agent",
             description = "Just a hello world agent",
-            url = "http://localhost:9999/",
-            preferredTransport = TransportProtocol.JSONRPC,
-            supportedInterfaces = null,
+            supportedInterfaces = listOf(
+                AgentInterface(
+                    url = "http://localhost:9999/",
+                    protocolBinding = TransportProtocol.JSONRPC,
+                    protocolVersion = "0.3.0",
+                )
+            ),
             iconUrl = null,
             provider = null,
             version = "1.0.0",
@@ -73,8 +81,8 @@ abstract class BaseA2AProtocolTest {
             capabilities = AgentCapabilities(
                 streaming = true,
                 pushNotifications = true,
-                stateTransitionHistory = null,
-                extensions = null
+                extensions = null,
+                extendedAgentCard = true,
             ),
             securitySchemes = null,
             security = null,
@@ -92,26 +100,28 @@ abstract class BaseA2AProtocolTest {
                     security = null
                 )
             ),
-            supportsAuthenticatedExtendedCard = true,
             signatures = null
         )
 
         agentCard shouldBe expectedAgentCard
     }
 
-    open fun `test get authenticated extended agent card`() = runTest(timeout = testTimeout) {
-        val request = Request(data = null)
+    open fun `test get extended agent card`() = runTest(timeout = testTimeout) {
+        val request = GetExtendedAgentCardRequest()
 
-        val response = client.getAuthenticatedExtendedAgentCard(request)
+        val response = client.getExtendedAgentCard(request)
 
         // Assert on the extended agent card structure
         val expectedExtendedAgentCard = AgentCard(
-            protocolVersion = "0.3.0",
             name = "Hello World Agent - Extended Edition",
             description = "The full-featured hello world agent for authenticated users.",
-            url = "http://localhost:9999/",
-            preferredTransport = TransportProtocol.JSONRPC,
-            supportedInterfaces = null,
+            supportedInterfaces = listOf(
+                AgentInterface(
+                    url = "http://localhost:9999/",
+                    protocolBinding = TransportProtocol.JSONRPC,
+                    protocolVersion = "0.3.0",
+                )
+            ),
             iconUrl = null,
             provider = null,
             version = "1.0.1",
@@ -119,8 +129,8 @@ abstract class BaseA2AProtocolTest {
             capabilities = AgentCapabilities(
                 streaming = true,
                 pushNotifications = true,
-                stateTransitionHistory = null,
-                extensions = null
+                extensions = null,
+                extendedAgentCard = true,
             ),
             securitySchemes = null,
             security = null,
@@ -148,58 +158,48 @@ abstract class BaseA2AProtocolTest {
                     security = null
                 )
             ),
-            supportsAuthenticatedExtendedCard = true,
             signatures = null
         )
 
-        response.data shouldBe expectedExtendedAgentCard
+        response shouldBe expectedExtendedAgentCard
     }
 
     open fun `test send message`() = runTest(timeout = testTimeout) {
-        val request = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("hello world"),
-                    ),
-                    contextId = "test-context"
+        val request = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("hello world"),
                 ),
-            )
+                contextId = "test-context"
+            ),
         )
 
         val response = client.sendMessage(request)
 
-        response should { response ->
-            response.id shouldBe request.id
-
-            response.data.shouldBeInstanceOf<Message> {
-                it.role shouldBe Role.ROLE_AGENT
-                it.parts shouldBe listOf(TextPart("Hello World"))
-                it.contextId shouldBe "test-context"
-            }
+        response.shouldBeInstanceOf<Message> {
+            it.role shouldBe Role.ROLE_AGENT
+            it.parts shouldBe listOf(TextPart("Hello World"))
+            it.contextId shouldBe "test-context"
         }
     }
 
     open fun `test send message streaming`() = runTest(timeout = testTimeout) {
-        val createTaskRequest = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do task"),
-                    ),
-                    contextId = "test-context"
+        val createTaskRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do task"),
                 ),
+                contextId = "test-context"
             ),
         )
 
         val events: List<Event> = client
             .sendMessageStreaming(createTaskRequest)
             .toList()
-            .map { it.data }
 
         events shouldHaveSize 3
 
@@ -245,31 +245,27 @@ abstract class BaseA2AProtocolTest {
     }
 
     open fun `test get task`() = runTest(timeout = testTimeout) {
-        val createTaskRequest = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do task"),
-                    ),
-                    contextId = "test-context"
+        val createTaskRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do task"),
                 ),
+                contextId = "test-context"
             ),
         )
 
-        val taskId = (client.sendMessage(createTaskRequest).data as Task).id
+        val taskId = (client.sendMessage(createTaskRequest) as Task).id
 
-        val getTaskRequest = Request(
-            data = TaskQueryParams(
-                id = taskId,
-                historyLength = 1
-            )
+        val getTaskRequest = GetTaskRequest(
+            id = taskId,
+            historyLength = 1
         )
 
         val response = client.getTask(getTaskRequest)
 
-        response.data should { task ->
+        response should { task ->
             task.id shouldBe taskId
             task.contextId shouldBe "test-context"
             task.status should { status ->
@@ -278,31 +274,57 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    open fun `test cancel task`() = runTest(timeout = testTimeout) {
-        val createTaskRequest = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do cancelable task"),
-                    ),
-                    contextId = "test-context"
+    open fun `test list tasks`() = runTest(timeout = testTimeout) {
+        val createTaskRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do task"),
                 ),
+                contextId = "test-context"
             ),
         )
 
-        val taskId = (client.sendMessage(createTaskRequest).data as Task).id
+        val taskId = (client.sendMessage(createTaskRequest) as Task).id
 
-        val cancelTaskRequest = Request(
-            data = TaskIdParams(
-                id = taskId,
-            )
+        val listTasksRequest = ListTasksRequest(
+            contextId = "test-context"
+        )
+
+        val response = client.listTasks(listTasksRequest)
+
+        response.tasks.shouldNotBeEmpty()
+
+        response.tasks.shouldForAll {
+            it.contextId shouldBe "test-context"
+        }
+
+        // The task created above should be present in the listing
+        response.tasks.shouldForAny { it.id shouldBe taskId }
+    }
+
+    open fun `test cancel task`() = runTest(timeout = testTimeout) {
+        val createTaskRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do cancelable task"),
+                ),
+                contextId = "test-context"
+            ),
+        )
+
+        val taskId = (client.sendMessage(createTaskRequest) as Task).id
+
+        val cancelTaskRequest = CancelTaskRequest(
+            id = taskId,
         )
 
         val response = client.cancelTask(cancelTaskRequest)
 
-        response.data should {
+        response should {
             it.id shouldBe taskId
             it.contextId shouldBe "test-context"
             it.status should {
@@ -315,35 +337,30 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    open fun `test resubscribe task`() = runTest(timeout = testTimeout) {
-        val createTaskRequest = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do long-running task"),
-                    ),
-                    contextId = "test-context"
+    open fun `test subscribe to task`() = runTest(timeout = testTimeout) {
+        val createTaskRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do long-running task"),
                 ),
-                configuration = SendMessageConfiguration(
-                    blocking = false
-                )
+                contextId = "test-context"
             ),
-        )
-
-        val taskId = (client.sendMessage(createTaskRequest).data as Task).id
-
-        val resubscribeTaskRequest = Request(
-            data = TaskIdParams(
-                id = taskId,
+            configuration = SendMessageConfiguration(
+                blocking = false
             )
         )
 
+        val taskId = (client.sendMessage(createTaskRequest) as Task).id
+
+        val resubscribeTaskRequest = SubscribeToTaskRequest(
+            id = taskId,
+        )
+
         val events = client
-            .resubscribeTask(resubscribeTaskRequest)
+            .subscribeToTask(resubscribeTaskRequest)
             .toList()
-            .map { it.data }
 
         events.shouldNotBeEmpty()
 
@@ -369,70 +386,56 @@ abstract class BaseA2AProtocolTest {
     }
 
     open fun `test push notification configs`() = runTest(timeout = testTimeout) {
-        val createTaskRequest = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do long-running task"),
-                    ),
-                    contextId = "test-context"
+        val createTaskRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do long-running task"),
                 ),
+                contextId = "test-context"
             ),
         )
 
-        val taskId = (client.sendMessage(createTaskRequest).data as Task).id
+        val taskId = (client.sendMessage(createTaskRequest) as Task).id
+
+        val pushConfigId = "push-id"
 
         val pushConfig = TaskPushNotificationConfig(
             taskId = taskId,
-            pushNotificationConfig = PushNotificationConfig(
-                id = "push-id",
-                url = "https://localhost:3000",
-                token = "push-token",
-                authentication = AuthenticationInfo(
-                    schemes = listOf("bearer"),
-                    credentials = "very-secret-credential"
-                )
+            id = pushConfigId,
+            url = "https://localhost:3000",
+            token = "push-token",
+            authentication = AuthenticationInfo(
+                schemes = listOf("bearer"),
+                credentials = "very-secret-credential"
             )
         )
 
-        val request = Request(
-            data = pushConfig
+        val setPushConfigResponse = client.createTaskPushNotificationConfig(pushConfig)
+        setPushConfigResponse shouldBe pushConfig
+
+        val getPushConfigRequest = GetTaskPushNotificationConfigRequest(
+            taskId = taskId,
+            id = pushConfigId,
         )
-
-        val setPushConfigResponse = client.setTaskPushNotificationConfig(request)
-        setPushConfigResponse.data shouldBe pushConfig
-
-        val getPushConfigRequest = Request(
-            data = TaskPushNotificationConfigParams(
-                id = taskId,
-                pushNotificationConfigId = pushConfig.pushNotificationConfig.id,
-            )
-        )
-
 
         val response = client.getTaskPushNotificationConfig(getPushConfigRequest)
-        response.data shouldBe pushConfig
+        response shouldBe pushConfig
 
-        val listPushConfigRequest = Request(
-            data = TaskIdParams(
-                id = taskId,
-            )
+        val listPushConfigRequest = ListTaskPushNotificationConfigsRequest(
+            taskId = taskId,
         )
 
-        val listPushConfigResponse = client.listTaskPushNotificationConfig(listPushConfigRequest)
-        listPushConfigResponse.data shouldBe listOf(pushConfig)
+        val listPushConfigResponse = client.listTaskPushNotificationConfigs(listPushConfigRequest)
+        listPushConfigResponse.configs shouldBe listOf(pushConfig)
 
-        val deletePushConfigRequest = Request(
-            data = TaskPushNotificationConfigParams(
-                id = taskId,
-                pushNotificationConfigId = pushConfig.pushNotificationConfig.id,
-            )
+        val deletePushConfigRequest = DeleteTaskPushNotificationConfigRequest(
+            taskId = taskId,
+            id = pushConfigId,
         )
 
         client.deleteTaskPushNotificationConfig(deletePushConfigRequest)
-
 
         shouldThrowExactly<A2AInternalErrorException> {
             client.getTaskPushNotificationConfig(getPushConfigRequest)

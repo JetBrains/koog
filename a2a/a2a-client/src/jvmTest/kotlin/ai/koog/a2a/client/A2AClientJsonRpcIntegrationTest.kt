@@ -71,8 +71,8 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
         super.`test get agent card`()
 
     @Test
-    override fun `test get authenticated extended agent card`() =
-        super.`test get authenticated extended agent card`()
+    override fun `test get extended agent card`() =
+        super.`test get extended agent card`()
 
     @Test
     override fun `test send message`() =
@@ -87,12 +87,16 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
         super.`test get task`()
 
     @Test
+    override fun `test list tasks`() =
+        super.`test list tasks`()
+
+    @Test
     override fun `test cancel task`() =
         super.`test cancel task`()
 
     @Test
-    override fun `test resubscribe task`() =
-        super.`test resubscribe task`()
+    override fun `test subscribe to task`() =
+        super.`test subscribe to task`()
 
     @Test
     override fun `test push notification configs`() =
