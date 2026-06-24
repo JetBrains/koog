@@ -29,6 +29,7 @@ import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
+import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
@@ -211,7 +212,7 @@ class HttpJSONRPCServerTransportTest {
         testApplication {
             install(SSE)
 
-            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
+            val transport = JSONRPCServerTransport(MockRequestHandler)
 
             routing {
                 a2aJsonRpcTransportRoute("/a2a", transport)
