@@ -61,7 +61,7 @@ abstract class BaseA2AProtocolTest {
     protected abstract var client: A2AClient
 
     open fun `test get agent card`() = runTest(timeout = testTimeout) {
-        val agentCard = client.getAgentCard()
+        val agentCard = client.card
 
         // Assert on the full AgentCard structure
         val expectedAgentCard = AgentCard(
@@ -71,7 +71,7 @@ abstract class BaseA2AProtocolTest {
                 AgentInterface(
                     url = "http://localhost:9999/",
                     protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "0.3.0",
+                    protocolVersion = "1.0",
                 )
             ),
             iconUrl = null,
@@ -119,7 +119,7 @@ abstract class BaseA2AProtocolTest {
                 AgentInterface(
                     url = "http://localhost:9999/",
                     protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "0.3.0",
+                    protocolVersion = "1.0",
                 )
             ),
             iconUrl = null,

@@ -54,7 +54,7 @@ if __name__ == '__main__':
             AgentInterface(
                 url='http://localhost:9999/',
                 protocol_binding=TransportProtocol.JSONRPC.value,
-                protocol_version="1.1.0"
+                protocol_version="1.0"
             ),
         ],
         version='1.0.0',
