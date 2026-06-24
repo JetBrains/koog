@@ -108,6 +108,12 @@ include(":koog-spring-ai:koog-spring-ai-starter-model-embedding")
 include(":koog-spring-ai:koog-spring-ai-starter-chat-memory")
 include(":koog-spring-ai:koog-spring-ai-starter-vector-store")
 
+include(":koog-spring-ai-2:koog-spring-ai-2-common")
+include(":koog-spring-ai-2:koog-spring-ai-2-starter-model-chat")
+include(":koog-spring-ai-2:koog-spring-ai-2-starter-model-embedding")
+include(":koog-spring-ai-2:koog-spring-ai-2-starter-chat-memory")
+include(":koog-spring-ai-2:koog-spring-ai-2-starter-vector-store")
+
 include(":koog-ktor")
 include(":docs")
 

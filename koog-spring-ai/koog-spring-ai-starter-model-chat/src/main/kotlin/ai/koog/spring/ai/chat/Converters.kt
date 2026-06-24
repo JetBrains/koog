@@ -175,11 +175,9 @@ public fun springGenerationToKoogResponses(
  * The returned callback carries the tool definition (name, description, JSON schema)
  * but its [ToolCallback.call] method always throws [IllegalStateException].
  * This is by design: in KOOG execution mode, tools are executed by the Koog agent
- * framework, not by Spring AI. Because the Spring AI [org.springframework.ai.chat.model.ChatModel]
- * is invoked directly (without a `ToolCallingAdvisor`/`ChatClient`), Spring AI 2.0 never executes
- * tool calls itself — it only forwards the tool definitions to the model and returns the requested
- * tool calls in the response. If [ToolCallback.call] is invoked anyway, the error message provides
- * clear guidance on the misconfiguration.
+ * framework, not by Spring AI. The `internalToolExecutionEnabled=false` option
+ * prevents Spring from ever calling this method. If it is called anyway, the error
+ * message provides clear guidance on the misconfiguration.
  *
  * @param descriptor the Koog tool descriptor to convert
  * @return the corresponding Spring AI tool callback (definition-only, non-executable)
@@ -197,17 +195,16 @@ public fun koogToolDescriptorToToolCallback(descriptor: ToolDescriptor): ToolCal
         override fun call(toolInput: String): String {
             converterLogger.error(
                 "Spring AI attempted to execute tool '{}' via callback. " +
-                    "This should never happen when Koog owns tool execution: the ChatModel is " +
-                    "invoked directly (without a ToolCallingAdvisor/ChatClient), so Spring AI 2.0 " +
-                    "does not run the tool-execution loop. " +
+                    "This should never happen when Koog owns tool execution " +
+                    "(internalToolExecutionEnabled=false). " +
                     "Check your Spring AI / Koog configuration.",
                 descriptor.name
             )
             throw IllegalStateException(
                 "Tool '${descriptor.name}' execution is handled by the Koog agent framework, " +
-                    "not Spring AI. If you see this error, ensure the Spring AI ChatModel is invoked " +
-                    "directly (without a ToolCallingAdvisor or ChatClient), so that Spring AI does not " +
-                    "attempt to execute tool calls itself. This is a configuration error."
+                    "not Spring AI. If you see this error, ensure that " +
+                    "ToolCallingChatOptions.internalToolExecutionEnabled is set to false. " +
+                    "This is a configuration error."
             )
         }
     }

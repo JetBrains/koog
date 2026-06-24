@@ -212,7 +212,7 @@ class ConvertersTest {
             callback.call("{}")
         }
         assertTrue(ex.message!!.contains("Koog agent framework"))
-        assertTrue(ex.message!!.contains("ToolCallingAdvisor"))
+        assertTrue(ex.message!!.contains("internalToolExecutionEnabled"))
     }
 
     // ---- toolDescriptorToJsonSchema ----
