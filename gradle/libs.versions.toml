@@ -29,7 +29,6 @@ logback = "1.5.13"
 mcp = "0.11.1"
 mockito = "5.21.0"
 mockk = "1.14.7"
-mokksy = "0.5.1"
 mysql = "9.6.0"
 netty = "4.2.9.Final"
 okhttp = "5.3.2"
@@ -88,7 +87,6 @@ android-litertlm = { module = "com.google.ai.edge.litertlm:litertlm-android", ve
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-mokksy-a2a = { module = "me.kpavlov.aimocks:ai-mocks-a2a", version.ref = "mokksy" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 acp = { module = "com.agentclientprotocol:acp", version.ref = "acp"}
 mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
