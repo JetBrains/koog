@@ -43,5 +43,5 @@ class StressA2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
 
     // Long test, lower repetitions
     @RepeatedTest(10, name = "{currentRepetition}/{totalRepetitions}")
-    fun `stress test resubscribe task`() = super.`test resubscribe task`()
+    fun `stress test subscribe to task`() = super.`test subscribe to task`()
 }
