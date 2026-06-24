@@ -308,9 +308,11 @@ public fun springModerationResultToKoogModerationResult(springResult: SpringMode
     val cats = result.categories
     val scores = result.categoryScores
 
-    val categoryMap: Map<ModerationCategory, ModerationCategoryResult> = if (cats == null || scores == null) {
-        emptyMap()
-    } else buildMap {
+    if (cats == null || scores == null) {
+        return ModerationResult(isHarmful = false, categories = emptyMap())
+    }
+
+    val categoryMap = buildMap {
         put(
             ModerationCategory.Harassment,
             ModerationCategoryResult(

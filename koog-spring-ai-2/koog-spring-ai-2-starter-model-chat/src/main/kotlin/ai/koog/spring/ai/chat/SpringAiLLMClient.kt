@@ -139,7 +139,7 @@ public class SpringAiLLMClient(
     /**
      * Returns the list with one model based on the configured [LLMProvider] and [ChatModel] without capabilities or parameters.
      *
-     * The model id is extracted from [ChatModel.getDefaultOptions] at runtime,
+     * The model id is extracted from [ChatModel.getOptions] at runtime,
      * reflecting whatever model the Spring AI provider has been configured with.
      * If the underlying [ChatModel] does not expose a model name via its default options,
      * an empty list is returned.
@@ -147,7 +147,7 @@ public class SpringAiLLMClient(
      * @return a list containing the configured [LLModel], or an empty list if the model name is unavailable.
      */
     override suspend fun models(): List<LLModel> {
-        val modelId = chatModel.defaultOptions.model ?: return emptyList()
+        val modelId = chatModel.options.model ?: return emptyList()
         return listOf(LLModel(provider = provider, id = modelId))
     }
 
