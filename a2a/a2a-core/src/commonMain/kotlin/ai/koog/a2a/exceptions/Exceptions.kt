@@ -20,6 +20,7 @@ public object A2AErrorCodes {
     public const val CONTENT_TYPE_NOT_SUPPORTED: Int = -32005
     public const val INVALID_AGENT_RESPONSE: Int = -32006
     public const val AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED: Int = -32007
+    public const val VERSION_NOT_SUPPORTED: Int = -32009
 }
 
 /**
@@ -53,6 +54,7 @@ public sealed class A2AException(
                 A2AErrorCodes.CONTENT_TYPE_NOT_SUPPORTED -> A2AContentTypeNotSupportedException(message, details)
                 A2AErrorCodes.INVALID_AGENT_RESPONSE -> A2AInvalidAgentResponseException(message, details)
                 A2AErrorCodes.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED -> A2AAuthenticatedExtendedCardNotConfiguredException(message, details)
+                A2AErrorCodes.VERSION_NOT_SUPPORTED -> A2AVersionNotSupportedException(message, details)
                 else -> A2AUnknownException(message, errorCode, details)
             }
         }
@@ -172,6 +174,14 @@ public class A2AAuthenticatedExtendedCardNotConfiguredException(
     message: String = "Authenticated Extended Card not configured",
     details: List<ErrorData> = emptyList(),
 ) : A2AServerException(message, A2AErrorCodes.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED, details)
+
+/**
+ * The agent doesn't support provided A2A protocol version.
+ */
+public class A2AVersionNotSupportedException(
+    message: String = "Version not supported",
+    details: List<ErrorData> = emptyList(),
+) : A2AServerException(message, A2AErrorCodes.VERSION_NOT_SUPPORTED, details)
 
 /**
  * Server returned some unknown error code.
