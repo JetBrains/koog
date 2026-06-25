@@ -71,7 +71,7 @@ class SpringAiLLMClientTest {
         val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
-            override fun getDefaultOptions() = ToolCallingChatOptions.builder().model("gpt-4o").build()
+            override fun getOptions() = ToolCallingChatOptions.builder().model("gpt-4o").build()
         }).build()
         val models = client.models()
 
@@ -85,7 +85,7 @@ class SpringAiLLMClientTest {
         val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
-            override fun getDefaultOptions() = ToolCallingChatOptions.builder().build()
+            override fun getOptions() = ToolCallingChatOptions.builder().build()
         }).build()
         val models = client.models()
 
@@ -97,7 +97,7 @@ class SpringAiLLMClientTest {
         val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
             override fun stream(prompt: SpringPrompt): Flux<ChatResponse> = throw UnsupportedOperationException()
-            override fun getDefaultOptions() = ToolCallingChatOptions.builder().model("llama3").build()
+            override fun getOptions() = ToolCallingChatOptions.builder().model("llama3").build()
         }).provider(LLMProvider.Ollama).build()
         val models = client.models()
 
