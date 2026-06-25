@@ -31,7 +31,7 @@ tasks.withType<JavaCompile>().configureEach {
 dependencies {
     api(project(":rag:rag-base"))
     api(project(":koog-spring-ai:koog-spring-ai-common"))
-    implementation(libs.spring.ai.vectorstore)
+    api(libs.spring.ai.vectorstore)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.kotlinx.coroutines.test)
