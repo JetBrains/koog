@@ -53,8 +53,7 @@ It auto-configures:
 - A Koog `LLMClient` (`SpringAiLLMClient`) that delegates to a Spring AI `ChatModel`
 - A `PromptExecutor` (`MultiLLMPromptExecutor`) assembled from all available `LLMClient` beans
 
-Tools are always executed by the Koog agent framework.
-Spring AI receives only tool definitions and schemas, and `internalToolExecutionEnabled` is set to `false`.
+Tools are always executed by the Koog agent framework. Spring AI receives only tool definitions and schemas.
 
 ### Add Dependency
 

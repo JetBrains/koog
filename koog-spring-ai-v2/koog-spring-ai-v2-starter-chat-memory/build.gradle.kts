@@ -1,0 +1,38 @@
+import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
+val isBeta by extra(true)
+
+plugins {
+    id("ai.kotlin.jvm")
+    id("ai.kotlin.jvm.publish")
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.management)
+}
+kotlin {
+    explicitApi()
+}
+// Override JVM target to 17 for Spring Boot 3.x compatibility
+tasks.withType<KotlinJvmCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+        javaParameters.set(true)
+    }
+}
+tasks.withType<JavaCompile>().configureEach {
+    sourceCompatibility = JavaVersion.VERSION_17.toString()
+    targetCompatibility = JavaVersion.VERSION_17.toString()
+    options.compilerArgs.add("-parameters")
+}
+dependencies {
+    api(project(":koog-spring-ai-v2:koog-spring-ai-v2-common"))
+    api(project(":agents:agents-features:agents-features-memory"))
+    api(libs.spring.ai.model)
+
+    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+publishToMaven()

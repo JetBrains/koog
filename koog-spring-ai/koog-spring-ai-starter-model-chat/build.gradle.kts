@@ -29,11 +29,7 @@ dependencies {
     api(project(":koog-spring-ai:koog-spring-ai-common"))
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
     api(project(":prompt:prompt-executor:prompt-executor-model"))
-    implementation(project.dependencies.platform(libs.spring.boot.bom))
-    implementation(project.dependencies.platform(libs.spring.ai.bom))
-    api(libs.bundles.spring.boot.core)
     api(libs.spring.ai.model)
-    implementation(libs.kotlinx.coroutines.reactor)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.spring.boot.starter.test)

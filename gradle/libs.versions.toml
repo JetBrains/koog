@@ -39,7 +39,9 @@ oshai-logging = "8.0.01"
 postgresql = "42.7.10"
 slf4j = "2.0.17"
 spring-ai = "1.1.6"
+spring-ai-v2 = "2.0.0"
 spring-boot = "3.5.14"
+spring-boot-v4 = "4.1.0"
 spring-management = "1.1.7"
 sqlite = "3.51.1.0"
 testcontainers = "1.21.4"
@@ -56,6 +58,7 @@ kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.
 kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-jdk9 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk9", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
@@ -138,6 +141,7 @@ aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kot
 
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-v4-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot-v4" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-context = { module = "org.springframework:spring-context" }
@@ -147,6 +151,7 @@ reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-
 
 # Spring AI
 spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "spring-ai" }
+spring-ai-v2-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "spring-ai-v2" }
 spring-ai-model = { module = "org.springframework.ai:spring-ai-model" }
 spring-ai-vectorstore = { module = "org.springframework.ai:spring-ai-vector-store" }
 
