@@ -1,4 +1,4 @@
-# koog-spring-ai-2
+# koog-spring-ai-v2
 
 Spring AI 2 adapter layer for the Koog AI Agent Framework.
 
@@ -16,9 +16,9 @@ Both starters are independent — pick one based on how you prefer to manage LLM
 
 | Module | Spring AI interfaces | Koog interfaces | Docs |
 |---|---|---|---|
-| `koog-spring-ai-2-starter-model-chat` | `ChatModel`, `ModerationModel` | `LLMClient`, `PromptExecutor` | [Module.md](koog-spring-ai-2-starter-model-chat/Module.md) |
-| `koog-spring-ai-2-starter-model-embedding` | `EmbeddingModel` | `LLMEmbeddingProvider` | [Module.md](koog-spring-ai-2-starter-model-embedding/Module.md) |
-| `koog-spring-ai-2-starter-chat-memory` | `ChatMemoryRepository` | `ChatHistoryProvider` | [Module.md](koog-spring-ai-2-starter-chat-memory/Module.md) |
-| `koog-spring-ai-2-starter-vector-store` | `VectorStore` | `WriteStorage`, `SearchStorage`, `FilteringDeletionStorage` | [Module.md](koog-spring-ai-2-starter-vector-store/Module.md) |
+| `koog-spring-ai-v2-starter-model-chat` | `ChatModel`, `ModerationModel` | `LLMClient`, `PromptExecutor` | [Module.md](koog-spring-ai-v2-starter-model-chat/Module.md) |
+| `koog-spring-ai-v2-starter-model-embedding` | `EmbeddingModel` | `LLMEmbeddingProvider` | [Module.md](koog-spring-ai-v2-starter-model-embedding/Module.md) |
+| `koog-spring-ai-v2-starter-chat-memory` | `ChatMemoryRepository` | `ChatHistoryProvider` | [Module.md](koog-spring-ai-v2-starter-chat-memory/Module.md) |
+| `koog-spring-ai-v2-starter-vector-store` | `VectorStore` | `WriteStorage`, `SearchStorage`, `FilteringDeletionStorage` | [Module.md](koog-spring-ai-v2-starter-vector-store/Module.md) |
 
 Each submodule is a fully independent Spring Boot starter with its own auto-configuration, configuration properties, and dispatcher management. See the linked `Module.md` for usage details, configuration reference, and examples.

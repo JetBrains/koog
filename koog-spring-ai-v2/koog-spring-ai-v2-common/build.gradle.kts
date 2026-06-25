@@ -26,8 +26,8 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-parameters")
 }
 dependencies {
-    api(project.dependencies.platform(libs.spring.boot.current.bom))
-    api(project.dependencies.platform(libs.spring.ai.current.bom))
+    api(project.dependencies.platform(libs.spring.boot.v4.bom))
+    api(project.dependencies.platform(libs.spring.ai.v2.bom))
     api(libs.spring.boot.starter)
     api(libs.kotlin.reflect)
     api(libs.kotlinx.coroutines.reactor)

@@ -1,4 +1,4 @@
-# Module koog-spring-ai-2-starter-model-embedding
+# Module koog-spring-ai-v2-starter-model-embedding
 
 Adapts a Spring AI `EmbeddingModel` into a Koog `LLMEmbeddingProvider`.
 
@@ -16,7 +16,7 @@ Add the dependency alongside any Spring AI model starter (e.g., Ollama):
 // build.gradle.kts
 dependencies {
     implementation("ai.koog:koog-agents-jvm:$koogVersion")
-    implementation("ai.koog:koog-spring-ai-2-starter-model-embedding:$koogVersion")
+    implementation("ai.koog:koog-spring-ai-v2-starter-model-embedding:$koogVersion")
     implementation("org.springframework.ai:spring-ai-starter-model-ollama")
 }
 ```

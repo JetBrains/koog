@@ -10,33 +10,31 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.management)
 }
-
 kotlin {
     explicitApi()
 }
-
+// Override JVM target to 17 for Spring Boot 3.x compatibility
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
         javaParameters.set(true)
     }
 }
-
 tasks.withType<JavaCompile>().configureEach {
     sourceCompatibility = JavaVersion.VERSION_17.toString()
     targetCompatibility = JavaVersion.VERSION_17.toString()
     options.compilerArgs.add("-parameters")
 }
-
 dependencies {
-    api(project(":rag:rag-base"))
-    api(project(":koog-spring-ai-2:koog-spring-ai-2-common"))
-    api(libs.spring.ai.vectorstore)
+    api(project(":koog-spring-ai-v2:koog-spring-ai-v2-common"))
+    api(project(":prompt:prompt-executor:prompt-executor-clients"))
+    api(project(":prompt:prompt-executor:prompt-executor-model"))
+    api(libs.spring.ai.model)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
-
 publishToMaven()

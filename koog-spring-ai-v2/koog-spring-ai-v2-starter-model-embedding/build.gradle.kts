@@ -26,11 +26,9 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-parameters")
 }
 dependencies {
-    api(project(":koog-spring-ai-2:koog-spring-ai-2-common"))
+    api(project(":koog-spring-ai-v2:koog-spring-ai-v2-common"))
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
-    api(project(":prompt:prompt-executor:prompt-executor-model"))
     api(libs.spring.ai.model)
-    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.kotlinx.coroutines.test)

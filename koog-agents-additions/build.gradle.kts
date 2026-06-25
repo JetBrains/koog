@@ -52,12 +52,12 @@ val excluded = setOf(
     ":koog-spring-ai:koog-spring-ai-starter-chat-memory",
     ":koog-spring-ai:koog-spring-ai-starter-vector-store",
 
-    ":koog-spring-ai-2",
-    ":koog-spring-ai-2:koog-spring-ai-2-common",
-    ":koog-spring-ai-2:koog-spring-ai-2-starter-model-chat",
-    ":koog-spring-ai-2:koog-spring-ai-2-starter-model-embedding",
-    ":koog-spring-ai-2:koog-spring-ai-2-starter-chat-memory",
-    ":koog-spring-ai-2:koog-spring-ai-2-starter-vector-store",
+    ":koog-spring-ai-v2",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-common",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-model-chat",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-model-embedding",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-chat-memory",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-vector-store",
 
     ":agents:agents-features:agents-features-longterm-memory-aws", // Optional AWS LongTermMemory provider
 
