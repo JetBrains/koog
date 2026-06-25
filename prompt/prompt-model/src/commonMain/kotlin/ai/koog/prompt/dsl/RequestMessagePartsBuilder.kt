@@ -1,6 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.MessagePart
 
 @JavaAPI
@@ -28,8 +29,9 @@ public class RequestMessagePartsBuilder : ContentPartsBuilderBase<List<MessagePa
         tool: String,
         output: String,
         isError: Boolean = false,
+        cacheControl: CacheControl? = null,
     ) {
-        part(MessagePart.Tool.Result(id, tool, output, isError))
+        part(MessagePart.Tool.Result(id, tool, output, isError, cacheControl))
     }
 
     override fun build(): List<MessagePart.RequestPart> {
