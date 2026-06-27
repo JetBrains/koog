@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OpenAILLMProvider
+import ai.koog.spring.ai.chat.ChatOptionsCustomizer
 import ai.koog.spring.ai.chat.SpringAiLLMClient
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
@@ -68,6 +69,16 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     private val openAiClient: SpringAiLLMClient = run {
+        val chatOptionsCustomizer = ChatOptionsCustomizer { options, params, _ ->
+            val builder = options.mutate() as OpenAiChatOptions.Builder
+
+            builder
+                // OpenAI chat model doesn't support generic maxTokens and throws an exception, need to customize
+                .maxTokens(null)
+                .maxCompletionTokens(params.maxTokens)
+                .build()
+        }
+
         val chatModel = OpenAiChatModel.builder()
             .options(
                 OpenAiChatOptions.builder()
@@ -79,6 +90,7 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
         SpringAiLLMClient.builder()
             .chatModel(chatModel)
             .provider(OpenAILLMProvider)
+            .chatOptionsCustomizer(chatOptionsCustomizer)
             .build()
     }
 

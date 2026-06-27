@@ -303,7 +303,7 @@ public class SpringAiLLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): ChatOptions {
-        val builder = chatModel.options.mutate()
+        val builder: ChatOptions.Builder<*> = chatModel.options.mutate()
 
         builder.model(model.id)
             .temperature(params.temperature)
