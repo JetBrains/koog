@@ -63,7 +63,7 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun allCompletionModels(): Stream<LLModel> {
-            return Models.bedrockModels()
+            return Models.springAiModels()
         }
     }
 
