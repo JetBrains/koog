@@ -68,8 +68,8 @@ object Models {
     fun springAiModels(): Stream<LLModel> {
         return Stream.of(
             OpenAIModels.Chat.GPT5_5,
-//            AnthropicModels.Haiku_4_5,
-//            GoogleModels.Gemini3_Flash_Preview,
+            AnthropicModels.Sonnet_4_6,
+            GoogleModels.Gemini3_5Flash,
         )
     }
 

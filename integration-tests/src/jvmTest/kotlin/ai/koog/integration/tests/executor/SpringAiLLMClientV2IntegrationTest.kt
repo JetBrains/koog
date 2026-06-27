@@ -5,26 +5,33 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.AnthropicLLMProvider
+import ai.koog.prompt.llm.GoogleLLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.spring.ai.chat.ChatOptionsCustomizer
 import ai.koog.spring.ai.chat.SpringAiLLMClient
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.ai.anthropic.AnthropicChatModel
+import org.springframework.ai.anthropic.AnthropicChatOptions
+import org.springframework.ai.google.genai.GoogleGenAiChatModel
 import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.ai.openai.OpenAiChatOptions
 import java.util.stream.Stream
 import kotlin.enums.EnumEntries
+import com.google.genai.Client as GenAiClient
 
 /**
- * Test Spring AI LLM client integration
+ * Test Spring AI LLM client integration.
  */
-class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
+class SpringAiLLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
     companion object {
         private fun EnumEntries<*>.combineSpringAiModels(): Stream<Arguments> {
             return toList()
@@ -82,7 +89,7 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
         val chatModel = OpenAiChatModel.builder()
             .options(
                 OpenAiChatOptions.builder()
-                    .apiKey(readTestOpenAIKeyFromEnv())
+                    .apiKey(TestCredentials.readTestOpenAIKeyFromEnv())
                     .build()
             )
             .build()
@@ -94,8 +101,40 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
             .build()
     }
 
+    private val googleClient: SpringAiLLMClient = run {
+        val chatModel = GoogleGenAiChatModel.builder()
+            .genAiClient(
+                GenAiClient.builder()
+                    .apiKey(TestCredentials.readTestGoogleAIKeyFromEnv())
+                    .build()
+            )
+            .build()
+
+        SpringAiLLMClient.builder()
+            .chatModel(chatModel)
+            .provider(GoogleLLMProvider)
+            .build()
+    }
+
+    private val anthropicClient: SpringAiLLMClient = run {
+        val chatModel = AnthropicChatModel.builder()
+            .options(
+                AnthropicChatOptions.builder()
+                    .apiKey(TestCredentials.readTestAnthropicKeyFromEnv())
+                    .build()
+            )
+            .build()
+
+        SpringAiLLMClient.builder()
+            .chatModel(chatModel)
+            .provider(AnthropicLLMProvider)
+            .build()
+    }
+
     private val executor: MultiLLMPromptExecutor = MultiLLMPromptExecutor(
-        OpenAILLMProvider to openAiClient
+        OpenAILLMProvider to openAiClient,
+        GoogleLLMProvider to googleClient,
+        AnthropicLLMProvider to anthropicClient,
     )
 
     override fun getExecutor(model: LLModel): PromptExecutor = executor
@@ -106,18 +145,25 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
         scenario: MarkdownTestScenario,
         model: LLModel
     ) {
+        assumeTrue(model.provider != AnthropicLLMProvider, "Anthropic doesn't support text attachments")
+
         super.integration_testMarkdownProcessingBasic(scenario, model)
     }
 
     @ParameterizedTest
     @MethodSource("imageScenarioModelCombinations")
     override fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) {
+        // FIXME Doesn't work with Google model for some reason
+        assumeTrue(model.provider != GoogleLLMProvider)
+
         super.integration_testImageProcessing(scenario, model)
     }
 
     @ParameterizedTest
     @MethodSource("textScenarioModelCombinations")
     override fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) {
+        assumeTrue(model.provider != AnthropicLLMProvider, "Anthropic doesn't support text attachments")
+
         super.integration_testTextProcessingBasic(scenario, model)
     }
 
@@ -197,12 +243,18 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testAssistantMultiPartRoundTrip(model: LLModel) {
+        // FIXME Google integration: Function call is missing a thought_signature in functionCall parts
+        assumeTrue(model.provider != GoogleLLMProvider)
+
         super.integration_testAssistantMultiPartRoundTrip(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testToolCallResultCorrelationById(model: LLModel) {
+        // FIXME Google integration: Function call is missing a thought_signature in functionCall parts
+        assumeTrue(model.provider != GoogleLLMProvider)
+
         super.integration_testToolCallResultCorrelationById(model)
     }
 
@@ -252,6 +304,8 @@ class SpringAILLMClientV2IntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNative(model: LLModel) {
+        assumeTrue(model.provider != AnthropicLLMProvider, "Anthropic doesn't support native structured output")
+
         super.integration_testStructuredOutputNative(model)
     }
 

@@ -74,6 +74,8 @@ kotlin {
                 // Spring
                 implementation(dependencies.platform(libs.spring.ai.v2.bom))
                 implementation(libs.spring.ai.v2.openai)
+                implementation(libs.spring.ai.v2.google)
+                implementation(libs.spring.ai.v2.anthropic)
             }
         }
     }
