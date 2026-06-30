@@ -109,7 +109,8 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
     ":prompt:prompt-executor:prompt-executor-llms-all",
-    ":rag:rag-vector"
+    ":rag:rag-vector",
+    ":skills"
 )
 
 // Modules that do not publish a wasmJs artifact. They are filtered out of the
