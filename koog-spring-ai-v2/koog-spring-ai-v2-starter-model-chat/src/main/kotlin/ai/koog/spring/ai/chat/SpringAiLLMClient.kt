@@ -303,32 +303,31 @@ public class SpringAiLLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): ChatOptions {
-        val options: ChatOptions = if (tools.isNotEmpty()) {
-            val toolCallbacks = tools.map { koogToolDescriptorToToolCallback(it) }
-            ToolCallingChatOptions.builder()
-                .model(model.id)
-                .temperature(params.temperature)
-                .maxTokens(params.maxTokens)
-                .toolCallbacks(toolCallbacks)
-                .build()
-        } else {
-            ChatOptions.builder()
-                .model(model.id)
-                .temperature(params.temperature)
-                .maxTokens(params.maxTokens)
-                .build()
+        val builder: ChatOptions.Builder<*> = chatModel.options.mutate()
+
+        builder.model(model.id)
+            .temperature(params.temperature)
+            .maxTokens(params.maxTokens)
+
+        if (tools.isNotEmpty()) {
+            require(builder is ToolCallingChatOptions.Builder<*>) {
+                "Configured ChatModel options (${chatModel.options::class.java.name}) do not support tool calling"
+            }
+            builder.toolCallbacks(tools.map { koogToolDescriptorToToolCallback(it) })
         }
+
+        val options: ChatOptions = builder.build()
 
         // Log unsupported params once at debug level
         params.numberOfChoices?.let {
-            logger.debug(
+            logger.warn(
                 "Koog Spring AI: 'numberOfChoices={}' is not supported by Spring AI ChatOptions; ignored for provider '{}'",
                 it,
                 model.provider.id
             )
         }
         params.speculation?.let {
-            logger.debug(
+            logger.warn(
                 "Koog Spring AI: 'speculation' is not supported by Spring AI ChatOptions; ignored for provider '{}'",
                 model.provider.id
             )

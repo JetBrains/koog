@@ -154,6 +154,9 @@ spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref =
 spring-ai-v2-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "spring-ai-v2" }
 spring-ai-model = { module = "org.springframework.ai:spring-ai-model" }
 spring-ai-vectorstore = { module = "org.springframework.ai:spring-ai-vector-store" }
+spring-ai-v2-openai = { module = "org.springframework.ai:spring-ai-openai" }
+spring-ai-v2-google = { module = "org.springframework.ai:spring-ai-google-genai" }
+spring-ai-v2-anthropic = { module = "org.springframework.ai:spring-ai-anthropic" }
 
 [bundles]
 spring-boot-core = [

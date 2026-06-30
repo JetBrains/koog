@@ -47,6 +47,9 @@ kotlin {
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
                 )
+                implementation(
+                    project(":koog-spring-ai-v2:koog-spring-ai-v2-starter-model-chat")
+                )
                 implementation(project(":agents:agents-features:agents-features-chat-history-aws"))
                 implementation(project(":agents:agents-features:agents-features-longterm-memory-aws"))
                 implementation(project(":serialization:serialization-jackson"))
@@ -67,6 +70,12 @@ kotlin {
                 implementation(project.dependencies.platform(libs.opentelemetry.bom))
                 implementation(libs.opentelemetry.sdk.testing)
                 implementation(libs.opentelemetry.kotlin.exporters.inMemory)
+
+                // Spring
+                implementation(dependencies.platform(libs.spring.ai.v2.bom))
+                implementation(libs.spring.ai.v2.openai)
+                implementation(libs.spring.ai.v2.google)
+                implementation(libs.spring.ai.v2.anthropic)
             }
         }
     }
