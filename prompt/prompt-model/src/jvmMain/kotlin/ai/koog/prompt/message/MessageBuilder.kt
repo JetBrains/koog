@@ -91,8 +91,9 @@ public class AssistantMessageBuilder {
         addPart(toolResult)
     }
 
-    public fun addText(content: String): AssistantMessageBuilder = apply {
-        addPart(MessagePart.Text(content))
+    @JvmOverloads
+    public fun addText(content: String, cache: CacheControl? = null): AssistantMessageBuilder = apply {
+        addPart(MessagePart.Text(content, cache))
     }
 
     public fun addToolCall(toolCall: MessagePart.Tool.Call): AssistantMessageBuilder = apply {
@@ -198,6 +199,7 @@ public class ToolCallBuilder {
     private var id: String? = null
     private var tool: String? = null
     private var args: JsonObject? = null
+    private var cacheControl: CacheControl? = null
 
     /**
      * Sets the tool call ID.
@@ -215,6 +217,11 @@ public class ToolCallBuilder {
     public fun args(args: JsonObject): ToolCallBuilder = apply { this.args = args }
 
     /**
+     * Sets the cache-control directive for the provider's prompt-caching feature.
+     */
+    public fun cacheControl(cacheControl: CacheControl?): ToolCallBuilder = apply { this.cacheControl = cacheControl }
+
+    /**
      * Builds a new [MessagePart.Tool.Call] instance.
      *
      * @throws IllegalStateException if tool name or content parts are missing.
@@ -226,6 +233,7 @@ public class ToolCallBuilder {
             id = id,
             tool = tool!!,
             args = args!!,
+            cacheControl = cacheControl,
         )
     }
 }
@@ -248,6 +256,7 @@ public class ToolResultBuilder {
     private var tool: String? = null
     private var output: String? = null
     private var isError: Boolean = false
+    private var cacheControl: CacheControl? = null
 
     /**
      * Sets the tool result ID.
@@ -267,6 +276,11 @@ public class ToolResultBuilder {
     public fun isError(isError: Boolean): ToolResultBuilder = apply { this.isError = isError }
 
     /**
+     * Sets the cache-control directive for the provider's prompt-caching feature.
+     */
+    public fun cacheControl(cacheControl: CacheControl?): ToolResultBuilder = apply { this.cacheControl = cacheControl }
+
+    /**
      * Builds a new [MessagePart.Tool.Result] instance.
      *
      * @throws IllegalStateException if tool name or content parts are missing.
@@ -278,7 +292,8 @@ public class ToolResultBuilder {
             id = id,
             tool = tool!!,
             output = output!!,
-            isError = isError
+            isError = isError,
+            cacheControl = cacheControl
         )
     }
 }
@@ -300,6 +315,7 @@ public class ReasoningBuilder {
     private val content: MutableList<String> = mutableListOf()
     private var summary: List<String>? = null
     private var encrypted: String? = null
+    private var cacheControl: CacheControl? = null
 
     /**
      * Sets the reasoning ID.
@@ -310,6 +326,11 @@ public class ReasoningBuilder {
      * Sets the encrypted content.
      */
     public fun encrypted(encrypted: String?): ReasoningBuilder = apply { this.encrypted = encrypted }
+
+    /**
+     * Sets the cache-control directive for the provider's prompt-caching feature.
+     */
+    public fun cacheControl(cacheControl: CacheControl?): ReasoningBuilder = apply { this.cacheControl = cacheControl }
 
     /**
      * Sets a single text content for the message, replacing any previously added parts.
@@ -338,6 +359,7 @@ public class ReasoningBuilder {
             content = content,
             summary = summary,
             encrypted = encrypted,
+            cacheControl = cacheControl,
         )
     }
 }

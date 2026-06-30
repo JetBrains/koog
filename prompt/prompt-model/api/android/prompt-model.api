@@ -81,10 +81,12 @@ public abstract class ai/koog/prompt/dsl/ContentPartsBuilderBase : ai/koog/promp
 	public static synthetic fun audio$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Lai/koog/prompt/message/AttachmentSource$Audio;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 	public static synthetic fun audio$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 	public static synthetic fun audio$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Lkotlinx/io/files/Path;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
-	public final fun binaryFile (Lkotlinx/io/files/Path;Ljava/lang/String;)V
+	public final fun binaryFile (Lkotlinx/io/files/Path;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public static synthetic fun binaryFile$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Lkotlinx/io/files/Path;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 	public final fun file (Lai/koog/prompt/message/AttachmentSource$File;Lai/koog/prompt/message/CacheControl;)V
-	public final fun file (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun file (Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
 	public static synthetic fun file$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Lai/koog/prompt/message/AttachmentSource$File;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
+	public static synthetic fun file$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 	protected final fun flushTextBuilder ()V
 	protected final fun getContentParts ()Ljava/util/List;
 	public final fun image (Lai/koog/prompt/message/AttachmentSource$Image;Lai/koog/prompt/message/CacheControl;)V
@@ -97,7 +99,8 @@ public abstract class ai/koog/prompt/dsl/ContentPartsBuilderBase : ai/koog/promp
 	public final fun text (Lai/koog/prompt/message/CacheControl;Lkotlin/jvm/functions/Function1;)V
 	public final fun text (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
 	public static synthetic fun text$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Lai/koog/prompt/message/CacheControl;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
-	public final fun textFile (Lkotlinx/io/files/Path;Ljava/lang/String;)V
+	public final fun textFile (Lkotlinx/io/files/Path;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public static synthetic fun textFile$default (Lai/koog/prompt/dsl/ContentPartsBuilderBase;Lkotlinx/io/files/Path;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 	public final fun video (Lai/koog/prompt/message/AttachmentSource$Video;Lai/koog/prompt/message/CacheControl;)V
 	public final fun video (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
 	public final fun video (Lkotlinx/io/files/Path;Lai/koog/prompt/message/CacheControl;)V
@@ -304,7 +307,8 @@ public final class ai/koog/prompt/dsl/PromptBuilder {
 	public final fun reasoning (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun reasoning (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun reasoning (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
-	public static synthetic fun reasoning$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
+	public final fun reasoning (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/dsl/PromptBuilder;
+	public static synthetic fun reasoning$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun system (Lai/koog/prompt/message/CacheControl;Lkotlin/jvm/functions/Function1;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun system (Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun system (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/dsl/PromptBuilder;
@@ -314,15 +318,18 @@ public final class ai/koog/prompt/dsl/PromptBuilder {
 	public final fun toolCall (Lai/koog/prompt/message/MessagePart$Tool$Call;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
+	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolCall (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolCall (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
-	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
-	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
+	public final fun toolCall (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/dsl/PromptBuilder;
+	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
+	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolResult (Lai/koog/prompt/message/MessagePart$Tool$Result;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolResult (Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolResult (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun toolResult (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Lai/koog/prompt/dsl/PromptBuilder;
-	public static synthetic fun toolResult$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
+	public final fun toolResult (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/message/CacheControl;)Lai/koog/prompt/dsl/PromptBuilder;
+	public static synthetic fun toolResult$default (Lai/koog/prompt/dsl/PromptBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun user (Ljava/lang/String;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun user (Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/dsl/PromptBuilder;
 	public final fun user (Ljava/util/List;)Lai/koog/prompt/dsl/PromptBuilder;
@@ -346,8 +353,8 @@ public final class ai/koog/prompt/dsl/RequestMessagePartsBuilder : ai/koog/promp
 	public synthetic fun build ()Ljava/lang/Object;
 	public fun build ()Ljava/util/List;
 	public final fun toolResult (Lai/koog/prompt/message/MessagePart$Tool$Result;)V
-	public final fun toolResult (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
-	public static synthetic fun toolResult$default (Lai/koog/prompt/dsl/RequestMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun toolResult (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/message/CacheControl;)V
+	public static synthetic fun toolResult$default (Lai/koog/prompt/dsl/RequestMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 }
 
 public final class ai/koog/prompt/dsl/ResponseMessagePartsBuilder : ai/koog/prompt/text/TextContentBuilderBase {
@@ -355,13 +362,13 @@ public final class ai/koog/prompt/dsl/ResponseMessagePartsBuilder : ai/koog/prom
 	public synthetic fun build ()Ljava/lang/Object;
 	public fun build ()Ljava/util/List;
 	public final fun reasoning (Lai/koog/prompt/message/MessagePart$Reasoning;)V
-	public final fun reasoning (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public static synthetic fun reasoning$default (Lai/koog/prompt/dsl/ResponseMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun reasoning (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public static synthetic fun reasoning$default (Lai/koog/prompt/dsl/ResponseMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 	public final fun toolCall (Lai/koog/prompt/message/MessagePart$Tool$Call;)V
-	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
-	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/ResponseMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
-	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/ResponseMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)V
+	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public final fun toolCall (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/message/CacheControl;)V
+	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/ResponseMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
+	public static synthetic fun toolCall$default (Lai/koog/prompt/dsl/ResponseMessagePartsBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)V
 }
 
 public abstract interface class ai/koog/prompt/message/AttachmentContent {
@@ -831,6 +838,7 @@ public final class ai/koog/prompt/message/MessageMetaInfo$Companion {
 
 public abstract interface class ai/koog/prompt/message/MessagePart {
 	public static final field Companion Lai/koog/prompt/message/MessagePart$Companion;
+	public abstract fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
 }
 
 public final class ai/koog/prompt/message/MessagePart$Attachment : ai/koog/prompt/message/MessagePart$ContentPart {
@@ -882,19 +890,23 @@ public final class ai/koog/prompt/message/MessagePart$Reasoning : ai/koog/prompt
 	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
 	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/util/List;)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;)V
 	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/util/List;
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/message/MessagePart$Reasoning;
-	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Reasoning;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Reasoning;
+	public final fun component5 ()Lai/koog/prompt/message/CacheControl;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/message/MessagePart$Reasoning;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Reasoning;Ljava/util/List;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Reasoning;
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
 	public final fun getContent ()Ljava/util/List;
 	public final fun getEncrypted ()Ljava/lang/String;
 	public final fun getId ()Ljava/lang/String;
@@ -920,7 +932,6 @@ public final class ai/koog/prompt/message/MessagePart$Reasoning$Companion {
 
 public abstract interface class ai/koog/prompt/message/MessagePart$RequestPart : ai/koog/prompt/message/MessagePart {
 	public static final field Companion Lai/koog/prompt/message/MessagePart$RequestPart$Companion;
-	public abstract fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
 }
 
 public final class ai/koog/prompt/message/MessagePart$RequestPart$Companion {
@@ -975,18 +986,22 @@ public final class ai/koog/prompt/message/MessagePart$Tool$Call : ai/koog/prompt
 	public static final field Companion Lai/koog/prompt/message/MessagePart$Tool$Call$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Lai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/koog/prompt/message/MessagePart$Tool$Call;
-	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Tool$Call;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Tool$Call;
+	public final fun component4 ()Lai/koog/prompt/message/CacheControl;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;)Lai/koog/prompt/message/MessagePart$Tool$Call;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Tool$Call;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Tool$Call;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getArgs ()Ljava/lang/String;
 	public final fun getArgsJson ()Lkotlinx/serialization/json/JsonObject;
+	public fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
 	public final fun getId ()Ljava/lang/String;
 	public fun getTool ()Ljava/lang/String;
 	public fun hashCode ()I
@@ -1014,16 +1029,23 @@ public final class ai/koog/prompt/message/MessagePart$Tool$Companion {
 
 public final class ai/koog/prompt/message/MessagePart$Tool$Result : ai/koog/prompt/message/MessagePart$RequestPart, ai/koog/prompt/message/MessagePart$Tool {
 	public static final field Companion Lai/koog/prompt/message/MessagePart$Tool$Result$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLai/koog/prompt/message/CacheControl;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLai/koog/prompt/message/CacheControl;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/util/List;
 	public final fun component4 ()Z
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Z)Lai/koog/prompt/message/MessagePart$Tool$Result;
-	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Tool$Result;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Tool$Result;
+	public final fun component5 ()Lai/koog/prompt/message/CacheControl;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLai/koog/prompt/message/CacheControl;)Lai/koog/prompt/message/MessagePart$Tool$Result;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/MessagePart$Tool$Result;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ZLai/koog/prompt/message/CacheControl;ILjava/lang/Object;)Lai/koog/prompt/message/MessagePart$Tool$Result;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getCacheControl ()Lai/koog/prompt/message/CacheControl;
 	public final fun getId ()Ljava/lang/String;

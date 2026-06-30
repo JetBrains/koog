@@ -246,6 +246,9 @@ internal object BedrockConverseConverters {
                                     }
                                 )
                             )
+                            part.cacheControl?.let { cc ->
+                                add(cc.require<BedrockCacheControl>().toBedrockCachePointContentBlock())
+                            }
                         }
                     }
                 }
