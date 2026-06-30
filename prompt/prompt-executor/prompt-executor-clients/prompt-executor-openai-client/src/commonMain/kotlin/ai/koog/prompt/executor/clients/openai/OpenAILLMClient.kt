@@ -293,6 +293,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             chunk.choices.firstOrNull()?.let { choice ->
                 choice.delta.content?.let { emitTextDelta(it, choice.index) }
 
+                choice.delta.reasoningContent
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { emitReasoningDelta(text = it, index = choice.index) }
+
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
                     val index = openAIToolCall.index
                     val id = openAIToolCall.id

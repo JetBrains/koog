@@ -937,7 +937,7 @@ final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoic
 }
 
 final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall>?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? = ..., kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall>?;kotlin.String?){}[0]
 
     final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.content|{}content[0]
         final fun <get-content>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.content.<get-content>|<get-content>(){}[0]
@@ -947,6 +947,8 @@ final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta
         final fun <get-role>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.role.<get-role>|<get-role>(){}[0]
     final val toolCalls // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.toolCalls|{}toolCalls[0]
         final fun <get-toolCalls>(): kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.toolCalls.<get-toolCalls>|<get-toolCalls>(){}[0]
+    final val reasoningContent // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.reasoningContent|{}reasoningContent[0]
+        final fun <get-reasoningContent>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.reasoningContent.<get-reasoningContent>|<get-reasoningContent>(){}[0]
 
     final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta> { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer|null[0]
         final val descriptor // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.$serializer.descriptor|{}descriptor[0]

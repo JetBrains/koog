@@ -957,7 +957,8 @@ public class OpenAIStreamDelta(
     public val content: String? = null,
     public val refusal: String? = null,
     public val role: String? = null,
-    public val toolCalls: List<OpenAIStreamToolCall>? = null
+    public val toolCalls: List<OpenAIStreamToolCall>? = null,
+    public val reasoningContent: String? = null,
 )
 
 internal object ContentSerializer : KSerializer<Content> {
