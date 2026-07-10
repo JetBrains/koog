@@ -939,7 +939,7 @@ internal class OpenAIPromptReference(
 /**
  * Configuration options for reasoning models.
  * @property effort Constrains effort on reasoning for reasoning models.
- * Currently supported values are `minimal`, `low`, `medium`, and `high`.
+ * Supported values vary by model and can include `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`.
  * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
  * @property summary A summary of the reasoning performed by the model.
  * This can be useful for debugging and understanding the model's reasoning process. One of `auto`, `concise`,

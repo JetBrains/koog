@@ -1239,9 +1239,11 @@ public final class ai/koog/prompt/executor/clients/openai/base/models/ReasoningE
 	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort$Companion;
 	public static final field HIGH Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
 	public static final field LOW Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static final field MAX Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
 	public static final field MEDIUM Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
 	public static final field MINIMAL Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
 	public static final field NONE Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
+	public static final field XHIGH Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
 	public static fun values ()[Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;
