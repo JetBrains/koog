@@ -31,4 +31,16 @@ internal object ApiKeyService {
 
     val mistralAIApiKey: String
         get() = System.getenv("MISTRALAI_API_KEY") ?: throw IllegalArgumentException("MISTRALAI_API_KEY env is not set")
+
+    val daoxeApiKey: String
+        get() = System.getenv("DAOXE_API_KEY") ?: throw IllegalArgumentException("DAOXE_API_KEY env is not set")
+
+    /**
+     * Model id from the caller's DaoXE account catalog (pricing / models page).
+     * Falls back to a placeholder string so local dry-runs fail clearly at the API layer
+     * if the env var is omitted; always set `DAOXE_MODEL` to a live account model id.
+     */
+    val daoxeModelId: String
+        get() = System.getenv("DAOXE_MODEL")?.takeIf { it.isNotBlank() }
+            ?: "replace-with-model-id-from-your-daoxe-account"
 }

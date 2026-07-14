@@ -38,6 +38,16 @@ The table below shows the LLM capabilities that Koog supports and which provider
     LLMs from each provider may have additional features that Koog does not currently support.
     To learn more, refer to [Model capabilities](model-capabilities.md).
 
+## OpenAI-compatible gateways (example: DaoXE)
+
+You can point Koog’s `OpenAILLMClient` at any OpenAI-compatible Chat Completions endpoint by setting
+`OpenAIClientSettings(baseUrl = ...)`. For [DaoXE](https://daoxe.com), use base URL **`https://daoxe.com/v1`**
+(in settings: `baseUrl = "https://daoxe.com"` with the default `v1/chat/completions` path).
+
+DaoXE is a **multi-model, multi-protocol** API gateway (OpenAI Chat Completions / Responses and Anthropic Messages among others).
+Pass **model ids from your DaoXE account catalog**—do not hardcode a fixed vendor list.
+DaoXE does **not** serve mainland China. See the full walkthrough: [DaoXE agent example](examples/DaoXEAgent.md).
+
 ## Working with providers
 
 Koog lets you work with LLM providers on two levels:

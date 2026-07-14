@@ -92,6 +92,7 @@ nav:
       - Attachments: examples/Attachments.md
       - Banking: examples/Banking.md
       - BedrockAgent: examples/BedrockAgent.md
+      - DaoXEAgent: examples/DaoXEAgent.md
       - Calculator: examples/Calculator.md
       - Chess: examples/Chess.md
       - Guesser: examples/Guesser.md

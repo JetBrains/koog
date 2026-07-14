@@ -132,6 +132,7 @@ registerRunExampleTask(
     "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt"
 )
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
+registerRunExampleTask("runExampleDaoXEAgent", "ai.koog.agents.example.client.DaoXEAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
 registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")

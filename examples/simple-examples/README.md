@@ -83,6 +83,7 @@ Welcome to the **Koog Framework Simple Examples** collection! This project showc
 |-------------------|------------------------------------------------------|------------------------------------|----------------------------------------------------------|
 | **Attachments**   | Using structured Markdown and attachments in prompts | `runExampleInstagramPostDescriber` | [📓 Attachments.ipynb](../notebooks/Attachments.ipynb)   |
 | **Bedrock Agent** | AI agents using AWS Bedrock integration              | `runExampleBedrockAgent`           | [📓 BedrockAgent.ipynb](../notebooks/BedrockAgent.ipynb) |
+| **DaoXE Agent**   | OpenAI-compatible gateway via DaoXE (`https://daoxe.com/v1`); multi-model multi-protocol notes; account model ids | `runExampleDaoXEAgent` | [docs](../../docs/docs/examples/DaoXEAgent.md) |
 | **Web Search**    | Agent with web search capabilities                   | `runExampleWebSearchAgent`         | -                                                        |
 
 ### Agent-to-Agent (A2A)
@@ -160,6 +161,7 @@ Run any example using:
 
 **External Integration:**
 - `runExampleBedrockAgent` - AWS Bedrock integration
+- `runExampleDaoXEAgent` - DaoXE OpenAI-compatible gateway (`https://daoxe.com/v1`)
 - `runExampleWebSearchAgent` - Web search capabilities
 - `runExampleInstagramPostDescriber` - Attachment handling
 
