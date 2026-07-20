@@ -3,7 +3,7 @@
 
 ## Major Features
 
-- **Spring Boot 2.0 integration**: New set of Koog starters for Spring Boot 4+ / Spring AI 2.0 ([KG-851](https://youtrack.jetbrains.com/issue/KG-851), #2149)
+- **Spring AI 2.0 integration**: New set of Koog starters for Spring Boot 4+ / Spring AI 2.0 ([KG-851](https://youtrack.jetbrains.com/issue/KG-851), #2149)
 - **Spring WebClient support**: Added Spring `WebClient` as a `KoogHttpClient` implementation, and removed `@Experimental` annotations from the now-stable HTTP client APIs/modules ([KG-820](https://youtrack.jetbrains.com/issue/KG-820), #2065)
 - **Explicit model resolution via `DynamicPromptExecutor`**: New `PromptExecutor` subclass that exposes model resolution (`resolveModel`) as an explicit step before LLM dispatch, so decorators like `ContextualPromptExecutor` know which `LLModel` will be used. `MultiLLMPromptExecutor` and `RoutingLLMPromptExecutor` moved fallback logic into `resolveModel`; existing executors are unaffected (#2081)
 - **Non-text content in tool results**: Widened `Message.Tool.Result.parts` from `List<ContentPart.Text>` to `List<ContentPart>`, allowing tools to return images and files alongside text. Anthropic, OpenAI, and Gemini clients handle the new content types; unsupported API paths throw a clear error (#1852)
