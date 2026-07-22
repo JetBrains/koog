@@ -16,6 +16,15 @@ import kotlin.test.assertTrue
 
 class AgentWorkspaceControllerTest {
     @Test
+    fun testDuplicateRunIdIsFenced() = runTest {
+        val controller = AgentWorkspaceController(InMemoryAgentWorkspaceStore()) { "2026-07-23T00:00:00Z" }
+
+        assertIs<AgentWorkspaceRunOutcome.Completed<String>>(controller.run("run-fenced") { "first" })
+        assertIs<AgentWorkspaceRunOutcome.Failed>(controller.run("run-fenced") { "duplicate" })
+        assertEquals(AgentWorkspaceRunStatus.COMPLETED, controller.snapshot("run-fenced")?.status)
+    }
+
+    @Test
     fun testSuspensionPersistsAndEventsReplay() = runTest {
         val store = InMemoryAgentWorkspaceStore()
         val controller = AgentWorkspaceController(store) { "2026-07-23T00:00:00Z" }
@@ -59,6 +68,12 @@ class AgentWorkspaceControllerTest {
             AgentInputResponse("question-2", listOf("approve"), respondedAt = "2026-07-23T00:01:00Z")
         )
         assertTrue(!receipt.revalidated)
+        assertFailsWith<IllegalArgumentException> {
+            controller.answer(
+                "run-2",
+                AgentInputResponse("question-2", listOf("reject"), respondedAt = "2026-07-23T00:02:00Z")
+            )
+        }
         assertTrue(controller.revalidateDecision("run-2").revalidated)
     }
 

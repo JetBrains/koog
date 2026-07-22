@@ -156,12 +156,17 @@ public data class AgentWorkspaceRunSnapshot(
     val status: AgentWorkspaceRunStatus,
     val createdAt: String,
     val updatedAt: String,
+    val revision: Long = 0,
     val interruption: AgentWorkspaceInterruption? = null,
     val decisionReceipt: AgentDecisionReceipt? = null,
     val cancellationMode: AgentCancellationMode? = null,
     val cancellationReason: String? = null,
     val error: String? = null,
-)
+) {
+    init {
+        require(revision >= 0) { "Run revision cannot be negative" }
+    }
+}
 
 /** Explicit result of a supervised agent execution. */
 public sealed interface AgentWorkspaceRunOutcome<out Output> {

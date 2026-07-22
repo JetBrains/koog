@@ -40,13 +40,18 @@ public class AgentWorkspaceController(
         block: suspend () -> Output,
     ): AgentWorkspaceRunOutcome<Output> {
         val timestamp = now()
-        val existing = store.loadRun(runId)
-        store.saveRun(
-            existing?.copy(status = AgentWorkspaceRunStatus.RUNNING, updatedAt = timestamp, error = null)
-                ?: AgentWorkspaceRunSnapshot(runId, AgentWorkspaceRunStatus.RUNNING, timestamp, timestamp)
-        )
+        val created = store.createRun(AgentWorkspaceRunSnapshot(runId, AgentWorkspaceRunStatus.RUNNING, timestamp, timestamp))
+        if (!created) {
+            return AgentWorkspaceRunOutcome.Failed(IllegalStateException("Workspace run '$runId' already exists"))
+        }
         emit(runId, "run.started", JsonObject(emptyMap()))
+        return execute(runId, block)
+    }
 
+    private suspend fun <Output> execute(
+        runId: String,
+        block: suspend () -> Output,
+    ): AgentWorkspaceRunOutcome<Output> {
         return try {
             val value = block()
             transition(runId, AgentWorkspaceRunStatus.COMPLETED)
@@ -66,7 +71,7 @@ public class AgentWorkspaceController(
             throw cancelled
         } catch (error: Throwable) {
             val snapshot = requireRun(runId)
-            store.saveRun(snapshot.copy(status = AgentWorkspaceRunStatus.FAILED, updatedAt = now(), error = error.message))
+            replace(snapshot, snapshot.copy(status = AgentWorkspaceRunStatus.FAILED, updatedAt = now(), error = error.message))
             emit(runId, "run.failed", JsonObject(mapOf("message" to JsonPrimitive(error.message ?: "Agent run failed"))))
             AgentWorkspaceRunOutcome.Failed(error)
         }
@@ -86,15 +91,37 @@ public class AgentWorkspaceController(
         input: Input,
         checkpoint: AgentCheckpointData,
     ): AgentWorkspaceRunOutcome<Output> {
-        val snapshot = requireRun(runId)
-        val interruption = requireNotNull(snapshot.interruption) { "Run '$runId' has no pending interruption" }
-        val receipt = requireNotNull(snapshot.decisionReceipt) { "Run '$runId' has no decision receipt" }
-        require(receipt.checkpointId == checkpoint.checkpointId) { "Decision receipt does not match checkpoint" }
-        require(receipt.requestHash == interruption.requestHash) { "Decision receipt is stale" }
-        require(!receipt.superseded) { "Decision receipt has been superseded" }
-        require(receipt.revalidated) { "Decision receipt must be revalidated before resume" }
+        val snapshot: AgentWorkspaceRunSnapshot
+        val interruption: AgentWorkspaceInterruption
+        val receipt: AgentDecisionReceipt
+        try {
+            snapshot = requireRun(runId)
+            require(snapshot.status == AgentWorkspaceRunStatus.WAITING_FOR_INPUT) { "Run '$runId' is not waiting for input" }
+            interruption = requireNotNull(snapshot.interruption) { "Run '$runId' has no pending interruption" }
+            receipt = requireNotNull(snapshot.decisionReceipt) { "Run '$runId' has no decision receipt" }
+            require(receipt.checkpointId == checkpoint.checkpointId) { "Decision receipt does not match checkpoint" }
+            require(receipt.requestHash == interruption.requestHash) { "Decision receipt is stale" }
+            require(!receipt.superseded) { "Decision receipt has been superseded" }
+            require(receipt.revalidated) { "Decision receipt must be revalidated before resume" }
+        } catch (error: IllegalArgumentException) {
+            emit(runId, "run.resume_failed", JsonObject(mapOf("message" to JsonPrimitive(error.message ?: "Resume validation failed"))))
+            return AgentWorkspaceRunOutcome.Failed(error)
+        }
+        val claimed = store.compareAndSetRun(
+            snapshot.revision,
+            snapshot.copy(
+                status = AgentWorkspaceRunStatus.RUNNING,
+                updatedAt = now(),
+                revision = snapshot.revision + 1,
+            ),
+        )
+        if (!claimed) {
+            val error = IllegalStateException("Run '$runId' was already resumed or changed")
+            emit(runId, "run.resume_failed", JsonObject(mapOf("message" to JsonPrimitive(error.message.orEmpty()))))
+            return AgentWorkspaceRunOutcome.Failed(error)
+        }
         emit(runId, "run.resumed", JsonObject(mapOf("checkpointId" to JsonPrimitive(checkpoint.checkpointId))))
-        return run(runId) { Persistence.runFromCheckpoint(agent, input, checkpoint, sessionId = runId) }
+        return execute(runId) { Persistence.runFromCheckpoint(agent, input, checkpoint, sessionId = runId) }
     }
 
     /** Suspends [context] using its latest durable Persistence checkpoint. */
@@ -139,13 +166,14 @@ public class AgentWorkspaceController(
             expiresAt = expiresAt,
         )
         val snapshot = requireRun(runId)
-        store.saveRun(
+        replace(
+            snapshot,
             snapshot.copy(
                 status = AgentWorkspaceRunStatus.WAITING_FOR_INPUT,
                 updatedAt = timestamp,
                 interruption = interruption,
                 decisionReceipt = null,
-            )
+            ),
         )
         emit(
             runId,
@@ -166,6 +194,7 @@ public class AgentWorkspaceController(
         val snapshot = requireRun(runId)
         val interruption = requireNotNull(snapshot.interruption) { "Run '$runId' is not waiting for input" }
         require(snapshot.status == AgentWorkspaceRunStatus.WAITING_FOR_INPUT) { "Run '$runId' is not waiting for input" }
+        require(snapshot.decisionReceipt == null) { "Run '$runId' already has a response" }
         require(response.requestId == interruption.request.id) { "Response does not match the pending request" }
         validateResponse(interruption.request, response)
 
@@ -178,7 +207,7 @@ public class AgentWorkspaceController(
             response = response,
             expiresAt = interruption.expiresAt,
         )
-        store.saveRun(snapshot.copy(updatedAt = now(), decisionReceipt = receipt))
+        replace(snapshot, snapshot.copy(updatedAt = now(), decisionReceipt = receipt))
         emit(runId, "agent.input_received", JsonObject(mapOf("requestId" to JsonPrimitive(response.requestId))))
         return receipt
     }
@@ -189,7 +218,7 @@ public class AgentWorkspaceController(
         val receipt = requireNotNull(snapshot.decisionReceipt) { "Run '$runId' has no decision receipt" }
         require(!receipt.superseded) { "Decision receipt has been superseded" }
         val updated = receipt.copy(revalidated = true)
-        store.saveRun(snapshot.copy(updatedAt = now(), decisionReceipt = updated))
+        replace(snapshot, snapshot.copy(updatedAt = now(), decisionReceipt = updated))
         emit(runId, "agent.decision_revalidated", JsonObject(mapOf("requestId" to JsonPrimitive(receipt.requestId))))
         return updated
     }
@@ -197,14 +226,15 @@ public class AgentWorkspaceController(
     /** Requests cooperative cancellation. */
     public suspend fun requestCancellation(runId: String, mode: AgentCancellationMode, reason: String? = null) {
         val snapshot = requireRun(runId)
-        if (snapshot.status in TERMINAL_STATUSES) return
-        store.saveRun(
+        if (snapshot.status in TERMINAL_STATUSES || snapshot.status == AgentWorkspaceRunStatus.CANCELLATION_REQUESTED) return
+        replace(
+            snapshot,
             snapshot.copy(
                 status = AgentWorkspaceRunStatus.CANCELLATION_REQUESTED,
                 updatedAt = now(),
                 cancellationMode = mode,
                 cancellationReason = reason,
-            )
+            ),
         )
         emit(runId, "run.cancellation_requested", JsonObject(mapOf("mode" to JsonPrimitive(mode.name))))
     }
@@ -265,7 +295,19 @@ public class AgentWorkspaceController(
 
     private suspend fun transition(runId: String, status: AgentWorkspaceRunStatus) {
         val snapshot = requireRun(runId)
-        store.saveRun(snapshot.copy(status = status, updatedAt = now()))
+        replace(snapshot, snapshot.copy(status = status, updatedAt = now()))
+    }
+
+    private suspend fun replace(
+        previous: AgentWorkspaceRunSnapshot,
+        next: AgentWorkspaceRunSnapshot,
+    ) {
+        check(
+            store.compareAndSetRun(
+                previous.revision,
+                next.copy(revision = previous.revision + 1),
+            )
+        ) { "Workspace run '${previous.runId}' changed concurrently" }
     }
 
     private suspend fun requireRun(runId: String): AgentWorkspaceRunSnapshot =

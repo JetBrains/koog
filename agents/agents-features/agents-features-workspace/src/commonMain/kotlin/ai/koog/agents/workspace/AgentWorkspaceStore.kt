@@ -7,11 +7,19 @@ import kotlinx.coroutines.sync.withLock
 
 /** Storage contract for durable workspace state and replayable events. */
 public interface AgentWorkspaceStore {
+    /** Creates a run only when its id does not already exist. */
+    public suspend fun createRun(snapshot: AgentWorkspaceRunSnapshot): Boolean
+
     /** Loads a run snapshot, or `null` when the run is unknown. */
     public suspend fun loadRun(runId: String): AgentWorkspaceRunSnapshot?
 
-    /** Creates or replaces a run snapshot. */
-    public suspend fun saveRun(snapshot: AgentWorkspaceRunSnapshot)
+    /**
+     * Replaces a run only when its current revision equals [expectedRevision].
+     *
+     * Durable implementations must perform this comparison atomically. This fences duplicate
+     * answers, resumes, and cancellation requests across processes.
+     */
+    public suspend fun compareAndSetRun(expectedRevision: Long, snapshot: AgentWorkspaceRunSnapshot): Boolean
 
     /** Appends [event] and returns the persisted event with its assigned sequence. */
     public suspend fun appendEvent(event: AgentWorkspaceEvent): AgentWorkspaceEvent
@@ -26,10 +34,22 @@ public class InMemoryAgentWorkspaceStore : AgentWorkspaceStore {
     private val runs: MutableMap<String, AgentWorkspaceRunSnapshot> = mutableMapOf()
     private val events: MutableMap<String, MutableList<AgentWorkspaceEvent>> = mutableMapOf()
 
+    override suspend fun createRun(snapshot: AgentWorkspaceRunSnapshot): Boolean = mutex.withLock {
+        if (snapshot.runId in runs) return@withLock false
+        runs[snapshot.runId] = snapshot
+        true
+    }
+
     override suspend fun loadRun(runId: String): AgentWorkspaceRunSnapshot? = mutex.withLock { runs[runId] }
 
-    override suspend fun saveRun(snapshot: AgentWorkspaceRunSnapshot): Unit = mutex.withLock {
+    override suspend fun compareAndSetRun(
+        expectedRevision: Long,
+        snapshot: AgentWorkspaceRunSnapshot,
+    ): Boolean = mutex.withLock {
+        val current = runs[snapshot.runId] ?: return@withLock false
+        if (current.revision != expectedRevision || snapshot.revision != expectedRevision + 1) return@withLock false
         runs[snapshot.runId] = snapshot
+        true
     }
 
     override suspend fun appendEvent(event: AgentWorkspaceEvent): AgentWorkspaceEvent = mutex.withLock {
