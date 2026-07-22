@@ -78,6 +78,41 @@ class AgentWorkspaceControllerTest {
     }
 
     @Test
+    fun testExpiredDecisionCannotBeRevalidatedOrClaimedForResume() = runTest {
+        var currentTime = "2026-07-23T00:00:00Z"
+        val controller = AgentWorkspaceController(InMemoryAgentWorkspaceStore()) { currentTime }
+        controller.run("run-expired") {
+            controller.suspendForInput(
+                "run-expired",
+                "chat/approve",
+                "checkpoint-expired",
+                AgentInputRequest(
+                    id = "question-expired",
+                    kind = AgentInputRequestKind.APPROVAL,
+                    prompt = "Continue?",
+                    options = listOf(AgentInputOption("approve", "Approve"), AgentInputOption("reject", "Reject")),
+                ),
+                "hash-expired",
+                expiresAt = "2026-07-23T00:05:00Z",
+            )
+        }
+        controller.answer(
+            "run-expired",
+            AgentInputResponse("question-expired", listOf("approve"), respondedAt = "2026-07-23T00:01:00Z")
+        )
+
+        currentTime = "2026-07-23T00:05:00Z"
+
+        assertFailsWith<IllegalArgumentException> { controller.revalidateDecision("run-expired") }
+        val snapshot = controller.snapshot("run-expired")
+        assertTrue(snapshot?.decisionReceipt?.revalidated == false)
+        val resumeError = controller.claimResume("run-expired", "checkpoint-expired")
+        assertTrue(resumeError is IllegalArgumentException)
+        assertEquals(AgentWorkspaceRunStatus.WAITING_FOR_INPUT, controller.snapshot("run-expired")?.status)
+        assertEquals("run.resume_failed", controller.events("run-expired").last().type)
+    }
+
+    @Test
     fun testChoiceValidationRejectsUnknownOption() = runTest {
         val controller = AgentWorkspaceController(InMemoryAgentWorkspaceStore()) { "2026-07-23T00:00:00Z" }
         controller.run("run-3") {

@@ -21,6 +21,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -84,28 +85,32 @@ public class AgentWorkspaceController(
         input: Input,
     ): AgentWorkspaceRunOutcome<Output> = run(runId) { agent.run(input, runId) }
 
-    /** Resumes a Koog agent from a Persistence checkpoint after validating the decision receipt. */
+    /** Resumes a Koog agent from a Persistence checkpoint after validating a current decision receipt. */
     public suspend fun <Input, Output> resumeAgent(
         runId: String,
         agent: AIAgent<Input, Output>,
         input: Input,
         checkpoint: AgentCheckpointData,
     ): AgentWorkspaceRunOutcome<Output> {
+        claimResume(runId, checkpoint.checkpointId)?.let { return AgentWorkspaceRunOutcome.Failed(it) }
+        return execute(runId) { Persistence.runFromCheckpoint(agent, input, checkpoint, sessionId = runId) }
+    }
+
+    internal suspend fun claimResume(runId: String, checkpointId: String): Throwable? {
         val snapshot: AgentWorkspaceRunSnapshot
-        val interruption: AgentWorkspaceInterruption
-        val receipt: AgentDecisionReceipt
         try {
             snapshot = requireRun(runId)
             require(snapshot.status == AgentWorkspaceRunStatus.WAITING_FOR_INPUT) { "Run '$runId' is not waiting for input" }
-            interruption = requireNotNull(snapshot.interruption) { "Run '$runId' has no pending interruption" }
-            receipt = requireNotNull(snapshot.decisionReceipt) { "Run '$runId' has no decision receipt" }
-            require(receipt.checkpointId == checkpoint.checkpointId) { "Decision receipt does not match checkpoint" }
+            val interruption = requireNotNull(snapshot.interruption) { "Run '$runId' has no pending interruption" }
+            val receipt = requireNotNull(snapshot.decisionReceipt) { "Run '$runId' has no decision receipt" }
+            require(receipt.checkpointId == checkpointId) { "Decision receipt does not match checkpoint" }
             require(receipt.requestHash == interruption.requestHash) { "Decision receipt is stale" }
             require(!receipt.superseded) { "Decision receipt has been superseded" }
             require(receipt.revalidated) { "Decision receipt must be revalidated before resume" }
+            requireDecisionIsCurrent(receipt)
         } catch (error: IllegalArgumentException) {
             emit(runId, "run.resume_failed", JsonObject(mapOf("message" to JsonPrimitive(error.message ?: "Resume validation failed"))))
-            return AgentWorkspaceRunOutcome.Failed(error)
+            return error
         }
         val claimed = store.compareAndSetRun(
             snapshot.revision,
@@ -118,10 +123,10 @@ public class AgentWorkspaceController(
         if (!claimed) {
             val error = IllegalStateException("Run '$runId' was already resumed or changed")
             emit(runId, "run.resume_failed", JsonObject(mapOf("message" to JsonPrimitive(error.message.orEmpty()))))
-            return AgentWorkspaceRunOutcome.Failed(error)
+            return error
         }
-        emit(runId, "run.resumed", JsonObject(mapOf("checkpointId" to JsonPrimitive(checkpoint.checkpointId))))
-        return execute(runId) { Persistence.runFromCheckpoint(agent, input, checkpoint, sessionId = runId) }
+        emit(runId, "run.resumed", JsonObject(mapOf("checkpointId" to JsonPrimitive(checkpointId))))
+        return null
     }
 
     /** Suspends [context] using its latest durable Persistence checkpoint. */
@@ -212,11 +217,12 @@ public class AgentWorkspaceController(
         return receipt
     }
 
-    /** Marks a decision receipt as revalidated against current external state. */
+    /** Marks an unexpired decision receipt as revalidated against current external state. */
     public suspend fun revalidateDecision(runId: String): AgentDecisionReceipt {
         val snapshot = requireRun(runId)
         val receipt = requireNotNull(snapshot.decisionReceipt) { "Run '$runId' has no decision receipt" }
         require(!receipt.superseded) { "Decision receipt has been superseded" }
+        requireDecisionIsCurrent(receipt)
         val updated = receipt.copy(revalidated = true)
         replace(snapshot, snapshot.copy(updatedAt = now(), decisionReceipt = updated))
         emit(runId, "agent.decision_revalidated", JsonObject(mapOf("requestId" to JsonPrimitive(receipt.requestId))))
@@ -291,6 +297,11 @@ public class AgentWorkspaceController(
             }
         }
         require(request.allowFreeText || response.text.isNullOrBlank()) { "Free text is not allowed for this request" }
+    }
+
+    private fun requireDecisionIsCurrent(receipt: AgentDecisionReceipt) {
+        val expiresAt = receipt.expiresAt ?: return
+        require(Instant.parse(expiresAt) > Instant.parse(now())) { "Decision receipt has expired" }
     }
 
     private suspend fun transition(runId: String, status: AgentWorkspaceRunStatus) {
