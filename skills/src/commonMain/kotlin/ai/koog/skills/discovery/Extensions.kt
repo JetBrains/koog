@@ -6,6 +6,7 @@ import ai.koog.skills.model.Skill
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
+
 /**
  * Defines which discovered skill wins when multiple skills share the same name.
  */
@@ -261,4 +262,3 @@ private inline fun List<String>.indexOfFirstFrom(startIndex: Int, predicate: (St
 private const val DEFAULT_SKILL_FILE_NAME: String = "SKILL.md"
 private val DEFAULT_SKIPPED_DIRECTORY_NAMES: Set<String> = setOf(".git", "node_modules")
 private val DEFAULT_SKILL_NAME_PATTERN = Regex("^[a-z0-9]+(?:-[a-z0-9]+)*$")
-

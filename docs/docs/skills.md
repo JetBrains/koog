@@ -12,6 +12,17 @@ At a high level, usage has three parts:
 
 ```kotlin
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.tool.file.ListDirectoryTool
+import ai.koog.agents.ext.tool.file.ReadFileTool
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.skills.discovery.discoverSkills
+import ai.koog.skills.prompt.SkillsPromptFormat
+import ai.koog.skills.prompt.generateSkillsPrompt
+import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val skillsRoot = "/absolute/path/to/skills"

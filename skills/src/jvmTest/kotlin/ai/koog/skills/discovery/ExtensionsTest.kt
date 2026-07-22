@@ -1,7 +1,6 @@
 package ai.koog.skills.discovery
 
 import ai.koog.rag.base.files.JVMFileSystemProvider
-
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import java.nio.file.Path
@@ -9,9 +8,9 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 import kotlin.test.Test
-import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ExtensionsTest {
     @Test

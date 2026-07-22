@@ -199,9 +199,11 @@ private fun toJsonObject(values: Map<String, String>): String {
     val nestedIndent = " ".repeat(JSON_INDENTATION + 2)
     return buildString {
         appendLine("{")
-        append(values.entries.joinToString(",\n") { (key, value) ->
-            "${nestedIndent}\"${escapeJson(key)}\": \"${escapeJson(value)}\""
-        })
+        append(
+            values.entries.joinToString(",\n") { (key, value) ->
+                "${nestedIndent}\"${escapeJson(key)}\": \"${escapeJson(value)}\""
+            }
+        )
         appendLine()
         append("$indent}")
     }
@@ -234,4 +236,3 @@ private fun escapeYmlKey(value: String): String =
     value
         .replace("\\", "\\\\")
         .replace(":", "\\:")
-
