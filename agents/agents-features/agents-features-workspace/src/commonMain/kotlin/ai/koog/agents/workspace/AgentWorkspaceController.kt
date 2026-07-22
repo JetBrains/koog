@@ -17,9 +17,9 @@ import ai.koog.agents.workspace.model.AgentWorkspaceRunOutcome
 import ai.koog.agents.workspace.model.AgentWorkspaceRunSnapshot
 import ai.koog.agents.workspace.model.AgentWorkspaceRunStatus
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 
 class AgentWorkspaceControllerTest {
     @Test
-    fun testSuspensionPersistsAndEventsReplay(): Unit = runTest {
+    fun testSuspensionPersistsAndEventsReplay() = runTest {
         val store = InMemoryAgentWorkspaceStore()
         val controller = AgentWorkspaceController(store) { "2026-07-23T00:00:00Z" }
 
@@ -37,7 +37,7 @@ class AgentWorkspaceControllerTest {
     }
 
     @Test
-    fun testDecisionMustBeRevalidated(): Unit = runTest {
+    fun testDecisionMustBeRevalidated() = runTest {
         val controller = AgentWorkspaceController(InMemoryAgentWorkspaceStore()) { "2026-07-23T00:00:00Z" }
         controller.run("run-2") {
             controller.suspendForInput(
@@ -63,7 +63,7 @@ class AgentWorkspaceControllerTest {
     }
 
     @Test
-    fun testChoiceValidationRejectsUnknownOption(): Unit = runTest {
+    fun testChoiceValidationRejectsUnknownOption() = runTest {
         val controller = AgentWorkspaceController(InMemoryAgentWorkspaceStore()) { "2026-07-23T00:00:00Z" }
         controller.run("run-3") {
             controller.suspendForInput(
@@ -89,7 +89,7 @@ class AgentWorkspaceControllerTest {
     }
 
     @Test
-    fun testAfterNodeCancellationHasExplicitOutcome(): Unit = runTest {
+    fun testAfterNodeCancellationHasExplicitOutcome() = runTest {
         val controller = AgentWorkspaceController(InMemoryAgentWorkspaceStore()) { "2026-07-23T00:00:00Z" }
         val outcome = controller.run("run-4") {
             controller.requestCancellation("run-4", AgentCancellationMode.AFTER_NODE, "redirected")
