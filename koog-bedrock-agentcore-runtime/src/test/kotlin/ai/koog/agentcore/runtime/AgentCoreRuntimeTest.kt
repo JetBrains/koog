@@ -15,6 +15,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.ratelimit.RateLimit
+import io.ktor.server.plugins.ratelimit.RateLimitName
+import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.Serializable
@@ -28,25 +32,23 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 class AgentCoreRuntimeTest {
 
     private fun Application.installAgentCoreTestModule(
         handler: suspend io.ktor.server.routing.RoutingContext.(String, AgentCoreContext) -> String = { body, _ -> """{"echo":"$body"}""" },
-        invocationsRateLimit: Int = 0,
-        pingRateLimit: Int = 0
     ) {
         install(ContentNegotiation) { json() }
         install(SSE)
-        install(AgentCoreRuntime) {
-            // Adapt the legacy String->String test lambdas to the unified handler.
-            this.handler = { input, ctx ->
-                val body = (input as InvocationInput.Text).body
-                InvocationResult.Text(handler(this, body, ctx))
+        routing {
+            agentCoreRuntime {
+                // Adapt the legacy String->String test lambdas to the unified handler.
+                this.handler = { input, ctx ->
+                    val body = (input as InvocationInput.Text).body
+                    InvocationResult.Text(handler(this, body, ctx))
+                }
             }
-            this.invocationsRateLimit = invocationsRateLimit
-            this.pingRateLimit = pingRateLimit
         }
     }
 
@@ -109,7 +111,17 @@ class AgentCoreRuntimeTest {
     @Test
     fun `rate limiting returns 429 when exceeded`() = testApplication {
         application {
-            installAgentCoreTestModule(pingRateLimit = 2)
+            install(ContentNegotiation) { json() }
+            install(RateLimit) {
+                global {
+                    rateLimiter(limit = 2, refillPeriod = 1.minutes)
+                }
+            }
+            routing {
+                agentCoreRuntime {
+                    handler = { _, _ -> InvocationResult.Text("ok") }
+                }
+            }
         }
         repeat(2) {
             client.get("/ping").apply {
@@ -186,13 +198,22 @@ class AgentCoreRuntimeTest {
     fun `rate limited request does not execute route handler twice`() = testApplication {
         var handlerCalls = 0
         application {
-            installAgentCoreTestModule(
-                handler = { _, _ ->
-                    handlerCalls++
-                    """{"ok":true}"""
-                },
-                invocationsRateLimit = 1
-            )
+            install(ContentNegotiation) { json() }
+            install(RateLimit) {
+                register(RateLimitName("agentcore")) {
+                    rateLimiter(limit = 1, refillPeriod = 1.minutes)
+                }
+            }
+            routing {
+                rateLimit(RateLimitName("agentcore")) {
+                    agentCoreRuntime {
+                        handler = { _, _ ->
+                            handlerCalls++
+                            InvocationResult.Text("ok")
+                        }
+                    }
+                }
+            }
         }
         client.post("/invocations") {
             contentType(ContentType.Application.Json)
@@ -231,8 +252,10 @@ class AgentCoreRuntimeTest {
     ) {
         install(ContentNegotiation) { json() }
         install(SSE)
-        install(AgentCoreRuntime) {
-            handle(handler)
+        routing {
+            agentCoreRuntime {
+                handle(handler)
+            }
         }
     }
 
@@ -290,8 +313,10 @@ class AgentCoreRuntimeTest {
                 application {
                     install(ContentNegotiation) { json() }
                     install(SSE)
-                    install(AgentCoreRuntime) {
-                        // no handler configured
+                    routing {
+                        agentCoreRuntime {
+                            // no handler configured
+                        }
                     }
                 }
                 client.get("/ping")
@@ -302,7 +327,19 @@ class AgentCoreRuntimeTest {
     @Test
     fun `invocations rate limiting returns 429 when exceeded`() = testApplication {
         application {
-            installAgentCoreTestModule(invocationsRateLimit = 1)
+            install(ContentNegotiation) { json() }
+            install(RateLimit) {
+                register(RateLimitName("agentcore")) {
+                    rateLimiter(limit = 1, refillPeriod = 1.minutes)
+                }
+            }
+            routing {
+                rateLimit(RateLimitName("agentcore")) {
+                    agentCoreRuntime {
+                        handler = { _, _ -> InvocationResult.Text("ok") }
+                    }
+                }
+            }
         }
         client.post("/invocations") {
             contentType(ContentType.Application.Json)
@@ -339,8 +376,10 @@ class AgentCoreRuntimeTest {
         application {
             install(ContentNegotiation) { json() }
             install(SSE)
-            install(AgentCoreRuntime) {
-                handler = { _, _ -> InvocationResult.Binary(png, ContentType.Image.PNG) }
+            routing {
+                agentCoreRuntime {
+                    handler = { _, _ -> InvocationResult.Binary(png, ContentType.Image.PNG) }
+                }
             }
         }
         client.post("/invocations") {
@@ -358,9 +397,11 @@ class AgentCoreRuntimeTest {
         application {
             install(ContentNegotiation) { json() }
             install(SSE)
-            install(AgentCoreRuntime) {
-                handler = { _, _ ->
-                    InvocationResult.TextStream(kotlinx.coroutines.flow.flowOf("Hello", " ", "world"))
+            routing {
+                agentCoreRuntime {
+                    handler = { _, _ ->
+                        InvocationResult.TextStream(kotlinx.coroutines.flow.flowOf("Hello", " ", "world"))
+                    }
                 }
             }
         }
@@ -379,13 +420,15 @@ class AgentCoreRuntimeTest {
         application {
             install(ContentNegotiation) { json() }
             install(SSE)
-            install(AgentCoreRuntime) {
-                handler = { input, _ ->
-                    when (input) {
-                        is InvocationInput.Text -> InvocationResult.Text("text:${input.body}")
-                        is InvocationInput.Binary -> InvocationResult.Text("binary:${input.bytes.size}")
-                        is InvocationInput.Stream -> InvocationResult.Text("stream")
-                        is InvocationInput.Multipart -> InvocationResult.Text("multipart")
+            routing {
+                agentCoreRuntime {
+                    handler = { input, _ ->
+                        when (input) {
+                            is InvocationInput.Text -> InvocationResult.Text("text:${input.body}")
+                            is InvocationInput.Binary -> InvocationResult.Text("binary:${input.bytes.size}")
+                            is InvocationInput.Stream -> InvocationResult.Text("stream")
+                            is InvocationInput.Multipart -> InvocationResult.Text("multipart")
+                        }
                     }
                 }
             }
@@ -404,10 +447,12 @@ class AgentCoreRuntimeTest {
         application {
             install(ContentNegotiation) { json() }
             install(SSE)
-            install(AgentCoreRuntime) {
-                handler = { input, _ ->
-                    val body = (input as InvocationInput.Text).body
-                    InvocationResult.Text("echo:$body")
+            routing {
+                agentCoreRuntime {
+                    handler = { input, _ ->
+                        val body = (input as InvocationInput.Text).body
+                        InvocationResult.Text("echo:$body")
+                    }
                 }
             }
         }
@@ -499,11 +544,13 @@ class AgentCoreRuntimeTest {
         var handlerCalled = false
         application {
             install(SSE)
-            install(AgentCoreRuntime) {
-                maxRequestBytes = 16
-                handler = { _, _ ->
-                    handlerCalled = true
-                    InvocationResult.Text("should not run")
+            routing {
+                agentCoreRuntime {
+                    maxRequestBytes = 16
+                    handler = { _, _ ->
+                        handlerCalled = true
+                        InvocationResult.Text("should not run")
+                    }
                 }
             }
         }
@@ -520,11 +567,13 @@ class AgentCoreRuntimeTest {
     fun `handlerTimeoutMillis triggers 504 when handler runs too long`() = testApplication {
         application {
             install(SSE)
-            install(AgentCoreRuntime) {
-                handlerTimeoutMillis = 100
-                handler = { _, _ ->
-                    kotlinx.coroutines.delay(2_000.milliseconds)
-                    InvocationResult.Text("never")
+            routing {
+                agentCoreRuntime {
+                    handlerTimeoutMillis = 100
+                    handler = { _, _ ->
+                        kotlinx.coroutines.delay(2_000)
+                        InvocationResult.Text("never")
+                    }
                 }
             }
         }
@@ -539,43 +588,46 @@ class AgentCoreRuntimeTest {
     }
 
     @Test
-    fun `auto-installs ContentNegotiation when missing so typed handler works without manual setup`() =
-        testApplication {
-            application {
-                // Note: no install(ContentNegotiation) here — the plugin should add it.
-                install(AgentCoreRuntime) {
+    fun `typed handler uses host-installed ContentNegotiation`() = testApplication {
+        application {
+            install(ContentNegotiation) { json() }
+            routing {
+                agentCoreRuntime {
                     handle<TypedRequest, TypedResponse> { input, _ ->
-                        TypedResponse(answer = "auto:${input.prompt}", repeated = input.count)
+                        TypedResponse(answer = "configured:${input.prompt}", repeated = input.count)
                     }
                 }
             }
-            client.post("/invocations") {
-                contentType(ContentType.Application.Json)
-                setBody("""{"prompt":"yo"}""")
-            }.apply {
-                assertEquals(HttpStatusCode.OK, status)
-                val json = Json.parseToJsonElement(bodyAsText()).jsonObject
-                assertEquals("auto:yo", json["answer"]?.jsonPrimitive?.content)
-            }
         }
+        client.post("/invocations") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"prompt":"yo"}""")
+        }.apply {
+            assertEquals(HttpStatusCode.OK, status)
+            val json = Json.parseToJsonElement(bodyAsText()).jsonObject
+            assertEquals("configured:yo", json["answer"]?.jsonPrimitive?.content)
+        }
+    }
 
     @Test
     fun `multipart request is exposed via InvocationInput Multipart variant`() = testApplication {
         application {
             install(SSE)
-            install(AgentCoreRuntime) {
-                handler = { input, _ ->
-                    if (input is InvocationInput.Multipart) {
-                        val parts = mutableListOf<String>()
-                        var part = input.parts.readPart()
-                        while (part != null) {
-                            parts.add("${part::class.simpleName}:${part.name}")
-                            part.dispose()
-                            part = input.parts.readPart()
+            routing {
+                agentCoreRuntime {
+                    handler = { input, _ ->
+                        if (input is InvocationInput.Multipart) {
+                            val parts = mutableListOf<String>()
+                            var part = input.parts.readPart()
+                            while (part != null) {
+                                parts.add("${part::class.simpleName}:${part.name}")
+                                part.dispose()
+                                part = input.parts.readPart()
+                            }
+                            InvocationResult.Text("parts=${parts.joinToString(",")}")
+                        } else {
+                            InvocationResult.Text("not-multipart:${input::class.simpleName}")
                         }
-                        InvocationResult.Text("parts=${parts.joinToString(",")}")
-                    } else {
-                        InvocationResult.Text("not-multipart:${input::class.simpleName}")
                     }
                 }
             }

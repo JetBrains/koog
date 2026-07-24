@@ -73,6 +73,8 @@ nav:
           - Ktor: ktor-plugin.md
           - Spring Boot: spring-boot.md
           - Spring AI: spring-ai-integration.md
+      - Cloud platform integrations:
+          - Amazon Bedrock AgentCore: amazon-bedrock-agentcore.md
       - Advanced usage:
           - Events: agent-events.md
           - Structured output: structured-output.md

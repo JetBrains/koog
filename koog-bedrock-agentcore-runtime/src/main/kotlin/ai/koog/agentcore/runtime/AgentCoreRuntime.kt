@@ -6,16 +6,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.parseHeaderValue
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.ApplicationPlugin
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.server.application.install
-import io.ktor.server.application.pluginOrNull
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.ratelimit.RateLimit
-import io.ktor.server.plugins.ratelimit.RateLimitName
-import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.request.contentLength
 import io.ktor.server.request.contentType
 import io.ktor.server.request.header
@@ -30,7 +21,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.route
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.util.reflect.typeInfo
 import io.ktor.utils.io.ByteReadChannel
@@ -40,16 +31,9 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.withTimeout
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * Well-known AgentCore HTTP headers used by Amazon Bedrock AgentCore Runtime.
@@ -302,7 +286,7 @@ internal class TypedInvocation(
     val handle: suspend RoutingContext.(input: Any?, context: AgentCoreContext) -> Any?,
 )
 
-/** Configuration for the [AgentCoreRuntime] Ktor plugin. */
+/** Configuration for the [agentCoreRuntime] route installer. */
 public class AgentCoreRuntimeConfig {
     /**
      * Single handler covering all input/output shapes. Required unless a typed handler is
@@ -338,18 +322,6 @@ public class AgentCoreRuntimeConfig {
      */
     public var handlerTimeoutMillis: Long = 0
 
-    /**
-     * If `true`, the plugin auto-installs Ktor's `ContentNegotiation` with a default JSON
-     * configuration (`ignoreUnknownKeys = true`) when no `ContentNegotiation` plugin is
-     * already installed. Required for the typed [handle] convenience to work.
-     *
-     * Set to `false` if you want full control over `ContentNegotiation` (custom serializers,
-     * additional formats, etc.).
-     *
-     * Default: `true`.
-     */
-    public var autoInstallContentNegotiation: Boolean = true
-
     /** The typed handler registered via [handle], if any. */
     @PublishedApi
     internal var typedInvocation: TypedInvocation? = null
@@ -362,12 +334,6 @@ public class AgentCoreRuntimeConfig {
      * is in progress. Exposed to the handler via [AgentCoreContext.taskTracker].
      */
     public var taskTracker: AgentCoreTaskTracker = AgentCoreTaskTracker()
-
-    /** Rate limit for `/invocations` (requests per minute per client). 0 = no limit. */
-    public var invocationsRateLimit: Int = 0
-
-    /** Rate limit for `/ping` (requests per minute per client). 0 = no limit. */
-    public var pingRateLimit: Int = 0
 }
 
 /**
@@ -378,9 +344,11 @@ public class AgentCoreRuntimeConfig {
  *
  * Example:
  * ```kotlin
- * install(AgentCoreRuntime) {
- *     handle<MyRequest, MyResponse> { input, ctx ->
- *         MyResponse(answer = process(input.prompt))
+ * routing {
+ *     agentCoreRuntime {
+ *         handle<MyRequest, MyResponse> { input, ctx ->
+ *             MyResponse(answer = process(input.prompt))
+ *         }
  *     }
  * }
  * ```
@@ -423,10 +391,8 @@ internal suspend fun respondInvocationText(call: ApplicationCall, contentType: C
             writeStringUtf8("data: $value\n\n")
             flush()
         }
-
         ContentType.Application.OctetStream ->
             call.respondBytes(value.toByteArray(Charsets.UTF_8), ContentType.Application.OctetStream)
-
         else -> call.respondText(value, contentType)
     }
 }
@@ -473,11 +439,11 @@ internal suspend fun respondInvocationResult(call: ApplicationCall, accept: Cont
  * Optionally includes the throwable simple name as `type`.
  */
 internal fun jsonError(message: String, type: String? = null): String =
-    Json.encodeToString(
-        JsonObject.serializer(),
-        buildJsonObject {
-            put("error", JsonPrimitive(message))
-            if (type != null) put("type", JsonPrimitive(type))
+    kotlinx.serialization.json.Json.encodeToString(
+        kotlinx.serialization.json.JsonObject.serializer(),
+        kotlinx.serialization.json.buildJsonObject {
+            put("error", kotlinx.serialization.json.JsonPrimitive(message))
+            if (type != null) put("type", kotlinx.serialization.json.JsonPrimitive(type))
         },
     )
 
@@ -486,7 +452,7 @@ internal fun jsonError(message: String, type: String? = null): String =
  * the block runs without any timeout wrapper.
  */
 internal suspend inline fun <T> withOptionalTimeout(timeoutMillis: Long, crossinline block: suspend () -> T): T =
-    if (timeoutMillis > 0) withTimeout(timeoutMillis.milliseconds) { block() } else block()
+    if (timeoutMillis > 0) kotlinx.coroutines.withTimeout(timeoutMillis) { block() } else block()
 
 /**
  * Reads the request body and turns it into an [InvocationInput] variant according to the
@@ -515,149 +481,97 @@ internal suspend fun readInvocationInput(call: ApplicationCall, thresholdBytes: 
 }
 
 // ---------------------------------------------------------------------------
-//  The plugin
+//  Route installer
 // ---------------------------------------------------------------------------
 
 /**
- * Ktor plugin implementing the Amazon Bedrock AgentCore Runtime contract:
+ * Installs routes implementing the Amazon Bedrock AgentCore Runtime contract:
  *
  * - `GET /ping` — health check with task-aware status reporting.
  * - `POST /invocations` — invocation endpoint backed by a single unified handler.
  *
  * Quick start:
  * ```kotlin
- * install(AgentCoreRuntime) {
- *     handler = { input, ctx ->
- *         when (input) {
- *             is InvocationInput.Text   -> InvocationResult.Text("ok: ${input.body}")
- *             is InvocationInput.Binary -> InvocationResult.Binary(input.bytes, input.contentType)
- *             is InvocationInput.Stream -> InvocationResult.Text("streamed ${input.contentType}")
+ * routing {
+ *     agentCoreRuntime {
+ *         handler = { input, ctx ->
+ *             when (input) {
+ *                 is InvocationInput.Text   -> InvocationResult.Text("ok: ${input.body}")
+ *                 is InvocationInput.Binary -> InvocationResult.Binary(input.bytes, input.contentType)
+ *                 is InvocationInput.Stream -> InvocationResult.Text("streamed ${input.contentType}")
+ *             }
  *         }
  *     }
  * }
  * ```
+ *
+ * Application plugins such as `ContentNegotiation` and `RateLimit` remain owned by the host
+ * application and can be applied to these routes through normal Ktor route composition.
  */
-public val AgentCoreRuntime: ApplicationPlugin<AgentCoreRuntimeConfig> =
-    createApplicationPlugin(name = "AgentCoreRuntime", createConfiguration = ::AgentCoreRuntimeConfig) {
-        val logger = LoggerFactory.getLogger("AgentCoreRuntime")
-        val config = pluginConfig
-        val taskTracker = config.taskTracker
-        val pingService = config.pingService ?: StaticAgentCorePingService(taskTracker)
+public fun Route.agentCoreRuntime(configure: AgentCoreRuntimeConfig.() -> Unit): Route = route("") {
+    val logger = LoggerFactory.getLogger("AgentCoreRuntime")
+    val config = AgentCoreRuntimeConfig().apply(configure)
+    val taskTracker = config.taskTracker
+    val pingService = config.pingService ?: StaticAgentCorePingService(taskTracker)
 
-        val unifiedHandler = config.handler
-        val typedInvocation = config.typedInvocation
-        val streamThreshold = config.binaryStreamThresholdBytes
-        val maxRequestBytes = config.maxRequestBytes
-        val handlerTimeoutMillis = config.handlerTimeoutMillis
-        if (unifiedHandler == null && typedInvocation == null) {
-            throw AgentCoreInvocationException(
-                "No invocation handler configured. Set AgentCoreRuntimeConfig.handler or " +
-                    "register a typed handler via handle<I, O> { ... }."
-            )
+    val unifiedHandler = config.handler
+    val typedInvocation = config.typedInvocation
+    val streamThreshold = config.binaryStreamThresholdBytes
+    val maxRequestBytes = config.maxRequestBytes
+    val handlerTimeoutMillis = config.handlerTimeoutMillis
+    if (unifiedHandler == null && typedInvocation == null) {
+        throw AgentCoreInvocationException(
+            "No invocation handler configured. Set AgentCoreRuntimeConfig.handler or " +
+                "register a typed handler via handle<I, O> { ... }."
+        )
+    }
+
+    get("/ping") {
+        val pingResponse = pingService.getPingStatus()
+        call.respondText(
+            """{"status":"${pingResponse.status}","time_of_last_update":${pingResponse.timeOfLastUpdate}}""",
+            ContentType.Application.Json,
+            pingResponse.httpStatus,
+        )
+    }
+
+    post("/invocations") {
+        val context = AgentCoreContext(call.request.headers, taskTracker)
+
+        // 413 — Payload Too Large (only when Content-Length is announced)
+        val contentLength = call.request.contentLength()
+        if (contentLength != null && contentLength > maxRequestBytes) {
+            val body = jsonError("Payload too large: $contentLength bytes (max $maxRequestBytes)")
+            call.respondText(body, ContentType.Application.Json, HttpStatusCode.PayloadTooLarge)
+            return@post
         }
 
-        // Auto-install ContentNegotiation with sensible JSON defaults if missing and the user
-        // hasn't disabled it. The typed handler needs ContentNegotiation; the unified handler
-        // benefits from it for `call.receive<MyType>()` etc. inside the handler body.
-        if (config.autoInstallContentNegotiation && application.pluginOrNull(ContentNegotiation) == null) {
-            application.install(ContentNegotiation) {
-                json(
-                    Json {
-                        ignoreUnknownKeys = true
-                        explicitNulls = false
-                    }
-                )
-            }
-        }
-
-        val hasInvocationsLimit = config.invocationsRateLimit > 0
-        val hasPingLimit = config.pingRateLimit > 0
-
-        if (hasInvocationsLimit || hasPingLimit) {
-            application.install(RateLimit) {
-                if (hasInvocationsLimit) {
-                    register(RateLimitName("agentcore-invocations")) {
-                        rateLimiter(limit = config.invocationsRateLimit, refillPeriod = 1.minutes)
-                        requestKey { call ->
-                            call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
-                                ?: call.request.local.remoteAddress
-                        }
-                    }
+        try {
+            if (typedInvocation != null) {
+                // Typed JSON-in / JSON-out via ContentNegotiation
+                val input = call.receive<Any?>(typedInvocation.inputType)
+                val result = withOptionalTimeout(handlerTimeoutMillis) {
+                    typedInvocation.handle(this@post, input, context)
                 }
-                if (hasPingLimit) {
-                    register(RateLimitName("agentcore-ping")) {
-                        rateLimiter(limit = config.pingRateLimit, refillPeriod = 1.minutes)
-                        requestKey { call ->
-                            call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
-                                ?: call.request.local.remoteAddress
-                        }
-                    }
-                }
-            }
-        }
-
-        application.routing {
-            val pingRoute: Route.() -> Unit = {
-                get("/ping") {
-                    val pingResponse = pingService.getPingStatus()
-                    call.respondText(
-                        """{"status":"${pingResponse.status}","time_of_last_update":${pingResponse.timeOfLastUpdate}}""",
-                        ContentType.Application.Json,
-                        pingResponse.httpStatus,
-                    )
-                }
-            }
-
-            val invocationsRoute: Route.() -> Unit = {
-                post("/invocations") {
-                    val context = AgentCoreContext(call.request.headers, taskTracker)
-
-                    // 413 — Payload Too Large (only when Content-Length is announced)
-                    val contentLength = call.request.contentLength()
-                    if (contentLength != null && contentLength > maxRequestBytes) {
-                        val body = jsonError("Payload too large: $contentLength bytes (max $maxRequestBytes)")
-                        call.respondText(body, ContentType.Application.Json, HttpStatusCode.PayloadTooLarge)
-                        return@post
-                    }
-
-                    try {
-                        if (typedInvocation != null) {
-                            // Typed JSON-in / JSON-out via ContentNegotiation
-                            val input = call.receive<Any?>(typedInvocation.inputType)
-                            val result = withOptionalTimeout(handlerTimeoutMillis) {
-                                typedInvocation.handle(this@post, input, context)
-                            }
-                            call.respond(result, typedInvocation.outputType)
-                        } else {
-                            // Unified handler covers all (Input × Output) shapes
-                            val input = readInvocationInput(call, streamThreshold)
-                            val accept = resolveResponseContentType(call.request.header(HttpHeaders.Accept))
-                            val result = withOptionalTimeout(handlerTimeoutMillis) {
-                                unifiedHandler!!(this@post, input, context)
-                            }
-                            respondInvocationResult(call, accept, result)
-                        }
-                    } catch (t: TimeoutCancellationException) {
-                        logger.error("Handler timeout (${handlerTimeoutMillis}ms exceeded)", t)
-                        val body = jsonError("Handler timed out after ${handlerTimeoutMillis}ms")
-                        call.respondText(body, ContentType.Application.Json, HttpStatusCode.GatewayTimeout)
-                    } catch (t: Throwable) {
-                        logger.error("Error invoking AgentCore handler: ${t.message}", t)
-                        val msg = t.message ?: t::class.simpleName ?: "error"
-                        val body = jsonError(msg, t::class.simpleName)
-                        call.respondText(body, ContentType.Application.Json, HttpStatusCode.InternalServerError)
-                    }
-                }
-            }
-
-            if (hasPingLimit) rateLimit(RateLimitName("agentcore-ping"), pingRoute) else pingRoute()
-            if (hasInvocationsLimit) {
-                rateLimit(
-                    RateLimitName("agentcore-invocations"),
-                    invocationsRoute
-                )
+                call.respond(result, typedInvocation.outputType)
             } else {
-                invocationsRoute()
+                // Unified handler covers all (Input × Output) shapes
+                val input = readInvocationInput(call, streamThreshold)
+                val accept = resolveResponseContentType(call.request.header(HttpHeaders.Accept))
+                val result = withOptionalTimeout(handlerTimeoutMillis) {
+                    unifiedHandler!!(this@post, input, context)
+                }
+                respondInvocationResult(call, accept, result)
             }
+        } catch (t: TimeoutCancellationException) {
+            logger.error("Handler timeout (${handlerTimeoutMillis}ms exceeded)", t)
+            val body = jsonError("Handler timed out after ${handlerTimeoutMillis}ms")
+            call.respondText(body, ContentType.Application.Json, HttpStatusCode.GatewayTimeout)
+        } catch (t: Throwable) {
+            logger.error("Error invoking AgentCore handler: ${t.message}", t)
+            val msg = t.message ?: t::class.simpleName ?: "error"
+            val body = jsonError(msg, t::class.simpleName)
+            call.respondText(body, ContentType.Application.Json, HttpStatusCode.InternalServerError)
         }
     }
+}
