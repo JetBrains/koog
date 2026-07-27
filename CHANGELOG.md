@@ -1,4 +1,4 @@
-# 1.1.0
+# 1.1.1
 > Published 17 July 2026
 
 ## Major Features
