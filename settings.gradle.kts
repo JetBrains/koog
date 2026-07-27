@@ -114,6 +114,8 @@ include(":koog-spring-ai-v2:koog-spring-ai-v2-starter-model-embedding")
 include(":koog-spring-ai-v2:koog-spring-ai-v2-starter-chat-memory")
 include(":koog-spring-ai-v2:koog-spring-ai-v2-starter-vector-store")
 
+include(":koog-bedrock-agentcore-runtime")
+
 include(":koog-ktor")
 include(":docs")
 

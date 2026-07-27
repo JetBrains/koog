@@ -18,6 +18,7 @@ val excluded = setOf(
     ":integration-tests",
     ":test-utils",
     ":koog-spring-boot-starter",
+    ":koog-bedrock-agentcore-runtime",
     ":koog-ktor",
     ":docs",
 
