@@ -28,7 +28,7 @@ tasks.withType<JavaCompile>().configureEach {
 dependencies {
     api(project(":koog-spring-ai-v2:koog-spring-ai-v2-common"))
     api(project(":prompt:prompt-executor:prompt-executor-clients"))
-    api(libs.spring.ai.model)
+    api(libs.spring.ai.v2.model)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.kotlinx.coroutines.test)
