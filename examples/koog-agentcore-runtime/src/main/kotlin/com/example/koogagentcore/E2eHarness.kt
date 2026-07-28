@@ -38,7 +38,7 @@ internal object E2eHarness {
     suspend fun handleAction(body: String, action: String): InvocationResult = when (action) {
         // ──── Text-shaped one-shot output ─────────────────────────────
         "string-out" -> InvocationResult.Text("plain text response")
-        "json-out"   -> InvocationResult.Text("""{"greeting":"hello","echo":"$action"}""")
+        "json-out" -> InvocationResult.Text("""{"greeting":"hello","echo":"$action"}""")
 
         // ──── Binary one-shot output (InvocationResult.Binary) ────────
         "image-out" -> {
@@ -76,8 +76,10 @@ internal object E2eHarness {
             }
         )
 
-        else -> error("unknown action: '$action'. Supported: " +
-            "string-out, json-out, image-out, bytes-stream, text-stream")
+        else -> error(
+            "unknown action: '$action'. Supported: " +
+                "string-out, json-out, image-out, bytes-stream, text-stream"
+        )
     }
 
     fun handleBinary(input: InvocationInput.Binary): InvocationResult {

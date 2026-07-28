@@ -71,7 +71,10 @@ internal data class ChatRequest(
     val imageFormat: String? = null,
 )
 
-internal val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+internal val json = Json {
+    ignoreUnknownKeys = true
+    explicitNulls = false
+}
 
 fun main() {
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
@@ -88,9 +91,9 @@ fun Application.module() {
             handlerTimeoutMillis = 60_000
             handler = { input, ctx ->
                 when (input) {
-                    is InvocationInput.Text      -> handleText(input.body, ctx.getHeader("Accept"))
-                    is InvocationInput.Binary    -> handleBinary(input)
-                    is InvocationInput.Stream    -> handleStream(input)
+                    is InvocationInput.Text -> handleText(input.body, ctx.getHeader("Accept"))
+                    is InvocationInput.Binary -> handleBinary(input)
+                    is InvocationInput.Stream -> handleStream(input)
                     is InvocationInput.Multipart -> handleMultipart(input)
                 }
             }
@@ -138,14 +141,16 @@ private suspend fun handleMultipart(input: InvocationInput.Multipart): Invocatio
  */
 internal suspend fun chat(req: ChatRequest): String =
     BedrockRuntimeClient { region = REGION }.use { client ->
-        val resp = client.converse(ConverseRequest {
-            modelId = MODEL
-            messages = listOf(buildUserMessage(req))
-            inferenceConfig {
-                maxTokens = 600
-                temperature = 0.4F
+        val resp = client.converse(
+            ConverseRequest {
+                modelId = MODEL
+                messages = listOf(buildUserMessage(req))
+                inferenceConfig {
+                    maxTokens = 600
+                    temperature = 0.4F
+                }
             }
-        })
+        )
         (resp.output as? ConverseOutput.Message)?.value?.content
             ?.mapNotNull { (it as? ContentBlock.Text)?.value }
             ?.joinToString("")
@@ -159,14 +164,16 @@ internal suspend fun chat(req: ChatRequest): String =
  */
 internal fun streamChat(req: ChatRequest) = streamingFlow {
     BedrockRuntimeClient { region = REGION }.use { client ->
-        client.converseStream(ConverseStreamRequest {
-            modelId = MODEL
-            messages = listOf(buildUserMessage(req))
-            inferenceConfig {
-                maxTokens = 600
-                temperature = 0.4F
+        client.converseStream(
+            ConverseStreamRequest {
+                modelId = MODEL
+                messages = listOf(buildUserMessage(req))
+                inferenceConfig {
+                    maxTokens = 600
+                    temperature = 0.4F
+                }
             }
-        }) { resp ->
+        ) { resp ->
             resp.stream?.collect { chunk ->
                 if (chunk is ConverseStreamOutput.ContentBlockDelta) {
                     chunk.value.delta?.asTextOrNull()?.let { send(it) }
@@ -181,17 +188,21 @@ private fun buildUserMessage(req: ChatRequest): Message = Message {
     content = buildList {
         add(ContentBlock.Text(req.prompt))
         if (req.imageBase64 != null) {
-            add(ContentBlock.Image(ImageBlock {
-                format = imageFormatOf(req.imageFormat ?: "png")
-                source = ImageSource.Bytes(Base64.getDecoder().decode(req.imageBase64))
-            }))
+            add(
+                ContentBlock.Image(
+                    ImageBlock {
+                        format = imageFormatOf(req.imageFormat ?: "png")
+                        source = ImageSource.Bytes(Base64.getDecoder().decode(req.imageBase64))
+                    }
+                )
+            )
         }
     }
 }
 
 internal fun imageFormatOf(s: String): ImageFormat = when (s.lowercase()) {
     "jpeg", "jpg" -> ImageFormat.Jpeg
-    "gif"         -> ImageFormat.Gif
-    "webp"        -> ImageFormat.Webp
-    else          -> ImageFormat.Png
+    "gif" -> ImageFormat.Gif
+    "webp" -> ImageFormat.Webp
+    else -> ImageFormat.Png
 }
