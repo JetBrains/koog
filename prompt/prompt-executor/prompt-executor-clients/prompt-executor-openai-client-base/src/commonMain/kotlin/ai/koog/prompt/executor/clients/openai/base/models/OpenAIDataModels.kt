@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlin.jvm.JvmInline
+import kotlin.jvm.JvmOverloads
 
 /**
  * Base interface for LLM OpenAI API requests.
@@ -288,7 +289,7 @@ public class OpenAIAudio(
  * @property function The function that the model called.
  */
 @Serializable
-public class OpenAIToolCall(
+public class OpenAIToolCall @JvmOverloads constructor(
     public val id: String,
     public val function: OpenAIFunction,
     public val extraContent: JsonObject? = null,

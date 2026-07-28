@@ -1055,8 +1055,10 @@ final class ai.koog.prompt.executor.clients.openai.base.models/OpenAITool { // a
 }
 
 final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall|null[0]
-    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIFunction){}[0]
+    constructor <init>(kotlin/String, ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction, kotlinx.serialization.json/JsonObject? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.<init>|<init>(kotlin.String;ai.koog.prompt.executor.clients.openai.base.models.OpenAIFunction;kotlinx.serialization.json.JsonObject?){}[0]
 
+    final val extraContent // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.extraContent|{}extraContent[0]
+        final fun <get-extraContent>(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.extraContent.<get-extraContent>|<get-extraContent>(){}[0]
     final val function // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.function|{}function[0]
         final fun <get-function>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIFunction // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.function.<get-function>|<get-function>(){}[0]
     final val id // ai.koog.prompt.executor.clients.openai.base.models/OpenAIToolCall.id|{}id[0]
