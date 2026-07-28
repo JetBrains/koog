@@ -65,9 +65,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmOverloads
@@ -299,6 +301,17 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                     val functionName = openAIToolCall.function?.name
                     val functionArgs = openAIToolCall.function?.arguments
                     emitToolCallDelta(id, functionName, functionArgs, index)
+                    // Gemini 3 (OpenAI-compat) streams the thought_signature for a function call in
+                    // tool_calls[].extra_content.google.thought_signature on the chunk that opens the
+                    // call. Attach it to the pending call so its completion emits a signature-only
+                    // Reasoning frame right before ToolCallComplete — the same
+                    // `Reasoning(encrypted)` -> `Tool.Call` shape the non-streaming path produces.
+                    (
+                        (openAIToolCall.extraContent?.get("google") as? JsonObject)
+                            ?.get("thought_signature") as? JsonPrimitive
+                        )
+                        ?.contentOrNull
+                        ?.let { attachToolCallSignature(it) }
                 }
 
                 choice.finishReason?.let { finishReason = it }
@@ -791,12 +804,15 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                         put("text", p.text)
                                                     }
                                                 )
+
                                                 is MessagePart.Attachment -> {
                                                     when (val source = p.source) {
                                                         is AttachmentSource.Image -> {
                                                             val imageUrl = when (val c = source.content) {
                                                                 is AttachmentContent.URL -> c.url
+
                                                                 is AttachmentContent.Binary -> "data:${source.mimeType};base64,${c.asBase64()}"
+
                                                                 else -> {
                                                                     logger.warn { "Unsupported image content type in tool result for OpenAI: ${c::class}, skipping" }
                                                                     null
@@ -812,6 +828,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                                 )
                                                             }
                                                         }
+
                                                         is AttachmentSource.File -> {
                                                             when (val c = source.content) {
                                                                 is AttachmentContent.Binary -> add(
@@ -821,6 +838,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                                         source.fileName?.let { put("filename", it) }
                                                                     }
                                                                 )
+
                                                                 is AttachmentContent.URL -> add(
                                                                     buildJsonObject {
                                                                         put("type", "input_file")
@@ -828,9 +846,11 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                                                         source.fileName?.let { put("filename", it) }
                                                                     }
                                                                 )
+
                                                                 else -> logger.warn { "Unsupported file content type in tool result for OpenAI: ${c::class}, skipping" }
                                                             }
                                                         }
+
                                                         else -> logger.warn { "Unsupported attachment type in tool result for OpenAI: ${source::class}, skipping" }
                                                     }
                                                 }
@@ -1053,7 +1073,9 @@ public open class OpenAILLMClient @JvmOverloads constructor(
     }
 
     internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
-        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
+        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams()
+
+        // TODO: create a separate Azure Client
         params is OpenAIResponsesParams -> {
             model.requireCapability(
                 LLMCapability.OpenAIEndpoint.Responses,
@@ -1071,7 +1093,9 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         }
 
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
+
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
+
         else -> throw LLMClientException(clientName, "Cannot determine proper LLM params for OpenAI model: ${model.id}")
     }
 

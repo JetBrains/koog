@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
@@ -19,7 +20,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -353,5 +356,58 @@ class OpenAIChatCompletionLLMClientTest {
             .first { it.jsonObject["tool_calls"] != null }
             .jsonObject["tool_calls"]!!.jsonArray[0].jsonObject
         assertNull(toolCall["extra_content"], "non-Gemini tool call must not carry extra_content")
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    @Test
+    fun testGemini3StreamingToolCallChunkParsesExtraContent() {
+        // STREAMING inbound: Gemini 3 sends the thought_signature on the SSE chunk that opens a
+        // tool call (delta.tool_calls[].extra_content.google.thought_signature). The stream DTO
+        // must surface it so processStreamingResponse can attach it to the pending tool call.
+        // The Json configuration mirrors AbstractOpenAILLMClient.defaultJson (SnakeCase mapping
+        // of extraContent <-> extra_content is what this test pins down).
+        val streamJson = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            namingStrategy = JsonNamingStrategy.SnakeCase
+        }
+        val chunk = """
+            {
+              "id": "chatcmpl-g3",
+              "object": "chat.completion.chunk",
+              "created": 1677652288,
+              "model": "gemini-3.5-flash",
+              "choices": [
+                {
+                  "index": 0,
+                  "delta": {
+                    "role": "assistant",
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_g3",
+                        "type": "function",
+                        "extra_content": { "google": { "thought_signature": "SIG_ABC_123" } },
+                        "function": { "name": "weather", "arguments": "" }
+                      }
+                    ]
+                  },
+                  "finish_reason": null
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val decoded = streamJson.decodeFromString(
+            OpenAIChatCompletionStreamResponse.serializer(),
+            chunk,
+        )
+
+        val toolCall = decoded.choices.single().delta.toolCalls!!.single()
+        val signature = (toolCall.extraContent?.get("google") as? JsonObject)
+            ?.get("thought_signature")
+            ?.let { it as? JsonPrimitive }
+            ?.contentOrNull
+        assertEquals("SIG_ABC_123", signature, "stream DTO must surface extra_content.google.thought_signature")
     }
 }

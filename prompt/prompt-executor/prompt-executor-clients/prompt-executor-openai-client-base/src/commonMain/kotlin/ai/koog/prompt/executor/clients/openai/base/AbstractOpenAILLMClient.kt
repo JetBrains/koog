@@ -381,7 +381,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     model.requireCapability(LLMCapability.Vision.Image)
                     val imageUrl = when (val attachmentContent = source.content) {
                         is AttachmentContent.URL -> attachmentContent.url
+
                         is AttachmentContent.Binary -> "data:${source.mimeType};base64,${attachmentContent.asBase64()}"
+
                         else -> throw LLMClientException(
                             clientName,
                             "Unsupported image attachment content: ${attachmentContent::class}"
@@ -443,8 +445,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
     protected fun LLMParams.ToolChoice.toOpenAIToolChoice(): OpenAIToolChoice = when (this) {
         LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
+
         LLMParams.ToolChoice.None -> OpenAIToolChoice.None
+
         LLMParams.ToolChoice.Required -> OpenAIToolChoice.Required
+
         is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(
             function = OpenAIToolChoice.FunctionName(name)
         )
