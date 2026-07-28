@@ -291,6 +291,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
         response.collect { chunk ->
             chunk.choices.firstOrNull()?.let { choice ->
+
                 choice.delta.content?.let { emitTextDelta(it, choice.index) }
 
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
@@ -300,6 +301,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                     val functionArgs = openAIToolCall.function?.arguments
                     emitToolCallDelta(id, functionName, functionArgs, index)
                 }
+
+                choice.delta.reasoningContent
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { emitReasoningDelta(text = it, index = choice.index) }
 
                 choice.finishReason?.let { finishReason = it }
             }

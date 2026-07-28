@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
@@ -17,6 +18,7 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -115,6 +117,36 @@ class OpenAIChatCompletionLLMClientTest {
         assertEquals("call_weather", toolCall.id)
         assertEquals("weather", toolCall.tool)
         assertEquals(buildJsonObject { put("city", JsonPrimitive("Boston")) }, toolCall.argsJson)
+    }
+
+    private val streamJson = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        explicitNulls = false
+        namingStrategy = JsonNamingStrategy.SnakeCase
+    }
+
+    private val streamChunkWithDelta: String =
+        """
+        {
+          "id": "chatcmpl-stream",
+          "object": "chat.completion.chunk",
+          "created": 1716920005,
+          "model": "gpt-4o",
+          "choices": [
+            {
+              "index": 0,
+              "delta": {"role": "assistant", "reasoning_content": "Let me think about this."}
+            }
+          ]
+        }
+        """.trimIndent()
+
+    @Test
+    fun testStreamDeltaDeserializesReasoningContent() {
+        val delta = streamJson.decodeFromString<OpenAIChatCompletionStreamResponse>(streamChunkWithDelta).choices.single().delta
+
+        assertEquals("Let me think about this.", delta.reasoningContent)
     }
 
     @Test
