@@ -193,10 +193,14 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return buildStreamFrameFlow {
             var inputTokens: Int? = null
             var outputTokens: Int? = null
+            var cacheReadInputTokensCount: Int? = null
+            var cacheWriteInputTokensCount: Int? = null
 
             fun updateUsage(usage: AnthropicUsage) {
                 inputTokens = usage.inputTokens ?: inputTokens
                 outputTokens = usage.outputTokens ?: outputTokens
+                cacheReadInputTokensCount = usage.cacheReadInputTokens ?: cacheReadInputTokensCount
+                cacheWriteInputTokensCount = usage.cacheCreationInputTokens ?: cacheWriteInputTokensCount
             }
 
             fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
@@ -204,6 +208,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                 totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
                 inputTokensCount = inputTokens,
                 outputTokensCount = outputTokens,
+                cacheReadInputTokensCount = cacheReadInputTokensCount,
+                cacheWriteInputTokensCount = cacheWriteInputTokensCount,
             )
 
             try {
@@ -665,12 +671,15 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
         val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
-        val cacheCreationInputTokens = response.usage?.cacheCreationInputTokens
-        val cacheReadInputTokens = response.usage?.cacheReadInputTokens
+        val cacheWriteInputTokensCount = response.usage?.cacheCreationInputTokens
+        val cacheReadInputTokensCount = response.usage?.cacheReadInputTokens
 
+        // The typed counts above are the supported way to read these. The
+        // metadata object is still populated because it was the only path
+        // before those fields existed and consumers depend on it.
         val cacheMetadata = buildJsonObject {
-            cacheCreationInputTokens?.let { put("cacheCreationInputTokens", it) }
-            cacheReadInputTokens?.let { put("cacheReadInputTokens", it) }
+            cacheWriteInputTokensCount?.let { put("cacheCreationInputTokens", it) }
+            cacheReadInputTokensCount?.let { put("cacheReadInputTokens", it) }
         }.takeIf { it.isNotEmpty() }
 
         val metaInfo = ResponseMetaInfo.create(
@@ -678,6 +687,8 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             totalTokensCount = totalTokensCount,
             inputTokensCount = inputTokensCount,
             outputTokensCount = outputTokensCount,
+            cacheReadInputTokensCount = cacheReadInputTokensCount,
+            cacheWriteInputTokensCount = cacheWriteInputTokensCount,
             metadata = cacheMetadata,
         )
 

@@ -440,7 +440,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                         clock = clock,
                                         totalTokensCount = usage?.totalTokens,
                                         inputTokensCount = usage?.inputTokens,
-                                        outputTokensCount = usage?.outputTokens
+                                        outputTokensCount = usage?.outputTokens,
+                                        cacheReadInputTokensCount = usage?.inputTokensDetails?.cachedTokens
                                     )
                                 }
                             )
@@ -986,7 +987,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             clock,
             totalTokensCount = response.usage?.totalTokens,
             inputTokensCount = response.usage?.inputTokens,
-            outputTokensCount = response.usage?.outputTokens
+            outputTokensCount = response.usage?.outputTokens,
+            cacheReadInputTokensCount = response.usage?.inputTokensDetails?.cachedTokens
         )
 
         var finishReason: String? = null
