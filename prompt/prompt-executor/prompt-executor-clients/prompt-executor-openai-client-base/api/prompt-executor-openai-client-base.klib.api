@@ -937,10 +937,12 @@ final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoic
 }
 
 final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall>?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamToolCall>? = ..., kotlin/String? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamToolCall>?;kotlin.String?){}[0]
 
     final val content // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.content|{}content[0]
         final fun <get-content>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.content.<get-content>|<get-content>(){}[0]
+    final val reasoningContent // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.reasoningContent|{}reasoningContent[0]
+        final fun <get-reasoningContent>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.reasoningContent.<get-reasoningContent>|<get-reasoningContent>(){}[0]
     final val refusal // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.refusal|{}refusal[0]
         final fun <get-refusal>(): kotlin/String? // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.refusal.<get-refusal>|<get-refusal>(){}[0]
     final val role // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta.role|{}role[0]
