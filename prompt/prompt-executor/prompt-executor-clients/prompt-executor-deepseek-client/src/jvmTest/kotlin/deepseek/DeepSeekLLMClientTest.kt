@@ -1,5 +1,6 @@
 package deepseek
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -11,6 +12,8 @@ import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponse
 import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -21,6 +24,9 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -29,6 +35,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -280,6 +287,115 @@ class DeepSeekLLMClientTest {
         // For now, we'd only verify that streaming flow can be created
         // as MockEngine does not support Ktor SSE end-to-end streaming reliably in tests
         assertNotNull(flow, "Flow should not be null")
+    }
+
+    @Test
+    fun testStreamingReasoningIsEmittedAndReplayedToProvider() = runTest {
+        val reasoning = "I should call the weather tool first."
+        val answer = "The weather in Boston is 72F."
+
+        // The reasoning-capable model streams reasoning under `reasoning_content` in one delta, then the answer.
+        //language=json
+        val reasoningChunk =
+            """{"id":"c","object":"chat.completion.chunk","created":0,"system_fingerprint":"fp","model":"deepseek-reasoner","choices":[{"index":0,"delta":{"role":"assistant","reasoning_content":"$reasoning"}}]}"""
+        //language=json
+        val answerChunk =
+            """{"id":"c","object":"chat.completion.chunk","created":0,"system_fingerprint":"fp","model":"deepseek-reasoner","choices":[{"index":0,"delta":{"content":"$answer"},"finish_reason":"stop"}]}"""
+
+        var capturedBody: String? = null
+
+        // A fake transport that drives the real decode + processStreamingResponse path for `sse`, and captures
+        // the serialized request body for the follow-up `post`. MockEngine cannot drive Ktor SSE reliably in tests.
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "DeepSeekStreamingTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R {
+                capturedBody = requestBody as String
+                @Suppress("UNCHECKED_CAST")
+                return body as R
+            }
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<O> = flow {
+                for (data in listOf(reasoningChunk, answerChunk)) {
+                    if (dataFilter(data)) {
+                        processStreamingChunk(decodeStreamingResponse(data))?.let { emit(it) }
+                    }
+                }
+            }
+
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = DeepSeekLLMClient(httpClient = transport, clock = FixedClock)
+
+        // 1. The reasoning delta is emitted while streaming.
+        val frames = client.executeStreaming(
+            Prompt.build(id = "p-stream", clock = FixedClock) { user("What's the weather in Boston?") },
+            DeepSeekModels.DeepSeekV4Flash,
+        ).toList()
+
+        assertTrue(
+            frames.any { it is StreamFrame.ReasoningDelta && it.text == reasoning },
+            "A reasoning delta should be emitted from the stream"
+        )
+        val reasoningComplete = frames.filterIsInstance<StreamFrame.ReasoningComplete>().single()
+        assertEquals(listOf(reasoning), reasoningComplete.content)
+
+        // 2. The streamed reasoning is preserved on the assistant message and replayed back to the provider.
+        val assistant = frames.toMessageResponse()
+        val reasoningPart = assistant.parts.filterIsInstance<MessagePart.Reasoning>().single()
+        assertEquals(listOf(reasoning), reasoningPart.content)
+
+        val followUp = Prompt(
+            id = "p-followup",
+            messages = listOf(
+                Message.User("What's the weather in Boston?", RequestMetaInfo.Empty),
+                assistant,
+            )
+        )
+        client.execute(followUp, DeepSeekModels.DeepSeekV4Flash)
+
+        assertNotNull(capturedBody, "The follow-up request body should be captured")
+        val messages = KotlinxJson.parseToJsonElement(capturedBody).jsonObject["messages"]!!.jsonArray
+        val assistantMessage = messages
+            .first { it.jsonObject["role"]?.jsonPrimitive?.contentOrNull == "assistant" }
+            .jsonObject
+        assertEquals(
+            reasoning,
+            assistantMessage["reasoning_content"]?.jsonPrimitive?.contentOrNull,
+            "Reasoning content received while streaming must be sent back to the provider"
+        )
     }
 
     @Test

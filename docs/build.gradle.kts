@@ -109,3 +109,8 @@ tasks.register<Delete>("knitAssemble") {
 
 tasks.named("knit").configure { mustRunAfter("knitClean") }
 tasks.named("assemble").configure { mustRunAfter("knit") }
+
+// docs is not a published library, so ABI validation is not applicable
+tasks.matching { it.name.contains("Abi") }.configureEach {
+    enabled = false
+}

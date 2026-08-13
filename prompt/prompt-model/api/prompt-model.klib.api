@@ -476,6 +476,9 @@ sealed interface ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.mess
 }
 
 sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/MessagePart|null[0]
+    abstract val cacheControl // ai.koog.prompt.message/MessagePart.cacheControl|{}cacheControl[0]
+        abstract fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+
     sealed interface ContentPart : ai.koog.prompt.message/MessagePart.RequestPart, ai.koog.prompt.message/MessagePart.ResponsePart { // ai.koog.prompt.message/MessagePart.ContentPart|null[0]
         final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.ContentPart.Companion|null[0]
             final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.message/MessagePart.ContentPart.Companion.serializer|serializer(){}[0]
@@ -484,9 +487,6 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
     }
 
     sealed interface RequestPart : ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/MessagePart.RequestPart|null[0]
-        abstract val cacheControl // ai.koog.prompt.message/MessagePart.RequestPart.cacheControl|{}cacheControl[0]
-            abstract fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.RequestPart.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
-
         final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.RequestPart.Companion|null[0]
             final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.RequestPart> // ai.koog.prompt.message/MessagePart.RequestPart.Companion.serializer|serializer(){}[0]
             final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.RequestPart.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -505,13 +505,15 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
             abstract fun <get-tool>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.tool.<get-tool>|<get-tool>(){}[0]
 
         final class Call : ai.koog.prompt.message/MessagePart.ResponsePart, ai.koog.prompt.message/MessagePart.Tool { // ai.koog.prompt.message/MessagePart.Tool.Call|null[0]
-            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String) // ai.koog.prompt.message/MessagePart.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String){}[0]
-            constructor <init>(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.message/MessagePart.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject;ai.koog.prompt.message.CacheControl?){}[0]
 
             final val args // ai.koog.prompt.message/MessagePart.Tool.Call.args|{}args[0]
                 final fun <get-args>(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.args.<get-args>|<get-args>(){}[0]
             final val argsJson // ai.koog.prompt.message/MessagePart.Tool.Call.argsJson|{}argsJson[0]
                 final fun <get-argsJson>(): kotlinx.serialization.json/JsonObject // ai.koog.prompt.message/MessagePart.Tool.Call.argsJson.<get-argsJson>|<get-argsJson>(){}[0]
+            final val cacheControl // ai.koog.prompt.message/MessagePart.Tool.Call.cacheControl|{}cacheControl[0]
+                final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Tool.Call.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
             final val id // ai.koog.prompt.message/MessagePart.Tool.Call.id|{}id[0]
                 final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Call.id.<get-id>|<get-id>(){}[0]
             final val tool // ai.koog.prompt.message/MessagePart.Tool.Call.tool|{}tool[0]
@@ -520,7 +522,8 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
             final fun component1(): kotlin/String? // ai.koog.prompt.message/MessagePart.Tool.Call.component1|component1(){}[0]
             final fun component2(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.component2|component2(){}[0]
             final fun component3(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.component3|component3(){}[0]
-            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ...): ai.koog.prompt.message/MessagePart.Tool.Call // ai.koog.prompt.message/MessagePart.Tool.Call.copy|copy(kotlin.String?;kotlin.String;kotlin.String){}[0]
+            final fun component4(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Tool.Call.component4|component4(){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.message/MessagePart.Tool.Call // ai.koog.prompt.message/MessagePart.Tool.Call.copy|copy(kotlin.String?;kotlin.String;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
             final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Call.equals|equals(kotlin.Any?){}[0]
             final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Tool.Call.hashCode|hashCode(){}[0]
             final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Call.toString|toString(){}[0]
@@ -535,13 +538,15 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
             }
 
             final object Companion { // ai.koog.prompt.message/MessagePart.Tool.Call.Companion|null[0]
+                final val $childSerializers // ai.koog.prompt.message/MessagePart.Tool.Call.Companion.$childSerializers|{}$childSerializers[0]
+
                 final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Tool.Call> // ai.koog.prompt.message/MessagePart.Tool.Call.Companion.serializer|serializer(){}[0]
             }
         }
 
         final class Result : ai.koog.prompt.message/MessagePart.RequestPart, ai.koog.prompt.message/MessagePart.Tool { // ai.koog.prompt.message/MessagePart.Tool.Result|null[0]
-            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>, kotlin/Boolean = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>;kotlin.Boolean){}[0]
-            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart>, kotlin/Boolean = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>;kotlin.Boolean;ai.koog.prompt.message.CacheControl?){}[0]
+            constructor <init>(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean;ai.koog.prompt.message.CacheControl?){}[0]
 
             final val cacheControl // ai.koog.prompt.message/MessagePart.Tool.Result.cacheControl|{}cacheControl[0]
                 final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Tool.Result.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
@@ -560,7 +565,8 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
             final fun component2(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.component2|component2(){}[0]
             final fun component3(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> // ai.koog.prompt.message/MessagePart.Tool.Result.component3|component3(){}[0]
             final fun component4(): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.component4|component4(){}[0]
-            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> = ..., kotlin/Boolean = ...): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.prompt.message/MessagePart.Tool.Result.copy|copy(kotlin.String?;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>;kotlin.Boolean){}[0]
+            final fun component5(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Tool.Result.component5|component5(){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin.collections/List<ai.koog.prompt.message/MessagePart.ContentPart> = ..., kotlin/Boolean = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.message/MessagePart.Tool.Result // ai.koog.prompt.message/MessagePart.Tool.Result.copy|copy(kotlin.String?;kotlin.String;kotlin.collections.List<ai.koog.prompt.message.MessagePart.ContentPart>;kotlin.Boolean;ai.koog.prompt.message.CacheControl?){}[0]
             final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Tool.Result.equals|equals(kotlin.Any?){}[0]
             final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Tool.Result.hashCode|hashCode(){}[0]
             final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Tool.Result.toString|toString(){}[0]
@@ -619,9 +625,11 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
     }
 
     final class Reasoning : ai.koog.prompt.message/MessagePart.ResponsePart { // ai.koog.prompt.message/MessagePart.Reasoning|null[0]
-        constructor <init>(kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.message/MessagePart.Reasoning.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?){}[0]
-        constructor <init>(kotlin/String, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.message/MessagePart.Reasoning.<init>|<init>(kotlin.String;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?){}[0]
+        constructor <init>(kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Reasoning.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
+        constructor <init>(kotlin/String, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Reasoning.<init>|<init>(kotlin.String;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
 
+        final val cacheControl // ai.koog.prompt.message/MessagePart.Reasoning.cacheControl|{}cacheControl[0]
+            final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Reasoning.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
         final val content // ai.koog.prompt.message/MessagePart.Reasoning.content|{}content[0]
             final fun <get-content>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.message/MessagePart.Reasoning.content.<get-content>|<get-content>(){}[0]
         final val encrypted // ai.koog.prompt.message/MessagePart.Reasoning.encrypted|{}encrypted[0]
@@ -635,7 +643,8 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
         final fun component2(): kotlin.collections/List<kotlin/String>? // ai.koog.prompt.message/MessagePart.Reasoning.component2|component2(){}[0]
         final fun component3(): kotlin/String? // ai.koog.prompt.message/MessagePart.Reasoning.component3|component3(){}[0]
         final fun component4(): kotlin/String? // ai.koog.prompt.message/MessagePart.Reasoning.component4|component4(){}[0]
-        final fun copy(kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ...): ai.koog.prompt.message/MessagePart.Reasoning // ai.koog.prompt.message/MessagePart.Reasoning.copy|copy(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?){}[0]
+        final fun component5(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Reasoning.component5|component5(){}[0]
+        final fun copy(kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.message/MessagePart.Reasoning // ai.koog.prompt.message/MessagePart.Reasoning.copy|copy(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Reasoning.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Reasoning.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Reasoning.toString|toString(){}[0]
@@ -956,9 +965,9 @@ abstract class <#A: kotlin/Any?> ai.koog.prompt.dsl/ContentPartsBuilderBase : ai
     final fun audio(ai.koog.prompt.message/AttachmentSource.Audio, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.audio|audio(ai.koog.prompt.message.AttachmentSource.Audio;ai.koog.prompt.message.CacheControl?){}[0]
     final fun audio(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.audio|audio(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun audio(kotlinx.io.files/Path, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.audio|audio(kotlinx.io.files.Path;ai.koog.prompt.message.CacheControl?){}[0]
-    final fun binaryFile(kotlinx.io.files/Path, kotlin/String) // ai.koog.prompt.dsl/ContentPartsBuilderBase.binaryFile|binaryFile(kotlinx.io.files.Path;kotlin.String){}[0]
+    final fun binaryFile(kotlinx.io.files/Path, kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.binaryFile|binaryFile(kotlinx.io.files.Path;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun file(ai.koog.prompt.message/AttachmentSource.File, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.file|file(ai.koog.prompt.message.AttachmentSource.File;ai.koog.prompt.message.CacheControl?){}[0]
-    final fun file(kotlin/String, kotlin/String) // ai.koog.prompt.dsl/ContentPartsBuilderBase.file|file(kotlin.String;kotlin.String){}[0]
+    final fun file(kotlin/String, kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.file|file(kotlin.String;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun flushTextBuilder() // ai.koog.prompt.dsl/ContentPartsBuilderBase.flushTextBuilder|flushTextBuilder(){}[0]
     final fun image(ai.koog.prompt.message/AttachmentSource.Image, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.image|image(ai.koog.prompt.message.AttachmentSource.Image;ai.koog.prompt.message.CacheControl?){}[0]
     final fun image(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.image|image(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
@@ -966,7 +975,7 @@ abstract class <#A: kotlin/Any?> ai.koog.prompt.dsl/ContentPartsBuilderBase : ai
     final fun part(ai.koog.prompt.message/MessagePart.ContentPart) // ai.koog.prompt.dsl/ContentPartsBuilderBase.part|part(ai.koog.prompt.message.MessagePart.ContentPart){}[0]
     final fun text(ai.koog.prompt.message/CacheControl? = ..., kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.koog.prompt.dsl/ContentPartsBuilderBase.text|text(ai.koog.prompt.message.CacheControl?;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
     final fun text(kotlin/String, ai.koog.prompt.message/CacheControl) // ai.koog.prompt.dsl/ContentPartsBuilderBase.text|text(kotlin.String;ai.koog.prompt.message.CacheControl){}[0]
-    final fun textFile(kotlinx.io.files/Path, kotlin/String) // ai.koog.prompt.dsl/ContentPartsBuilderBase.textFile|textFile(kotlinx.io.files.Path;kotlin.String){}[0]
+    final fun textFile(kotlinx.io.files/Path, kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.textFile|textFile(kotlinx.io.files.Path;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun video(ai.koog.prompt.message/AttachmentSource.Video, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.video|video(ai.koog.prompt.message.AttachmentSource.Video;ai.koog.prompt.message.CacheControl?){}[0]
     final fun video(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.video|video(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun video(kotlinx.io.files/Path, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ContentPartsBuilderBase.video|video(kotlinx.io.files.Path;ai.koog.prompt.message.CacheControl?){}[0]
@@ -1106,15 +1115,15 @@ final class ai.koog.prompt.dsl/PromptBuilder { // ai.koog.prompt.dsl/PromptBuild
     final fun message(ai.koog.prompt.message/Message): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.message|message(ai.koog.prompt.message.Message){}[0]
     final fun messages(kotlin.collections/List<ai.koog.prompt.message/Message>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.messages|messages(kotlin.collections.List<ai.koog.prompt.message.Message>){}[0]
     final fun reasoning(ai.koog.prompt.message/MessagePart.Reasoning): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.reasoning|reasoning(ai.koog.prompt.message.MessagePart.Reasoning){}[0]
-    final fun reasoning(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.reasoning|reasoning(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    final fun reasoning(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.reasoning|reasoning(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
     final fun system(ai.koog.prompt.message/CacheControl? = ..., kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.system|system(ai.koog.prompt.message.CacheControl?;kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
     final fun system(kotlin/Function1<ai.koog.prompt.text/TextContentBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.system|system(kotlin.Function1<ai.koog.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
     final fun system(kotlin/String, ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.system|system(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun toolCall(ai.koog.prompt.message/MessagePart.Tool.Call): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
-    final fun toolCall(kotlin/String, kotlin/String, kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(kotlin.String;kotlin.String;kotlin.String?){}[0]
-    final fun toolCall(kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/String? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.String?){}[0]
+    final fun toolCall(kotlin/String, kotlin/String, kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(kotlin.String;kotlin.String;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun toolCall(kotlin/String, kotlinx.serialization.json/JsonObject, kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolCall|toolCall(kotlin.String;kotlinx.serialization.json.JsonObject;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
     final fun toolResult(ai.koog.prompt.message/MessagePart.Tool.Result): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolResult|toolResult(ai.koog.prompt.message.MessagePart.Tool.Result){}[0]
-    final fun toolResult(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolResult|toolResult(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean){}[0]
+    final fun toolResult(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Boolean = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.toolResult|toolResult(kotlin.String;kotlin.String;kotlin.String?;kotlin.Boolean;ai.koog.prompt.message.CacheControl?){}[0]
     final fun user(kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.user|user(kotlin.collections.List<ai.koog.prompt.message.MessagePart.RequestPart>){}[0]
     final fun user(kotlin/Function1<ai.koog.prompt.dsl/RequestMessagePartsBuilder, kotlin/Unit>): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.user|user(kotlin.Function1<ai.koog.prompt.dsl.RequestMessagePartsBuilder,kotlin.Unit>){}[0]
     final fun user(kotlin/String, ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.dsl/PromptBuilder // ai.koog.prompt.dsl/PromptBuilder.user|user(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
@@ -1125,7 +1134,7 @@ final class ai.koog.prompt.dsl/RequestMessagePartsBuilder : ai.koog.prompt.dsl/C
 
     final fun build(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.RequestPart> // ai.koog.prompt.dsl/RequestMessagePartsBuilder.build|build(){}[0]
     final fun toolResult(ai.koog.prompt.message/MessagePart.Tool.Result) // ai.koog.prompt.dsl/RequestMessagePartsBuilder.toolResult|toolResult(ai.koog.prompt.message.MessagePart.Tool.Result){}[0]
-    final fun toolResult(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ...) // ai.koog.prompt.dsl/RequestMessagePartsBuilder.toolResult|toolResult(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+    final fun toolResult(kotlin/String? = ..., kotlin/String, kotlin/String, kotlin/Boolean = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/RequestMessagePartsBuilder.toolResult|toolResult(kotlin.String?;kotlin.String;kotlin.String;kotlin.Boolean;ai.koog.prompt.message.CacheControl?){}[0]
 }
 
 final class ai.koog.prompt.dsl/ResponseMessagePartsBuilder : ai.koog.prompt.text/TextContentBuilderBase<kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart>> { // ai.koog.prompt.dsl/ResponseMessagePartsBuilder|null[0]
@@ -1133,10 +1142,10 @@ final class ai.koog.prompt.dsl/ResponseMessagePartsBuilder : ai.koog.prompt.text
 
     final fun build(): kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.build|build(){}[0]
     final fun reasoning(ai.koog.prompt.message/MessagePart.Reasoning) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.reasoning|reasoning(ai.koog.prompt.message.MessagePart.Reasoning){}[0]
-    final fun reasoning(kotlin/String? = ..., kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.reasoning|reasoning(kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    final fun reasoning(kotlin/String? = ..., kotlin/String, kotlin/String? = ..., kotlin/String? = ..., ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.reasoning|reasoning(kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?;ai.koog.prompt.message.CacheControl?){}[0]
     final fun toolCall(ai.koog.prompt.message/MessagePart.Tool.Call) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
-    final fun toolCall(kotlin/String? = ..., kotlin/String, kotlin/String) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlin.String){}[0]
-    final fun toolCall(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+    final fun toolCall(kotlin/String? = ..., kotlin/String, kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+    final fun toolCall(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject;ai.koog.prompt.message.CacheControl?){}[0]
 }
 
 final class ai.koog.prompt.message/RequestMetaInfo : ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.message/RequestMetaInfo|null[0]

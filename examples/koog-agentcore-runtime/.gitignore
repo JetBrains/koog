@@ -1,0 +1,9 @@
+.gradle/
+build/
+.idea/
+*.iml
+.kotlin/
+out/
+deploy/test-outputs/
+deploy/image-uri.txt
+deploy/runtime-info.json

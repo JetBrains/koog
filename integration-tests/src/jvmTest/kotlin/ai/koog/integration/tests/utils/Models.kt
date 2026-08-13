@@ -61,6 +61,18 @@ object Models {
         )
     }
 
+    /**
+     * Models from different providers to test the proper integration
+     */
+    @JvmStatic
+    fun springAiModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Chat.GPT5_5,
+            AnthropicModels.Sonnet_4_6,
+            GoogleModels.Gemini3_5Flash,
+        )
+    }
+
     @JvmStatic
     fun embeddingModels(): Stream<LLModel> {
         return Stream.of(

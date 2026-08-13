@@ -239,7 +239,7 @@ public abstract class ContentPartsBuilderBase<T> : TextContentBuilderBase<T>() {
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
      */
-    public fun file(url: String, mimeType: String) {
+    public fun file(url: String, mimeType: String, cacheControl: CacheControl? = null) {
         val fileData = url.urlFileData()
         file(
             AttachmentSource.File(
@@ -247,7 +247,8 @@ public abstract class ContentPartsBuilderBase<T> : TextContentBuilderBase<T>() {
                 format = fileData.extension,
                 mimeType = mimeType,
                 fileName = fileData.name
-            )
+            ),
+            cacheControl
         )
     }
 
@@ -258,7 +259,7 @@ public abstract class ContentPartsBuilderBase<T> : TextContentBuilderBase<T>() {
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun binaryFile(path: Path, mimeType: String) {
+    public fun binaryFile(path: Path, mimeType: String, cacheControl: CacheControl? = null) {
         val fileData = path.fileData()
         file(
             AttachmentSource.File(
@@ -266,7 +267,8 @@ public abstract class ContentPartsBuilderBase<T> : TextContentBuilderBase<T>() {
                 format = fileData.extension,
                 mimeType = mimeType,
                 fileName = fileData.name
-            )
+            ),
+            cacheControl
         )
     }
 
@@ -277,7 +279,7 @@ public abstract class ContentPartsBuilderBase<T> : TextContentBuilderBase<T>() {
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun textFile(path: Path, mimeType: String) {
+    public fun textFile(path: Path, mimeType: String, cacheControl: CacheControl? = null) {
         val fileData = path.fileData()
         file(
             AttachmentSource.File(
@@ -285,7 +287,8 @@ public abstract class ContentPartsBuilderBase<T> : TextContentBuilderBase<T>() {
                 format = fileData.extension,
                 mimeType = mimeType,
                 fileName = fileData.name
-            )
+            ),
+            cacheControl
         )
     }
 }

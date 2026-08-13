@@ -26,7 +26,10 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-parameters")
 }
 dependencies {
-    implementation(project.dependencies.platform(libs.spring.boot.bom))
-    api(libs.bundles.spring.boot.core)
+    api(project.dependencies.platform(libs.spring.boot.bom))
+    api(project.dependencies.platform(libs.spring.ai.bom))
+    api(libs.spring.boot.starter)
+    api(libs.kotlin.reflect)
+    api(libs.kotlinx.coroutines.reactor)
 }
 publishToMaven()

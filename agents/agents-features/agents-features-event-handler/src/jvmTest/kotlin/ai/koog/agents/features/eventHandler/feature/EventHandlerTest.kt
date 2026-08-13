@@ -272,8 +272,8 @@ class EventHandlerTest {
             .toString()
 
         val toolCallAssistantObj =
-            "Assistant(parts=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
-        val toolCallsInput = "ToolCalls(toolCalls=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded)])"
+            "Assistant(parts=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+        val toolCallsInput = "ToolCalls(toolCalls=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded, cacheControl=null)])"
         val receivedToolResults = "ReceivedToolResults(toolResults=[$dummyToolReceivedToolResult])"
         val finalAssistantObj =
             "Assistant(parts=[Text(text=$mockResponse, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"

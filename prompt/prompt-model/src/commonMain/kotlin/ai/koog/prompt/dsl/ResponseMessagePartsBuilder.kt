@@ -1,6 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.agents.annotations.JavaAPI
+import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.text.TextContentBuilderBase
 import kotlinx.serialization.json.JsonObject
@@ -31,8 +32,17 @@ public class ResponseMessagePartsBuilder : TextContentBuilderBase<List<MessagePa
         content: String,
         summary: String? = null,
         encrypted: String? = null,
+        cacheControl: CacheControl? = null,
     ) {
-        part(MessagePart.Reasoning(content = content, summary = summary?.let { listOf(it) }, encrypted = encrypted, id = id))
+        part(
+            MessagePart.Reasoning(
+                content = content,
+                summary = summary?.let { listOf(it) },
+                encrypted = encrypted,
+                id = id,
+                cacheControl = cacheControl
+            )
+        )
     }
 
     public fun toolCall(call: MessagePart.Tool.Call) {
@@ -43,12 +53,14 @@ public class ResponseMessagePartsBuilder : TextContentBuilderBase<List<MessagePa
         id: String? = null,
         tool: String,
         args: String,
+        cacheControl: CacheControl? = null,
     ) {
         part(
             MessagePart.Tool.Call(
                 id = id,
                 tool = tool,
-                args = args
+                args = args,
+                cacheControl = cacheControl
             )
         )
     }
@@ -57,12 +69,14 @@ public class ResponseMessagePartsBuilder : TextContentBuilderBase<List<MessagePa
         id: String? = null,
         tool: String,
         args: JsonObject,
+        cacheControl: CacheControl? = null,
     ) {
         part(
             MessagePart.Tool.Call(
                 id = id,
                 tool = tool,
-                args = args
+                args = args,
+                cacheControl = cacheControl
             )
         )
     }
