@@ -1,5 +1,7 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
+val isBeta by extra(true)
+
 plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)

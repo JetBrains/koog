@@ -80,7 +80,7 @@ class AIAgentSkillsIntegrationTest : AIAgentTestBase() {
     fun `integration test agent uses discovered skills prompt`(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         val skillsRoot = skillsRootDirectory()
-        val discoveredSkills = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(skillsRoot))
+        val discoveredSkills = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(skillsRoot))
         val generatedSkillsPrompt = generateSkillsPrompt(discoveredSkills, SkillsPromptFormat.XML)
         val pythonTool = ExecutePythonScriptTool()
 
@@ -198,7 +198,7 @@ class AIAgentSkillsIntegrationTest : AIAgentTestBase() {
     fun `integration test agent uses weather retrieval skill for weather request`(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         val skillsRoot = skillsRootDirectory()
-        val discoveredSkills = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(skillsRoot))
+        val discoveredSkills = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(skillsRoot))
         val generatedSkillsPrompt = generateSkillsPrompt(discoveredSkills, SkillsPromptFormat.XML)
         val pythonTool = ExecutePythonScriptTool()
 

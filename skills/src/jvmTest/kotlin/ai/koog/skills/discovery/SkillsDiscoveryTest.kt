@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class ExtensionsTest {
+class SkillsDiscoveryTest {
     @Test
     fun `test discoverSkills parses skill frontmatter`() = runTest {
         val root = createTempDirectory()
@@ -34,7 +34,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(root.absolutePathString()))
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(root.absolutePathString()))
 
         assertEquals(1, discovered.size)
         val skill = discovered.single()
@@ -70,7 +70,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(firstRoot.absolutePathString(), secondRoot.absolutePathString()),
         )
 
@@ -101,7 +101,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(firstRoot.absolutePathString(), secondRoot.absolutePathString()),
             precedenceRule = SkillCollisionPrecedence.FIRST_FOUND,
         )
@@ -122,7 +122,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(root.absolutePathString()))
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(root.absolutePathString()))
 
         assertEquals(0, discovered.size)
     }
@@ -176,7 +176,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        JVMFileSystemProvider.ReadOnly.discoverSkills(
+        discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(firstRoot.absolutePathString(), secondRoot.absolutePathString()),
             warningLogger = warnings::add,
         )
@@ -201,11 +201,11 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discoveredWithLowDepth = JVMFileSystemProvider.ReadOnly.discoverSkills(
+        val discoveredWithLowDepth = discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(root.absolutePathString()),
             maxDepth = 2,
         )
-        val discoveredWithEnoughDepth = JVMFileSystemProvider.ReadOnly.discoverSkills(
+        val discoveredWithEnoughDepth = discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(root.absolutePathString()),
             maxDepth = 4,
         )
@@ -237,7 +237,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(root.absolutePathString()), maxDepth = 4)
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(root.absolutePathString()), maxDepth = 4)
         assertEquals(0, discovered.size)
     }
 
@@ -254,7 +254,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(root.absolutePathString()))
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(root.absolutePathString()))
 
         assertEquals(1, discovered.size)
         assertNull(discovered.single().metadata)
@@ -273,7 +273,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(root.absolutePathString()),
             skillFileName = "CUSTOM_SKILL.md",
         )
@@ -295,7 +295,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        val discovered = JVMFileSystemProvider.ReadOnly.discoverSkills(
+        val discovered = discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(root.absolutePathString()),
             skippedDirectoryNames = setOf("vendor"),
         )
@@ -317,7 +317,7 @@ class ExtensionsTest {
             """.trimIndent()
         )
 
-        JVMFileSystemProvider.ReadOnly.discoverSkills(
+        discoverSkills(JVMFileSystemProvider.ReadOnly, 
             directoriesToSearch = listOf(root.absolutePathString()),
             skillNamePattern = Regex("^[a-z_]+$"),
             warningLogger = warnings::add,

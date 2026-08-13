@@ -1,9 +1,11 @@
+@file:JvmName("SkillsDiscovery")
 package ai.koog.skills.discovery
 
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.skills.model.Skill
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.jvm.JvmName
 
 private val logger = KotlinLogging.logger {}
 
@@ -32,6 +34,7 @@ public enum class SkillCollisionPrecedence {
  * Warnings (ignored roots/directories, malformed skill files, collisions, and format mismatches)
  * are reported through [warningLogger].
  *
+ * @param fs file system provider used to interact with files.
  * @param directoriesToSearch absolute root directories to scan for skills.
  * @param maxDepth maximum traversal depth relative to each root directory. Must be `>= 0`.
  * @param maxDirectories maximum number of directories to visit across all roots. Must be `> 0`.
@@ -45,7 +48,8 @@ public enum class SkillCollisionPrecedence {
  *
  * @throws IllegalArgumentException if [maxDepth] is negative or [maxDirectories] is not positive.
  */
-public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.discoverSkills(
+public suspend fun <Path> discoverSkills(
+    fs: FileSystemProvider.ReadOnly<Path>,
     directoriesToSearch: List<String>,
     maxDepth: Int = 4,
     maxDirectories: Int = 2000,
@@ -62,8 +66,8 @@ public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.discoverSkills(
     val queue = ArrayDeque<DirectoryDepth<Path>>()
 
     directoriesToSearch.forEach { root ->
-        val path = fromAbsolutePathString(root)
-        if (metadata(path)?.type == FileMetadata.FileType.Directory) {
+        val path = fs.fromAbsolutePathString(root)
+        if (fs.metadata(path)?.type == FileMetadata.FileType.Directory) {
             queue.addLast(DirectoryDepth(path, 0))
         } else {
             warningLogger("Skill discovery ignored non-directory root: $root")
@@ -76,10 +80,10 @@ public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.discoverSkills(
         val (directory, depth) = queue.removeFirst()
         visitedDirectories++
 
-        val children = runCatching { list(directory) }.getOrDefault(emptyList())
-        val skillFile = children.firstOrNull { name(it) == skillFileName }
+        val children = runCatching { fs.list(directory) }.getOrDefault(emptyList())
+        val skillFile = children.firstOrNull { fs.name(it) == skillFileName }
         if (skillFile != null) {
-            parseSkill(skillFile, skillNamePattern, warningLogger)?.let { skill ->
+            fs.parseSkill(skillFile, skillNamePattern, warningLogger)?.let { skill ->
                 val existing = discoveredByName[skill.name]
                 if (existing != null) {
                     warningLogger(
@@ -98,15 +102,15 @@ public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.discoverSkills(
         }
 
         children.forEach { child ->
-            val childName = name(child)
+            val childName = fs.name(child)
             if (childName in skippedDirectoryNames) {
                 warningLogger(
-                    "Skill discovery ignored directory '$childName' at '${toAbsolutePathString(child)}'"
+                    "Skill discovery ignored directory '$childName' at '${fs.toAbsolutePathString(child)}'"
                 )
                 return@forEach
             }
 
-            if (metadata(child)?.type == FileMetadata.FileType.Directory) {
+            if (fs.metadata(child)?.type == FileMetadata.FileType.Directory) {
                 queue.addLast(DirectoryDepth(child, depth + 1))
             }
         }
@@ -160,8 +164,8 @@ private suspend fun <Path> FileSystemProvider.ReadOnly<Path>.parseSkill(
         warningLogger("Skill '$skillName' at '$location' does not match expected name format")
     }
 
-    val parentDirectoryName = location.substringBeforeLast('/').substringBeforeLast('\\').substringAfterLast('/').substringAfterLast('\\')
-    if (parentDirectoryName.isNotBlank() && parentDirectoryName != skillName) {
+    val parentDirectoryName = parent(skillFile)?.let { name(it) }
+    if (parentDirectoryName != skillName) {
         warningLogger(
             "Skill '$skillName' at '$location' does not match parent directory name '$parentDirectoryName'"
         )

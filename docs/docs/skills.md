@@ -26,7 +26,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val skillsRoot = "/absolute/path/to/skills"
-    val discoveredSkills = JVMFileSystemProvider.ReadOnly.discoverSkills(listOf(skillsRoot))
+    val discoveredSkills = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(skillsRoot))
     val generatedSkillsPrompt = generateSkillsPrompt(discoveredSkills, SkillsPromptFormat.XML)
 
     // Replace with your script execution tool implementation.
