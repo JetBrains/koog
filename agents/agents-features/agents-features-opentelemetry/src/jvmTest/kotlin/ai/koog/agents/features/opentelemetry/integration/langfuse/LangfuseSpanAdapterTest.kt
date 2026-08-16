@@ -191,6 +191,93 @@ class LangfuseSpanAdapterTest {
     }
 
     @Test
+    fun testCompletionAttributesPreferTextOverReasoning() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        val assistantText = "RELEVANT"
+        val reasoningText = "The user's latest message translates to a coupon question."
+        val assistantMessage = Message.Assistant(
+            parts = listOf(
+                MessagePart.Text(assistantText),
+                MessagePart.Reasoning(reasoningText),
+            ),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "stop",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        val actualContent = attributes.requireValue("gen_ai.completion.0.content")
+        assertIs<HiddenString>(actualContent)
+        assertEquals(assistantText, actualContent.value)
+
+        val actualReasoning = attributes.requireValue("gen_ai.completion.0.reasoning")
+        assertIs<HiddenString>(actualReasoning)
+        assertEquals(reasoningText, actualReasoning.value)
+        assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    }
+
+    @Test
+    fun testCompletionAttributesReasoningOnlyLeavesContentEmpty() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        val reasoningText = "Need to classify the latest user message."
+        val assistantMessage = Message.Assistant(
+            parts = listOf(MessagePart.Reasoning(reasoningText)),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "stop",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        val actualContent = attributes.requireValue("gen_ai.completion.0.content")
+        assertIs<HiddenString>(actualContent)
+        assertEquals("", actualContent.value)
+
+        val actualReasoning = attributes.requireValue("gen_ai.completion.0.reasoning")
+        assertIs<HiddenString>(actualReasoning)
+        assertEquals(reasoningText, actualReasoning.value)
+        assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    }
+
+    @Test
+    fun testPromptAttributesPreferTextOverReasoning() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val assistantText = "I'll look that up."
+        val reasoningText = "The user asked about coupons."
+        val inferenceSpan = createInferenceSpan(
+            MockLLMProvider(),
+            messages = listOf(
+                Message.Assistant(
+                    parts = listOf(
+                        MessagePart.Text(assistantText),
+                        MessagePart.Reasoning(reasoningText),
+                    ),
+                    metaInfo = ResponseMetaInfo.Empty,
+                )
+            ),
+        )
+
+        adapter.onBeforeSpanStarted(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        val actualContent = attributes.requireValue("gen_ai.prompt.0.content")
+        assertIs<HiddenString>(actualContent)
+        assertEquals(assistantText, actualContent.value)
+
+        val actualReasoning = attributes.requireValue("gen_ai.prompt.0.reasoning")
+        assertIs<HiddenString>(actualReasoning)
+        assertEquals(reasoningText, actualReasoning.value)
+    }
+
+    @Test
     fun `onBeforeSpanStarted adds langgraph metadata to node execute spans`() {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
