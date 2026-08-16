@@ -128,20 +128,33 @@ internal class LangfuseSpanAdapter(
 
             is Message.Assistant -> {
                 val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                // Reasoning parts with no content (e.g. Google's signature-only parts) must not
+                // suppress the text parts of the same message. Content-bearing parts are written
+                // to `gen_ai.prompt.{i}.reasoning`, not to `.content`.
                 val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                    .filter { it.content.isNotEmpty() }
                 val textParts = message.parts.filterIsInstance<MessagePart.Text>()
 
                 span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
+                // Langfuse Preview renders `*.content`. Keep that the visible assistant
+                // text (or tool calls).
                 span.addAttribute(
                     CustomAttribute(
                         "gen_ai.prompt.$index.content",
                         when {
                             toolCalls.isNotEmpty() -> HiddenString(encodeToolCallsContent(toolCalls))
-                            reasoningParts.isNotEmpty() -> HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })
                             else -> HiddenString(textParts.joinToString("\n") { it.text })
                         }
                     )
                 )
+                if (reasoningParts.isNotEmpty()) {
+                    span.addAttribute(
+                        CustomAttribute(
+                            "gen_ai.prompt.$index.reasoning",
+                            HiddenString(encodeReasoningContent(reasoningParts)),
+                        )
+                    )
+                }
             }
         }
     }
@@ -156,7 +169,8 @@ internal class LangfuseSpanAdapter(
             is Message.Assistant -> {
                 val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
                 // Reasoning parts with no content (e.g. Google's signature-only parts) must not
-                // suppress the text parts of the same message.
+                // suppress the text parts of the same message. Content-bearing parts are written
+                // to `gen_ai.completion.{i}.reasoning`, not to `.content`.
                 val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
                     .filter { it.content.isNotEmpty() }
                 val textParts = message.parts.filterIsInstance<MessagePart.Text>()
@@ -166,18 +180,20 @@ internal class LangfuseSpanAdapter(
                         span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(encodeToolCallsContent(toolCalls))))
                         span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", GenAIAttributes.Response.FinishReasonType.ToolCalls.id))
                     }
-                    reasoningParts.isNotEmpty() -> {
-                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })))
-                        message.finishReason?.let { reason ->
-                            span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
-                        }
-                    }
                     else -> {
                         span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
                         message.finishReason?.let { reason ->
                             span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
                         }
                     }
+                }
+                if (reasoningParts.isNotEmpty()) {
+                    span.addAttribute(
+                        CustomAttribute(
+                            "gen_ai.completion.$index.reasoning",
+                            HiddenString(encodeReasoningContent(reasoningParts)),
+                        )
+                    )
                 }
             }
 
@@ -220,3 +236,12 @@ internal fun encodeToolCallsContent(toolCalls: List<MessagePart.Tool.Call>): Str
     )
     return array.toString()
 }
+
+/**
+ * Joins [MessagePart.Reasoning] payloads the same way [LangfuseSpanAdapter] writes
+ * `gen_ai.prompt.{i}.reasoning` / `gen_ai.completion.{i}.reasoning`.
+ *
+ * Marked `internal` so the [LangfuseSpanAdapter] tests can compute the identical expected value.
+ */
+internal fun encodeReasoningContent(reasoningParts: List<MessagePart.Reasoning>): String =
+    reasoningParts.joinToString("\n") { it.content.joinToString("\n") }
