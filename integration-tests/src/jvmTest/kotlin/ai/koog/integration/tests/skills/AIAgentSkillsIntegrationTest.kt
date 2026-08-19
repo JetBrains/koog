@@ -77,7 +77,7 @@ class AIAgentSkillsIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("latestModels")
-    fun `integration test agent uses discovered skills prompt`(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun `integration_ test agent uses discovered skills prompt`(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         val skillsRoot = skillsRootDirectory()
         val discoveredSkills = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(skillsRoot))
@@ -146,7 +146,7 @@ class AIAgentSkillsIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("latestModels")
-    fun `integration test agent without skills does not activate skill tools`(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun `integration_ test agent without skills does not activate skill tools`(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         val pythonTool = ExecutePythonScriptTool()
 
@@ -195,7 +195,7 @@ class AIAgentSkillsIntegrationTest : AIAgentTestBase() {
 
     @ParameterizedTest
     @MethodSource("latestModels")
-    fun `integration test agent uses weather retrieval skill for weather request`(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun `integration_ test agent uses weather retrieval skill for weather request`(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         val skillsRoot = skillsRootDirectory()
         val discoveredSkills = discoverSkills(JVMFileSystemProvider.ReadOnly, listOf(skillsRoot))
