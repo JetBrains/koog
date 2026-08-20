@@ -30,6 +30,7 @@ nav:
             - Prompt executors: prompts/prompt-executors.md
           - Handling failures: prompts/handling-failures.md
           - LLM response caching: prompts/llm-response-caching.md
+      - Skills: skills.md
       - Strategies:
           - Pre-defined nodes and components: nodes-and-components.md
           - Predefined strategies: predefined-agent-strategies.md
