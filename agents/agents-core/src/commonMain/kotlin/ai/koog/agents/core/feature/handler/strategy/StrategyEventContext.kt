@@ -26,12 +26,16 @@ public interface StrategyEventContext : AgentLifecycleEventContext {
 
 /**
  * Represents the context for updating AI agent strategies during execution.
+ *
+ * @property input The input passed to [strategy]. Typed as `Any?` because [AIAgentStrategy] does not
+ * yet carry its input type (mirrors the same convention used by [StrategyCompletedContext.result]).
  */
 public class StrategyStartingContext(
     override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     override val context: AIAgentContext,
     override val strategy: AIAgentStrategy<*, *, *>,
+    public val input: Any?,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyStarting
 }

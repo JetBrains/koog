@@ -1,7 +1,7 @@
 # Built-in tools
 
-The Koog framework provides built-in tools for Kotlin and Java that handle common scenarios of agent-user interaction.
-
+Koog provides built-in tools for Kotlin and Java to help you quickly prototype and experiment with agent-user interaction.
+These tools are not intended for production use. To use them, add `ai.koog:agents-ext` to your dependencies.
 The following built-in tools are available:
 
 | Tool              | <div style="width:115px">Name</div> | Description                                                                                                              |

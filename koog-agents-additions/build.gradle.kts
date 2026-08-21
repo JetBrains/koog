@@ -19,6 +19,7 @@ val excluded = setOf(
     ":integration-tests",
     ":test-utils",
     ":koog-spring-boot-starter",
+    ":koog-bedrock-agentcore-runtime",
     ":koog-ktor",
     ":docs",
 
@@ -51,6 +52,13 @@ val excluded = setOf(
     ":koog-spring-ai:koog-spring-ai-starter-model-embedding",
     ":koog-spring-ai:koog-spring-ai-starter-chat-memory",
     ":koog-spring-ai:koog-spring-ai-starter-vector-store",
+
+    ":koog-spring-ai-v2",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-common",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-model-chat",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-model-embedding",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-chat-memory",
+    ":koog-spring-ai-v2:koog-spring-ai-v2-starter-vector-store",
 
     ":agents:agents-features:agents-features-longterm-memory-aws", // Optional AWS LongTermMemory provider
 
@@ -109,7 +117,8 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
     ":prompt:prompt-executor:prompt-executor-llms-all",
-    ":rag:rag-vector"
+    ":rag:rag-vector",
+    ":skills"
 )
 
 // Modules that do not publish a wasmJs artifact. They are filtered out of the

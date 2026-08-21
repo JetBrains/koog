@@ -1,3 +1,66 @@
+# 1.1.1
+> Published 17 July 2026
+
+## Major Features
+
+- **Spring AI 2.0 integration**: New set of Koog starters for Spring Boot 4+ / Spring AI 2.0 ([KG-851](https://youtrack.jetbrains.com/issue/KG-851), #2149)
+- **Spring WebClient support**: Added Spring `WebClient` as a `KoogHttpClient` implementation, and removed `@Experimental` annotations from the now-stable HTTP client APIs/modules ([KG-820](https://youtrack.jetbrains.com/issue/KG-820), #2065)
+- **Explicit model resolution via `DynamicPromptExecutor`**: New `PromptExecutor` subclass that exposes model resolution (`resolveModel`) as an explicit step before LLM dispatch, so decorators like `ContextualPromptExecutor` know which `LLModel` will be used. `MultiLLMPromptExecutor` and `RoutingLLMPromptExecutor` moved fallback logic into `resolveModel`; existing executors are unaffected (#2081)
+- **Non-text content in tool results**: Widened `Message.Tool.Result.parts` from `List<ContentPart.Text>` to `List<ContentPart>`, allowing tools to return images and files alongside text. Anthropic, OpenAI, and Gemini clients handle the new content types; unsupported API paths throw a clear error (#1852)
+- **`CliAIAgent` wrapper**: Introduced `CliAIAgent`, an `AIAgent` that calls another CLI agent (e.g. claude, codex) under the hood and can also be used as a graph node via `.asNode()` (#1413)
+- **Amazon Bedrock AgentCore Memory auto-discovery**: Added auto-discovery for Amazon Bedrock AgentCore `LongTermMemory` (#2003)
+- **Anthropic Claude Fable 5**: Added support for the newly released Anthropic Claude Fable 5 model (#2130)
+
+## Improvements
+
+- **Cache control on all message parts**: Introduced the ability to add `cacheControl` to all `MessagePart` objects, including tool results and `ResponsePart` (#2152)
+- **`freshHistory` parameter for subgraphs**: Added `freshHistory: Boolean = false` to `AIAgentSubgraph`, all `subgraph()` DSL overloads, all `subgraphWithTask()` overloads, and `setupSubgraphWithTask()`. When `true`, the subgraph starts with an empty conversation history and discards it upon completion — useful for optimizable subgraphs that should reason independently (#1889)
+- **Strategy input on `StrategyStartingContext`**: Added an `input: Any?` field (mirroring `result: Any?` on `StrategyCompletedContext`), so features can see what the agent was invoked with before the strategy starts (#2128)
+- **New Gemini profiles**: Added `Gemini3_1Pro_Preview`, `Gemini3_1FlashLite_Preview`, `Gemini3_1FlashLite`, and `Gemini3_5Flash` profiles (#2076)
+
+## Bug Fixes
+
+- **Spring AI 2.0 `ClassCastException`**: `SpringAiLLMClient` V2 now uses `chatModel.options.mutate()` to obtain a concrete-typed options builder, avoiding a `ClassCastException` thrown by Spring AI 2.0.0 when passing a generic `ChatOptions`. Added an integration test suite for the V2 client across OpenAI, Google, and Anthropic (#2155)
+- **`MessageTokenizer` storage key conflict**: Renamed the `MessageTokenizer` storage key from `agents-features-tracing` to `agents-features-message-tokenizer`, fixing a runtime exception when the Tracing feature is also installed (#2143, #2144)
+- **Generics preserved in `decodeFromJSONElement`**: `JacksonSerializer.decodeFromJSONElement` now passes the full `JavaType` to `treeToValue`, so parameterized types (e.g. `List<Person>`) no longer deserialize elements as `Map` (#2115, #2116)
+- **Double-encoded tool-call arguments**: Emit `Tool.Call.args` verbatim in OpenAI-compatible request paths (Chat Completions and Responses API) instead of re-encoding them, fixing `400` errors on strict backends like DashScope / Qwen (#2095, #2096)
+- **`@Contextual` properties in JSON schema**: Added a `SerialKind.CONTEXTUAL` branch to `GenericJsonSchemaGenerator` so `executeStructured` no longer crashes on `@Contextual` properties (e.g. `java.util.UUID`); resolves the contextual serializer or throws a descriptive error (#1486, #1875)
+- **Sealed type outputs in `subgraphWithTask`**: The schema converter now prefers `oneOf`/`anyOf` when present and `FinishTool` generates its schema with the polymorphic discriminator enabled, so `subgraphWithTask<Input, SealedOutput>` advertises and decodes sealed results correctly (#1941, #2013)
+- **Anthropic enum serialization**: Dropped an incorrect `.lowercase()` call in `AnthropicLLMClient` enum serialization (#2020, #2099)
+- **Streaming tool-call fragmentation**: `StreamFrameFlowBuilder.emitToolCallDelta()` now treats a repeated tool-call `id` as a continuation rather than a new tool call, so OpenAI-compatible providers that repeat the same `id` per chunk no longer fragment one tool call into multiple premature `ToolCallComplete` frames (#2002, #2052)
+- **`AIAgentGraphContext.fork`**: Fixed forking of the agent graph context (#1916, #2083)
+- **Bedrock Nova empty system prompt**: Added a guard for Bedrock Nova's empty system prompt array (#2089, #2090)
+- **Multiple tool calls in `LiteRTLLMClient`**: Support multiple tool calls per response (#2073)
+- **Nullable collections in OpenAI JSON schema**: `OpenAIStandardJsonSchemaGenerator` now emits `anyOf` for nullable `List<X>?` fields instead of `{"type": ["array", "null"]}`, which GPT-5-family strict mode rejects (#1930, #1943)
+
+## Breaking Changes in Beta modules
+
+- **Removed `PromptAugmenter.SECTION_SEPARATOR`** (#2074)
+
+## Build & CI
+
+- **ABI validation**: Enabled Kotlin's built-in ABI validation to catch breaking public-API changes before merge; beta modules are excluded automatically, and `./gradlew checkLegacyAbi` runs in CI (#2082)
+- **Lower Android minSdk**: Decreased Android `minSdk` from 35 to 23 to cover more devices (#2059, #2053)
+
+## Tests
+
+- **Long-term memory & auto-discovery**: Refactored AgentCore long-term memory integration tests and added an auto-discovery strategies test (#920, #2092)
+- **Integration checks**: Replaced a deprecated Google model, added DeepSeek, ACP message conversion, and metadata retrieval tests plus nullable tool schema support, and fixed the Ollama test run (#2075)
+- **Message-part round-trips**: Added provider round-trip coverage for the redesigned message parts (#2085)
+
+## Examples
+
+- **DataStore settings**: Unified the DataStore-based settings implementation across platforms, adding Okio-backed DataStore support on the web target (#1608)
+
+## Documentation
+
+- **Beta modules**: Added beta-module descriptions and versioning notes, updated after 1.0.0 (#2077)
+- **`koog-agents-additions`**: Documented the `koog-agents-additions` dependency in the Readme and Quickstart (#2086, #2087, #2091)
+
+## Deprecations
+
+- `Gemini 3 Pro Preview` is no longer supported; use `Gemini3_1Pro_Preview` instead (#2076)
+
 # 1.0.0
 > Published 21 May 2026
 

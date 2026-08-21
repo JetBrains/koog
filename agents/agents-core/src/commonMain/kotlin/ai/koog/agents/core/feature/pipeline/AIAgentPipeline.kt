@@ -217,6 +217,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
      * @param executionInfo The execution information for the strategy event
      * @param context The context of the strategy execution
      * @param strategy The strategy that has started execution
+     * @param input The input passed to the strategy
      */
     @InternalAgentsApi
     public override suspend fun onStrategyStarting(
@@ -224,6 +225,7 @@ public expect abstract class AIAgentPipeline(agentConfig: AIAgentConfig, clock: 
         executionInfo: AgentExecutionInfo,
         context: AIAgentContext,
         strategy: AIAgentStrategy<*, *, *>,
+        input: Any?,
     )
 
     /**

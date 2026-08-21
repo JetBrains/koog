@@ -32,6 +32,7 @@ public open class AgentSubgraphBuilder<SubgraphBuilder : AgentSubgraphBuilder<Su
     protected var llmModel: LLModel? = null,
     protected var llmParams: LLMParams? = null,
     protected var responseProcessor: ResponseProcessor? = null,
+    protected var freshHistory: Boolean = false,
 ) {
     private fun self(): SubgraphBuilder = this as SubgraphBuilder
 
@@ -99,6 +100,18 @@ public open class AgentSubgraphBuilder<SubgraphBuilder : AgentSubgraphBuilder<Su
     }
 
     /**
+     * Configures the subgraph to start with only the parent's system messages, discarding
+     * inherited user/assistant conversation turns. The subgraph's own history is discarded
+     * upon completion, so it does not affect the parent's conversation.
+     *
+     * @param freshHistory When true, the subgraph starts with only inherited system messages.
+     *   Defaults to false (full history inherited).
+     */
+    public fun withFreshHistory(freshHistory: Boolean): SubgraphBuilder = self().apply {
+        this.freshHistory = freshHistory
+    }
+
+    /**
      * Configures the builder with the specified input type and returns a new instance of
      * AIAgentSubgraphBuilderWithInput, allowing further configuration for the specified input type.
      *
@@ -110,7 +123,8 @@ public open class AgentSubgraphBuilder<SubgraphBuilder : AgentSubgraphBuilder<Su
             llmModel,
             llmParams,
             responseProcessor,
-            outputClass
+            outputClass,
+            freshHistory,
         )
 }
 
@@ -129,13 +143,15 @@ public open class AIAgentSubgraphBuilderWithInput<Input : Any, SubgraphBuilder :
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     responseProcessor: ResponseProcessor? = null,
-    protected val inputClass: Class<Input>
+    protected val inputClass: Class<Input>,
+    freshHistory: Boolean = false,
 ) : AgentSubgraphBuilder<SubgraphBuilder>(
     name,
     toolSelectionStrategy,
     llmModel,
     llmParams,
     responseProcessor,
+    freshHistory,
 ) {
     /**
      * Specifies the output type for the subgraph and transitions to a builder capable of handling
@@ -153,7 +169,8 @@ public open class AIAgentSubgraphBuilderWithInput<Input : Any, SubgraphBuilder :
             llmParams,
             responseProcessor,
             inputClass,
-            outputClass
+            outputClass,
+            freshHistory,
         )
 
     /**
@@ -176,7 +193,8 @@ public open class AIAgentSubgraphBuilderWithInput<Input : Any, SubgraphBuilder :
             responseProcessor,
             inputClass,
             OutputOption.Verification(),
-            defineVerificationTask
+            defineVerificationTask,
+            freshHistory = freshHistory,
         )
 
     /**
@@ -199,7 +217,8 @@ public open class AIAgentSubgraphBuilderWithInput<Input : Any, SubgraphBuilder :
             responseProcessor,
             inputClass,
             OutputOption.Verification(),
-            defineTask = { input, _ -> defineVerificationTask.execute(input) }
+            defineTask = { input, _ -> defineVerificationTask.execute(input) },
+            freshHistory = freshHistory,
         )
 
     /**
@@ -219,7 +238,8 @@ public open class AIAgentSubgraphBuilderWithInput<Input : Any, SubgraphBuilder :
             llmParams,
             responseProcessor,
             inputClass,
-            finishTool
+            finishTool,
+            freshHistory,
         )
 }
 
@@ -245,6 +265,7 @@ public class SubgraphWithFinishToolBuilder<Input : Any, Output : Any, OutputTran
     private val responseProcessor: ResponseProcessor? = null,
     private val inputClass: Class<Input>,
     private val finishTool: Tool<Output, OutputTransformed>,
+    private val freshHistory: Boolean = false,
 ) {
     /**
      * Configures a task to be executed as part of the subgraph.
@@ -262,7 +283,8 @@ public class SubgraphWithFinishToolBuilder<Input : Any, Output : Any, OutputTran
             responseProcessor,
             inputClass,
             OutputOption.ByFinishTool(finishTool),
-            defineTask
+            defineTask,
+            freshHistory = freshHistory,
         )
 
     /**
@@ -281,7 +303,8 @@ public class SubgraphWithFinishToolBuilder<Input : Any, Output : Any, OutputTran
             responseProcessor,
             inputClass,
             OutputOption.ByFinishTool(finishTool),
-            defineTask = { input, _ -> defineTask.execute(input) }
+            defineTask = { input, _ -> defineTask.execute(input) },
+            freshHistory = freshHistory,
         )
 }
 
@@ -300,12 +323,14 @@ public abstract class TypedAIAgentSubgraphBuilderBase<Input : Any, Output : Any,
     responseProcessor: ResponseProcessor? = null,
     protected val inputClass: Class<Input>,
     protected val outputOption: OutputOption<Output>,
+    freshHistory: Boolean = false,
 ) : AgentSubgraphBuilder<SubgraphBuilder>(
     name,
     toolSelectionStrategy,
     llmModel,
     llmParams,
-    responseProcessor
+    responseProcessor,
+    freshHistory,
 ) {
     protected val inputTypeToken: TypeToken = TypeToken.of(inputClass)
 }
@@ -324,6 +349,7 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
     responseProcessor: ResponseProcessor? = null,
     inputClass: Class<Input>,
     outputClass: Class<Output>,
+    freshHistory: Boolean = false,
 ) : TypedAIAgentSubgraphBuilderBase<Input, Output, TypedAIAgentSubgraphBuilder<Input, Output>>(
     name,
     toolSelectionStrategy,
@@ -331,7 +357,8 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
     llmParams,
     responseProcessor,
     inputClass,
-    OutputOption.ByClass(outputClass)
+    OutputOption.ByClass(outputClass),
+    freshHistory,
 ) {
     private val outputClass: Class<Output> = (outputOption as OutputOption.ByClass<Output>).outputClass
 
@@ -353,7 +380,8 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
             responseProcessor,
             inputClass,
             outputClass,
-            buildSubgraph
+            buildSubgraph,
+            freshHistory,
         )
 
     /**
@@ -372,7 +400,8 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
             responseProcessor,
             inputClass,
             outputOption,
-            defineTask
+            defineTask,
+            freshHistory = freshHistory,
         )
 
     /**
@@ -391,7 +420,8 @@ public class TypedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
             responseProcessor,
             inputClass,
             outputOption,
-            defineTask = { input, _ -> defineTask.execute(input) }
+            defineTask = { input, _ -> defineTask.execute(input) },
+            freshHistory = freshHistory,
         )
 }
 
@@ -425,7 +455,8 @@ public class DefinedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
     responseProcessor: ResponseProcessor? = null,
     inputClass: Class<Input>,
     outputClass: Class<Output>,
-    private val buildSubgraph: GraphBuilderAction<Input, Output>
+    private val buildSubgraph: GraphBuilderAction<Input, Output>,
+    freshHistory: Boolean = false,
 ) : TypedAIAgentSubgraphBuilderBase<Input, Output, TypedAIAgentSubgraphBuilder<Input, Output>>(
     name,
     toolSelectionStrategy,
@@ -433,7 +464,8 @@ public class DefinedAIAgentSubgraphBuilder<Input : Any, Output : Any>(
     llmParams,
     responseProcessor,
     inputClass,
-    OutputOption.ByClass(outputClass)
+    OutputOption.ByClass(outputClass),
+    freshHistory,
 ) {
     /**
      * Holds the `Class` object representing the output type expected from the operation.
@@ -489,6 +521,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
     private val defineTask: ContextualAction<Input, String>,
     private var parallelTools: Boolean = false,
     private var assistantResponseRepeatMax: Int? = null,
+    freshHistory: Boolean = false,
 ) : TypedAIAgentSubgraphBuilderBase<Input, Output, SubgraphWithTaskBuilder<Input, Output>>(
     name,
     toolSelectionStrategy,
@@ -496,7 +529,8 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
     llmParams,
     responseProcessor,
     inputClass,
-    outputOption
+    outputOption,
+    freshHistory,
 ) {
     /**
      * Configures the run mode for*/
@@ -531,6 +565,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
+                freshHistory = freshHistory,
             ) { input ->
                 val ctx = this
                 withContextReentrant(ctx.config.strategyDispatcher) {
@@ -552,6 +587,7 @@ public class SubgraphWithTaskBuilder<Input : Any, Output : Any>(
                 parallelTools = parallelTools,
                 assistantResponseRepeatMax = assistantResponseRepeatMax,
                 responseProcessor = responseProcessor,
+                freshHistory = freshHistory,
             ) { input ->
                 val ctx = this
                 withContextReentrant(ctx.config.strategyDispatcher) {

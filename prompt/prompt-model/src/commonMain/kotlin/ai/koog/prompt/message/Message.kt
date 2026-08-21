@@ -245,15 +245,15 @@ public sealed interface Message {
 @Serializable
 public sealed interface MessagePart {
 
+    /** Optional cache-control directive for the provider's prompt-caching feature. */
+    public val cacheControl: CacheControl?
+
     /**
      * A part that can appear in a request sent to the LLM.
      * All request parts carry an optional [cacheControl] directive.
      */
     @Serializable
-    public sealed interface RequestPart : MessagePart {
-        /** Optional cache-control directive for the provider's prompt-caching feature. */
-        public val cacheControl: CacheControl?
-    }
+    public sealed interface RequestPart : MessagePart
 
     /**
      * A part that can appear in a response received from the LLM
@@ -306,6 +306,7 @@ public sealed interface MessagePart {
         public val summary: List<String>? = null,
         public val encrypted: String? = null,
         public val id: String? = null,
+        override val cacheControl: CacheControl? = null,
     ) : ResponsePart {
 
         /**
@@ -319,11 +320,13 @@ public sealed interface MessagePart {
             summary: List<String>? = null,
             encrypted: String? = null,
             id: String? = null,
+            cacheControl: CacheControl? = null
         ) : this(
             listOf(content),
             summary,
             encrypted,
             id,
+            cacheControl
         )
     }
 
@@ -349,6 +352,7 @@ public sealed interface MessagePart {
             public val id: String? = null,
             override val tool: String,
             public val args: String,
+            override val cacheControl: CacheControl? = null,
         ) : Tool, ResponsePart {
 
             // TODO: replace with JSONObject?
@@ -367,10 +371,12 @@ public sealed interface MessagePart {
                 id: String? = null,
                 tool: String,
                 args: JsonObject,
+                cacheControl: CacheControl? = null,
             ) : this(
                 id = id,
                 tool = tool,
-                args = Json.encodeToString(args)
+                args = Json.encodeToString(args),
+                cacheControl = cacheControl
             )
         }
 
@@ -382,20 +388,27 @@ public sealed interface MessagePart {
          * @property parts The parts of the tool result. May contain text and attachment parts such as images or files.
          *   Note that not all LLM providers support non-text content in tool results.
          * @property isError Whether this tool result represents an error. Defaults to false.
+         * @property cacheControl Optional cache-control directive for the provider's prompt-caching feature.
          */
         @Serializable
-        public data class Result constructor(
+        public data class Result @JvmOverloads constructor(
             public val id: String? = null,
             override val tool: String,
             public val parts: List<ContentPart>,
             public val isError: Boolean = false,
+            override val cacheControl: CacheControl? = null,
         ) : Tool, RequestPart {
-            // Tool result does not support cache control
-            override val cacheControl: CacheControl? = null
 
             /** Convenience constructor for a single text output. */
-            public constructor(id: String? = null, tool: String, output: String, isError: Boolean = false) :
-                this(id, tool, listOf(Text(output)), isError)
+            @JvmOverloads
+            public constructor(
+                id: String? = null,
+                tool: String,
+                output: String,
+                isError: Boolean = false,
+                cacheControl: CacheControl? = null,
+            ) :
+                this(id, tool, listOf(Text(output)), isError, cacheControl)
 
             /** Returns the concatenated text content of all text parts. */
             public val output: String

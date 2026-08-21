@@ -55,8 +55,7 @@ public class JacksonSerializer(
     override fun <T> decodeFromJSONElement(value: JSONElement, typeToken: TypeToken): T {
         val jsonNode = value.toJacksonJsonNode()
         val javaType = resolveJavaType(typeToken)
-        @Suppress("UNCHECKED_CAST")
-        return objectMapper.treeToValue(jsonNode, javaType.rawClass) as T
+        return objectMapper.treeToValue(jsonNode, javaType)
     }
 
     @OptIn(InternalKoogSerializationApi::class)

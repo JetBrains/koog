@@ -172,8 +172,9 @@ public class PromptBuilder internal constructor(
         output: String,
         id: String? = null,
         isError: Boolean = false,
+        cacheControl: CacheControl? = null,
     ): PromptBuilder = apply {
-        user { toolResult(MessagePart.Tool.Result(id, tool, output, isError)) }
+        user { toolResult(MessagePart.Tool.Result(id, tool, output, isError, cacheControl)) }
     }
 
     /**
@@ -247,6 +248,7 @@ public class PromptBuilder internal constructor(
         id: String? = null,
         summary: String? = null,
         encrypted: String? = null,
+        cacheControl: CacheControl? = null,
     ): PromptBuilder = apply {
         assistant {
             reasoning(
@@ -255,6 +257,7 @@ public class PromptBuilder internal constructor(
                     summary = summary?.let { listOf(it) },
                     encrypted = encrypted,
                     id = id,
+                    cacheControl = cacheControl,
                 )
             )
         }
@@ -271,13 +274,15 @@ public class PromptBuilder internal constructor(
         tool: String,
         args: String,
         id: String? = null,
+        cacheControl: CacheControl? = null,
     ): PromptBuilder = apply {
         assistant {
             toolCall(
                 MessagePart.Tool.Call(
                     id = id,
                     tool = tool,
-                    args = args
+                    args = args,
+                    cacheControl = cacheControl
                 )
             )
         }
@@ -289,13 +294,15 @@ public class PromptBuilder internal constructor(
         tool: String,
         args: JsonObject,
         id: String? = null,
+        cacheControl: CacheControl? = null,
     ): PromptBuilder = apply {
         assistant {
             toolCall(
                 MessagePart.Tool.Call(
                     id = id,
                     tool = tool,
-                    args = args
+                    args = args,
+                    cacheControl = cacheControl
                 )
             )
         }

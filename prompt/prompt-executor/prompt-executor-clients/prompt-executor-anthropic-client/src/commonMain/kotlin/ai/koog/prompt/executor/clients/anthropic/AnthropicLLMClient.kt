@@ -510,6 +510,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 id = it.id ?: Uuid.random().toString(),
                                 name = it.tool,
                                 input = it.argsJson,
+                                cacheControl = it.cacheControl?.toAnthropicCacheControl()
                             )
                         )
                     }
@@ -539,7 +540,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 toolUseId = part.id ?: "",
                                 content = part.toAnthropicToolResultContent(model),
                                 isError = part.isError,
-                                // TODO: check if anthropic supports cache control in tool result
+                                cacheControl = part.cacheControl?.toAnthropicCacheControl()
                             )
                         )
                     }
@@ -616,7 +617,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
     private fun MessagePart.Tool.Result.toAnthropicToolResultContent(model: LLModel): List<AnthropicContent> =
         parts.map { part ->
             when (part) {
-                is MessagePart.Text -> AnthropicContent.Text(part.text)
+                is MessagePart.Text -> AnthropicContent.Text(
+                    part.text,
+                    cacheControl = part.cacheControl?.toAnthropicCacheControl()
+                )
 
                 is MessagePart.Attachment -> {
                     when (val source = part.source) {
@@ -629,7 +633,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                     "Unsupported image attachment content in tool result: ${content::class}"
                                 )
                             }
-                            AnthropicContent.Image(imageSource)
+                            AnthropicContent.Image(
+                                imageSource,
+                                cacheControl = part.cacheControl?.toAnthropicCacheControl()
+                            )
                         }
 
                         is AttachmentSource.File -> {
@@ -638,7 +645,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                 is AttachmentContent.Binary -> DocumentSource.Base64(content.asBase64(), source.mimeType)
                                 is AttachmentContent.PlainText -> DocumentSource.PlainText(content.text, source.mimeType)
                             }
-                            AnthropicContent.Document(documentSource)
+                            AnthropicContent.Document(
+                                documentSource,
+                                cacheControl = part.cacheControl?.toAnthropicCacheControl()
+                            )
                         }
 
                         else -> throw LLMClientException(

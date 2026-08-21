@@ -1062,8 +1062,8 @@ public abstract class ai/koog/agents/core/agent/entity/AIAgentStrategyBlocking :
 
 public final class ai/koog/agents/core/agent/entity/AIAgentSubgraph : ai/koog/agents/core/agent/entity/AIAgentSubgraphBase {
 	public static final field Companion Lai/koog/agents/core/agent/entity/AIAgentSubgraph$Companion;
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun builder ()Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
 	public static final fun builder (Ljava/lang/String;)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
 }
@@ -1078,8 +1078,8 @@ public class ai/koog/agents/core/agent/entity/AIAgentSubgraphBase : ai/koog/agen
 	public static final field Companion Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase$Companion;
 	public static final field FINISH_NODE_PREFIX Ljava/lang/String;
 	public static final field START_NODE_PREFIX Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/StartNode;Lai/koog/agents/core/agent/entity/FinishNode;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun enforceExecutionPoint (Lai/koog/agents/core/agent/entity/AIAgentNodeBase;Ljava/lang/Object;)V
 	public fun execute (Lai/koog/agents/core/agent/context/AIAgentGraphContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getExecutionPoint ()Lai/koog/agents/core/agent/entity/ExecutionPoint;
@@ -1095,8 +1095,8 @@ public final class ai/koog/agents/core/agent/entity/AIAgentSubgraphBase$Companio
 }
 
 public class ai/koog/agents/core/agent/entity/AIAgentSubgraphBuilderWithInput : ai/koog/agents/core/agent/entity/AgentSubgraphBuilder {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	protected final fun getInputClass ()Ljava/lang/Class;
 	public final fun withFinishTool (Lai/koog/agents/core/tools/Tool;)Lai/koog/agents/core/agent/entity/SubgraphWithFinishToolBuilder;
 	public final fun withOutput (Ljava/lang/Class;)Lai/koog/agents/core/agent/entity/TypedAIAgentSubgraphBuilder;
@@ -1110,8 +1110,9 @@ public final class ai/koog/agents/core/agent/entity/AgentEdgeBuilder {
 }
 
 public class ai/koog/agents/core/agent/entity/AgentSubgraphBuilder {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun getFreshHistory ()Z
 	protected final fun getLlmModel ()Lai/koog/prompt/llm/LLModel;
 	protected final fun getLlmParams ()Lai/koog/prompt/params/LLMParams;
 	protected final fun getName ()Ljava/lang/String;
@@ -1119,11 +1120,13 @@ public class ai/koog/agents/core/agent/entity/AgentSubgraphBuilder {
 	protected final fun getToolSelectionStrategy ()Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;
 	public final fun limitedTools (Ljava/util/List;)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
 	public final fun limitedTools ([Lai/koog/agents/core/tools/reflect/ToolSet;)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
+	protected final fun setFreshHistory (Z)V
 	protected final fun setLlmModel (Lai/koog/prompt/llm/LLModel;)V
 	protected final fun setLlmParams (Lai/koog/prompt/params/LLMParams;)V
 	protected final fun setResponseProcessor (Lai/koog/prompt/processor/ResponseProcessor;)V
 	protected final fun setToolSelectionStrategy (Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;)V
 	public final fun usingLLM (Lai/koog/prompt/llm/LLModel;)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
+	public final fun withFreshHistory (Z)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
 	public final fun withInput (Ljava/lang/Class;)Lai/koog/agents/core/agent/entity/AIAgentSubgraphBuilderWithInput;
 	public final fun withLLMParams (Lai/koog/prompt/params/LLMParams;)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
 	public final fun withResponseProcessor (Lai/koog/prompt/processor/ResponseProcessor;)Lai/koog/agents/core/agent/entity/AgentSubgraphBuilder;
@@ -1162,8 +1165,8 @@ public final class ai/koog/agents/core/agent/entity/DefinedAIAgentNodeBuilder {
 }
 
 public final class ai/koog/agents/core/agent/entity/DefinedAIAgentSubgraphBuilder : ai/koog/agents/core/agent/entity/TypedAIAgentSubgraphBuilderBase {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;Lai/koog/agents/core/agent/entity/GraphBuilderAction;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;Lai/koog/agents/core/agent/entity/GraphBuilderAction;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;Lai/koog/agents/core/agent/entity/GraphBuilderAction;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;Lai/koog/agents/core/agent/entity/GraphBuilderAction;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lai/koog/agents/core/agent/entity/AIAgentSubgraphBase;
 }
 
@@ -1282,15 +1285,15 @@ public final class ai/koog/agents/core/agent/entity/SubgraphMetadata {
 }
 
 public final class ai/koog/agents/core/agent/entity/SubgraphWithFinishToolBuilder {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/tools/Tool;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/tools/Tool;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/tools/Tool;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/tools/Tool;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun withTask (Lai/koog/agents/core/agent/entity/ContextualAction;)Lai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder;
 	public final fun withTask (Lai/koog/agents/core/agent/entity/SimpleAction;)Lai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder;
 }
 
 public final class ai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder : ai/koog/agents/core/agent/entity/TypedAIAgentSubgraphBuilderBase {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;Lai/koog/agents/core/agent/entity/ContextualAction;ZLjava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;Lai/koog/agents/core/agent/entity/ContextualAction;ZLjava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;Lai/koog/agents/core/agent/entity/ContextualAction;ZLjava/lang/Integer;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;Lai/koog/agents/core/agent/entity/ContextualAction;ZLjava/lang/Integer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun assistantResponseRepeatMax (I)Lai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder;
 	public final fun build ()Lai/koog/agents/core/agent/entity/AIAgentSubgraph;
 	public final fun parallelTools (Z)Lai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder;
@@ -1344,16 +1347,16 @@ public final class ai/koog/agents/core/agent/entity/TypedAIAgentNodeBuilder {
 }
 
 public final class ai/koog/agents/core/agent/entity/TypedAIAgentSubgraphBuilder : ai/koog/agents/core/agent/entity/TypedAIAgentSubgraphBuilderBase {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Ljava/lang/Class;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun define (Lai/koog/agents/core/agent/entity/GraphBuilderAction;)Lai/koog/agents/core/agent/entity/DefinedAIAgentSubgraphBuilder;
 	public final fun withTask (Lai/koog/agents/core/agent/entity/ContextualAction;)Lai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder;
 	public final fun withTask (Lai/koog/agents/core/agent/entity/SimpleAction;)Lai/koog/agents/core/agent/entity/SubgraphWithTaskBuilder;
 }
 
 public abstract class ai/koog/agents/core/agent/entity/TypedAIAgentSubgraphBuilderBase : ai/koog/agents/core/agent/entity/AgentSubgraphBuilder {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Ljava/lang/Class;Lai/koog/agents/core/agent/OutputOption;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	protected final fun getInputClass ()Ljava/lang/Class;
 	protected final fun getInputTypeToken ()Lai/koog/serialization/TypeToken;
 	protected final fun getOutputOption ()Lai/koog/agents/core/agent/OutputOption;
@@ -1707,8 +1710,8 @@ public final class ai/koog/agents/core/dsl/builder/AIAgentParallelNodesMergeCont
 }
 
 public final class ai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilder : ai/koog/agents/core/dsl/builder/AIAgentSubgraphBuilderBase, ai/koog/agents/core/dsl/builder/BaseBuilder {
-	public fun <init> (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;)V
-	public synthetic fun <init> (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/serialization/TypeToken;Lai/koog/serialization/TypeToken;Lai/koog/agents/core/agent/entity/ToolSelectionStrategy;Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/params/LLMParams;Lai/koog/prompt/processor/ResponseProcessor;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun build ()Lai/koog/agents/core/dsl/builder/AIAgentSubgraphDelegate;
 	public synthetic fun build ()Ljava/lang/Object;
 	public final fun getName ()Ljava/lang/String;
@@ -2972,11 +2975,12 @@ public abstract interface class ai/koog/agents/core/feature/handler/strategy/Str
 }
 
 public final class ai/koog/agents/core/feature/handler/strategy/StrategyStartingContext : ai/koog/agents/core/feature/handler/strategy/StrategyEventContext {
-	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/agents/core/agent/execution/AgentExecutionInfo;Lai/koog/agents/core/agent/context/AIAgentContext;Lai/koog/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;)V
 	public fun getContext ()Lai/koog/agents/core/agent/context/AIAgentContext;
 	public fun getEventId ()Ljava/lang/String;
 	public fun getEventType ()Lai/koog/agents/core/feature/handler/AgentLifecycleEventType;
 	public fun getExecutionInfo ()Lai/koog/agents/core/agent/execution/AgentExecutionInfo;
+	public final fun getInput ()Ljava/lang/Object;
 	public fun getStrategy ()Lai/koog/agents/core/agent/entity/AIAgentStrategy;
 }
 

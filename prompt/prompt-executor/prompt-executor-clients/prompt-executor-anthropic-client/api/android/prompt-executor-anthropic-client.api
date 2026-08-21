@@ -67,6 +67,7 @@ public class ai/koog/prompt/executor/clients/anthropic/AnthropicLLMClient : ai/k
 }
 
 public final class ai/koog/prompt/executor/clients/anthropic/AnthropicModels : ai/koog/prompt/executor/clients/LLModelDefinitions {
+	public static final field Fable_5 Lai/koog/prompt/llm/LLModel;
 	public static final field Haiku_4_5 Lai/koog/prompt/llm/LLModel;
 	public static final field INSTANCE Lai/koog/prompt/executor/clients/anthropic/AnthropicModels;
 	public static final field Opus_4 Lai/koog/prompt/llm/LLModel;

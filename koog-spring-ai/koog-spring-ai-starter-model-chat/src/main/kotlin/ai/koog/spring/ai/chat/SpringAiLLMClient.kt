@@ -279,7 +279,8 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ModerationModel.call() failed: ${e.message}", e)
         }
-        springModerationResultToKoogModerationResult(response.result.output)
+        val result = response.result ?: throw LLMClientException(clientName, "Moderation result is null")
+        springModerationResultToKoogModerationResult(result.output)
     }
 
     override fun close() {
