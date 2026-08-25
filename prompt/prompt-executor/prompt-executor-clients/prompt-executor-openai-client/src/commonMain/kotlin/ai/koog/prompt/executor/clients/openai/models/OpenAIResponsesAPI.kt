@@ -12,6 +12,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -19,6 +20,7 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonDecoder
@@ -1340,6 +1342,8 @@ public enum class Truncation {
  * @property id Unique identifier for this Response.
  * @property incompleteDetails Details about why the response is incomplete.
  * @property instructions A system (or developer) message inserted into the model's context.
+ * May be returned by the API either as a list of items or as a single string,
+ * in which case it is represented as a single-element list.
  *
  * When using along with `previous_response_id`,
  * the instructions from a previous response will not be carried over to the next response.
@@ -1421,6 +1425,7 @@ internal class OpenAIResponsesAPIResponse(
     val error: ResponseError? = null,
     override val id: String,
     val incompleteDetails: IncompleteDetails? = null,
+    @Serializable(with = ItemListOrSingleStringSerializer::class)
     val instructions: List<Item>? = null,
     val maxOutputTokens: Int? = null,
     val maxToolCalls: Int? = null,
@@ -2275,6 +2280,32 @@ internal object ItemTextSerializer : KSerializer<Item.Text> {
 
     override fun deserialize(decoder: Decoder): Item.Text {
         return Item.Text(decoder.decodeString())
+    }
+}
+
+/**
+ * Serializer for a list of [Item] that also accepts a single item (for example, a plain string)
+ * instead of an array, wrapping it into a single-element list.
+ *
+ * Serialization always produces an array.
+ */
+internal object ItemListOrSingleStringSerializer : KSerializer<List<Item>> {
+    private val delegate: KSerializer<List<Item>> = ListSerializer(ItemPolymorphicSerializer)
+
+    override val descriptor: SerialDescriptor = delegate.descriptor
+
+    override fun serialize(encoder: Encoder, value: List<Item>) {
+        encoder.encodeSerializableValue(delegate, value)
+    }
+
+    override fun deserialize(decoder: Decoder): List<Item> {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: return decoder.decodeSerializableValue(delegate)
+
+        return when (val element = jsonDecoder.decodeJsonElement()) {
+            is JsonArray -> jsonDecoder.json.decodeFromJsonElement(delegate, element)
+            else -> listOf(jsonDecoder.json.decodeFromJsonElement(ItemPolymorphicSerializer, element))
+        }
     }
 }
 

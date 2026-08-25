@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
+import kotlinx.serialization.json.JsonArrayBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -179,7 +180,7 @@ class OpenAIResponsesAPIResponseTest {
         }
 
     @Test
-    fun `test OpenAIResponsesAPIResponse deserialization from JSON`() =
+    fun `test OpenAIResponsesAPIResponse deserialization from JSON with instructions as string`() =
         runWithBothJsonConfigurations("response deserialization") { json ->
             val jsonInput = buildJsonObject {
                 put("created_at", JsonPrimitive(1699500000L))
@@ -213,6 +214,7 @@ class OpenAIResponsesAPIResponseTest {
                 put("parallelToolCalls", JsonPrimitive(true))
                 put("status", JsonPrimitive("completed"))
                 put("text", buildJsonObject { })
+                put("instructions", JsonPrimitive("test1"))
             }
 
             json.decodeFromJsonElement<OpenAIResponsesAPIResponse>(jsonInput).shouldNotBeNull {
@@ -223,6 +225,68 @@ class OpenAIResponsesAPIResponseTest {
                 output shouldHaveSize 1
                 parallelToolCalls shouldBe true
                 status shouldBe OpenAIInputStatus.COMPLETED
+                instructions.shouldNotBeNull {
+                    shouldHaveSize(1)
+                    single().shouldBeTypeOf<Item.Text>().value shouldBe "test1"
+                }
+            }
+        }
+
+    @Test
+    fun `test OpenAIResponsesAPIResponse deserialization with instructions as list of string`() =
+        runWithBothJsonConfigurations("response deserialization with instructions list of String") { json ->
+            val jsonInput = buildJsonObject {
+                put("created_at", JsonPrimitive(1699500000L))
+                put("id", JsonPrimitive("response_790"))
+                put("model", JsonPrimitive("gpt-4"))
+                put("output", buildJsonArray { })
+                put("parallelToolCalls", JsonPrimitive(true))
+                put("status", JsonPrimitive("completed"))
+                put("text", buildJsonObject { })
+                put(
+                    "instructions",
+                    buildJsonArray {
+                        add(JsonPrimitive("test1"))
+                        add(JsonPrimitive("test2"))
+                    }
+                )
+            }
+
+            json.decodeFromJsonElement<OpenAIResponsesAPIResponse>(jsonInput).shouldNotBeNull {
+                instructions.shouldNotBeNull {
+                    shouldHaveSize(2)
+                    get(0).shouldBeTypeOf<Item.Text>().value shouldBe "test1"
+                    get(1).shouldBeTypeOf<Item.Text>().value shouldBe "test2"
+                }
+            }
+        }
+
+    @Test
+    fun `test OpenAIResponsesAPIResponse deserialization with instructions as list of Item`() =
+        runWithBothJsonConfigurations("response deserialization with instructions list of Item") { json ->
+            val jsonInput = buildJsonObject {
+                put("created_at", JsonPrimitive(1699500000L))
+                put("id", JsonPrimitive("response_790"))
+                put("model", JsonPrimitive("gpt-4"))
+                put("output", buildJsonArray { })
+                put("parallelToolCalls", JsonPrimitive(true))
+                put("status", JsonPrimitive("completed"))
+                put("text", buildJsonObject { })
+                put(
+                    "instructions",
+                    buildJsonArray {
+                        createItemInputMessage("developer1")
+                        createItemInputMessage("developer2")
+                    }
+                )
+            }
+
+            json.decodeFromJsonElement<OpenAIResponsesAPIResponse>(jsonInput).shouldNotBeNull {
+                instructions.shouldNotBeNull {
+                    shouldHaveSize(2)
+                    get(0).shouldBeTypeOf<Item.InputMessage>().role shouldBe "developer1"
+                    get(1).shouldBeTypeOf<Item.InputMessage>().role shouldBe "developer2"
+                }
             }
         }
 
@@ -479,5 +543,25 @@ class OpenAIResponsesAPIResponseTest {
             inputSchema["type"]?.jsonPrimitive?.content shouldBe "object"
             annotations?.get("description")?.jsonPrimitive?.content shouldBe "A search tool"
         }
+    }
+
+    private fun JsonArrayBuilder.createItemInputMessage(role: String) {
+        add(
+            buildJsonObject {
+                put("type", JsonPrimitive("message"))
+                put("role", JsonPrimitive(role))
+                put(
+                    "content",
+                    buildJsonArray {
+                        add(
+                            buildJsonObject {
+                                put("type", JsonPrimitive("input_text"))
+                                put("text", JsonPrimitive("test2"))
+                            }
+                        )
+                    }
+                )
+            }
+        )
     }
 }
