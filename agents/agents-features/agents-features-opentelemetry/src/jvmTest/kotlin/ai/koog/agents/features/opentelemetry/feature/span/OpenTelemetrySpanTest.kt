@@ -108,6 +108,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                     "gen_ai.provider.name" to model.provider.id,
                     "gen_ai.agent.id" to agentId,
+                    "gen_ai.conversation.id" to runId,
                     "gen_ai.request.model" to model.id,
                     "system_instructions" to getSystemInstructionsString(listOf(systemPrompt)),
                     "koog.event.id" to actualCreateAgentEvent

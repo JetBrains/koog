@@ -40,6 +40,7 @@ class LangfuseSpanAdapterTest {
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
+        val runId = "run-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
@@ -47,6 +48,7 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
+            runId = runId,
             model = model,
             messages = emptyList()
         )
@@ -58,7 +60,6 @@ class LangfuseSpanAdapterTest {
         }
 
         val invokeAgentSpanId = "invoke-agent-span-id"
-        val runId = "run-id"
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
@@ -201,6 +202,7 @@ class LangfuseSpanAdapterTest {
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
+        val runId = "run-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
@@ -208,12 +210,12 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
+            runId = runId,
             model = model,
             messages = emptyList()
         )
 
         val invokeSpanId = "invoke-agent-span-id"
-        val runId = "run-id"
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
@@ -290,6 +292,7 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
+            runId = runId,
             model = model,
             messages = emptyList()
         )

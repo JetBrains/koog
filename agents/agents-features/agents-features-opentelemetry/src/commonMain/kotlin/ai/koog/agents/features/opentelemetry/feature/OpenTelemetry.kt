@@ -313,6 +313,7 @@ public class OpenTelemetry {
                     id = eventContext.eventId,
                     model = eventContext.agent.agentConfig.model,
                     agentId = eventContext.context.agentId,
+                    runId = eventContext.runId,
                     messages = messages,
                     spanAdapter = spanAdapter,
                 )
@@ -674,6 +675,7 @@ public class OpenTelemetry {
                     contextFactory = contextFactory,
                     parentSpan = parentSpan,
                     id = eventContext.eventId,
+                    runId = eventContext.runId,
                     toolName = eventContext.toolName,
                     toolArgs = eventContext.toolArgs.toKotlinxJsonObject(),
                     toolDescription = eventContext.toolDescription,

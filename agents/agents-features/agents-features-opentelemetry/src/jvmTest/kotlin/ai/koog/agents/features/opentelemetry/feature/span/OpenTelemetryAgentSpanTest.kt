@@ -67,6 +67,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                         "gen_ai.provider.name" to model.provider.id,
                         "gen_ai.agent.id" to agentId,
+                        "gen_ai.conversation.id" to runId,
                         "gen_ai.request.model" to model.id,
                         "system_instructions" to getSystemInstructionsString(listOf(OpenTelemetryTestAPI.Parameter.SYSTEM_PROMPT)),
                         "koog.event.id" to createAgentEventId
@@ -139,6 +140,7 @@ class OpenTelemetryAgentSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
                         "gen_ai.provider.name" to model.provider.id,
                         "gen_ai.agent.id" to agentId,
+                        "gen_ai.conversation.id" to runId,
                         "gen_ai.request.model" to model.id,
                         "system_instructions" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                         "koog.event.id" to createAgentEventId
