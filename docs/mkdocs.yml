@@ -168,7 +168,7 @@ plugins:
         Documentation:
           - index.md: This page provides a general overview of the Koog framework, its key features and setup.
           - key-features.md: This page provides a list of key features of the Koog framework.
-          - module-versioning.md: This page explains the Koog module stability model — stable modules (1.1.0) have guaranteed APIs, while beta modules (1.1.0-beta) are experimental and may change.
+          - module-versioning.md: This page explains the Koog module stability model — stable modules (1.2.0) have guaranteed APIs, while beta modules (1.2.0-beta) are experimental and may change.
           - llm-providers.md: This page provides a list of LLM providers supported by Koog.
           - glossary.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
         Quickstart:

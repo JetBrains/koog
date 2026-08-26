@@ -53,8 +53,8 @@ graph TB
     
         ```kotlin title="build.gradle.kts"
         dependencies {
-            implementation("ai.koog:koog-agents:1.1.0")
-            implementation("ai.koog:agents-features-memory:1.1.0")
+            implementation("ai.koog:koog-agents:1.2.0")
+            implementation("ai.koog:agents-features-memory:1.2.0")
         }
         ```
     
@@ -73,7 +73,7 @@ graph TB
         <dependency>
             <groupId>ai.koog</groupId>
             <artifactId>koog-agents-jvm</artifactId>
-            <version>1.1.0</version>
+            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>ai.koog</groupId>
