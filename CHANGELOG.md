@@ -1,3 +1,23 @@
+# 1.2.0
+> Published 27 August 2026
+
+## Major Features
+
+**Agent Skills**
+- **New `skills` module**: Support for the [Agent Skills specification](https://agentskills.io/specification) — discover skill repositories (`SkillsDiscovery`), model them as `Skill` objects, and generate skills-catalog prompts for progressive disclosure and activation. The catalog formatter emits XML, YAML, or JSON. Documented in `docs/docs/skills.md` (#1383, #2160)
+
+**Amazon Bedrock AgentCore Runtime**
+- **New `koog-bedrock-agentcore-runtime` module**: Run a Koog agent as an Amazon Bedrock AgentCore Runtime entry point, with request/response mapping between the Bedrock Runtime protocol and Koog agents ([KG-602](https://youtrack.jetbrains.com/issue/KG-602), #2154)
+
+## Bug Fixes
+
+- **OpenAI Responses API `instructions` as a plain string**: `OpenAIResponsesAPIResponse.instructions` now accepts both a single value and an array, instead of failing deserialization when OpenAI returns a plain string ([KG-898](https://youtrack.jetbrains.com/issue/KG-898), #2220)
+- **Reasoning content in OpenAI streaming deltas**: `OpenAIStreamDelta` now models `reasoning_content` / `reasoning`, so reasoning from models like DeepSeek reaches `MessagePart.Reasoning` and is replayed to the provider on subsequent requests ([KG-866](https://youtrack.jetbrains.com/issue/KG-866), #2190)
+
+## Examples
+
+- **Bedrock AgentCore deployment**: New example illustrating Koog agent deployment to Amazon Bedrock AgentCore, with tests covering different kinds of content (#2189)
+
 # 1.1.1
 > Published 17 July 2026
 
