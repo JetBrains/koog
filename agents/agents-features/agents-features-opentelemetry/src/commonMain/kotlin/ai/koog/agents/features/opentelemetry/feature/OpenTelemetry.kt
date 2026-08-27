@@ -364,7 +364,7 @@ public class OpenTelemetry {
 
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
-                    messages = eventContext.context.config.prompt.messages.toList(),
+                    messages = eventContext.context.llm.prompt.messages.toList(),
                     model = eventContext.context.config.model,
                     verbose = config.isVerbose,
                     spanAdapter = spanAdapter,
@@ -403,7 +403,7 @@ public class OpenTelemetry {
 
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
-                    messages = eventContext.context.config.prompt.messages.toList(),
+                    messages = eventContext.context.llm.prompt.messages.toList(),
                     model = eventContext.context.config.model,
                     error = eventContext.error,
                     verbose = config.isVerbose,

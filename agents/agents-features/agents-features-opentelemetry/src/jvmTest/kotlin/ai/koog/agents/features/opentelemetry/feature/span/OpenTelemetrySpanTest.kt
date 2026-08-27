@@ -97,13 +97,6 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                     "gen_ai.response.model" to model.id,
                     "gen_ai.usage.input_tokens" to 0L,
                     "gen_ai.usage.output_tokens" to 0L,
-                    "gen_ai.output.messages" to getMessagesString(
-                        listOf(
-                            Message.System(systemPrompt, RequestMetaInfo(OpenTelemetryTestAPI.testClock.now())),
-                            // User message is not added in invoked agent span
-                            // as it is propagated through user input in run() agent method
-                        )
-                    ),
                     "koog.event.id" to runId,
                 ),
                 "events" to emptyMap()
