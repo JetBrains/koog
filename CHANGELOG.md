@@ -1,5 +1,5 @@
 # 1.2.0
-> Published 26 August 2026
+> Published 27 August 2026
 
 ## Major Features
 
