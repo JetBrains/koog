@@ -26,6 +26,8 @@ public class ResponseMetaInfoBuilder {
     private var totalTokensCount: Int? = null
     private var inputTokensCount: Int? = null
     private var outputTokensCount: Int? = null
+    private var cacheReadInputTokensCount: Int? = null
+    private var cacheWriteInputTokensCount: Int? = null
     private var metadata: JsonObject? = null
 
     /**
@@ -64,6 +66,20 @@ public class ResponseMetaInfoBuilder {
     }
 
     /**
+     * Sets the number of input tokens served from cache (cache read).
+     */
+    public fun cacheReadInputTokensCount(count: Int): ResponseMetaInfoBuilder = apply {
+        this.cacheReadInputTokensCount = count
+    }
+
+    /**
+     * Sets the number of input tokens written to cache (cache creation).
+     */
+    public fun cacheWriteInputTokensCount(count: Int): ResponseMetaInfoBuilder = apply {
+        this.cacheWriteInputTokensCount = count
+    }
+
+    /**
      * Sets the metadata.
      */
     public fun metadata(metadata: JsonObject?): ResponseMetaInfoBuilder = apply {
@@ -79,6 +95,8 @@ public class ResponseMetaInfoBuilder {
         totalTokensCount = totalTokensCount,
         inputTokensCount = inputTokensCount,
         outputTokensCount = outputTokensCount,
+        cacheReadInputTokensCount = cacheReadInputTokensCount,
+        cacheWriteInputTokensCount = cacheWriteInputTokensCount,
         metadata = metadata
     )
 }
@@ -98,11 +116,15 @@ public fun ResponseMetaInfo.Companion.fromJavaInstant(
     totalTokensCount: Int? = null,
     inputTokensCount: Int? = null,
     outputTokensCount: Int? = null,
+    cacheReadInputTokensCount: Int? = null,
+    cacheWriteInputTokensCount: Int? = null,
     metadata: JsonObject? = null
 ): ResponseMetaInfo = ResponseMetaInfo(
     timestamp = timestamp.toKotlinInstant(),
     totalTokensCount = totalTokensCount,
     inputTokensCount = inputTokensCount,
     outputTokensCount = outputTokensCount,
+    cacheReadInputTokensCount = cacheReadInputTokensCount,
+    cacheWriteInputTokensCount = cacheWriteInputTokensCount,
     metadata = metadata
 )

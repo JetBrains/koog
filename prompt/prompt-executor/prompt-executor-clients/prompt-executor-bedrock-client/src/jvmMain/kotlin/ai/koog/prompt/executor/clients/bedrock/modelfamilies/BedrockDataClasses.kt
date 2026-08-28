@@ -222,6 +222,10 @@ public data class BedrockAnthropicResponse(
  */
 @Serializable
 public data class BedrockAnthropicUsage(
+    @SerialName("cache_creation_input_tokens")
+    val cacheCreationInputTokens: Int? = null,
+    @SerialName("cache_read_input_tokens")
+    val cacheReadInputTokens: Int? = null,
     val inputTokens: Int,
     val outputTokens: Int
 )

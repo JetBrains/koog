@@ -184,11 +184,15 @@ internal object BedrockAnthropicClaudeSerialization {
         val inputTokens = response.usage?.inputTokens
         val outputTokens = response.usage?.outputTokens
         val totalTokens = inputTokens?.let { input -> outputTokens?.let { output -> input + output } }
+        val cacheReadInputTokensCount = response.usage?.cacheReadInputTokens
+        val cacheWriteInputTokensCount = response.usage?.cacheCreationInputTokens
         val metaInfo = ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokens,
             inputTokensCount = inputTokens,
-            outputTokensCount = outputTokens
+            outputTokensCount = outputTokens,
+            cacheReadInputTokensCount = cacheReadInputTokensCount,
+            cacheWriteInputTokensCount = cacheWriteInputTokensCount,
         )
 
         return Message.Assistant(
@@ -223,10 +227,14 @@ internal object BedrockAnthropicClaudeSerialization {
     ): Flow<StreamFrame> = buildStreamFrameFlow {
         var inputTokens: Int? = null
         var outputTokens: Int? = null
+        var cacheReadInputTokensCount: Int? = null
+        var cacheWriteInputTokensCount: Int? = null
 
         fun updateUsage(usage: AnthropicUsage) {
             inputTokens = usage.inputTokens ?: inputTokens
             outputTokens = usage.outputTokens ?: outputTokens
+            cacheReadInputTokensCount = usage.cacheReadInputTokens ?: cacheReadInputTokensCount
+            cacheWriteInputTokensCount = usage.cacheCreationInputTokens ?: cacheWriteInputTokensCount
         }
 
         fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
@@ -234,6 +242,8 @@ internal object BedrockAnthropicClaudeSerialization {
             totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
             inputTokensCount = inputTokens,
             outputTokensCount = outputTokens,
+            cacheReadInputTokensCount = cacheReadInputTokensCount,
+            cacheWriteInputTokensCount = cacheWriteInputTokensCount,
         )
 
         chunkJsonStringFlow.collect { chunkJsonString ->
