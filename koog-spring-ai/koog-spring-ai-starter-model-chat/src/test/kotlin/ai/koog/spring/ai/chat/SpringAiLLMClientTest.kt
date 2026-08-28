@@ -320,6 +320,41 @@ class SpringAiLLMClientTest {
     }
 
     @Test
+    fun `executeStreaming preserves finish reason when final chunk has only usage metadata`() = runBlocking {
+        val usage = object : Usage {
+            override fun getPromptTokens(): Int = 3
+            override fun getCompletionTokens(): Int = 7
+            override fun getNativeUsage(): Any = emptyMap<String, Any>()
+        }
+        val metadata = ChatResponseMetadata.builder().usage(usage).build()
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
+            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+            override fun stream(prompt: SpringPrompt) = Flux.just(
+                ChatResponse(
+                    listOf(
+                        Generation(
+                            AssistantMessage.builder()
+                                .content("Hello")
+                                .properties(mapOf("finishReason" to "STOP"))
+                                .build()
+                        )
+                    ),
+                ),
+                ChatResponse(emptyList(), metadata)
+            )
+        }).build()
+
+        val prompt = createPrompt(Message.User("Hello", requestMeta()))
+        val frames = client.executeStreaming(prompt, testModel, emptyList()).toList()
+
+        val end = frames.filterIsInstance<StreamFrame.End>().single()
+        assertEquals("STOP", end.finishReason)
+        assertEquals(3, end.metaInfo.inputTokensCount)
+        assertEquals(7, end.metaInfo.outputTokensCount)
+        assertEquals(10, end.metaInfo.totalTokensCount)
+    }
+
+    @Test
     fun `executeStreaming skips empty text chunks`() = runBlocking {
         val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
