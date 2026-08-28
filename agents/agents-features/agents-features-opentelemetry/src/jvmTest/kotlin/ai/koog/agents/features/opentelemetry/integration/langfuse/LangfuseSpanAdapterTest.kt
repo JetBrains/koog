@@ -8,6 +8,7 @@ import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.span.endInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startCreateAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
 import ai.koog.agents.features.opentelemetry.span.startInvokeAgentSpan
@@ -22,6 +23,7 @@ import ai.koog.prompt.params.LLMParams
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class LangfuseSpanAdapterTest {
 
@@ -40,6 +42,7 @@ class LangfuseSpanAdapterTest {
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
+        val runId = "run-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
@@ -47,6 +50,7 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
+            runId = runId,
             model = model,
             messages = emptyList()
         )
@@ -58,7 +62,6 @@ class LangfuseSpanAdapterTest {
         }
 
         val invokeAgentSpanId = "invoke-agent-span-id"
-        val runId = "run-id"
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
@@ -201,6 +204,7 @@ class LangfuseSpanAdapterTest {
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
+        val runId = "run-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
@@ -208,12 +212,12 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
+            runId = runId,
             model = model,
             messages = emptyList()
         )
 
         val invokeSpanId = "invoke-agent-span-id"
-        val runId = "run-id"
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
@@ -270,6 +274,146 @@ class LangfuseSpanAdapterTest {
         assertEquals("executor-node-id", secondNode.attributes.requireValue("langfuse.observation.metadata.langgraph_node"))
     }
 
+    @Test
+    fun testRunInputAndOutputAreCopiedToTheRootObservation() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val model = createTestModel(provider)
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val agentId = "test-agent-id"
+        val runId = "run-id"
+
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "create-agent-span-id",
+            agentId = agentId,
+            runId = runId,
+            model = model,
+            messages = emptyList()
+        )
+
+        val messages = listOf(
+            Message.User("hi", RequestMetaInfo.Empty),
+            Message.Assistant("hello", ResponseMetaInfo.Empty),
+        )
+
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = createAgentSpan,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = runId,
+            agentId = agentId,
+            llmParams = LLMParams(),
+            messages = messages,
+            tools = emptyList()
+        )
+
+        adapter.onBeforeSpanStarted(invokeSpan)
+        assertEquals(
+            invokeSpan.attributes.requireValue("gen_ai.input.messages"),
+            createAgentSpan.attributes.requireValue("langfuse.observation.input"),
+        )
+
+        endInvokeAgentSpan(span = invokeSpan, messages = messages, model = model, spanAdapter = adapter)
+        assertEquals(
+            invokeSpan.attributes.requireValue("gen_ai.output.messages"),
+            createAgentSpan.attributes.requireValue("langfuse.observation.output"),
+        )
+    }
+
+    @Test
+    fun testRootObservationCopyIsSkippedWhenParentIsAbsent() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val model = createTestModel(provider)
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val messages = listOf(
+            Message.User("hi", RequestMetaInfo.Empty),
+            Message.Assistant("hello", ResponseMetaInfo.Empty),
+        )
+
+        val invokeSpanWithoutParent = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = "run-id",
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = messages,
+            tools = emptyList()
+        )
+
+        // No parent to write to - the start-time copy must be a silent no-op, not a crash.
+        adapter.onBeforeSpanStarted(invokeSpanWithoutParent)
+        assertTrue(
+            invokeSpanWithoutParent.attributes.none { it.key.startsWith("langfuse.observation.") },
+            "with no parent, the root-observation copy must not fall back to writing on the child",
+        )
+
+        // Same guard applies at finish time - must not throw with no parent to write to.
+        endInvokeAgentSpan(span = invokeSpanWithoutParent, messages = messages, model = model, spanAdapter = adapter)
+        assertTrue(
+            invokeSpanWithoutParent.attributes.none { it.key.startsWith("langfuse.observation.") },
+            "with no parent, the root-observation copy must not fall back to writing on the child",
+        )
+    }
+
+    @Test
+    fun testRootObservationCopyIsSkippedWhenParentIsNotCreateAgent() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val model = createTestModel(provider)
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val nodeParentSpan = startNodeExecuteSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "node-span-id",
+            runId = "run-id",
+            nodeId = "node-id",
+            nodeInput = "node-input"
+        )
+
+        val messages = listOf(
+            Message.User("hi", RequestMetaInfo.Empty),
+            Message.Assistant("hello", ResponseMetaInfo.Empty),
+        )
+
+        val invokeSpanUnderNodeParent = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = nodeParentSpan,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = "run-id",
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = messages,
+            tools = emptyList()
+        )
+
+        adapter.onBeforeSpanStarted(invokeSpanUnderNodeParent)
+        assertTrue(nodeParentSpan.attributes.none { it.key.startsWith("langfuse.observation.") })
+
+        endInvokeAgentSpan(span = invokeSpanUnderNodeParent, messages = messages, model = model, spanAdapter = adapter)
+        assertTrue(nodeParentSpan.attributes.none { it.key.startsWith("langfuse.observation.") })
+    }
+
     private fun createInferenceSpan(
         provider: MockLLMProvider,
         agentId: String = "agent-id",
@@ -290,6 +434,7 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
+            runId = runId,
             model = model,
             messages = emptyList()
         )
