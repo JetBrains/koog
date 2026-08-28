@@ -1,0 +1,152 @@
+# Koog
+
+Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
+
+## Documentation
+
+- [Overview](https://docs.koog.ai/index.md): This page provides a general overview of the Koog framework, its key features and setup.
+- [Key features](https://docs.koog.ai/key-features/index.md): This page provides a list of key features of the Koog framework.
+- [Module versioning](https://docs.koog.ai/module-versioning/index.md): This page explains the Koog module stability model — stable modules (1.2.0) have guaranteed APIs, while beta modules (1.2.0-beta) are experimental and may change.
+- [LLM providers](https://docs.koog.ai/llm-providers/index.md): This page provides a list of LLM providers supported by Koog.
+- [Glossary](https://docs.koog.ai/glossary/index.md): This page provides explanations of key terms and concepts related to Koog and agentic development.
+
+## Quickstart
+
+- [Quickstart](https://docs.koog.ai/quickstart/index.md): This page provides a guide on installing Koog and creating a minimal AI agent.
+
+## Agents
+
+- [Basic agents](https://docs.koog.ai/agents/basic-agents/index.md): This guide lets you build a basic agent with minimum required configuration.
+- [Graph-based agents](https://docs.koog.ai/agents/graph-based-agents/index.md): This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
+- [Functional agents](https://docs.koog.ai/agents/functional-agents/index.md): This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
+
+## Prompts
+
+- [Prompts](https://docs.koog.ai/prompts/index.md): This page includes an overview of how to create and run prompts with Koog.
+- [Creating prompts](https://docs.koog.ai/prompts/prompt-creation/index.md): This page provides details about structured prompts created using the Kotlin DSL.
+- [Multimodal content](https://docs.koog.ai/prompts/prompt-creation/multimodal-content/index.md): This page provides details about multimodal inputs, which allow you to send text, images, audio, video, and documents in your prompts.
+- [Handling failures](https://docs.koog.ai/prompts/handling-failures/index.md): This page provides details about handling failures in prompts.
+- [LLM response caching](https://docs.koog.ai/prompts/llm-response-caching/index.md): This page provides details about prompt caching, which lets you cache responses from LLMs to avoid repeated requests.
+- [Cache control](https://docs.koog.ai/prompts/prompt-creation/cache-control/index.md): This page provides details about provider-side prompt caching control for Anthropic and Amazon Bedrock, including automatic and block-level cache breakpoints and TTL options.
+
+## Running prompts
+
+- [LLM clients](https://docs.koog.ai/prompts/llm-clients/index.md): This page provides details about LLM clients, which are used to run prompts and receive responses from LLMs. They allow working with a single LLM provider only.
+- [HTTP clients](https://docs.koog.ai/prompts/http-clients/index.md): This page explains how Koog LLM clients talk HTTP via the pluggable KoogHttpClient abstraction, how the default backend is auto-resolved on JVM via ServiceLoader, and how to switch between Ktor, Java, and OkHttp backends or bring your own.
+- [Prompt executors](https://docs.koog.ai/prompts/prompt-executors/index.md): This page provides details about prompt executors, which wrap LLM clients and are used to run prompts and receive responses from LLMs. They allow working with multiple LLM providers in a unified way.
+
+## Tools
+
+- [Overview](https://docs.koog.ai/tools/index.md): This page provides a broad overview of the implementation of tools in Koog.
+- [Built-in tools](https://docs.koog.ai/tools/built-in-tools/index.md): This page provides details about built-in tools that handle common scenarios of agent-user interaction.
+- [Annotation-based tools](https://docs.koog.ai/tools/annotation-based-tools/index.md): This page shows you how you can use annotations to expose functions as tools for large language models (LLMs). This approach is useful when you need to expose existing functionality to LLMs without implementing tool descriptions manually.
+- [Class-based tools](https://docs.koog.ai/tools/class-based-tools/index.md): This page explains the implementation of class-based tools, which provides enhanced flexibility and customized behavior. With this approach, you have full control over a tool, including its parameters, metadata, execution logic, and how it is registered and invoked.
+
+## Events
+
+- [Events](https://docs.koog.ai/agent-events/index.md): This page describes agent events, which are actions or interactions that occur as part of an agent workflow.
+
+## Strategies
+
+- [Pre-defined nodes and components](https://docs.koog.ai/nodes-and-components/index.md): This page provides a quick reference of readily available nodes and components as fundamental building blocks of agent workflows in Koog.
+- [Predefined strategies](https://docs.koog.ai/predefined-agent-strategies/index.md): This page lists agent strategies that are readily available for use in Koog, and provides examples of their implementation in AI agents.
+- [Custom strategy graphs](https://docs.koog.ai/custom-strategy-graphs/index.md): This page explains how you can create a custom strategy graph that lets you tailor the behavior of an agent to your specific needs.
+- [Parallel node execution](https://docs.koog.ai/parallel-node-execution/index.md): This guide provides a basic reference and examples of using parallel node execution to run multiple AI agent nodes concurrently, improving performance and enabling complex workflows.
+- [Data transfer between nodes](https://docs.koog.ai/data-transfer-between-nodes/index.md): This page explains how you can store and pass data using AIAgentStorage, which is a key-value storage system designed as a type-safe way to pass data between different nodes or even subgraphs.
+
+## Features
+
+- [Features](https://docs.koog.ai/features/index.md): This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
+- [Event handlers](https://docs.koog.ai/features/agent-event-handlers/index.md): This page provides details about event handlers that let you monitor and respond to specific events during the agent workflow.
+- [Tracing](https://docs.koog.ai/features/tracing/index.md): This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
+- [Chat memory](https://docs.koog.ai/features/chat-memory/index.md): This page provides details about the ChatMemory feature which lets AI agents store and retrieve chat message history to combine multiple agent runs into one conversation. The page includes information about installing the feature, configuration details, best practices, and links to examples and tutorials.
+- [Agent persistence](https://docs.koog.ai/features/agent-persistence/index.md): This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
+- [Custom features](https://docs.koog.ai/features/custom-features/index.md): This page provides details on how to implement custom features in Koog. The page includes information about the basic feature structure and implementation, as well as a practical example of a custom feature.
+- [OpenTelemetry support](https://docs.koog.ai/features/open-telemetry/index.md): This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
+- [Datadog Exporter](https://docs.koog.ai/features/open-telemetry/opentelemetry-datadog-exporter/index.md): This page provides information about Koog's built-in support for exporting agent traces to Datadog, a monitoring and analytics platform with dedicated LLM Observability capabilities. The page provides details about Datadog integration configuration and an example of its use.
+- [Langfuse Exporter](https://docs.koog.ai/features/open-telemetry/opentelemetry-langfuse-exporter/index.md): This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
+- [Weave Exporter](https://docs.koog.ai/features/open-telemetry/opentelemetry-weave-exporter/index.md): This page provides details about W&B Weave integration in Koog to capture prompts, completions, system context, and execution traces and visualize them directly in a W&B workspace. The page provides details about W&B Weave integration setup, configuration and an example of its use.
+
+## History compression
+
+- [History compression](https://docs.koog.ai/history-compression/index.md): This page provides details about different implementations and different types of history compression strategies to reduce history size and token usage.
+
+## Model Context Protocol
+
+- [Model Context Protocol](https://docs.koog.ai/model-context-protocol/index.md): This page provides details about Koog integration with MCP servers, which allows you to incorporate MCP tools into your Koog agents.
+
+## A2A Protocol
+
+- [A2A protocol](https://docs.koog.ai/a2a/index.md): This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
+- [A2A server implementation](https://docs.koog.ai/a2a/a2a-server/index.md): This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
+- [A2A client implementation](https://docs.koog.ai/a2a/a2a-client/index.md): This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
+- [A2A and Koog integration](https://docs.koog.ai/a2a/a2a-koog-integration/index.md): This page provides details about the integration of A2A with Koog agents. It includes information about how to define your agent as A2A server and connect it to the Koog agent system.
+
+## Agent Client Protocol
+
+- [Agent Client Protocol](https://docs.koog.ai/agent-client-protocol/index.md): This page provides details about the Agent Client Protocol (ACP) integration in Koog, which enables AI agents to communicate with client applications through a standardized, bidirectional interface.
+
+## LLM Parameters
+
+- [LLM parameters](https://docs.koog.ai/llm-parameters/index.md): This page provides details about LLM Parameters, which allow you to control and customize the behavior of language models by adjusting parameters like temperature, token limits, schemas, and tool choices.
+
+## Model capabilities
+
+- [Model capabilities](https://docs.koog.ai/model-capabilities/index.md): This page provides an overview of different features or parameters that the models support, referred to as model capabilities.
+
+## Content moderation
+
+- [Content moderation](https://docs.koog.ai/content-moderation/index.md): This page provides details about content moderation in Koog. The page includes a general overview of content moderation, types of moderated content, list of supported providers and models, moderation categories, and examples of moderation results.
+
+## Backend framework integrations
+
+- [Ktor](https://docs.koog.ai/ktor-plugin/index.md): This guide provides instructions on how to add the Koog plugin to Ktor. The guide includes a quickstart, and details about the configuration and use of the Ktor plugin.
+- [Spring Boot](https://docs.koog.ai/spring-boot/index.md): This guide provides instructions on how to use Koog and Spring Boot integration to incorporate AI agents into your Spring Boot applications with minimal setup.
+
+## Advanced usage
+
+- [Structured output](https://docs.koog.ai/structured-output/index.md): This page explains how to use the Structured Output API to define data structures, generate schemas, and request structured responses from LLMs.
+- [Streaming API](https://docs.koog.ai/streaming-api/index.md): This page explains how to use the Streaming API to efficiently handle streamed responses that include structured data in Markdown format.
+- [Custom nodes](https://docs.koog.ai/custom-nodes/index.md): This page provides detailed instructions on how to implement your own custom nodes in the Koog framework. It provides details about the basic implementation, as well as the implementation of nodes with arguments and parametrized nodes.
+- [LLM sessions and manual history management](https://docs.koog.ai/sessions/index.md): This page provides detailed information about LLM sessions, including how to work with read and write sessions, manage conversation history, and make requests to language models.
+
+## Subgraphs
+
+- [Overview](https://docs.koog.ai/subgraphs-overview/index.md): This page provides detailed information about subgraphs in the Koog framework. It lets you understand what subgraphs are and provides information about subgraph context.
+- [Custom subgraphs](https://docs.koog.ai/custom-subgraphs/index.md): This guide provides code templates and common patterns in the creation of custom subgraphs for agentic workflows in Koog.
+
+## Embeddings
+
+- [Embeddings](https://docs.koog.ai/embeddings/index.md): This page provides information on how to generate and compare embeddings of text and code. The page includes a getting started section for local embeddings, details about OpenAI embeddings and examples of comparison of embeddings.
+
+## RAG
+
+- [RAG](https://docs.koog.ai/retrieval-augmented-generation/index.md): This guide provides details about the implementation and use of Retrieval-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
+- [Serialization](https://docs.koog.ai/serialization/index.md): This page explains Koog's library-agnostic serialization abstraction for tool arguments and results, how JSONElement works, and how to configure KotlinxSerializer or JacksonSerializer via AIAgentConfig.
+
+## Testing
+
+- [Testing](https://docs.koog.ai/testing/index.md): This guide provides a detailed overview of the Testing feature that provides a comprehensive framework for testing AI agent pipelines, subgraphs, and tool interactions in Koog. The page includes configuration and initialization details, basic and advanced examples and an FAQ and troubleshooting section.
+
+## Why Koog
+
+- [Why Koog](https://docs.koog.ai/why-koog/index.md): This page provides an overview of reasons why you should select Koog as a framework for building AI agents.
+
+## Examples
+
+- [Examples](https://docs.koog.ai/examples/index.md): This page provides a list of examples to help you understand how to implement AI agents for different use cases. These examples demonstrate key features and patterns that you can adapt for your own applications.
+- [Attachments](https://docs.koog.ai/examples/Attachments/index.md)
+- [Banking](https://docs.koog.ai/examples/Banking/index.md)
+- [BedrockAgent](https://docs.koog.ai/examples/BedrockAgent/index.md)
+- [Calculator](https://docs.koog.ai/examples/Calculator/index.md)
+- [Chess](https://docs.koog.ai/examples/Chess/index.md)
+- [MCP - Google Maps](https://docs.koog.ai/examples/GoogleMapsMcp/index.md)
+- [Guesser](https://docs.koog.ai/examples/Guesser/index.md)
+- [Langfuse](https://docs.koog.ai/examples/Langfuse/index.md)
+- [OpenTelemetry](https://docs.koog.ai/examples/OpenTelemetry/index.md)
+- [MCP - Playwright](https://docs.koog.ai/examples/PlaywrightMcp/index.md)
+- [MCP - Unity](https://docs.koog.ai/examples/UnityMcp/index.md)
+- [VaccumAgent](https://docs.koog.ai/examples/VaccumAgent/index.md)
+- [Weave](https://docs.koog.ai/examples/Weave/index.md)
+- [Web Scraping with The Web MCP by Bright Data and Koog](https://docs.koog.ai/examples/WebMcpClient/index.md)
+

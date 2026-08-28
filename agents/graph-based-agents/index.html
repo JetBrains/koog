@@ -1,0 +1,5210 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://docs.koog.ai/agents/graph-based-agents/">
+      
+      
+        <link rel="prev" href="../basic-agents/">
+      
+      
+        <link rel="next" href="../functional-agents/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../img/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Graph-based agents - Koog</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5P98');</script>
+<!-- End Google Tag Manager -->
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#graph-based-agents" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      <!--overrides original partial https://github.com/squidfunk/mkdocs-material/blob/master/src/templates/partials/header.html -->
+<!--
+  Copyright (c) 2016-2025 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine classes -->
+
+
+
+
+
+<!-- Header -->
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+    <nav
+            class="md-header__inner md-grid"
+            aria-label="Header"
+    >
+
+        <!-- Link to home -->
+        <a
+                href="../.."
+                title="Koog"
+                class="md-header__button md-logo"
+                aria-label="Koog"
+                data-md-component="logo"
+        >
+            
+  <img src="../../img/favicon.ico" alt="logo">
+
+        </a>
+
+        <!-- Button to open drawer -->
+        <label class="md-header__button md-icon" for="__drawer">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+        </label>
+
+        <!-- Header title -->
+        <div class="md-header__title" data-md-component="header-title">
+            <div class="md-header__ellipsis">
+                <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Koog
+          </span>
+                </div>
+                <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Graph-based agents
+            
+          </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color palette toggle -->
+        
+        
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+</form>
+        
+        
+
+        <!-- User preference: color palette -->
+        
+        <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+        
+
+        <!-- Site language selector -->
+        
+
+        <!-- Button to open search modal -->
+        
+        
+
+        <!-- Check if search is actually enabled - see https://t.ly/DT_0V -->
+        
+        <label class="md-header__button md-icon" for="__search">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+
+        <!-- Search interface -->
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+        
+
+        <!-- custom slack icon-link-->
+        <div class="md_header__social">
+            <a
+                href="https://docs.koog.ai/koog-slack-channel/"
+                target="_blank"
+                title="Koog on Slack"
+                class="md_social-custom"
+            >
+                <div class="md_social-custom__icon md-icon">
+                    
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+                </div>
+                <div>
+                    Support
+                </div>
+            </a>
+        </div>
+        <!-- end custom slack icon-link-->
+
+        <!-- custom YT icon-link-->
+        <div class="md_header__social">
+            <a
+                    href="https://youtrack.jetbrains.com/issues/KG/"
+                    target="_blank"
+                    title="Koog's Issues on YouTrack"
+                    class="md_social-custom"
+            >
+                <div class="md_social-custom__icon md-icon">
+                    
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M311.4 32h8.6c35.3 0 64 28.7 64 64v352c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96c0-35.3 28.7-64 64-64h8.6c11-19.1 31.7-32 55.4-32h128c23.7 0 44.4 12.9 55.4 32M248 112c13.3 0 24-10.7 24-24s-10.7-24-24-24H136c-13.3 0-24 10.7-24 24s10.7 24 24 24zM128 256a32 32 0 1 0-64 0 32 32 0 1 0 64 0m32 0c0 13.3 10.7 24 24 24h112c13.3 0 24-10.7 24-24s-10.7-24-24-24H184c-13.3 0-24 10.7-24 24m0 128c0 13.3 10.7 24 24 24h112c13.3 0 24-10.7 24-24s-10.7-24-24-24H184c-13.3 0-24 10.7-24 24m-64 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64"/></svg>
+                </div>
+                <div>
+                    Issue Tracker
+                </div>
+            </a>
+        </div>
+        <!-- end custom YT icon-link-->
+
+        <!-- Repository information -->
+        
+        <div class="md-header__source">
+            <a href="https://github.com/JetBrains/koog" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Koog on GitHub
+  </div>
+</a>
+        </div>
+        
+    </nav>
+
+    <!-- Navigation tabs (sticky) -->
+    
+    
+    
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../why-koog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Why Koog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://api.koog.ai/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API reference
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+    
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Koog" class="md-nav__button md-logo" aria-label="Koog" data-md-component="logo">
+      
+  <img src="../../img/favicon.ico" alt="logo">
+
+    </a>
+    Koog
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/JetBrains/koog" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Koog on GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_1" id="__nav_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Overview
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../module-versioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module versioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../llm-providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../basic-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph-based agents
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph-based agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-a-strategy-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build a strategy graph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-and-run-the-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create and run the agent
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#provide-a-system-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provide a system prompt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functional-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functional agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../planner-agents/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner agents
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_3_5" id="__nav_1_3_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Planner agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../planner-agents/llm-based-planners/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM-based planners
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../planner-agents/goap-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GOAP agents
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../prompts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_4" id="__nav_1_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Prompts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_4_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../prompts/prompt-creation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating prompts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_4_2" id="__nav_1_4_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Creating prompts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/prompt-creation/multimodal-content/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multimodal content
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/prompt-creation/cache-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cache control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_4_3" id="__nav_1_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running prompts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Running prompts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/llm-clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/http-clients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/prompt-executors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt executors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/handling-failures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handling failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prompts/llm-response-caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM response caching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_6" id="__nav_1_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strategies
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Strategies
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nodes-and-components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pre-defined nodes and components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../predefined-agent-strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predefined strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom-strategy-graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom strategy graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../parallel-node-execution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel node execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-transfer-between-nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data transfer between nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../tools/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/built-in-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/annotation-based-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotation-based tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/class-based-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Class-based tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/tool-descriptor-schemer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom tools schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../features/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/agent-event-handlers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event handlers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/tracing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tracing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../features/chat-memory/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chat memory
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_8_4" id="__nav_1_8_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_8_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_8_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Chat memory
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/chat-memory/chat-agent-with-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chat agent with memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/chat-memory/chat-backend-with-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chat backend with memory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/long-term-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Long-term memory
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/agent-persistence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent persistence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../features/open-telemetry/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenTelemetry
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_8_7" id="__nav_1_8_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_8_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_8_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    OpenTelemetry
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/open-telemetry/opentelemetry-datadog-exporter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datadog Exporter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/open-telemetry/opentelemetry-langfuse-exporter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Langfuse Exporter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/open-telemetry/opentelemetry-weave-exporter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weave Exporter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/custom-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history-compression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History compression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-context-protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Context Protocol
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_11" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../a2a/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A2A Protocol
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_11" id="__nav_1_11_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    A2A Protocol
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../a2a/a2a-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A2A server implementation
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../a2a/a2a-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A2A client implementation
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../a2a/a2a-koog-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A2A and Koog integration
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agent-client-protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Client Protocol
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../llm-parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-capabilities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model capabilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../content-moderation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Content moderation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_16" id="__nav_1_16_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backend framework integrations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Backend framework integrations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ktor-plugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ktor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../spring-boot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spring Boot
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../spring-ai-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spring AI
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_17" id="__nav_1_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud platform integrations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cloud platform integrations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../amazon-bedrock-agentcore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Amazon Bedrock AgentCore
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_18" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_18" id="__nav_1_18_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced usage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_18">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced usage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agent-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../structured-output/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Structured output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../streaming-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom-nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom nodes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sessions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM sessions and manual history management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_18_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_18_6" id="__nav_1_18_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subgraphs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_18_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_18_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Subgraphs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../subgraphs-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom-subgraphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom subgraphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../embeddings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retrieval-augmented-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--beta" title="Beta — experimental API, may change in future releases">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../serialization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serialization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../why-koog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why Koog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Attachments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Attachments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Banking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/BedrockAgent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BedrockAgent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Calculator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calculator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Chess/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chess
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Guesser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guesser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Langfuse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Langfuse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/GoogleMapsMcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP - Google Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/PlaywrightMcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP - Playwright
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/UnityMcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP - Unity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/OpenTelemetry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenTelemetry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/VaccumAgent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VaccumAgent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/Weave/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weave
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://api.koog.ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-a-strategy-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build a strategy graph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-and-run-the-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create and run the agent
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#provide-a-system-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provide a system prompt
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/JetBrains/koog/edit/develop/docs/docs/agents/graph-based-agents.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="graph-based-agents">Graph-based agents</h1>
+<p>With graph-based agents, you model the behavior as an explicit state machine:
+nodes of a graph strategy represent actions (<abbr title="Large Language Model">LLM</abbr> calls, tool execution)
+and edges represent data flow between nodes.</p>
+<p>The main advantages of graph-based agents are:</p>
+<ul>
+<li>Easy to visualize</li>
+<li>State persistence</li>
+<li>Composable architecture</li>
+</ul>
+<details class="note">
+<summary>Prerequisites</summary>
+<p>Ensure your environment and project meet the following requirements:</p>
+<ul>
+<li><abbr title="Java Development Kit">JDK</abbr> 17+</li>
+<li>Kotlin 2.2.0+</li>
+<li>Gradle 8.0+ or Maven 3.8+</li>
+</ul>
+<p>Add the <a href="https://central.sonatype.com/artifact/ai.koog/koog-agents/">Koog package</a> as a dependency:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="gradle-kotlin" name="__tabbed_1" type="radio" /><input id="gradle-groovy" name="__tabbed_1" type="radio" /><input id="maven" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="gradle-kotlin">Gradle (Kotlin)</label><label for="gradle-groovy">Gradle (Groovy)</label><label for="maven">Maven</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><span class="filename">build.gradle.kts</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="c1">// Stable</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;ai.koog:koog-agents:1.2.0&quot;</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">// Beta</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="n">implementation</span><span class="p">(</span><span class="s">&quot;ai.koog:koog-agents-additions:1.2.0-beta&quot;</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><span class="filename">build.gradle</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="c1">// Stable</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;ai.koog:koog-agents:1.2.0&#39;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="c1">// Beta</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;ai.koog:koog-agents-additions:1.2.0-beta&#39;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="o">}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><span class="filename">pom.xml</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="cm">&lt;!-- Stable --&gt;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="nt">&lt;groupId&gt;</span>ai.koog<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="nt">&lt;artifactId&gt;</span>koog-agents-jvm<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="nt">&lt;version&gt;</span>1.2.0<span class="nt">&lt;/version&gt;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="cm">&lt;!-- Beta --&gt;</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">        </span><span class="nt">&lt;groupId&gt;</span>ai.koog<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="nt">&lt;artifactId&gt;</span>koog-agents-additions-jvm<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">        </span><span class="nt">&lt;version&gt;</span>1.2.0-beta<span class="nt">&lt;/version&gt;</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>Get an <abbr title="Application Programming Interface">API</abbr> key from an <abbr title="Large Language Model">LLM</abbr> provider or run a local <abbr title="Large Language Model">LLM</abbr> via Ollama.
+For more information, see <a href="../../quickstart/">Quickstart</a>.</p>
+<p>Examples on this page assume that you are running Llama 3.2 locally via Ollama.</p>
+</details>
+<p>This page describes how to re-create the strategy graph used by <a href="../basic-agents/">basic agents</a>.
+It sends a request to an <abbr title="Large Language Model">LLM</abbr> and then either outputs the response (if the <abbr title="Large Language Model">LLM</abbr> responded with an assistant message)
+or executes a tool (if the <abbr title="Large Language Model">LLM</abbr> requested a tool call).
+In case of a tool call, the agent sends the tool result to the <abbr title="Large Language Model">LLM</abbr>
+and then either outputs the response or executes a tool.</p>
+<p>Here is an illustration of the strategy graph:</p>
+<pre class="mermaid"><code>---
+config:
+  flowchart:
+    defaultRenderer: "elk"
+---
+graph TB
+    subgraph nodeStart
+        Input
+    end
+
+    subgraph nodeFinish
+        Output
+    end
+
+    subgraph nodeSendInput
+        llmRequest(Request LLM)
+    end
+
+    subgraph nodeExecuteTool
+        executeTool(Execute tool call)
+    end
+
+    subgraph nodeSendToolResult
+        sendToolResult(Request LLM)
+    end
+
+    Input --String--&gt; llmRequest
+    llmRequest --Message.Assistant--&gt; onToolCalls{{onToolCalls}}
+    llmRequest --Message.Assistant--&gt; onTextMessage{{onTextMessage}}
+    onTextMessage --String--&gt; Output
+    onToolCalls --ToolCalls--&gt; executeTool --ReceivedToolResults--&gt; sendToolResult
+    sendToolResult --Message.Assistant--&gt; onToolCalls
+    sendToolResult --Message.Assistant--&gt; onTextMessage</code></pre>
+<!--- KNIT example-graph-agents-01.txt -->
+
+<h2 id="build-a-strategy-graph">Build a strategy graph</h2>
+<p>In Koog, you implement a strategy using <a href="https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/-a-i-agent-graph-strategy-builder/index.html"><code>AIAgentGraphStrategyBuilder</code></a>.
+Just like every node has an input and output type,
+the strategy as a whole also defines some input and output type.
+This example assumes that the input and output types are strings,
+which means the agent implementing this strategy will expect a string and return a string.</p>
+<p>To create a strategy, use the <a href="https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.builder/strategy.html"><code>strategy()</code></a> function with two generics as the input and output types,
+provide a unique identifier for the strategy, and define the nodes and edges.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="kotlin" name="__tabbed_2" type="radio" /><input id="java" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="kotlin">Kotlin</label><label for="java">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.* -->
+<div class="highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">calculatorAgentStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strategy</span><span class="o">&lt;</span><span class="kt">String</span><span class="p">,</span><span class="w"> </span><span class="kt">String</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;Simple calculator&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">nodeSendInput</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">nodeLLMRequest</span><span class="p">()</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">nodeExecuteTool</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">nodeExecuteTools</span><span class="p">()</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">nodeSendToolResult</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">nodeLLMSendToolResults</span><span class="p">()</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeStart</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeFinish</span><span class="w"> </span><span class="n">onTextMessage</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="n">onToolCalls</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeSendToolResult</span><span class="p">)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeFinish</span><span class="w"> </span><span class="n">onTextMessage</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="n">onToolCalls</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-01.kt --></p>
+</div>
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.entity.AIAgentEdge;
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+import ai.koog.agents.core.agent.entity.AIAgentNode;
+import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import java.util.stream.Collectors;
+class exampleGraphAgentsJava01 {
+    public static void main(String[] args) { -->
+<!--- SUFFIX
+    }
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">var</span><span class="w"> </span><span class="n">calculatorAgentStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentGraphStrategy</span><span class="p">.</span><span class="na">builder</span><span class="p">(</span><span class="s">&quot;Simple calculator&quot;</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="p">.</span><span class="na">withInput</span><span class="p">(</span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="p">.</span><span class="na">withOutput</span><span class="p">(</span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="kd">var</span><span class="w"> </span><span class="n">nodeSendInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentNode</span><span class="p">.</span><span class="na">llmRequest</span><span class="p">(</span><span class="s">&quot;nodeSendInput&quot;</span><span class="p">);</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="kd">var</span><span class="w"> </span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentNode</span><span class="p">.</span><span class="na">executeTools</span><span class="p">(</span><span class="s">&quot;nodeExecuteTool&quot;</span><span class="p">);</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">var</span><span class="w"> </span><span class="n">nodeSendToolResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentNode</span><span class="p">.</span><span class="na">llmSendToolResults</span><span class="p">(</span><span class="s">&quot;nodeSendToolResult&quot;</span><span class="p">);</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">nodeStart</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">nodeFinish</span><span class="p">)</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">    </span><span class="p">.</span><span class="na">onTextMessage</span><span class="p">()</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="p">)</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">    </span><span class="p">.</span><span class="na">onToolCalls</span><span class="p">()</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="p">,</span><span class="w"> </span><span class="n">nodeSendToolResult</span><span class="p">);</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="p">)</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">nodeFinish</span><span class="p">)</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">    </span><span class="p">.</span><span class="na">onTextMessage</span><span class="p">()</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="p">)</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="p">)</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="w">    </span><span class="p">.</span><span class="na">onToolCalls</span><span class="p">()</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span></code></pre></div>
+<!--- KNIT exampleGraphAgentsJava01.java --></p>
+</div>
+</div>
+</div>
+<p>This example uses only <a href="../../nodes-and-components/">predefined nodes</a>,
+but you can also create <a href="../../custom-nodes/">custom nodes</a>.</p>
+<p>Every strategy graph must have a path from <code>nodeStart</code> to <code>nodeFinish</code> connected by <a href="../../custom-strategy-graphs/#edges">edges</a>.
+Edges can have conditions to determine when to follow a particular edge.
+Edges can also transform the output of the previous node before passing it to the next one.
+This is necessary to connect nodes that have non-matching output and input types.</p>
+<p>In the previous example, <code>onToolCalls { true }</code> means that the edge will follow
+only if the previous node returned an assistant message containing at least one tool call (<code>MessagePart.Tool.Call</code>).</p>
+<p>When using <code>onTextMessage { true }</code>, the edge will follow
+only if the previous node returned an assistant message containing text parts (<code>MessagePart.Text</code>).
+This function also extracts and joins the text content of those parts,
+effectively transforming <code>Message.Assistant</code> to <code>String</code>, because <code>nodeFinish</code> expects a string.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Instead of <code>onTextMessage { true }</code>, you can do the following:</p>
+<p><!--- INCLUDE
+import ai.koog.prompt.message.MessagePart
+/** -->
+<!--- SUFFIX
+**/ -->
+<div class="highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">onMessageParts</span><span class="p">(</span><span class="n">MessagePart</span><span class="p">.</span><span class="na">Text</span><span class="o">::</span><span class="n">class</span><span class="p">)</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">it</span><span class="p">.</span><span class="na">joinToString</span><span class="p">(</span><span class="s">&quot;\n&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">part</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">part</span><span class="p">.</span><span class="na">text</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-02.kt --></p>
+<p>Or:</p>
+<p><!--- INCLUDE
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
+/** -->
+<!--- SUFFIX
+**/ -->
+<div class="highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">onCondition</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">it</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">Message</span><span class="p">.</span><span class="na">Assistant</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="nb">it</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">Message</span><span class="p">.</span><span class="na">Assistant</span><span class="p">).</span><span class="na">parts</span><span class="p">.</span><span class="na">filterIsInstance</span><span class="o">&lt;</span><span class="n">MessagePart</span><span class="p">.</span><span class="na">Text</span><span class="o">&gt;</span><span class="p">().</span><span class="na">joinToString</span><span class="p">(</span><span class="s">&quot;\n&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">part</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">part</span><span class="p">.</span><span class="na">text</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-03.kt --></p>
+</div>
+<h2 id="create-and-run-the-agent">Create and run the agent</h2>
+<p>Let's create an agent instance with this strategy and run it:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="kotlin_1" name="__tabbed_3" type="radio" /><input id="java_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="kotlin_1">Kotlin</label><label for="java_1">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import kotlinx.coroutines.runBlocking -->
+<div class="highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">calculatorAgentStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strategy</span><span class="o">&lt;</span><span class="kt">String</span><span class="p">,</span><span class="w"> </span><span class="kt">String</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;Simple calculator&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">nodeSendInput</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">nodeLLMRequest</span><span class="p">()</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">nodeExecuteTool</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">nodeExecuteTools</span><span class="p">()</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">nodeSendToolResult</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">nodeLLMSendToolResults</span><span class="p">()</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeStart</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeFinish</span><span class="w"> </span><span class="n">onTextMessage</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="n">onToolCalls</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeSendToolResult</span><span class="p">)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeFinish</span><span class="w"> </span><span class="n">onTextMessage</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="n">edge</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="w"> </span><span class="n">forwardTo</span><span class="w"> </span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="n">onToolCalls</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="p">}</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="kd">val</span><span class="w"> </span><span class="nv">mathAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgent</span><span class="p">(</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="n">promptExecutor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simpleOllamaAIExecutor</span><span class="p">(),</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">    </span><span class="n">llmModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OllamaModels</span><span class="p">.</span><span class="na">Meta</span><span class="p">.</span><span class="na">LLAMA_3_2</span><span class="p">,</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">    </span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculatorAgentStrategy</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="p">)</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runBlocking</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mathAgent</span><span class="p">.</span><span class="na">run</span><span class="p">(</span><span class="s">&quot;Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.&quot;</span><span class="p">)</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-04.kt --></p>
+</div>
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.entity.AIAgentEdge;
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+import ai.koog.agents.core.agent.entity.AIAgentNode;
+import ai.koog.prompt.executor.ollama.client.OllamaModels;
+import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import ai.koog.prompt.executor.model.PromptExecutor;
+import java.util.stream.Collectors;
+class exampleGraphAgentsJava02 {
+    public static void main(String[] args) { -->
+<!--- SUFFIX
+    }
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">var</span><span class="w"> </span><span class="n">calculatorAgentStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentGraphStrategy</span><span class="p">.</span><span class="na">builder</span><span class="p">(</span><span class="s">&quot;Simple calculator&quot;</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="p">.</span><span class="na">withInput</span><span class="p">(</span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="p">.</span><span class="na">withOutput</span><span class="p">(</span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kd">var</span><span class="w"> </span><span class="n">nodeSendInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentNode</span><span class="p">.</span><span class="na">llmRequest</span><span class="p">(</span><span class="s">&quot;nodeSendInput&quot;</span><span class="p">);</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="kd">var</span><span class="w"> </span><span class="n">nodeExecuteTool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentNode</span><span class="p">.</span><span class="na">executeTools</span><span class="p">(</span><span class="s">&quot;nodeExecuteTool&quot;</span><span class="p">);</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="kd">var</span><span class="w"> </span><span class="n">nodeSendToolResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgentNode</span><span class="p">.</span><span class="na">llmSendToolResults</span><span class="p">(</span><span class="s">&quot;nodeSendToolResult&quot;</span><span class="p">);</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">nodeStart</span><span class="p">)</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">nodeFinish</span><span class="p">)</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">    </span><span class="p">.</span><span class="na">onTextMessage</span><span class="p">()</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendInput</span><span class="p">)</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="p">)</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">    </span><span class="p">.</span><span class="na">onToolCalls</span><span class="p">()</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="p">,</span><span class="w"> </span><span class="n">nodeSendToolResult</span><span class="p">);</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="p">)</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">nodeFinish</span><span class="p">)</span>
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">    </span><span class="p">.</span><span class="na">onTextMessage</span><span class="p">()</span>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">edge</span><span class="p">(</span><span class="n">AIAgentEdge</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="w">    </span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">nodeSendToolResult</span><span class="p">)</span>
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="w">    </span><span class="p">.</span><span class="na">to</span><span class="p">(</span><span class="n">nodeExecuteTool</span><span class="p">)</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a><span class="w">    </span><span class="p">.</span><span class="na">onToolCalls</span><span class="p">()</span>
+</span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">());</span>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="kd">var</span><span class="w"> </span><span class="n">promptExecutor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PromptExecutor</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="w">    </span><span class="p">.</span><span class="na">ollama</span><span class="p">(</span><span class="s">&quot;http://localhost:11434&quot;</span><span class="p">)</span>
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a>
+</span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a><span class="n">AIAgent</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mathAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgent</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="w">    </span><span class="p">.</span><span class="na">promptExecutor</span><span class="p">(</span><span class="n">promptExecutor</span><span class="p">)</span>
+</span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a><span class="w">    </span><span class="p">.</span><span class="na">llmModel</span><span class="p">(</span><span class="n">OllamaModels</span><span class="p">.</span><span class="na">Meta</span><span class="p">.</span><span class="na">LLAMA_3_2</span><span class="p">)</span>
+</span><span id="__span-8-42"><a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a><span class="w">    </span><span class="p">.</span><span class="na">graphStrategy</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">build</span><span class="p">())</span>
+</span><span id="__span-8-43"><a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</span><span id="__span-8-44"><a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a>
+</span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mathAgent</span><span class="p">.</span><span class="na">run</span><span class="p">(</span><span class="s">&quot;Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span>
+</span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+</span></code></pre></div>
+<!--- KNIT exampleGraphAgentsJava02.java --></p>
+</div>
+</div>
+</div>
+<p>When you run this agent, it will respond with something like this:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>To calculate this, I&#39;ll follow the order of operations:
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>1. Multiply 3 by 4: 3 * 4 = 12
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>2. Multiply the result by 5: 12 * 5 = 60
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>3. Add 10: 60 + 10 = 70
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>4. Add 123: 70 + 123 = 193
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>The final answer is 193.
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-02.txt -->
+
+<p>However, since this agent doesn't have any tools, the <abbr title="Large Language Model">LLM</abbr> never returns a tool call 
+and simply generates the whole answer.
+This is what effectively happens:</p>
+<pre class="mermaid"><code>---
+config:
+  flowchart:
+    defaultRenderer: "elk"
+---
+graph LR
+    subgraph nodeStart
+        Input
+    end
+
+    subgraph nodeFinish
+        Output
+    end
+
+    subgraph nodeSendInput
+        llmRequest(Request LLM)
+    end
+
+    Input --String--&gt; llmRequest --Message.Assistant--&gt; onTextMessage{{onTextMessage}} --String--&gt; Output</code></pre>
+<!--- KNIT example-graph-agents-03.txt -->
+
+<p>Even though it is correct in this case, the answer will depend on the arithmetic abilities of the underlying <abbr title="Large Language Model">LLM</abbr>.
+To make sure the calculations are correct, we should provide the agent with math tools.
+Then the <abbr title="Large Language Model">LLM</abbr> will be able to decide to call tools that perform the calculations deterministically.</p>
+<h2 id="add-tools">Add tools</h2>
+<p>Define <a href="../../tools/">tools</a> for performing math operations and add them to a <a href="https://api.koog.ai/agents/agents-tools/ai.koog.agents.core.tools/-tool-registry/index.html">ToolRegistry</a>:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="kotlin_2" name="__tabbed_4" type="radio" /><input id="java_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="kotlin_2">Kotlin</label><label for="java_2">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet -->
+<div class="highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nd">@LLMDescription</span><span class="p">(</span><span class="s">&quot;Tools for performing math operations&quot;</span><span class="p">)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">MathTools</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">ToolSet</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="nd">@Tool</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="nd">@LLMDescription</span><span class="p">(</span><span class="s">&quot;Adds two numbers and returns the result&quot;</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">Int</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">Int</span><span class="p">):</span><span class="w"> </span><span class="kt">Int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">        </span><span class="c1">// This is not necessary, but it helps to see the tool call in the console output</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">        </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Adding </span><span class="si">$</span><span class="n">a</span><span class="s"> and </span><span class="si">$</span><span class="n">b</span><span class="s">...&quot;</span><span class="p">)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="nd">@Tool</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="nd">@LLMDescription</span><span class="p">(</span><span class="s">&quot;Multiplies two numbers and returns the result&quot;</span><span class="p">)</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">Int</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">Int</span><span class="p">):</span><span class="w"> </span><span class="kt">Int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">        </span><span class="c1">// This is not necessary, but it helps to see the tool call in the console output</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">        </span><span class="n">println</span><span class="p">(</span><span class="s">&quot;Multiplying </span><span class="si">$</span><span class="n">a</span><span class="s"> and </span><span class="si">$</span><span class="n">b</span><span class="s">...&quot;</span><span class="p">)</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="p">}</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="kd">val</span><span class="w"> </span><span class="nv">toolRegistry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ToolRegistry</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="w">    </span><span class="n">tools</span><span class="p">(</span><span class="n">MathTools</span><span class="p">())</span>
+</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-05.kt --></p>
+</div>
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.tools.ToolRegistry;
+import ai.koog.agents.core.tools.annotations.LLMDescription;
+import ai.koog.agents.core.tools.annotations.Tool;
+import ai.koog.agents.core.tools.reflect.ToolSet;
+import static ai.koog.prompt.executor.llms.all.SimplePromptExecutors.simpleOllamaAIExecutor;
+class exampleGraphAgentsJava03 { -->
+<!--- SUFFIX
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nd">@LLMDescription</span><span class="p">(</span><span class="s">&quot;Tools for performing math operations&quot;</span><span class="p">)</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MathTools</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ToolSet</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nd">@Tool</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nd">@LLMDescription</span><span class="p">(</span><span class="s">&quot;Adds two numbers and returns the result&quot;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">        </span><span class="c1">// This is not necessary, but it helps to see the tool call in the console output</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Adding &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; and &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;...&quot;</span><span class="p">);</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nd">@Tool</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">    </span><span class="nd">@LLMDescription</span><span class="p">(</span><span class="s">&quot;Multiplies two numbers and returns the result&quot;</span><span class="p">)</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">multiply</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">        </span><span class="c1">// This is not necessary, but it helps to see the tool call in the console output</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Multiplying &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; and &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;...&quot;</span><span class="p">);</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="p">}</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">    </span><span class="n">ToolRegistry</span><span class="w"> </span><span class="n">toolRegistry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ToolRegistry</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">        </span><span class="p">.</span><span class="na">tools</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">MathTools</span><span class="p">())</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">        </span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT exampleGraphAgentsJava03.java --></p>
+</div>
+</div>
+</div>
+<p>Add the tool registry to the agent configuration:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="kotlin_3" name="__tabbed_5" type="radio" /><input id="java_3" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="kotlin_3">Kotlin</label><label for="java_3">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import kotlinx.coroutines.runBlocking
+@LLMDescription("Tools for performing math operations")
+class MathTools : ToolSet {
+    @Tool
+    @LLMDescription("Adds two numbers and returns the result")
+    fun add(a: Int, b: Int): Int {
+        // This is not necessary, but it helps to see the tool call in the console output
+        println("Adding $a and $b...")
+        return a + b
+    }
+    @Tool
+    @LLMDescription("Multiplies two numbers and returns the result")
+    fun multiply(a: Int, b: Int): Int {
+        // This is not necessary, but it helps to see the tool call in the console output
+        println("Multiplying $a and $b...")
+        return a * b
+    }
+}
+val toolRegistry = ToolRegistry {
+    tools(MathTools())
+}
+val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
+    val nodeSendInput by nodeLLMRequest()
+    val nodeExecuteTool by nodeExecuteTools()
+    val nodeSendToolResult by nodeLLMSendToolResults()
+    edge(nodeStart forwardTo nodeSendInput)
+    edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
+    edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
+    edge(nodeExecuteTool forwardTo nodeSendToolResult)
+    edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">mathAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgent</span><span class="p">(</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="n">promptExecutor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simpleOllamaAIExecutor</span><span class="p">(),</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="n">llmModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OllamaModels</span><span class="p">.</span><span class="na">Meta</span><span class="p">.</span><span class="na">LLAMA_3_2</span><span class="p">,</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculatorAgentStrategy</span><span class="p">,</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="n">toolRegistry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toolRegistry</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="p">)</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runBlocking</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mathAgent</span><span class="p">.</span><span class="na">run</span><span class="p">(</span><span class="s">&quot;Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.&quot;</span><span class="p">)</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-06.kt --></p>
+</div>
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.entity.AIAgentEdge;
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+import ai.koog.agents.core.agent.entity.AIAgentNode;
+import ai.koog.agents.core.tools.ToolRegistry;
+import ai.koog.agents.core.tools.annotations.LLMDescription;
+import ai.koog.agents.core.tools.annotations.Tool;
+import ai.koog.agents.core.tools.reflect.ToolSet;
+import ai.koog.prompt.executor.ollama.client.OllamaModels;
+import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import ai.koog.prompt.executor.model.PromptExecutor;
+import java.util.stream.Collectors;
+class exampleGraphAgentsJava04 {
+    @LLMDescription("Tools for performing math operations")
+    public static class MathTools implements ToolSet {
+        @Tool
+        @LLMDescription("Adds two numbers and returns the result")
+        public int add(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Adding " + a + " and " + b + "...");
+            return a + b;
+    }
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        public int multiply(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Multiplying " + a + " and " + b + "...");
+            return a * b;
+        }
+    }
+    public static void main(String[] args) {
+        ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(new MathTools())
+            .build();
+        var calculatorAgentStrategy = AIAgentGraphStrategy.builder("Simple calculator")
+            .withInput(String.class)
+            .withOutput(String.class);
+        var nodeSendInput = AIAgentNode.llmRequest("nodeSendInput");
+        var nodeExecuteTool = AIAgentNode.executeTools("nodeExecuteTool");
+        var nodeSendToolResult = AIAgentNode.llmSendToolResults("nodeSendToolResult");
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(calculatorAgentStrategy.nodeStart)
+            .to(nodeSendInput)
+            .build());
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(calculatorAgentStrategy.nodeFinish)
+            .onTextMessage()
+            .build());
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(nodeExecuteTool)
+            .onToolCalls()
+            .build());
+        calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(calculatorAgentStrategy.nodeFinish)
+            .onTextMessage()
+            .build());
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(nodeExecuteTool)
+            .onToolCalls()
+            .build());
+        var promptExecutor = PromptExecutor.builder()
+            .ollama("http://localhost:11434")
+            .build(); -->
+<!--- SUFFIX
+    }
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">AIAgent</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mathAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgent</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="p">.</span><span class="na">promptExecutor</span><span class="p">(</span><span class="n">promptExecutor</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="p">.</span><span class="na">llmModel</span><span class="p">(</span><span class="n">OllamaModels</span><span class="p">.</span><span class="na">Meta</span><span class="p">.</span><span class="na">LLAMA_3_2</span><span class="p">)</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="p">.</span><span class="na">graphStrategy</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">build</span><span class="p">())</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="p">.</span><span class="na">toolRegistry</span><span class="p">(</span><span class="n">toolRegistry</span><span class="p">)</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="n">String</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mathAgent</span><span class="p">.</span><span class="na">run</span><span class="p">(</span><span class="s">&quot;Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+</span></code></pre></div>
+<!--- KNIT exampleGraphAgentsJava04.java --></p>
+</div>
+</div>
+</div>
+<p>When you run the agent now, it will respond with something like this:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Multiplying 3 and 4...
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>The output from the first operation was multiplied by 5:
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>5 * 12 = 60
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>Then, 10 was added to the result:
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>60 + 10 = 70
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>Finally, 123 was added to the result:
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>70 + 123 = 193
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-04.txt -->
+
+<p>According to this output, the agent correctly performed the calculations, but it only called the <code>multiply</code> tool once
+instead of calling the corresponding tool for every operation.
+We can help the agent by describing its role and providing instructions for using appropriate tools in the system prompt.</p>
+<h2 id="provide-a-system-prompt">Provide a system prompt</h2>
+<p>A <a href="../../prompts/prompt-creation/#system-message">system prompt</a> defines the agent's role and instructions for performing tasks.
+In our example, it is important to describe how the agent should process complex multistep calculations:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="kotlin_4" name="__tabbed_6" type="radio" /><input id="java_4" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="kotlin_4">Kotlin</label><label for="java_4">Java</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaModels
+import kotlinx.coroutines.runBlocking
+@LLMDescription("Tools for performing math operations")
+class MathTools : ToolSet {
+    @Tool
+    @LLMDescription("Adds two numbers and returns the result")
+    fun add(a: Int, b: Int): Int {
+        // This is not necessary, but it helps to see the tool call in the console output
+        println("Adding $a and $b...")
+        return a + b
+    }
+    @Tool
+    @LLMDescription("Multiplies two numbers and returns the result")
+    fun multiply(a: Int, b: Int): Int {
+        // This is not necessary, but it helps to see the tool call in the console output
+        println("Multiplying $a and $b...")
+        return a * b
+    }
+}
+val toolRegistry = ToolRegistry {
+    tools(MathTools())
+}
+val calculatorAgentStrategy = strategy<String, String>("Simple calculator") {
+    val nodeSendInput by nodeLLMRequest()
+    val nodeExecuteTool by nodeExecuteTools()
+    val nodeSendToolResult by nodeLLMSendToolResults()
+    edge(nodeStart forwardTo nodeSendInput)
+    edge(nodeSendInput forwardTo nodeFinish onTextMessage { true })
+    edge(nodeSendInput forwardTo nodeExecuteTool onToolCalls { true })
+    edge(nodeExecuteTool forwardTo nodeSendToolResult)
+    edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kd">val</span><span class="w"> </span><span class="nv">mathAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgent</span><span class="p">(</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span><span class="n">promptExecutor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simpleOllamaAIExecutor</span><span class="p">(),</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="n">llmModel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OllamaModels</span><span class="p">.</span><span class="na">Meta</span><span class="p">.</span><span class="na">LLAMA_3_2</span><span class="p">,</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="n">systemPrompt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="s">                You are a simple calculator assistant.</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="s">                You can add and multiply two numbers using the &#39;add&#39; and &#39;multiply&#39; tools.</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="s">                When the user provides input, extract the numbers and operations they requested.</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="s">                Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result.</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="s">                Always respond with a clear, friendly message showing the calculation and result.</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="s">                &quot;&quot;&quot;</span><span class="p">.</span><span class="na">trimIndent</span><span class="p">(),</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">    </span><span class="n">toolRegistry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toolRegistry</span><span class="p">,</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">    </span><span class="n">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculatorAgentStrategy</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="p">)</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="kd">fun</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runBlocking</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">    </span><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mathAgent</span><span class="p">.</span><span class="na">run</span><span class="p">(</span><span class="s">&quot;Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.&quot;</span><span class="p">)</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="w">    </span><span class="n">println</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="p">}</span>
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-07.kt --></p>
+</div>
+<div class="tabbed-block">
+<p><!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent;
+import ai.koog.agents.core.agent.entity.AIAgentEdge;
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy;
+import ai.koog.agents.core.agent.entity.AIAgentNode;
+import ai.koog.agents.core.tools.ToolRegistry;
+import ai.koog.agents.core.tools.annotations.LLMDescription;
+import ai.koog.agents.core.tools.annotations.Tool;
+import ai.koog.agents.core.tools.reflect.ToolSet;
+import ai.koog.prompt.executor.ollama.client.OllamaModels;
+import ai.koog.prompt.message.Message;
+import ai.koog.prompt.message.MessagePart;
+import ai.koog.prompt.executor.model.PromptExecutor;
+import java.util.stream.Collectors;
+class exampleGraphAgentsJava05 {
+    @LLMDescription("Tools for performing math operations")
+    public static class MathTools implements ToolSet {
+        @Tool
+        @LLMDescription("Adds two numbers and returns the result")
+        public int add(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Adding " + a + " and " + b + "...");
+            return a + b;
+    }
+        @Tool
+        @LLMDescription("Multiplies two numbers and returns the result")
+        public int multiply(int a, int b) {
+            // This is not necessary, but it helps to see the tool call in the console output
+            System.out.println("Multiplying " + a + " and " + b + "...");
+            return a * b;
+        }
+    }
+    public static void main(String[] args) {
+        ToolRegistry toolRegistry = ToolRegistry.builder()
+            .tools(new MathTools())
+            .build();
+        var calculatorAgentStrategy = AIAgentGraphStrategy.builder("Simple calculator")
+            .withInput(String.class)
+            .withOutput(String.class); 
+        var nodeSendInput = AIAgentNode.llmRequest("nodeSendInput");
+        var nodeExecuteTool = AIAgentNode.executeTools("nodeExecuteTool");
+        var nodeSendToolResult = AIAgentNode.llmSendToolResults("nodeSendToolResult"); 
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(calculatorAgentStrategy.nodeStart)
+            .to(nodeSendInput)
+            .build());
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(calculatorAgentStrategy.nodeFinish)
+            .onTextMessage()
+            .build());
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendInput)
+            .to(nodeExecuteTool)
+            .onToolCalls()
+            .build());
+        calculatorAgentStrategy.edge(nodeExecuteTool, nodeSendToolResult);
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(calculatorAgentStrategy.nodeFinish)
+            .onTextMessage()
+            .build());
+        calculatorAgentStrategy.edge(AIAgentEdge.builder()
+            .from(nodeSendToolResult)
+            .to(nodeExecuteTool)
+            .onToolCalls()
+            .build());
+        var promptExecutor = PromptExecutor.builder()
+            .ollama("http://localhost:11434")
+            .build(); -->
+<!--- SUFFIX
+    }
+} -->
+<div class="highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">AIAgent</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mathAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AIAgent</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="p">.</span><span class="na">promptExecutor</span><span class="p">(</span><span class="n">promptExecutor</span><span class="p">)</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="p">.</span><span class="na">llmModel</span><span class="p">(</span><span class="n">OllamaModels</span><span class="p">.</span><span class="na">Meta</span><span class="p">.</span><span class="na">LLAMA_3_2</span><span class="p">)</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="p">.</span><span class="na">systemPrompt</span><span class="p">(</span><span class="s">&quot;You are a simple calculator assistant. You can add and multiply two numbers using the &#39;add&#39; and &#39;multiply&#39; tools. When the user provides input, extract the numbers and operations they requested. Use the appropriate tool for the first operation, then the next one, and so on, until you calculate the result. Always respond with a clear, friendly message showing the calculation and result.&quot;</span><span class="p">)</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="p">.</span><span class="na">graphStrategy</span><span class="p">(</span><span class="n">calculatorAgentStrategy</span><span class="p">.</span><span class="na">build</span><span class="p">())</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="p">.</span><span class="na">toolRegistry</span><span class="p">(</span><span class="n">toolRegistry</span><span class="p">)</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">String</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mathAgent</span><span class="p">.</span><span class="na">run</span><span class="p">(</span><span class="s">&quot;Multiply 3 by 4, then multiply the result by 5, then add 10, then add 123.&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">);</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+</span></code></pre></div>
+<!--- KNIT exampleGraphAgentsJava05.java --></p>
+</div>
+</div>
+</div>
+<p>When you run the agent now, it will respond with something like this:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Multiplying 3 and 4...
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>Multiplying 12 and 5...
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Adding 60 and 10...
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>Adding 70 and 123...
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>The final result is: 193
+</span></code></pre></div>
+<!--- KNIT example-graph-agents-05.txt -->
+
+<p>As you can see, the agent now correctly calls the appropriate tool for each operation,
+ensuring that it performs the calculations deterministically instead of risking a hallucinated result.</p>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li>Compare to <a href="../functional-agents/">functional agents</a> and <a href="../planner-agents/">planner agents</a></li>
+<li>Enhance your agent by <a href="../../features/">installing features</a></li>
+<li>Improve the predictability and reliability with <a href="../../structured-output/">structured output</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2000-2025 JetBrains s.r.o.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://docs.koog.ai/koog-slack-channel/" target="_blank" rel="noopener" title="Koog on Slack" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M94.1 315.1c0 25.9-21.2 47.1-47.1 47.1S0 341 0 315.1 21.2 268 47.1 268h47.1v47.1zm23.7 0c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1v117.8c0 25.9-21.2 47.1-47.1 47.1s-47.1-21.2-47.1-47.1zm47.1-189c-25.9 0-47.1-21.2-47.1-47.1s21.2-47 47.1-47S212 53.2 212 79.1v47.1h-47.1zm0 23.7c25.9 0 47.1 21.2 47.1 47.1S190.8 244 164.9 244H47.1C21.2 244 0 222.8 0 196.9s21.2-47.1 47.1-47.1zm189 47.1c0-25.9 21.2-47.1 47.1-47.1s47 21.2 47 47.1-21.2 47.1-47.1 47.1h-47.1v-47.1zm-23.7 0c0 25.9-21.2 47.1-47.1 47.1S236 222.8 236 196.9V79.1c0-25.9 21.2-47.1 47.1-47.1s47.1 21.2 47.1 47.1zm-47.1 189c25.9 0 47.1 21.2 47.1 47.1s-21.2 47-47.1 47-47.1-21.2-47.1-47.1v-47.1h47.1zm0-23.7c-25.9 0-47.1-21.2-47.1-47.1s21.2-47.1 47.1-47.1h117.8c25.9 0 47.1 21.2 47.1 47.1s-21.2 47.1-47.1 47.1z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.action.edit", "content.tabs.link", "content.footnote.tooltips", "navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.indexes", "navigation.tracking", "navigation.status"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+        <script src="../../javascripts/mermaid.mjs" type="module"></script>
+      
+    
+
+  </body>
+</html>
