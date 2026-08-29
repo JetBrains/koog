@@ -1,5 +1,6 @@
 package ai.koog.prompt.streaming
 
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -36,14 +37,22 @@ public fun streamFrameFlow(@BuilderInference block: suspend FlowCollector<Stream
 /**
  * Emits a [StreamFrame.TextDelta] with the given [text].
  */
-public suspend fun FlowCollector<StreamFrame>.emitTextDelta(text: String, index: Int? = null): Unit =
-    emit(StreamFrame.TextDelta(text, index))
+public suspend fun FlowCollector<StreamFrame>.emitTextDelta(
+    text: String,
+    index: Int? = null,
+    phase: MessagePart.Text.Phase? = null,
+): Unit =
+    emit(StreamFrame.TextDelta(text, index, phase))
 
 /**
  * Emits a [StreamFrame.TextComplete] with the given [text].
  */
-public suspend fun FlowCollector<StreamFrame>.emitTextComplete(text: String, index: Int? = null): Unit =
-    emit(StreamFrame.TextComplete(text, index))
+public suspend fun FlowCollector<StreamFrame>.emitTextComplete(
+    text: String,
+    index: Int? = null,
+    phase: MessagePart.Text.Phase? = null,
+): Unit =
+    emit(StreamFrame.TextComplete(text, index, phase))
 
 /**
  * Emits a [StreamFrame.ReasoningDelta] with the given [text] and [summary].
@@ -141,16 +150,20 @@ public class StreamFrameFlowBuilder(
     /**
      * Emits a [StreamFrame.TextDelta] with the given [text].
      */
-    public suspend fun emitTextDelta(text: String, index: Int? = null) {
+    public suspend fun emitTextDelta(
+        text: String,
+        index: Int? = null,
+        phase: MessagePart.Text.Phase? = null,
+    ) {
         tryEmitPendingToolCall()
         tryEmitPendingReasoning()
         val previous: PendingText? = pendingTextRef.load()
         if (previous == null) {
-            pendingTextRef.store(PendingText(textDelta = text, index = index))
+            pendingTextRef.store(PendingText(textDelta = text, index = index, phase = phase))
         } else {
-            pendingTextRef.store(previous.appendTextDelta(text, index))
+            pendingTextRef.store(previous.appendTextDelta(text, index, phase))
         }
-        flowCollector.emitTextDelta(text, index)
+        flowCollector.emitTextDelta(text, index, phase)
     }
 
     /**
@@ -230,7 +243,8 @@ public class StreamFrameFlowBuilder(
         if (pendingText != null) {
             flowCollector.emitTextComplete(
                 text = pendingText.textDelta ?: "",
-                index = pendingText.index
+                index = pendingText.index,
+                phase = pendingText.phase,
             )
         }
     }
@@ -282,9 +296,15 @@ public class StreamFrameFlowBuilder(
     private data class PendingText(
         val textDelta: String?,
         val index: Int?,
+        val phase: MessagePart.Text.Phase?,
     ) {
-        fun appendTextDelta(textDelta: String?, index: Int?): PendingText {
+        fun appendTextDelta(
+            textDelta: String?,
+            index: Int?,
+            phase: MessagePart.Text.Phase?,
+        ): PendingText {
             require(this.index == index)
+            require(this.phase == phase)
             val newText = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
             return copy(textDelta = newText)
         }

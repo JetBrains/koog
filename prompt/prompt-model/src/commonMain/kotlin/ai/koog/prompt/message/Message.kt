@@ -1,6 +1,7 @@
 package ai.koog.prompt.message
 
 import ai.koog.utils.time.KoogClock
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -191,7 +192,7 @@ public sealed interface Message {
             metaInfo,
             finishReason,
             rawResponse,
-            id
+            id,
         )
 
         /**
@@ -211,7 +212,7 @@ public sealed interface Message {
             metaInfo,
             finishReason,
             rawResponse,
-            id
+            id,
         )
     }
 
@@ -273,12 +274,30 @@ public sealed interface MessagePart {
      * Text content part of the message.
      *
      * @property text The text content.
+     * @property phase Optional assistant text phase, used by providers that distinguish intermediate commentary
+     * from the final answer.
      */
     @Serializable
     public data class Text @JvmOverloads constructor(
         public val text: String,
         override val cacheControl: CacheControl? = null,
-    ) : ContentPart
+        public val phase: Phase? = null,
+    ) : ContentPart {
+
+        /**
+         * Labels assistant text as intermediate commentary or the final answer.
+         */
+        @Serializable
+        public enum class Phase {
+            /** Intermediate assistant commentary, such as preambles or progress updates. */
+            @SerialName("commentary")
+            COMMENTARY,
+
+            /** The completed assistant answer intended for the user. */
+            @SerialName("final_answer")
+            FINAL_ANSWER,
+        }
+    }
 
     /**
      * Attachment content part of the message.

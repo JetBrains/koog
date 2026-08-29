@@ -147,7 +147,7 @@ class EventHandlerTest {
             .toString()
 
         val expectedAssistantMessage =
-            "Assistant(parts=[Text(text=Default test response, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+            "Assistant(parts=[Text(text=Default test response, cacheControl=null, phase=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
 
         val expectedEvents = listOf(
             "OnAgentStarting (agent id: $agentId, run id: $runId)",
@@ -276,7 +276,7 @@ class EventHandlerTest {
         val toolCallsInput = "ToolCalls(toolCalls=[Call(id=null, tool=$dummyToolName, args=$dummyToolArgsEncoded, cacheControl=null)])"
         val receivedToolResults = "ReceivedToolResults(toolResults=[$dummyToolReceivedToolResult])"
         val finalAssistantObj =
-            "Assistant(parts=[Text(text=$mockResponse, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+            "Assistant(parts=[Text(text=$mockResponse, cacheControl=null, phase=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
 
         val toolCallResponseEntry =
             "role: ${Message.Role.Assistant}, parts: [$toolCallPart]"
@@ -384,7 +384,7 @@ class EventHandlerTest {
             .toString()
 
         val expectedAssistantMessage =
-            "Assistant(parts=[Text(text=$defaultResponse, cacheControl=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
+            "Assistant(parts=[Text(text=$defaultResponse, cacheControl=null, phase=null)], metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null), finishReason=null, rawResponse=null, id=null)"
 
         val expectedTools = toolRegistry.tools.joinToString { it.name }
         val responseEntry = expectedMessage(Message.Role.Assistant, defaultResponse).trim('{', '}')
@@ -606,8 +606,8 @@ class EventHandlerTest {
 
         val expectedEvents = listOf(
             "OnLLMStreamingStarting (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
-            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0))",
-            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextDelta(text=$testLLMResponse, index=0, phase=null))",
+            "OnLLMStreamingFrameReceived (run id: $runId, frame: TextComplete(text=$testLLMResponse, index=0, phase=null))",
             "OnLLMStreamingFrameReceived (run id: $runId, frame: End(finishReason=null, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, modelId=null, metadata=null)))",
             "OnLLMStreamingCompleted (run id: $runId, prompt: $expectedPromptString, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}])",
         )

@@ -666,19 +666,38 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
     }
 
     final class Text : ai.koog.prompt.message/MessagePart.ContentPart { // ai.koog.prompt.message/MessagePart.Text|null[0]
-        constructor <init>(kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.message/MessagePart.Text.<init>|<init>(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+        constructor <init>(kotlin/String, ai.koog.prompt.message/CacheControl? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...) // ai.koog.prompt.message/MessagePart.Text.<init>|<init>(kotlin.String;ai.koog.prompt.message.CacheControl?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
 
         final val cacheControl // ai.koog.prompt.message/MessagePart.Text.cacheControl|{}cacheControl[0]
             final fun <get-cacheControl>(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Text.cacheControl.<get-cacheControl>|<get-cacheControl>(){}[0]
+        final val phase // ai.koog.prompt.message/MessagePart.Text.phase|{}phase[0]
+            final fun <get-phase>(): ai.koog.prompt.message/MessagePart.Text.Phase? // ai.koog.prompt.message/MessagePart.Text.phase.<get-phase>|<get-phase>(){}[0]
         final val text // ai.koog.prompt.message/MessagePart.Text.text|{}text[0]
             final fun <get-text>(): kotlin/String // ai.koog.prompt.message/MessagePart.Text.text.<get-text>|<get-text>(){}[0]
 
         final fun component1(): kotlin/String // ai.koog.prompt.message/MessagePart.Text.component1|component1(){}[0]
         final fun component2(): ai.koog.prompt.message/CacheControl? // ai.koog.prompt.message/MessagePart.Text.component2|component2(){}[0]
-        final fun copy(kotlin/String = ..., ai.koog.prompt.message/CacheControl? = ...): ai.koog.prompt.message/MessagePart.Text // ai.koog.prompt.message/MessagePart.Text.copy|copy(kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
+        final fun component3(): ai.koog.prompt.message/MessagePart.Text.Phase? // ai.koog.prompt.message/MessagePart.Text.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., ai.koog.prompt.message/CacheControl? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...): ai.koog.prompt.message/MessagePart.Text // ai.koog.prompt.message/MessagePart.Text.copy|copy(kotlin.String;ai.koog.prompt.message.CacheControl?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/MessagePart.Text.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.prompt.message/MessagePart.Text.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.prompt.message/MessagePart.Text.toString|toString(){}[0]
+
+        final enum class Phase : kotlin/Enum<ai.koog.prompt.message/MessagePart.Text.Phase> { // ai.koog.prompt.message/MessagePart.Text.Phase|null[0]
+            enum entry COMMENTARY // ai.koog.prompt.message/MessagePart.Text.Phase.COMMENTARY|null[0]
+            enum entry FINAL_ANSWER // ai.koog.prompt.message/MessagePart.Text.Phase.FINAL_ANSWER|null[0]
+
+            final val entries // ai.koog.prompt.message/MessagePart.Text.Phase.entries|#static{}entries[0]
+                final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.message/MessagePart.Text.Phase> // ai.koog.prompt.message/MessagePart.Text.Phase.entries.<get-entries>|<get-entries>#static(){}[0]
+
+            final fun valueOf(kotlin/String): ai.koog.prompt.message/MessagePart.Text.Phase // ai.koog.prompt.message/MessagePart.Text.Phase.valueOf|valueOf#static(kotlin.String){}[0]
+            final fun values(): kotlin/Array<ai.koog.prompt.message/MessagePart.Text.Phase> // ai.koog.prompt.message/MessagePart.Text.Phase.values|values#static(){}[0]
+
+            final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/MessagePart.Text.Phase.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Text.Phase> // ai.koog.prompt.message/MessagePart.Text.Phase.Companion.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/MessagePart.Text.Phase.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            }
+        }
 
         final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/MessagePart.Text> { // ai.koog.prompt.message/MessagePart.Text.$serializer|null[0]
             final val descriptor // ai.koog.prompt.message/MessagePart.Text.$serializer.descriptor|{}descriptor[0]
@@ -818,16 +837,19 @@ sealed interface ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.stream
     }
 
     final class TextComplete : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.CompleteFrame { // ai.koog.prompt.streaming/StreamFrame.TextComplete|null[0]
-        constructor <init>(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.TextComplete.<init>|<init>(kotlin.String;kotlin.Int?){}[0]
+        constructor <init>(kotlin/String, kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...) // ai.koog.prompt.streaming/StreamFrame.TextComplete.<init>|<init>(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
 
         final val index // ai.koog.prompt.streaming/StreamFrame.TextComplete.index|{}index[0]
             final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextComplete.index.<get-index>|<get-index>(){}[0]
+        final val phase // ai.koog.prompt.streaming/StreamFrame.TextComplete.phase|{}phase[0]
+            final fun <get-phase>(): ai.koog.prompt.message/MessagePart.Text.Phase? // ai.koog.prompt.streaming/StreamFrame.TextComplete.phase.<get-phase>|<get-phase>(){}[0]
         final val text // ai.koog.prompt.streaming/StreamFrame.TextComplete.text|{}text[0]
             final fun <get-text>(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextComplete.text.<get-text>|<get-text>(){}[0]
 
         final fun component1(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextComplete.component1|component1(){}[0]
         final fun component2(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextComplete.component2|component2(){}[0]
-        final fun copy(kotlin/String = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.TextComplete // ai.koog.prompt.streaming/StreamFrame.TextComplete.copy|copy(kotlin.String;kotlin.Int?){}[0]
+        final fun component3(): ai.koog.prompt.message/MessagePart.Text.Phase? // ai.koog.prompt.streaming/StreamFrame.TextComplete.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...): ai.koog.prompt.streaming/StreamFrame.TextComplete // ai.koog.prompt.streaming/StreamFrame.TextComplete.copy|copy(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.TextComplete.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.TextComplete.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextComplete.toString|toString(){}[0]
@@ -842,21 +864,26 @@ sealed interface ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.stream
         }
 
         final object Companion { // ai.koog.prompt.streaming/StreamFrame.TextComplete.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.streaming/StreamFrame.TextComplete.Companion.$childSerializers|{}$childSerializers[0]
+
             final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.TextComplete> // ai.koog.prompt.streaming/StreamFrame.TextComplete.Companion.serializer|serializer(){}[0]
         }
     }
 
     final class TextDelta : ai.koog.prompt.streaming/StreamFrame, ai.koog.prompt.streaming/StreamFrame.DeltaFrame { // ai.koog.prompt.streaming/StreamFrame.TextDelta|null[0]
-        constructor <init>(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrame.TextDelta.<init>|<init>(kotlin.String;kotlin.Int?){}[0]
+        constructor <init>(kotlin/String, kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...) // ai.koog.prompt.streaming/StreamFrame.TextDelta.<init>|<init>(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
 
         final val index // ai.koog.prompt.streaming/StreamFrame.TextDelta.index|{}index[0]
             final fun <get-index>(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextDelta.index.<get-index>|<get-index>(){}[0]
+        final val phase // ai.koog.prompt.streaming/StreamFrame.TextDelta.phase|{}phase[0]
+            final fun <get-phase>(): ai.koog.prompt.message/MessagePart.Text.Phase? // ai.koog.prompt.streaming/StreamFrame.TextDelta.phase.<get-phase>|<get-phase>(){}[0]
         final val text // ai.koog.prompt.streaming/StreamFrame.TextDelta.text|{}text[0]
             final fun <get-text>(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextDelta.text.<get-text>|<get-text>(){}[0]
 
         final fun component1(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextDelta.component1|component1(){}[0]
         final fun component2(): kotlin/Int? // ai.koog.prompt.streaming/StreamFrame.TextDelta.component2|component2(){}[0]
-        final fun copy(kotlin/String = ..., kotlin/Int? = ...): ai.koog.prompt.streaming/StreamFrame.TextDelta // ai.koog.prompt.streaming/StreamFrame.TextDelta.copy|copy(kotlin.String;kotlin.Int?){}[0]
+        final fun component3(): ai.koog.prompt.message/MessagePart.Text.Phase? // ai.koog.prompt.streaming/StreamFrame.TextDelta.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...): ai.koog.prompt.streaming/StreamFrame.TextDelta // ai.koog.prompt.streaming/StreamFrame.TextDelta.copy|copy(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.streaming/StreamFrame.TextDelta.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.prompt.streaming/StreamFrame.TextDelta.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.prompt.streaming/StreamFrame.TextDelta.toString|toString(){}[0]
@@ -871,6 +898,8 @@ sealed interface ai.koog.prompt.streaming/StreamFrame { // ai.koog.prompt.stream
         }
 
         final object Companion { // ai.koog.prompt.streaming/StreamFrame.TextDelta.Companion|null[0]
+            final val $childSerializers // ai.koog.prompt.streaming/StreamFrame.TextDelta.Companion.$childSerializers|{}$childSerializers[0]
+
             final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.streaming/StreamFrame.TextDelta> // ai.koog.prompt.streaming/StreamFrame.TextDelta.Companion.serializer|serializer(){}[0]
         }
     }
@@ -1235,7 +1264,7 @@ final class ai.koog.prompt.streaming/StreamFrameFlowBuilder { // ai.koog.prompt.
 
     final suspend fun emitEnd(kotlin/String? = ..., ai.koog.prompt.message/ResponseMetaInfo? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitEnd|emitEnd(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo?){}[0]
     final suspend fun emitReasoningDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitReasoningDelta|emitReasoningDelta(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
-    final suspend fun emitTextDelta(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitTextDelta|emitTextDelta(kotlin.String;kotlin.Int?){}[0]
+    final suspend fun emitTextDelta(kotlin/String, kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitTextDelta|emitTextDelta(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
     final suspend fun emitToolCallDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitToolCallDelta|emitToolCallDelta(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
     final suspend fun tryEmitPendingReasoning() // ai.koog.prompt.streaming/StreamFrameFlowBuilder.tryEmitPendingReasoning|tryEmitPendingReasoning(){}[0]
     final suspend fun tryEmitPendingText() // ai.koog.prompt.streaming/StreamFrameFlowBuilder.tryEmitPendingText|tryEmitPendingText(){}[0]
@@ -1601,7 +1630,7 @@ final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streamin
 final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitReasoningComplete(kotlin/String? = ..., kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin/String>? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/emitReasoningComplete|emitReasoningComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>?;kotlin.String?;kotlin.Int?){}[0]
 final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitReasoningComplete(kotlin/String? = ..., kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/emitReasoningComplete|emitReasoningComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
 final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitReasoningDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/emitReasoningDelta|emitReasoningDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
-final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitTextComplete(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitTextComplete|emitTextComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String;kotlin.Int?){}[0]
-final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitTextDelta(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitTextDelta|emitTextDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String;kotlin.Int?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitTextComplete(kotlin/String, kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...) // ai.koog.prompt.streaming/emitTextComplete|emitTextComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
+final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitTextDelta(kotlin/String, kotlin/Int? = ..., ai.koog.prompt.message/MessagePart.Text.Phase? = ...) // ai.koog.prompt.streaming/emitTextDelta|emitTextDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String;kotlin.Int?;ai.koog.prompt.message.MessagePart.Text.Phase?){}[0]
 final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitToolCallComplete(kotlin/String?, kotlin/String, kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitToolCallComplete|emitToolCallComplete@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String;kotlin.String;kotlin.Int?){}[0]
 final suspend fun (kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>).ai.koog.prompt.streaming/emitToolCallDelta(kotlin/String?, kotlin/String?, kotlin/String?, kotlin/Int? = ...) // ai.koog.prompt.streaming/emitToolCallDelta|emitToolCallDelta@kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
