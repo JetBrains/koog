@@ -3,6 +3,7 @@ package ai.koog.http.client.test
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.cio.CIOApplicationEngine
@@ -41,7 +42,8 @@ class MockWebServer {
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
         val contentType: ContentType = ContentType.Text.Plain,
-        val expectedParameters: Map<String, String> = emptyMap()
+        val expectedParameters: Map<String, String> = emptyMap(),
+        val responseHeaders: Map<String, String> = emptyMap()
     )
 
     /**
@@ -53,15 +55,22 @@ class MockWebServer {
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
         val contentType: ContentType = ContentType.Text.Plain,
         val expectedParameters: Map<String, String> = emptyMap(),
+        val responseHeaders: Map<String, String> = emptyMap(),
         val expectedHeaders: Map<String, String> = emptyMap()
     )
 
     /**
-     * Configuration for a mock SSE endpoint
+     * Configuration for a mock SSE endpoint.
+     *
+     * When [statusCode] is a success code the endpoint streams [events]; when it is a non-success
+     * code the endpoint short-circuits with that status, [responseHeaders], and no SSE body.
+     * Useful for covering error-before-stream paths such as 429 rate limits.
      */
     data class SSEEndpointConfig(
         val path: String,
-        val events: List<String>
+        val events: List<String>,
+        val statusCode: HttpStatusCode = HttpStatusCode.OK,
+        val responseHeaders: Map<String, String> = emptyMap()
     )
 
     /**
@@ -74,6 +83,7 @@ class MockWebServer {
         val contentType: ContentType = ContentType.Application.Json,
         val expectedParameters: Map<String, String> = emptyMap(),
         val expectedHeaders: Map<String, String> = emptyMap(),
+        val responseHeaders: Map<String, String> = emptyMap(),
         val lineDelayMillis: Long = 10,
         val onLineWritten: (Int) -> Unit = {},
         val onStreamClosed: () -> Unit = {},
@@ -116,6 +126,9 @@ class MockWebServer {
                             }
                         }
 
+                        config.responseHeaders.forEach { (name, value) ->
+                            call.response.header(name, value)
+                        }
                         call.respondText(
                             text = config.responseBody,
                             contentType = config.contentType,
@@ -153,6 +166,9 @@ class MockWebServer {
                             }
                         }
 
+                        config.responseHeaders.forEach { (name, value) ->
+                            call.response.header(name, value)
+                        }
                         call.respondText(
                             text = config.responseBody,
                             contentType = config.contentType,
@@ -189,6 +205,9 @@ class MockWebServer {
                             }
                         }
 
+                        config.responseHeaders.forEach { (name, value) ->
+                            call.response.header(name, value)
+                        }
                         call.respondTextWriter(contentType = config.contentType, status = config.statusCode) {
                             try {
                                 config.lines.forEachIndexed { index, line ->
@@ -209,6 +228,18 @@ class MockWebServer {
                 sseEndpoints.forEach { config ->
                     post(config.path) {
                         call.receiveText()
+
+                        if (!config.statusCode.isSuccess()) {
+                            config.responseHeaders.forEach { (name, value) ->
+                                call.response.header(name, value)
+                            }
+                            call.respondText(
+                                text = "",
+                                contentType = ContentType.Text.Plain,
+                                status = config.statusCode
+                            )
+                            return@post
+                        }
 
                         val handle: suspend ServerSSESession.() -> Unit = {
                             config.events.forEach { event ->

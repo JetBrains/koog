@@ -27,6 +27,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.URLBuilder
@@ -95,8 +96,13 @@ public class KtorKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.status.value,
             errorBody = response.bodyAsText(),
+            headers = response.headers.toResponseHeaderMap(),
         )
     }
+
+    // Keys keep Ktor's casing; KoogHttpClientException normalizes them to lowercase itself.
+    private fun Headers.toResponseHeaderMap(): Map<String, List<String>> =
+        entries().associate { it.key to it.value }
 
     private fun HttpRequestBuilder.applyRequestHeaders(headers: Map<String, String>) {
         headers.forEach { (name, value) ->
@@ -210,7 +216,8 @@ public class KtorKoogHttpClient internal constructor(
                 statusCode = e.response?.status?.value,
                 errorBody = errorBody,
                 message = e.message,
-                cause = e
+                cause = e,
+                headers = e.response?.headers?.toResponseHeaderMap() ?: emptyMap()
             )
         } catch (e: CancellationException) {
             throw e
@@ -250,6 +257,7 @@ public class KtorKoogHttpClient internal constructor(
                         clientName = clientName,
                         statusCode = response.status.value,
                         errorBody = response.bodyAsText(),
+                        headers = response.headers.toResponseHeaderMap(),
                     )
                 }
 
