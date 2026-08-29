@@ -67,6 +67,7 @@ val excluded = setOf(
 
 val betaModules = setOf(
     ":agents:agents-cli",
+    ":agents:agents-features:agents-features-workspace",
     ":agents:agents-features:agents-features-longterm-memory",
     ":agents:agents-mcp",
     ":agents:agents-planner",
