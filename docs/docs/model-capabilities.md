@@ -98,6 +98,23 @@ The list below indicates the capabilities related to processing structured data:
         - **Standard** (`LLMCapability.Schema.JSON.Standard`): offers comprehensive JSON schema support for complex data
           structures.
 
+### Endpoint capabilities
+
+The capabilities above describe what a model can do. Endpoint capabilities describe something else: which API of a
+provider the model is served by, so that a client knows where to send the request.
+
+- **OpenAI endpoint** (`LLMCapability.OpenAIEndpoint`): the OpenAI API used to call the model.
+    - **Completions** (`LLMCapability.OpenAIEndpoint.Completions`): the
+      [chat completions API](https://platform.openai.com/docs/api-reference/chat).
+    - **Responses** (`LLMCapability.OpenAIEndpoint.Responses`): the
+      [responses API](https://platform.openai.com/docs/api-reference/responses).
+
+`OpenAILLMClient` has no other way to tell which endpoint a model speaks, so declare one. Every model in `OpenAIModels`
+already declares the right one; this matters when you define an `LLModel` yourself — most often when pointing the client
+at an OpenAI-compatible server such as vLLM, SGLang, or LM Studio. `Completions` is the one to declare there, because
+those servers implement the chat completions API. Declaring `Responses` is what selects the responses API. See
+[Models on OpenAI-compatible servers](#models-on-openai-compatible-servers) below.
+
 ## Creating a model (LLModel) configuration
 
 To define a model in a universal, provider-agnostic way, create a model configuration as an instance of the `LLModel`
@@ -130,6 +147,7 @@ The code below represents a basic LLM configuration with core capabilities:
         provider = LLMProvider.OpenAI,
         id = "gpt-4-turbo",
         capabilities = listOf(
+            LLMCapability.OpenAIEndpoint.Completions,
             LLMCapability.Temperature,
             LLMCapability.Tools,
             LLMCapability.Schema.JSON.Standard
@@ -154,6 +172,7 @@ The code below represents a basic LLM configuration with core capabilities:
         LLMProvider.OpenAI,
         "gpt-4-turbo",
         List.of(
+            LLMCapability.OpenAIEndpoint.Completions.INSTANCE,
             LLMCapability.Temperature.INSTANCE,
             LLMCapability.Tools.INSTANCE,
             LLMCapability.Schema.JSON.Standard.INSTANCE
@@ -181,6 +200,7 @@ The model configuration below is a multimodal LLM with vision capabilities:
         provider = LLMProvider.OpenAI,
         id = "gpt-4-vision",
         capabilities = listOf(
+            LLMCapability.OpenAIEndpoint.Completions,
             LLMCapability.Temperature,
             LLMCapability.Vision.Image,
             LLMCapability.MultipleChoices
@@ -206,6 +226,7 @@ The model configuration below is a multimodal LLM with vision capabilities:
         LLMProvider.OpenAI,
         "gpt-4-vision",
         List.of(
+            LLMCapability.OpenAIEndpoint.Completions.INSTANCE,
             LLMCapability.Temperature.INSTANCE,
             LLMCapability.Vision.Image.INSTANCE,
             LLMCapability.MultipleChoices.INSTANCE
@@ -357,6 +378,68 @@ capability in the `capabilities` list:
     }
     -->
     <!--- KNIT example-model-capabilities-java-05.java -->
+
+### Models on OpenAI-compatible servers
+
+A self-hosted server that implements the OpenAI API (vLLM, SGLang, LM Studio, and others) serves models that Koog has
+no predefined configuration for, so you describe them yourself. Along with what the model can do, declare which OpenAI
+endpoint the server exposes — `LLMCapability.OpenAIEndpoint.Completions` for the chat completions API, which is what
+these servers implement:
+
+=== "Kotlin"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability
+    import ai.koog.prompt.llm.LLMProvider
+    import ai.koog.prompt.llm.LLModel
+
+    -->
+    ```kotlin
+    val selfHostedModel = LLModel(
+        provider = LLMProvider.OpenAI,
+        id = "qwen3-27b",
+        capabilities = listOf(
+            LLMCapability.OpenAIEndpoint.Completions,
+            LLMCapability.Completion,
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.Schema.JSON.Basic
+        ),
+        contextLength = 262_144
+    )
+    ```
+    <!--- KNIT example-model-capabilities-06.kt -->
+
+=== "Java"
+
+    <!--- INCLUDE
+    import ai.koog.prompt.llm.LLMCapability;
+    import ai.koog.prompt.llm.LLMProvider;
+    import ai.koog.prompt.llm.LLModel;
+    import java.util.List;
+
+    class ExampleModelCapabilities06 {
+    -->
+    ```java
+    LLModel selfHostedModel = new LLModel(
+        LLMProvider.OpenAI,
+        "qwen3-27b",
+        List.of(
+            LLMCapability.OpenAIEndpoint.Completions.INSTANCE,
+            LLMCapability.Completion.INSTANCE,
+            LLMCapability.Temperature.INSTANCE,
+            LLMCapability.Tools.INSTANCE,
+            LLMCapability.Schema.JSON.Basic.INSTANCE
+        ),
+        262_144L
+    );
+    ```
+    <!--- SUFFIX
+    }
+    -->
+    <!--- KNIT example-model-capabilities-java-06.java -->
+
+The server itself is selected with `OpenAIClientSettings(baseUrl = ...)` when creating the client.
 
 ### LLM capabilities by model
 
