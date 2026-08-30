@@ -53,6 +53,7 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-chat-history-aws"))
                 implementation(project(":agents:agents-features:agents-features-longterm-memory-aws"))
                 implementation(project(":serialization:serialization-jackson"))
+                implementation(project(":skills"))
 
                 // External libraries
                 implementation(libs.junit.jupiter.params)
