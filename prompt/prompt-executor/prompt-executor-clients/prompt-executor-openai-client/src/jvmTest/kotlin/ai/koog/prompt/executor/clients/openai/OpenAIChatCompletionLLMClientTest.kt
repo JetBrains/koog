@@ -1,6 +1,13 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.http.client.ktor.KtorKoogHttpClient
+import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponse
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
 import ai.koog.prompt.message.Message
@@ -33,6 +40,17 @@ import kotlin.test.assertNotNull
 import kotlin.time.Instant
 
 class OpenAIChatCompletionLLMClientTest {
+
+    private class TestOpenAILLMClient(
+        httpClientFactory: KtorKoogHttpClient.Factory,
+        apiKey: String,
+        clock: KoogClock,
+    ) : OpenAILLMClient(apiKey, httpClientFactory = httpClientFactory, clock = clock) {
+        fun processChunks(chunks: kotlinx.coroutines.flow.Flow<OpenAIChatCompletionStreamResponse>) =
+            processStreamingResponse(chunks)
+
+        fun decodeChunk(data: String): OpenAIChatCompletionStreamResponse = decodeStreamingResponse(data)
+    }
 
     object FixedClock : KoogClock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
@@ -206,5 +224,85 @@ class OpenAIChatCompletionLLMClientTest {
         val decoded = Json.parseToJsonElement(arguments)
         assertIs<JsonObject>(decoded, "function.arguments must be a JSON object, not a double-encoded JSON string")
         assertEquals(JsonObject(mapOf("city" to JsonPrimitive("Boston"))), decoded)
+    }
+
+    @Test
+    fun testStreamingEmitsReasoningContentFromDelta() = runTest {
+        val client = TestOpenAILLMClient(
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(MockEngine { respond("") })),
+            apiKey = key,
+            clock = FixedClock,
+        )
+
+        val reasoningChunk = OpenAIChatCompletionStreamResponse(
+            choices = listOf(
+                OpenAIStreamChoice(
+                    delta = OpenAIStreamDelta(reasoningContent = "I should call the weather tool first."),
+                    index = 0,
+                )
+            ),
+            created = 1L,
+            id = "chatcmpl-stream",
+            model = "gpt-4o",
+            objectType = "chat.completion.chunk",
+        )
+        val finishChunk = OpenAIChatCompletionStreamResponse(
+            choices = listOf(
+                OpenAIStreamChoice(
+                    delta = OpenAIStreamDelta(),
+                    finishReason = "tool_calls",
+                    index = 0,
+                )
+            ),
+            created = 1L,
+            id = "chatcmpl-stream",
+            model = "gpt-4o",
+            objectType = "chat.completion.chunk",
+        )
+
+        val frames = client.processChunks(flowOf(reasoningChunk, finishChunk)).toList()
+
+        val reasoningDelta = assertIs<StreamFrame.ReasoningDelta>(frames[0])
+        assertEquals("I should call the weather tool first.", reasoningDelta.text)
+
+        val reasoningComplete = assertIs<StreamFrame.ReasoningComplete>(frames[1])
+        assertEquals(listOf("I should call the weather tool first."), reasoningComplete.content)
+
+        val message = frames.toMessageResponse()
+        val reasoningPart = assertIs<MessagePart.Reasoning>(message.parts.single())
+        assertEquals("I should call the weather tool first.", reasoningPart.content.single())
+    }
+
+    @Test
+    fun testStreamingDecodesReasoningContentFromJsonChunk() = runTest {
+        val client = TestOpenAILLMClient(
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(MockEngine { respond("") })),
+            apiKey = key,
+            clock = FixedClock,
+        )
+
+        val chunkJson = """
+            {
+              "id": "chatcmpl-stream",
+              "object": "chat.completion.chunk",
+              "created": 1,
+              "model": "gpt-4o",
+              "choices": [
+                {
+                  "index": 0,
+                  "delta": {
+                    "reasoning_content": "I should call the weather tool first."
+                  }
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val decoded = client.decodeChunk(chunkJson)
+        val reasoningContent = decoded.choices.single().delta.reasoningContent
+        assertEquals("I should call the weather tool first.", reasoningContent)
+
+        val frames = client.processChunks(flowOf(decoded)).toList()
+        assertIs<StreamFrame.ReasoningDelta>(frames.first())
     }
 }
