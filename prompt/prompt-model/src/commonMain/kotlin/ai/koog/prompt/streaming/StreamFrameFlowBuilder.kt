@@ -251,11 +251,37 @@ public class StreamFrameFlowBuilder(
     }
 
     /**
+     * Attaches an opaque provider signature (e.g. Gemini 3 `thought_signature`) to the tool call
+     * currently being combined. When the pending call completes, the signature is emitted as a
+     * signature-only [StreamFrame.ReasoningComplete] (empty content, `encrypted` set) immediately
+     * before its [StreamFrame.ToolCallComplete], so [toMessageResponse] reconstructs the
+     * `Reasoning(encrypted)` -> `Tool.Call` part order that multi-turn function calling requires.
+     *
+     * Calling this without a pending tool call is a no-op: the signature is advisory metadata and
+     * must never fail a live stream.
+     */
+    public fun attachToolCallSignature(signature: String) {
+        val previous: PendingToolCall? = pendingToolCallRef.load()
+        if (previous != null) {
+            pendingToolCallRef.store(previous.copy(signature = signature))
+        }
+    }
+
+    /**
      * Emits a [pendingToolCallRef] if it exists and then clears it.
      */
     public suspend fun tryEmitPendingToolCall() {
         val pendingToolCall = pendingToolCallRef.exchange(null)
         if (pendingToolCall != null) {
+            pendingToolCall.signature?.let { signature ->
+                flowCollector.emitReasoningComplete(
+                    id = null,
+                    text = emptyList(),
+                    summary = null,
+                    encrypted = signature,
+                    index = pendingToolCall.index
+                )
+            }
             flowCollector.emitToolCallComplete(
                 id = pendingToolCall.id,
                 name = pendingToolCall.name ?: "",
@@ -270,6 +296,7 @@ public class StreamFrameFlowBuilder(
         val name: String?,
         val argumentsDelta: String?,
         val index: Int?,
+        val signature: String? = null,
     ) {
         fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
             require(this.index == index)

@@ -890,8 +890,9 @@ public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStre
 
 public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall {
 	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamToolCall$Companion;
-	public fun <init> (ILjava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;Ljava/lang/String;)V
-	public synthetic fun <init> (ILjava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILjava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (ILjava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getExtraContent ()Lkotlinx/serialization/json/JsonObject;
 	public final fun getFunction ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIStreamFunction;
 	public final fun getId ()Ljava/lang/String;
 	public final fun getIndex ()I
@@ -937,7 +938,9 @@ public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAITool
 
 public final class ai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall {
 	public static final field Companion Lai/koog/prompt/executor/clients/openai/base/models/OpenAIToolCall$Companion;
-	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;)V
+	public fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;Lkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getExtraContent ()Lkotlinx/serialization/json/JsonObject;
 	public final fun getFunction ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIFunction;
 	public final fun getId ()Ljava/lang/String;
 	public final fun getType ()Ljava/lang/String;
