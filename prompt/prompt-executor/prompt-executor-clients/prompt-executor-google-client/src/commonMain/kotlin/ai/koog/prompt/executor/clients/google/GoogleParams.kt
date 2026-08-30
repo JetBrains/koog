@@ -3,6 +3,59 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
+import kotlin.time.Instant
+
+/**
+ * Configuration for Google Search grounding, which allows Gemini models to ground
+ * responses with real-time web search results.
+ *
+ * @property groundingEnabled When `true`, enables grounding with Google Search.
+ *   All other properties require this to be `true`.
+ * @property groundingStartTime Optional RFC3339 timestamp (e.g. `"2025-01-01T00:00:00Z"`)
+ *   restricting search results to those published after this time.
+ *   Must be set together with [groundingEndTime].
+ * @property groundingEndTime Optional RFC3339 timestamp restricting search results to those
+ *   published before this time. Must be set together with [groundingStartTime].
+ * @property webSearch When `true`, explicitly requests web search results in addition to
+ *   the default grounding behavior.
+ * @property imageSearch When `true`, explicitly requests image search results.
+ *
+ * API reference: https://ai.google.dev/api/caching#GoogleSearch
+ */
+public data class GoogleSearchConfig(
+    val groundingEnabled: Boolean = false,
+    val groundingStartTime: String? = null,
+    val groundingEndTime: String? = null,
+    val webSearch: Boolean = false,
+    val imageSearch: Boolean = false,
+) {
+    init {
+        require(
+            groundingEnabled ||
+                (groundingStartTime == null && groundingEndTime == null && !webSearch && !imageSearch)
+        ) {
+            "groundingEnabled must be true when groundingStartTime/groundingEndTime/searchTypes are configured"
+        }
+        require((groundingStartTime == null) == (groundingEndTime == null)) {
+            "Both groundingStartTime and groundingEndTime must be set together, or both must be null"
+        }
+        if (groundingStartTime != null && groundingEndTime != null) {
+            val start = parseRfc3339("groundingStartTime", groundingStartTime)
+            val end = parseRfc3339("groundingEndTime", groundingEndTime)
+            require(start <= end) {
+                "groundingStartTime must be <= groundingEndTime, but was $groundingStartTime > $groundingEndTime"
+            }
+        }
+    }
+
+    private companion object {
+        private fun parseRfc3339(fieldName: String, value: String): Instant = try {
+            Instant.parse(value)
+        } catch (_: IllegalArgumentException) {
+            throw IllegalArgumentException("$fieldName must be a valid RFC3339 timestamp, but was $value")
+        }
+    }
+}
 
 internal fun LLMParams.toGoogleParams(): GoogleParams {
     if (this is GoogleParams) return this
@@ -35,6 +88,8 @@ internal fun LLMParams.toGoogleParams(): GoogleParams {
  * @property topK The maximum number of tokens to consider when sampling.
  * @property thinkingConfig Controls whether the model should expose its chain-of-thought
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
+ * @property groundingSearchConfig Google Search grounding configuration.
+ * Set [GoogleSearchConfig.groundingEnabled] to true to enable grounding.
  */
 @Suppress("LongParameterList")
 public class GoogleParams(
@@ -49,6 +104,7 @@ public class GoogleParams(
     public val topP: Double? = null,
     public val topK: Int? = null,
     public val thinkingConfig: GoogleThinkingConfig? = null,
+    public val groundingSearchConfig: GoogleSearchConfig? = null,
 ) : LLMParams(
     temperature,
     maxTokens,
@@ -92,6 +148,7 @@ public class GoogleParams(
         topP = topP,
         topK = topK,
         thinkingConfig = thinkingConfig,
+        groundingSearchConfig = groundingSearchConfig,
     )
 
     /**
@@ -109,6 +166,7 @@ public class GoogleParams(
         topP: Double? = this.topP,
         topK: Int? = this.topK,
         thinkingConfig: GoogleThinkingConfig? = this.thinkingConfig,
+        groundingSearchConfig: GoogleSearchConfig? = this.groundingSearchConfig,
     ): GoogleParams = GoogleParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -121,6 +179,7 @@ public class GoogleParams(
         topP = topP,
         topK = topK,
         thinkingConfig = thinkingConfig,
+        groundingSearchConfig = groundingSearchConfig,
     )
 
     override fun equals(other: Any?): Boolean = when {
@@ -137,13 +196,15 @@ public class GoogleParams(
                 additionalProperties == other.additionalProperties &&
                 topP == other.topP &&
                 topK == other.topK &&
-                thinkingConfig == other.thinkingConfig
+                thinkingConfig == other.thinkingConfig &&
+                groundingSearchConfig == other.groundingSearchConfig
     }
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice, user,
-        additionalProperties, topP, topK, thinkingConfig
+        additionalProperties, topP, topK, thinkingConfig,
+        groundingSearchConfig
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -161,6 +222,7 @@ public class GoogleParams(
         append(", topP=$topP")
         append(", topK=$topK")
         append(", thinkingConfig=$thinkingConfig")
+        append(", groundingSearchConfig=$groundingSearchConfig")
         append(")")
     }
 }

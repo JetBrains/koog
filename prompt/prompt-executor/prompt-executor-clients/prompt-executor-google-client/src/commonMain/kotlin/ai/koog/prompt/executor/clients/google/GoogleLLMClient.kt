@@ -25,8 +25,13 @@ import ai.koog.prompt.executor.clients.google.models.GoogleModelsResponse
 import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
+import ai.koog.prompt.executor.clients.google.models.GoogleSearch
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
 import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
+import ai.koog.prompt.executor.clients.google.models.ImageSearch
+import ai.koog.prompt.executor.clients.google.models.Interval
+import ai.koog.prompt.executor.clients.google.models.SearchTypes
+import ai.koog.prompt.executor.clients.google.models.WebSearch
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -403,10 +408,36 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             null -> null
         }
 
+        val groundingConfig = googleParams.groundingSearchConfig
+        val groundingTool: GoogleTool? = if (groundingConfig?.groundingEnabled == true) {
+            val interval = if (groundingConfig.groundingStartTime != null && groundingConfig.groundingEndTime != null) {
+                Interval(startTime = groundingConfig.groundingStartTime, endTime = groundingConfig.groundingEndTime)
+            } else {
+                null
+            }
+            val searchTypes = if (groundingConfig.webSearch || groundingConfig.imageSearch) {
+                SearchTypes(
+                    webSearch = if (groundingConfig.webSearch) WebSearch() else null,
+                    imageSearch = if (groundingConfig.imageSearch) ImageSearch() else null,
+                )
+            } else {
+                null
+            }
+            GoogleTool(googleSearch = GoogleSearch(timeRangeFilter = interval, searchTypes = searchTypes))
+        } else {
+            null
+        }
+
+        val allTools = when {
+            groundingTool != null && googleTools != null -> googleTools + groundingTool
+            groundingTool != null -> listOf(groundingTool)
+            else -> googleTools
+        }
+
         return GoogleRequest(
             contents = contents,
             systemInstruction = googleSystemInstruction,
-            tools = googleTools,
+            tools = allTools,
             generationConfig = generationConfig,
             toolConfig = GoogleToolConfig(functionCallingConfig),
         )

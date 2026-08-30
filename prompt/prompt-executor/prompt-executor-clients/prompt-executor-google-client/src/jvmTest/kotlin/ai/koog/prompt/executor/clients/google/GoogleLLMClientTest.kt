@@ -22,8 +22,10 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -694,5 +696,158 @@ class GoogleLLMClientTest {
         response.parts[1].shouldBeInstanceOf<MessagePart.Attachment>()
         val filePart = (response.parts[1] as MessagePart.Attachment).source as AttachmentSource.Image
         filePart.format shouldBe "png"
+    }
+
+    @Test
+    fun `createGoogleRequest injects googleSearch tool when groundingSearchConfig is enabled`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        val tools = request.tools.shouldNotBeNull()
+        tools.shouldHaveSize(1)
+        tools.first().googleSearch shouldNotBe null
+        tools.first().functionDeclarations shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest does not inject googleSearch tool when groundingSearchConfig is absent`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams()),
+            model = model,
+            tools = emptyList()
+        )
+
+        request.tools shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest googleSearch has no timeRangeFilter when no times are provided`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        val tools = request.tools.shouldNotBeNull()
+        tools.first().googleSearch.shouldNotBeNull().timeRangeFilter shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest googleSearch includes timeRangeFilter when both times are provided`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(
+                    groundingSearchConfig = GoogleSearchConfig(
+                        groundingEnabled = true,
+                        groundingStartTime = "2025-01-01T00:00:00Z",
+                        groundingEndTime = "2025-07-01T00:00:00Z"
+                    )
+                )
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        val googleSearch = request.tools.shouldNotBeNull().first().googleSearch.shouldNotBeNull()
+        val interval = googleSearch.timeRangeFilter.shouldNotBeNull()
+        interval.startTime shouldBe "2025-01-01T00:00:00Z"
+        interval.endTime shouldBe "2025-07-01T00:00:00Z"
+    }
+
+    @Test
+    fun `GoogleSearchConfig throws when only one of groundingStartTime or groundingEndTime is set`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(groundingEnabled = true, groundingStartTime = "2025-01-01T00:00:00Z")
+        }
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(groundingEnabled = true, groundingEndTime = "2025-07-01T00:00:00Z")
+        }
+    }
+
+    @Test
+    fun `GoogleSearchConfig throws when grounding times are not valid RFC3339`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(
+                groundingEnabled = true,
+                groundingStartTime = "2025-01-01 00:00:00",
+                groundingEndTime = "2025-07-01T00:00:00Z"
+            )
+        }
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(
+                groundingEnabled = true,
+                groundingStartTime = "2025-01-01T00:00:00Z",
+                groundingEndTime = "not-a-timestamp"
+            )
+        }
+    }
+
+    @Test
+    fun `GoogleSearchConfig throws when grounding options are set while grounding is disabled`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(webSearch = true)
+        }
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(groundingStartTime = "2025-01-01T00:00:00Z", groundingEndTime = "2025-07-01T00:00:00Z")
+        }
+    }
+
+    @Test
+    fun `GoogleSearchConfig throws when groundingStartTime is after groundingEndTime`() {
+        shouldThrow<IllegalArgumentException> {
+            GoogleSearchConfig(
+                groundingEnabled = true,
+                groundingStartTime = "2025-07-01T00:00:00Z",
+                groundingEndTime = "2025-01-01T00:00:00Z"
+            )
+        }
+    }
+
+    @Test
+    fun `createGoogleRequest merges grounding tool with function tools`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Flash
+
+        val tool = ToolDescriptor(name = "myTool", description = "desc", requiredParameters = emptyList())
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(groundingSearchConfig = GoogleSearchConfig(groundingEnabled = true))
+            ),
+            model = model,
+            tools = listOf(tool)
+        )
+
+        val tools = request.tools.shouldNotBeNull()
+        tools.shouldHaveSize(2)
+        tools.any { it.googleSearch != null } shouldBe true
+        tools.any { it.functionDeclarations != null } shouldBe true
     }
 }
