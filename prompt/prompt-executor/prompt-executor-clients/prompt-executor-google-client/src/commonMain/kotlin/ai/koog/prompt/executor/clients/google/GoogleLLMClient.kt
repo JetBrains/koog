@@ -409,6 +409,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             tools = googleTools,
             generationConfig = generationConfig,
             toolConfig = GoogleToolConfig(functionCallingConfig),
+            serviceTier = googleParams.serviceTier,
         )
     }
 
