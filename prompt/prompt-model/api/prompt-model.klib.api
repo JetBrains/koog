@@ -339,13 +339,15 @@ sealed interface ai.koog.prompt.message/Message { // ai.koog.prompt.message/Mess
 
     final class Assistant : ai.koog.prompt.message/Message { // ai.koog.prompt.message/Message.Assistant|null[0]
         constructor <init>(ai.koog.prompt.message/MessagePart.ResponsePart, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(ai.koog.prompt.message.MessagePart.ResponsePart;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
-        constructor <init>(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart>, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+        constructor <init>(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart>, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.message/LogProb>? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.message.LogProb>?){}[0]
         constructor <init>(kotlin/String, ai.koog.prompt.message/ResponseMetaInfo, kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...) // ai.koog.prompt.message/Message.Assistant.<init>|<init>(kotlin.String;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
 
         final val finishReason // ai.koog.prompt.message/Message.Assistant.finishReason|{}finishReason[0]
             final fun <get-finishReason>(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.finishReason.<get-finishReason>|<get-finishReason>(){}[0]
         final val id // ai.koog.prompt.message/Message.Assistant.id|{}id[0]
             final fun <get-id>(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.id.<get-id>|<get-id>(){}[0]
+        final val logprobs // ai.koog.prompt.message/Message.Assistant.logprobs|{}logprobs[0]
+            final fun <get-logprobs>(): kotlin.collections/List<ai.koog.prompt.message/LogProb>? // ai.koog.prompt.message/Message.Assistant.logprobs.<get-logprobs>|<get-logprobs>(){}[0]
         final val metaInfo // ai.koog.prompt.message/Message.Assistant.metaInfo|{}metaInfo[0]
             final fun <get-metaInfo>(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/Message.Assistant.metaInfo.<get-metaInfo>|<get-metaInfo>(){}[0]
         final val parts // ai.koog.prompt.message/Message.Assistant.parts|{}parts[0]
@@ -360,7 +362,8 @@ sealed interface ai.koog.prompt.message/Message { // ai.koog.prompt.message/Mess
         final fun component3(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.component3|component3(){}[0]
         final fun component4(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/Message.Assistant.component4|component4(){}[0]
         final fun component5(): kotlin/String? // ai.koog.prompt.message/Message.Assistant.component5|component5(){}[0]
-        final fun copy(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> = ..., ai.koog.prompt.message/ResponseMetaInfo = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.message/Message.Assistant.copy|copy(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?){}[0]
+        final fun component6(): kotlin.collections/List<ai.koog.prompt.message/LogProb>? // ai.koog.prompt.message/Message.Assistant.component6|component6(){}[0]
+        final fun copy(kotlin.collections/List<ai.koog.prompt.message/MessagePart.ResponsePart> = ..., ai.koog.prompt.message/ResponseMetaInfo = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ..., kotlin/String? = ..., kotlin.collections/List<ai.koog.prompt.message/LogProb>? = ...): ai.koog.prompt.message/Message.Assistant // ai.koog.prompt.message/Message.Assistant.copy|copy(kotlin.collections.List<ai.koog.prompt.message.MessagePart.ResponsePart>;ai.koog.prompt.message.ResponseMetaInfo;kotlin.String?;kotlinx.serialization.json.JsonObject?;kotlin.String?;kotlin.collections.List<ai.koog.prompt.message.LogProb>?){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/Message.Assistant.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // ai.koog.prompt.message/Message.Assistant.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // ai.koog.prompt.message/Message.Assistant.toString|toString(){}[0]
@@ -1146,6 +1149,43 @@ final class ai.koog.prompt.dsl/ResponseMessagePartsBuilder : ai.koog.prompt.text
     final fun toolCall(ai.koog.prompt.message/MessagePart.Tool.Call) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
     final fun toolCall(kotlin/String? = ..., kotlin/String, kotlin/String, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlin.String;ai.koog.prompt.message.CacheControl?){}[0]
     final fun toolCall(kotlin/String? = ..., kotlin/String, kotlinx.serialization.json/JsonObject, ai.koog.prompt.message/CacheControl? = ...) // ai.koog.prompt.dsl/ResponseMessagePartsBuilder.toolCall|toolCall(kotlin.String?;kotlin.String;kotlinx.serialization.json.JsonObject;ai.koog.prompt.message.CacheControl?){}[0]
+}
+
+final class ai.koog.prompt.message/LogProb { // ai.koog.prompt.message/LogProb|null[0]
+    constructor <init>(kotlin/String, kotlin/Double, kotlin.collections/List<kotlin/Int>? = ..., kotlin.collections/List<ai.koog.prompt.message/LogProb> = ...) // ai.koog.prompt.message/LogProb.<init>|<init>(kotlin.String;kotlin.Double;kotlin.collections.List<kotlin.Int>?;kotlin.collections.List<ai.koog.prompt.message.LogProb>){}[0]
+
+    final val bytes // ai.koog.prompt.message/LogProb.bytes|{}bytes[0]
+        final fun <get-bytes>(): kotlin.collections/List<kotlin/Int>? // ai.koog.prompt.message/LogProb.bytes.<get-bytes>|<get-bytes>(){}[0]
+    final val logprob // ai.koog.prompt.message/LogProb.logprob|{}logprob[0]
+        final fun <get-logprob>(): kotlin/Double // ai.koog.prompt.message/LogProb.logprob.<get-logprob>|<get-logprob>(){}[0]
+    final val token // ai.koog.prompt.message/LogProb.token|{}token[0]
+        final fun <get-token>(): kotlin/String // ai.koog.prompt.message/LogProb.token.<get-token>|<get-token>(){}[0]
+    final val topLogprobs // ai.koog.prompt.message/LogProb.topLogprobs|{}topLogprobs[0]
+        final fun <get-topLogprobs>(): kotlin.collections/List<ai.koog.prompt.message/LogProb> // ai.koog.prompt.message/LogProb.topLogprobs.<get-topLogprobs>|<get-topLogprobs>(){}[0]
+
+    final fun component1(): kotlin/String // ai.koog.prompt.message/LogProb.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // ai.koog.prompt.message/LogProb.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<kotlin/Int>? // ai.koog.prompt.message/LogProb.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<ai.koog.prompt.message/LogProb> // ai.koog.prompt.message/LogProb.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Double = ..., kotlin.collections/List<kotlin/Int>? = ..., kotlin.collections/List<ai.koog.prompt.message/LogProb> = ...): ai.koog.prompt.message/LogProb // ai.koog.prompt.message/LogProb.copy|copy(kotlin.String;kotlin.Double;kotlin.collections.List<kotlin.Int>?;kotlin.collections.List<ai.koog.prompt.message.LogProb>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/LogProb.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.koog.prompt.message/LogProb.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.message/LogProb.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.koog.prompt.message/LogProb> { // ai.koog.prompt.message/LogProb.$serializer|null[0]
+        final val descriptor // ai.koog.prompt.message/LogProb.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.koog.prompt.message/LogProb.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.koog.prompt.message/LogProb.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.koog.prompt.message/LogProb // ai.koog.prompt.message/LogProb.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.koog.prompt.message/LogProb) // ai.koog.prompt.message/LogProb.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.koog.prompt.message.LogProb){}[0]
+    }
+
+    final object Companion { // ai.koog.prompt.message/LogProb.Companion|null[0]
+        final val $childSerializers // ai.koog.prompt.message/LogProb.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/LogProb> // ai.koog.prompt.message/LogProb.Companion.serializer|serializer(){}[0]
+    }
 }
 
 final class ai.koog.prompt.message/RequestMetaInfo : ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.message/RequestMetaInfo|null[0]
