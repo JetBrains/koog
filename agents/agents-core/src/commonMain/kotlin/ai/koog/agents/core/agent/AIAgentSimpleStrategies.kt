@@ -35,6 +35,6 @@ public fun singleRunStrategy(parallelTools: Boolean = false): AIAgentGraphStrate
     edge(nodeCallLLM forwardTo nodeExecuteTool onToolCalls { true })
     edge(nodeCallLLM forwardTo nodeFinish onTextMessage { true })
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
+    edge(nodeSendToolResult forwardTo nodeFinish onTextMessage { true })
 }
