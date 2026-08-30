@@ -5,7 +5,7 @@ Provides pure JDBC chat history providers for persisting conversation history wi
 ## Features
 
 - **No ORM Dependency**: Uses plain `javax.sql.DataSource` and JDBC — no Exposed or other ORM required
-- **Multi-Database Support**: PostgreSQL, MySQL, H2
+- **Multi-Database Support**: Oracle, PostgreSQL, MySQL, H2
 - **TTL Support**: Automatic cleanup of expired conversations with configurable TTL
 - **Java Interop**: `@JvmOverloads` constructors and `migrateBlocking()` for convenient Java usage
 
@@ -16,6 +16,9 @@ Provides pure JDBC chat history providers for persisting conversation history wi
 - `agents-features-chat-memory-sql` - Provides the `SQLChatHistoryProvider` base class
 
 ## Providers
+
+### OracleJdbcChatHistoryProvider
+Production-ready provider for Oracle using `MERGE ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT`.
 
 ### PostgresJdbcChatHistoryProvider
 Production-ready provider for PostgreSQL using `INSERT ... ON CONFLICT DO UPDATE`.
