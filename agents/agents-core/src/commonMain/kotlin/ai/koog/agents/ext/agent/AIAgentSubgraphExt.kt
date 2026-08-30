@@ -18,6 +18,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolFailure
+import ai.koog.agents.core.environment.ToolFailureStage
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
@@ -838,7 +840,18 @@ internal suspend fun <Output, OutputTransformed> AIAgentContext.executeFinishToo
             tool = finishTool.name,
             toolArgs = runCatching { toolCall.argsJson.toKoogJSONObject() }.getOrElse { JSONObject(emptyMap()) },
             toolDescription = toolDescription,
-            output = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
+            // Route the model-facing text through the configured presenter so a host can sanitize the raw
+            // exception before it reaches the prompt, consistent with GenericAgentEnvironment. The legacy
+            // wording is supplied as the override so ToolFailurePresenter.Default stays byte-for-byte
+            // backward compatible; the original throwable remains observable via ToolResultKind.Failure.
+            output = config.toolFailurePresenter.present(
+                ToolFailure(
+                    toolName = finishTool.name,
+                    stage = ToolFailureStage.Execution,
+                    error = e,
+                    defaultMessageOverride = "Failed to execute '${finishTool.name}' with error: ${e.message}'",
+                )
+            ),
             resultKind = ToolResultKind.Failure(e),
             result = null,
             resultObject = null

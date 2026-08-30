@@ -53,6 +53,18 @@ final enum class ai.koog.agents.core.dsl.extension/FactType : kotlin/Enum<ai.koo
     }
 }
 
+final enum class ai.koog.agents.core.environment/ToolFailureStage : kotlin/Enum<ai.koog.agents.core.environment/ToolFailureStage> { // ai.koog.agents.core.environment/ToolFailureStage|null[0]
+    enum entry ArgumentParsing // ai.koog.agents.core.environment/ToolFailureStage.ArgumentParsing|null[0]
+    enum entry Execution // ai.koog.agents.core.environment/ToolFailureStage.Execution|null[0]
+    enum entry ResultSerialization // ai.koog.agents.core.environment/ToolFailureStage.ResultSerialization|null[0]
+
+    final val entries // ai.koog.agents.core.environment/ToolFailureStage.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.agents.core.environment/ToolFailureStage> // ai.koog.agents.core.environment/ToolFailureStage.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.koog.agents.core.environment/ToolFailureStage // ai.koog.agents.core.environment/ToolFailureStage.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.koog.agents.core.environment/ToolFailureStage> // ai.koog.agents.core.environment/ToolFailureStage.values|values#static(){}[0]
+}
+
 final enum class ai.koog.agents.core.model/AgentServiceErrorType : kotlin/Enum<ai.koog.agents.core.model/AgentServiceErrorType> { // ai.koog.agents.core.model/AgentServiceErrorType|null[0]
     enum entry AGENT_NOT_FOUND // ai.koog.agents.core.model/AgentServiceErrorType.AGENT_NOT_FOUND|null[0]
     enum entry MALFORMED_MESSAGE // ai.koog.agents.core.model/AgentServiceErrorType.MALFORMED_MESSAGE|null[0]
@@ -85,6 +97,15 @@ abstract fun interface <#A: kotlin/Any?, #B: kotlin/Any?> ai.koog.agents.core.ut
 
 abstract fun interface <#A: kotlin/Any?> ai.koog.agents.core.utils/ConfigureAction { // ai.koog.agents.core.utils/ConfigureAction|null[0]
     abstract fun configure(#A) // ai.koog.agents.core.utils/ConfigureAction.configure|configure(1:0){}[0]
+}
+
+abstract fun interface ai.koog.agents.core.environment/ToolFailurePresenter { // ai.koog.agents.core.environment/ToolFailurePresenter|null[0]
+    abstract fun present(ai.koog.agents.core.environment/ToolFailure): kotlin/String // ai.koog.agents.core.environment/ToolFailurePresenter.present|present(ai.koog.agents.core.environment.ToolFailure){}[0]
+
+    final object Companion { // ai.koog.agents.core.environment/ToolFailurePresenter.Companion|null[0]
+        final val Default // ai.koog.agents.core.environment/ToolFailurePresenter.Companion.Default|{}Default[0]
+            final fun <get-Default>(): ai.koog.agents.core.environment/ToolFailurePresenter // ai.koog.agents.core.environment/ToolFailurePresenter.Companion.Default.<get-Default>|<get-Default>(){}[0]
+    }
 }
 
 abstract interface <#A: ai.koog.agents.core.feature.config/FeatureConfig, #B: kotlin/Any> ai.koog.agents.core.feature/AIAgentFeature { // ai.koog.agents.core.feature/AIAgentFeature|null[0]
@@ -1616,7 +1637,7 @@ final class <#A: kotlin/Any?> ai.koog.agents.ext.agent/RetrySubgraphResult { // 
 }
 
 final class ai.koog.agents.core.agent.config/AIAgentConfig : ai.koog.agents.core.agent.config/AIAgentConfigBase { // ai.koog.agents.core.agent.config/AIAgentConfig|null[0]
-    constructor <init>(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin/Int, ai.koog.agents.core.agent.config/MissingToolsConversionStrategy = ..., ai.koog.prompt.processor/ResponseProcessor? = ..., ai.koog.serialization/JSONSerializer = ...) // ai.koog.agents.core.agent.config/AIAgentConfig.<init>|<init>(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.Int;ai.koog.agents.core.agent.config.MissingToolsConversionStrategy;ai.koog.prompt.processor.ResponseProcessor?;ai.koog.serialization.JSONSerializer){}[0]
+    constructor <init>(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin/Int, ai.koog.agents.core.agent.config/MissingToolsConversionStrategy = ..., ai.koog.prompt.processor/ResponseProcessor? = ..., ai.koog.serialization/JSONSerializer = ..., ai.koog.agents.core.environment/ToolFailurePresenter = ...) // ai.koog.agents.core.agent.config/AIAgentConfig.<init>|<init>(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.Int;ai.koog.agents.core.agent.config.MissingToolsConversionStrategy;ai.koog.prompt.processor.ResponseProcessor?;ai.koog.serialization.JSONSerializer;ai.koog.agents.core.environment.ToolFailurePresenter){}[0]
 
     final val maxAgentIterations // ai.koog.agents.core.agent.config/AIAgentConfig.maxAgentIterations|{}maxAgentIterations[0]
         final fun <get-maxAgentIterations>(): kotlin/Int // ai.koog.agents.core.agent.config/AIAgentConfig.maxAgentIterations.<get-maxAgentIterations>|<get-maxAgentIterations>(){}[0]
@@ -1630,6 +1651,8 @@ final class ai.koog.agents.core.agent.config/AIAgentConfig : ai.koog.agents.core
         final fun <get-responseProcessor>(): ai.koog.prompt.processor/ResponseProcessor? // ai.koog.agents.core.agent.config/AIAgentConfig.responseProcessor.<get-responseProcessor>|<get-responseProcessor>(){}[0]
     final val serializer // ai.koog.agents.core.agent.config/AIAgentConfig.serializer|{}serializer[0]
         final fun <get-serializer>(): ai.koog.serialization/JSONSerializer // ai.koog.agents.core.agent.config/AIAgentConfig.serializer.<get-serializer>|<get-serializer>(){}[0]
+    final val toolFailurePresenter // ai.koog.agents.core.agent.config/AIAgentConfig.toolFailurePresenter|{}toolFailurePresenter[0]
+        final fun <get-toolFailurePresenter>(): ai.koog.agents.core.environment/ToolFailurePresenter // ai.koog.agents.core.agent.config/AIAgentConfig.toolFailurePresenter.<get-toolFailurePresenter>|<get-toolFailurePresenter>(){}[0]
 
     final object Companion { // ai.koog.agents.core.agent.config/AIAgentConfig.Companion|null[0]
         final fun withSystemPrompt(kotlin/String, ai.koog.prompt.llm/LLModel = ..., kotlin/String = ..., kotlin/Int = ...): ai.koog.agents.core.agent.config/AIAgentConfig // ai.koog.agents.core.agent.config/AIAgentConfig.Companion.withSystemPrompt|withSystemPrompt(kotlin.String;ai.koog.prompt.llm.LLModel;kotlin.String;kotlin.Int){}[0]
@@ -2072,7 +2095,7 @@ final class ai.koog.agents.core.dsl.extension/ToolResults { // ai.koog.agents.co
 }
 
 final class ai.koog.agents.core.environment/GenericAgentEnvironment : ai.koog.agents.core.environment/AIAgentEnvironment { // ai.koog.agents.core.environment/GenericAgentEnvironment|null[0]
-    constructor <init>(kotlin/String, io.github.oshai.kotlinlogging/KLogger, ai.koog.agents.core.tools/ToolRegistry, ai.koog.serialization/JSONSerializer) // ai.koog.agents.core.environment/GenericAgentEnvironment.<init>|<init>(kotlin.String;io.github.oshai.kotlinlogging.KLogger;ai.koog.agents.core.tools.ToolRegistry;ai.koog.serialization.JSONSerializer){}[0]
+    constructor <init>(kotlin/String, io.github.oshai.kotlinlogging/KLogger, ai.koog.agents.core.tools/ToolRegistry, ai.koog.serialization/JSONSerializer, ai.koog.agents.core.environment/ToolFailurePresenter = ...) // ai.koog.agents.core.environment/GenericAgentEnvironment.<init>|<init>(kotlin.String;io.github.oshai.kotlinlogging.KLogger;ai.koog.agents.core.tools.ToolRegistry;ai.koog.serialization.JSONSerializer;ai.koog.agents.core.environment.ToolFailurePresenter){}[0]
 
     final suspend fun executeTool(ai.koog.prompt.message/MessagePart.Tool.Call): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.core.environment/GenericAgentEnvironment.executeTool|executeTool(ai.koog.prompt.message.MessagePart.Tool.Call){}[0]
     final suspend fun executeTool(ai.koog.prompt.message/MessagePart.Tool.Call, ai.koog.agents.core.tools/ToolCallMetadata): ai.koog.agents.core.environment/ReceivedToolResult // ai.koog.agents.core.environment/GenericAgentEnvironment.executeTool|executeTool(ai.koog.prompt.message.MessagePart.Tool.Call;ai.koog.agents.core.tools.ToolCallMetadata){}[0]
@@ -2128,6 +2151,17 @@ final class ai.koog.agents.core.environment/ReceivedToolResult { // ai.koog.agen
 
         final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.agents.core.environment/ReceivedToolResult> // ai.koog.agents.core.environment/ReceivedToolResult.Companion.serializer|serializer(){}[0]
     }
+}
+
+final class ai.koog.agents.core.environment/ToolFailure { // ai.koog.agents.core.environment/ToolFailure|null[0]
+    final val defaultMessage // ai.koog.agents.core.environment/ToolFailure.defaultMessage|{}defaultMessage[0]
+        final fun <get-defaultMessage>(): kotlin/String // ai.koog.agents.core.environment/ToolFailure.defaultMessage.<get-defaultMessage>|<get-defaultMessage>(){}[0]
+    final val error // ai.koog.agents.core.environment/ToolFailure.error|{}error[0]
+        final fun <get-error>(): kotlin/Throwable // ai.koog.agents.core.environment/ToolFailure.error.<get-error>|<get-error>(){}[0]
+    final val stage // ai.koog.agents.core.environment/ToolFailure.stage|{}stage[0]
+        final fun <get-stage>(): ai.koog.agents.core.environment/ToolFailureStage // ai.koog.agents.core.environment/ToolFailure.stage.<get-stage>|<get-stage>(){}[0]
+    final val toolName // ai.koog.agents.core.environment/ToolFailure.toolName|{}toolName[0]
+        final fun <get-toolName>(): kotlin/String // ai.koog.agents.core.environment/ToolFailure.toolName.<get-toolName>|<get-toolName>(){}[0]
 }
 
 final class ai.koog.agents.core.exception/AgentNotFoundException : ai.koog.agents.core.exception/AgentEngineException { // ai.koog.agents.core.exception/AgentNotFoundException|null[0]

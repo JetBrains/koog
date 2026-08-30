@@ -9,6 +9,7 @@ import ai.koog.agents.core.dsl.extension.ToolCalls
 import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolFailurePresenter
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
@@ -24,6 +25,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -106,6 +108,48 @@ class ToolCallFailureEventsTest {
         val capturedFailure = assertNotNull(toolValidationFailed)
         assertEquals("required_args", capturedFailure.toolName)
         assertTrue(capturedFailure.message.contains("Failed to parse tool arguments"))
+    }
+
+    @Test
+    fun testCustomPresenterSanitizesInvalidJsonValidationFailure() = runTest {
+        var toolValidationFailed: ToolValidationFailedContext? = null
+
+        val strategy = strategy<ToolCalls, ReceivedToolResults>("tool_failure_strategy") {
+            val executeTool by nodeExecuteTools()
+            edge(nodeStart forwardTo executeTool)
+            edge(executeTool forwardTo nodeFinish)
+        }
+
+        val agent = GraphAIAgent(
+            promptExecutor = getMockExecutor(serializer) { },
+            agentConfig = AIAgentConfig.withSystemPrompt("test").copy(
+                toolFailurePresenter = ToolFailurePresenter { failure ->
+                    "Could not parse arguments for '${failure.toolName}'."
+                },
+            ),
+            strategy = strategy,
+            toolRegistry = ToolRegistry { tool(RequiredArgsTool()) },
+            installFeatures = {
+                install(ToolFailureCaptureFeature) {
+                    onToolValidationFailed = { toolValidationFailed = it }
+                }
+            }
+        )
+
+        val toolCall = MessagePart.Tool.Call(
+            id = "1",
+            tool = "required_args",
+            args = "not-json",
+        )
+
+        agent.run(ToolCalls(listOf(toolCall)))
+        val capturedFailure = assertNotNull(toolValidationFailed)
+        // The model-facing text for the invalid-JSON path now goes through the configured presenter, so the
+        // raw parser exception is fully replaced before it reaches the prompt.
+        assertEquals("Could not parse arguments for 'required_args'.", capturedFailure.message)
+        assertFalse(capturedFailure.message.contains("Failed to parse tool arguments"))
+        // The host still observes the original parser throwable through the validation-failed event.
+        assertNotNull(capturedFailure.error)
     }
 
     @Test

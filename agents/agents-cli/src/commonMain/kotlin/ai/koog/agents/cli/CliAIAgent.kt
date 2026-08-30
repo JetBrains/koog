@@ -187,6 +187,7 @@ public class CliAIAgent<Input, Output> internal constructor(
             logger = logger,
             toolRegistry = toolRegistry,
             serializer = agentConfig.serializer,
+            toolFailurePresenter = agentConfig.toolFailurePresenter,
         )
 
         return baseEnvironment

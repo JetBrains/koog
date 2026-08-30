@@ -2,6 +2,7 @@
 
 package ai.koog.agents.core.agent.config
 
+import ai.koog.agents.core.environment.ToolFailurePresenter
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
@@ -15,6 +16,7 @@ public actual class AIAgentConfig actual constructor(
     public actual val missingToolsConversionStrategy: MissingToolsConversionStrategy,
     public actual val responseProcessor: ResponseProcessor?,
     public actual val serializer: JSONSerializer,
+    public actual val toolFailurePresenter: ToolFailurePresenter,
 ) : AIAgentConfigBase {
 
     init {
@@ -43,13 +45,15 @@ public actual class AIAgentConfig actual constructor(
         maxAgentIterations: Int,
         missingToolsConversionStrategy: MissingToolsConversionStrategy,
         responseProcessor: ResponseProcessor?,
-        serializer: JSONSerializer
+        serializer: JSONSerializer,
+        toolFailurePresenter: ToolFailurePresenter
     ) = AIAgentConfig(
         prompt = prompt,
         model = model,
         maxAgentIterations = maxAgentIterations,
         missingToolsConversionStrategy = missingToolsConversionStrategy,
         responseProcessor = responseProcessor,
-        serializer = serializer
+        serializer = serializer,
+        toolFailurePresenter = toolFailurePresenter
     )
 }

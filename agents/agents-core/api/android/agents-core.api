@@ -419,14 +419,15 @@ public final class ai/koog/agents/core/agent/PlannerAgentBuilder : ai/koog/agent
 
 public final class ai/koog/agents/core/agent/config/AIAgentConfig : ai/koog/agents/core/agent/config/AIAgentConfigBase {
 	public static final field Companion Lai/koog/agents/core/agent/config/AIAgentConfig$Companion;
-	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;)V
-	public synthetic fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;)V
+	public synthetic fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;)V
 	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;)V
 	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;)V
 	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;)V
 	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;)V
-	public synthetic fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;)V
+	public synthetic fun <init> (Lai/koog/prompt/Prompt;Lai/koog/prompt/llm/LLModel;ILjava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun builder ()Lai/koog/agents/core/agent/config/AIAgentConfig$Companion$InitialAIAgentBuilder;
 	public final fun getMaxAgentIterations ()I
 	public final fun getMissingToolsConversionStrategy ()Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;
@@ -434,6 +435,7 @@ public final class ai/koog/agents/core/agent/config/AIAgentConfig : ai/koog/agen
 	public fun getPrompt ()Lai/koog/prompt/Prompt;
 	public final fun getResponseProcessor ()Lai/koog/prompt/processor/ResponseProcessor;
 	public final fun getSerializer ()Lai/koog/serialization/JSONSerializer;
+	public final fun getToolFailurePresenter ()Lai/koog/agents/core/environment/ToolFailurePresenter;
 }
 
 public final class ai/koog/agents/core/agent/config/AIAgentConfig$Companion {
@@ -443,8 +445,8 @@ public final class ai/koog/agents/core/agent/config/AIAgentConfig$Companion {
 }
 
 public final class ai/koog/agents/core/agent/config/AIAgentConfig$Companion$AIAgentConfigBuilder {
-	public fun <init> (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/Prompt;Ljava/lang/Integer;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Ljava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/serialization/JSONSerializer;)V
-	public synthetic fun <init> (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/Prompt;Ljava/lang/Integer;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Ljava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/serialization/JSONSerializer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/Prompt;Ljava/lang/Integer;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Ljava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;)V
+	public synthetic fun <init> (Lai/koog/prompt/llm/LLModel;Lai/koog/prompt/Prompt;Ljava/lang/Integer;Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;Lai/koog/prompt/processor/ResponseProcessor;Ljava/util/concurrent/Executor;Ljava/util/concurrent/Executor;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lai/koog/agents/core/agent/config/AIAgentConfig;
 	public final fun getMaxAgentIterations ()Ljava/lang/Integer;
 	public final fun getMissingToolsConversionStrategy ()Lai/koog/agents/core/agent/config/MissingToolsConversionStrategy;
@@ -462,6 +464,7 @@ public final class ai/koog/agents/core/agent/config/AIAgentConfig$Companion$AIAg
 	public final fun setPrompt (Lai/koog/prompt/Prompt;)V
 	public final fun setResponseProcessor (Lai/koog/prompt/processor/ResponseProcessor;)V
 	public final fun strategyExecutor (Ljava/util/concurrent/Executor;)Lai/koog/agents/core/agent/config/AIAgentConfig$Companion$AIAgentConfigBuilder;
+	public final fun toolFailurePresenter (Lai/koog/agents/core/environment/ToolFailurePresenter;)Lai/koog/agents/core/agent/config/AIAgentConfig$Companion$AIAgentConfigBuilder;
 }
 
 public final class ai/koog/agents/core/agent/config/AIAgentConfig$Companion$InitialAIAgentBuilder {
@@ -2174,7 +2177,8 @@ public final class ai/koog/agents/core/environment/AIAgentEnvironment$DefaultImp
 }
 
 public final class ai/koog/agents/core/environment/GenericAgentEnvironment : ai/koog/agents/core/environment/AIAgentEnvironment {
-	public fun <init> (Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/serialization/JSONSerializer;)V
+	public fun <init> (Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/github/oshai/kotlinlogging/KLogger;Lai/koog/agents/core/tools/ToolRegistry;Lai/koog/serialization/JSONSerializer;Lai/koog/agents/core/environment/ToolFailurePresenter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeTool (Lai/koog/prompt/message/MessagePart$Tool$Call;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun executeTools (Ljava/util/List;Lai/koog/agents/core/tools/ToolCallMetadata;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -2299,6 +2303,31 @@ public final class ai/koog/agents/core/environment/TerminationTool {
 	public static final field ARG Ljava/lang/String;
 	public static final field INSTANCE Lai/koog/agents/core/environment/TerminationTool;
 	public static final field NAME Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/environment/ToolFailure {
+	public final fun getDefaultMessage ()Ljava/lang/String;
+	public final fun getError ()Ljava/lang/Throwable;
+	public final fun getStage ()Lai/koog/agents/core/environment/ToolFailureStage;
+	public final fun getToolName ()Ljava/lang/String;
+}
+
+public abstract interface class ai/koog/agents/core/environment/ToolFailurePresenter {
+	public static final field Companion Lai/koog/agents/core/environment/ToolFailurePresenter$Companion;
+	public abstract fun present (Lai/koog/agents/core/environment/ToolFailure;)Ljava/lang/String;
+}
+
+public final class ai/koog/agents/core/environment/ToolFailurePresenter$Companion {
+	public final fun getDefault ()Lai/koog/agents/core/environment/ToolFailurePresenter;
+}
+
+public final class ai/koog/agents/core/environment/ToolFailureStage : java/lang/Enum {
+	public static final field ArgumentParsing Lai/koog/agents/core/environment/ToolFailureStage;
+	public static final field Execution Lai/koog/agents/core/environment/ToolFailureStage;
+	public static final field ResultSerialization Lai/koog/agents/core/environment/ToolFailureStage;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/koog/agents/core/environment/ToolFailureStage;
+	public static fun values ()[Lai/koog/agents/core/environment/ToolFailureStage;
 }
 
 public abstract class ai/koog/agents/core/environment/ToolResultKind {

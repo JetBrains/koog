@@ -2,6 +2,7 @@
 
 package ai.koog.agents.core.agent.config
 
+import ai.koog.agents.core.environment.ToolFailurePresenter
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
@@ -27,6 +28,10 @@ import kotlin.jvm.JvmName
  *        This ensures the prompt remains consistent and readable for the model, even with undefined tools.
  * @param responseProcessor Optional processor for the agent's responses. If specified, will modify the responses from the llm.
  * @param serializer Optional serializer to (de)serialize tool arguments and results. Defaults to [KotlinxSerializer]
+ * @param toolFailurePresenter Controls the text re-injected into the LLM context when a tool call fails with a
+ *        generic (non-[ai.koog.agents.core.tools.ToolException]) exception. Defaults to
+ *        [ToolFailurePresenter.Default], which preserves the legacy behavior of forwarding the raw exception
+ *        message. Override it to redact or replace untrusted exception text before it reaches the model.
  */
 public expect class AIAgentConfig(
     prompt: Prompt,
@@ -36,6 +41,7 @@ public expect class AIAgentConfig(
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
     responseProcessor: ResponseProcessor? = null,
     serializer: JSONSerializer = KotlinxSerializer(),
+    toolFailurePresenter: ToolFailurePresenter = ToolFailurePresenter.Default,
 ) : AIAgentConfigBase {
 
     /**
@@ -92,6 +98,17 @@ public expect class AIAgentConfig(
     public val serializer: JSONSerializer
 
     /**
+     * Presenter that decides what text is fed back to the LLM when a tool call fails with a generic
+     * (non-[ai.koog.agents.core.tools.ToolException]) exception.
+     *
+     * Defaults to [ToolFailurePresenter.Default], which re-injects the raw exception message. Override it
+     * to sanitize or replace untrusted exception text. The original exception remains observable via the
+     * event-handler feature regardless of this presenter.
+     */
+    @get:JvmName("toolFailurePresenter")
+    public val toolFailurePresenter: ToolFailurePresenter
+
+    /**
      * Companion object for providing utility methods related to [AIAgentConfig].
      */
     public companion object {
@@ -125,6 +142,7 @@ public expect class AIAgentConfig(
      * @param missingToolsConversionStrategy The strategy for handling missing tools during the AI agent's execution. Defaults to the existing strategy.
      * @param responseProcessor The processor for handling responses from the LLM. Defaults to the existing processor.
      * @param serializer The serializer for handling tool arguments and results. Defaults to the existing serializer.
+     * @param toolFailurePresenter The presenter for tool-failure messages. Defaults to the existing presenter.
      * @return A new instance of [AIAgentConfig] with the specified modifications.
      */
     internal fun copy(
@@ -133,6 +151,7 @@ public expect class AIAgentConfig(
         maxAgentIterations: Int = this.maxAgentIterations,
         missingToolsConversionStrategy: MissingToolsConversionStrategy = this.missingToolsConversionStrategy,
         responseProcessor: ResponseProcessor? = this.responseProcessor,
-        serializer: JSONSerializer = this.serializer
+        serializer: JSONSerializer = this.serializer,
+        toolFailurePresenter: ToolFailurePresenter = this.toolFailurePresenter
     ): AIAgentConfig
 }
