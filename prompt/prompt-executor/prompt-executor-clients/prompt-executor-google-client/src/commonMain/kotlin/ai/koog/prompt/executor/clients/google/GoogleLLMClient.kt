@@ -23,6 +23,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleFunctionDeclaration
 import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleModelsResponse
 import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GooglePromptFeedback
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
@@ -764,8 +765,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
      */
     private fun processGoogleResponse(response: GoogleResponse): List<Message.Assistant> {
         if (response.candidates.isEmpty()) {
-            logger.error { "Empty candidates in Google API response" }
-            throw LLMClientException(clientName, "Empty candidates in Google API response")
+            throw noCandidatesException(response)
         }
 
         // Extract token count from the response
@@ -783,6 +783,25 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         return response.candidates.map { candidate ->
             processGoogleCandidate(candidate, metaInfo)
         }
+    }
+
+    /**
+     * Builds an exception for a Google response that carries no candidates.
+     *
+     * Google omits the `candidates` field entirely when the prompt itself is rejected by the safety
+     * filters, returning only [GoogleResponse.promptFeedback]. When that happens we surface the
+     * [GooglePromptFeedback.blockReason] so the caller can tell a content-policy block apart from a
+     * genuine framework error.
+     */
+    private fun noCandidatesException(response: GoogleResponse): LLMClientException {
+        val blockReason = response.promptFeedback?.blockReason
+        val message = if (blockReason != null) {
+            "Google API returned no candidates: the prompt was blocked (reason: $blockReason)"
+        } else {
+            "Google API returned no candidates"
+        }
+        logger.error { message }
+        return LLMClientException(clientName, message)
     }
 
     /**
