@@ -57,7 +57,7 @@ search:
 # --8<-- [end:audio]
 
 # --8<-- [start:reasoningEffort]
-| `reasoningEffort` | ReasoningEffort | Specifies the level of reasoning effort that the model will use. For more information and available values, see the API documentation for [ReasoningEffort](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort). |
+| `reasoningEffort` | ReasoningEffort | Specifies the model's reasoning effort: `NONE`, `MINIMAL`, `LOW`, `MEDIUM`, `HIGH`, `XHIGH`, or `MAX`. Support varies by model. For details, see [ReasoningEffort](api:prompt-executor-openai-client-base::ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort). |
 # --8<-- [end:reasoningEffort]
 
 # --8<-- [start:webSearchOptions]
