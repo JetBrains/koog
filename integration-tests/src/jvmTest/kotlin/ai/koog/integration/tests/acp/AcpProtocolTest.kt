@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.seconds
 class AcpProtocolTest {
     companion object {
         val DEFAULT_MODEL = OpenAIModels.Chat.GPT5_2
-        val AUTH_METHOD = AuthMethod(AuthMethodId("test-auth"), "Test Auth", "Auth for testing")
+        val AUTH_METHOD = AuthMethod.AgentAuth(AuthMethodId("test-auth"), "Test Auth", "Auth for testing")
         const val NOTIFICATION = "Hello world!"
         const val AUTH_ERROR = "Authentication required"
 
