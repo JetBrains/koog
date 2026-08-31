@@ -34,7 +34,13 @@ class OracleJdbcChatHistoryProviderTest : AbstractJdbcChatHistoryProviderTest() 
         oracle = GenericContainer(imageName)
             .withEnv("ORACLE_PASSWORD", "test")
             .withExposedPorts(1521)
-            .waitingFor(Wait.forLogMessage("(?s).*DATABASE IS READY TO USE!.*", 1))
+            .waitingFor(
+                Wait.forLogMessage("(?s).*DATABASE IS READY TO USE!.*", 1)
+                    // Testcontainers defaults the startup timeout to 60 seconds, which Oracle Free
+                    // regularly exceeds on CI runners, making this test flaky. Bootstrapping is
+                    // allowed the same order of magnitude as the JDBC readiness probe below.
+                    .withStartupTimeout(CONTAINER_STARTUP_TIMEOUT)
+            )
         oracle.start()
 
         val jdbcUrl = waitForDatabaseReady(oracle.host, oracle.getMappedPort(1521))
@@ -69,7 +75,7 @@ class OracleJdbcChatHistoryProviderTest : AbstractJdbcChatHistoryProviderTest() 
     }
 
     private fun waitForDatabaseReady(host: String, port: Int): String {
-        val timeoutAt = System.currentTimeMillis() + Duration.ofMinutes(15).toMillis()
+        val timeoutAt = System.currentTimeMillis() + DATABASE_READY_TIMEOUT.toMillis()
         var lastError: Throwable? = null
         val hostsToTry = buildList {
             add(host)
@@ -107,5 +113,13 @@ class OracleJdbcChatHistoryProviderTest : AbstractJdbcChatHistoryProviderTest() 
             "Oracle DB did not become ready",
             lastError
         )
+    }
+
+    private companion object {
+        /** Time allowed for the Oracle container to report that the database finished bootstrapping. */
+        private val CONTAINER_STARTUP_TIMEOUT: Duration = Duration.ofMinutes(5)
+
+        /** Time allowed for the database to start accepting JDBC connections after bootstrapping. */
+        private val DATABASE_READY_TIMEOUT: Duration = Duration.ofMinutes(10)
     }
 }
