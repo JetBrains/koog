@@ -213,8 +213,8 @@ install(Koog) {
 
 When configuring llm.fallback in YAML/CONF, use these identifier formats:
 
-- OpenAI: openai.chat.gpt4_1, openai.reasoning.o3, openai.costoptimized.gpt4_1mini, openai.audio.gpt4oaudio, openai.moderation.omni
-- Anthropic: anthropic.fable_5, anthropic.sonnet_4_5, anthropic.opus_4, anthropic.haiku_4_5
+- OpenAI: openai.chat.gpt5_6sol, openai.chat.gpt5_5, openai.chat.gpt4_1, openai.reasoning.o3, openai.costoptimized.gpt4_1mini, openai.audio.gpt4oaudio, openai.moderation.omni
+- Anthropic: anthropic.fable_5, anthropic.opus_5, anthropic.sonnet_5, anthropic.sonnet_4_5, anthropic.opus_4, anthropic.haiku_4_5
 - Google: google.gemini2_5pro, google.gemini2_0flash001
 - OpenRouter: openrouter.gpt4o, openrouter.gpt4, openrouter.claude3sonnet
 - DeepSeek: deepseek.deepseek-v4-flash, deepseek.deepseek-v4-pro, deepseek.deepseek-chat, deepseek.deepseek-reasoner

@@ -235,6 +235,11 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5_4mini" to OpenAIModels.Chat.GPT5_4Mini,
         "gpt5_4" to OpenAIModels.Chat.GPT5_4,
         "gpt5_4pro" to OpenAIModels.Chat.GPT5_4Pro,
+        "gpt5_5" to OpenAIModels.Chat.GPT5_5,
+        "gpt5_5pro" to OpenAIModels.Chat.GPT5_5Pro,
+        "gpt5_6sol" to OpenAIModels.Chat.GPT5_6Sol,
+        "gpt5_6terra" to OpenAIModels.Chat.GPT5_6Terra,
+        "gpt5_6luna" to OpenAIModels.Chat.GPT5_6Luna,
         "gpt4_1nano" to OpenAIModels.Chat.GPT4_1Nano,
         "gpt4_1mini" to OpenAIModels.Chat.GPT4_1Mini,
         "gpt4omini" to OpenAIModels.Chat.GPT4oMini,
@@ -260,10 +265,12 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
     "opus_4_5" to AnthropicModels.Opus_4_5,
     "opus_4_6" to AnthropicModels.Opus_4_6,
     "opus_4_7" to AnthropicModels.Opus_4_7,
+    "opus_5" to AnthropicModels.Opus_5,
     "haiku_4_5" to AnthropicModels.Haiku_4_5,
     "sonnet_4" to AnthropicModels.Sonnet_4,
     "sonnet_4_5" to AnthropicModels.Sonnet_4_5,
     "sonnet_4_6" to AnthropicModels.Sonnet_4_6,
+    "sonnet_5" to AnthropicModels.Sonnet_5,
 )
 
 private val GOOGLE_MODELS_MAP = mapOf(

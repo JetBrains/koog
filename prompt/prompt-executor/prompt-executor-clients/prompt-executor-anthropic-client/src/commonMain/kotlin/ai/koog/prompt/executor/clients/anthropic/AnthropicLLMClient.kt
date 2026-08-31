@@ -457,7 +457,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             stopSequence = anthropicParams.stopSequences,
             stream = stream,
             system = systemMessages,
-            temperature = anthropicParams.temperature,
+            // Models of the 5 generation removed the sampling parameters and reject them with HTTP 400,
+            // so temperature is only sent for models that declare LLMCapability.Temperature.
+            temperature = anthropicParams.temperature?.takeIf { model.supports(LLMCapability.Temperature) },
             thinking = anthropicParams.thinking,
             toolChoice = toolChoice,
             tools = tools,

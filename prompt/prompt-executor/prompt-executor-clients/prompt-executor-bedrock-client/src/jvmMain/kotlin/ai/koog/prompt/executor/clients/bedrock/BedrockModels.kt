@@ -201,6 +201,23 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude Opus 5 is Anthropic's most advanced Opus model, powering long-running agents while
+     * delivering improvements in complex agentic coding and professional knowledge work.
+     *
+     * Adaptive thinking is on by default; it can be disabled, but then the effort level is capped at
+     * `high`. The sampling parameters removed with the 5 generation are not declared as capabilities,
+     * so Koog never sends `temperature` for this model.
+     *
+     * 1M context window, 128K max output tokens, knowledge cutoff May 2026.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-opus-5.html">Model card</a>
+     */
+    public val AnthropicClaudeOpus5: LLModel = BedrockModel(
+        AnthropicModels.Opus_5,
+        "anthropic.claude-opus-5",
+    ).effectiveModel
+
+    /**
      * Claude Fable 5 is Anthropic's most capable widely released model, built for the most demanding
      * reasoning and long-horizon agentic work.
      *
@@ -251,6 +268,24 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude4_6Sonnet: LLModel = BedrockModel(
         AnthropicModels.Sonnet_4_6,
         "anthropic.claude-sonnet-4-6",
+    ).effectiveModel
+
+    /**
+     * Claude Sonnet 5 is Anthropic's most capable Sonnet model, built for coding, agents, and
+     * professional work at scale, bringing near-Opus intelligence at the Sonnet balance of
+     * capability, cost, and speed.
+     *
+     * Adaptive thinking is on by default and can be turned off. The sampling parameters removed with
+     * the 5 generation are not declared as capabilities, so Koog never sends `temperature` for this
+     * model.
+     *
+     * 1M context window, 128K max output tokens, knowledge cutoff January 2026.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-5.html">Model card</a>
+     */
+    public val AnthropicClaudeSonnet5: LLModel = BedrockModel(
+        AnthropicModels.Sonnet_5,
+        "anthropic.claude-sonnet-5",
     ).effectiveModel
 
     /**
@@ -865,10 +900,12 @@ public object BedrockModels : LLModelDefinitions {
         AnthropicClaude45Opus,
         AnthropicClaude46Opus,
         AnthropicClaude47Opus,
+        AnthropicClaudeOpus5,
         AnthropicClaudeFable5,
         AnthropicClaude4Sonnet,
         AnthropicClaude4_5Sonnet,
         AnthropicClaude4_6Sonnet,
+        AnthropicClaudeSonnet5,
         AnthropicClaude4_5Haiku,
 
         // Amazon Nova Series
