@@ -162,6 +162,79 @@ public object DashscopeModels : LLModelDefinitions {
     )
 
     /**
+     * Qwen3.5-Plus is the flagship model of the Qwen3.5 series, unifying text and vision
+     * with a single backbone trained via early fusion of text and multimodal tokens.
+     * Supports thinking mode via the `enable_thinking` parameter.
+     */
+    @JvmField
+    public val QWEN3_5_PLUS: LLModel = LLModel(
+        provider = LLMProvider.Alibaba,
+        id = "qwen3.5-plus",
+        capabilities = listOf(
+            LLMCapability.Completion,
+            LLMCapability.Speculation,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Temperature,
+            LLMCapability.MultipleChoices,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Thinking,
+            LLMCapability.Vision.Image,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 65_536
+    )
+
+    /**
+     * Qwen3.7-Max is the flagship of the Qwen3.7 series, designed for the agent-centric era
+     * with a native extended-thinking mode. Text-only input and output.
+     */
+    @JvmField
+    public val QWEN3_7_MAX: LLModel = LLModel(
+        provider = LLMProvider.Alibaba,
+        id = "qwen3.7-max",
+        capabilities = listOf(
+            LLMCapability.Completion,
+            LLMCapability.Speculation,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Temperature,
+            LLMCapability.MultipleChoices,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 65_536
+    )
+
+    /**
+     * Qwen3.8-Max is the most capable model in the Qwen family to date — a 2.4T parameter MoE model
+     * (95B active) built on the Qwen3.5 architecture. Accepts text, image, and video input.
+     */
+    @JvmField
+    public val QWEN3_8_MAX: LLModel = LLModel(
+        provider = LLMProvider.Alibaba,
+        id = "qwen3.8-max",
+        capabilities = listOf(
+            LLMCapability.Completion,
+            LLMCapability.Speculation,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Temperature,
+            LLMCapability.MultipleChoices,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Thinking,
+            LLMCapability.Vision.Image,
+            LLMCapability.Vision.Video,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 131_072
+    )
+
+    /**
      * List of the supported models by the Dashscope provider.
      */
     private val supportedModels: List<LLModel> = listOf(
@@ -171,7 +244,10 @@ public object DashscopeModels : LLModelDefinitions {
         QWEN_PLUS_LATEST,
         QWEN3_CODER_PLUS,
         QWEN3_CODER_FLASH,
-        QWEN3_MAX
+        QWEN3_MAX,
+        QWEN3_5_PLUS,
+        QWEN3_7_MAX,
+        QWEN3_8_MAX
     )
 
     /**
