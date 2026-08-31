@@ -395,6 +395,11 @@ In the tables below:
     | Chat.GPT5                | ✓           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
     | Chat.GPT5Mini            | ✓           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
     | Chat.GPT5Nano            | ✓           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
+    | Chat.GPT5_5              | -           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
+    | Chat.GPT5_5Pro           | -           | Full        | -          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
+    | Chat.GPT5_6Sol           | -           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
+    | Chat.GPT5_6Terra         | -           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
+    | Chat.GPT5_6Luna          | -           | Full        | ✓          | ✓                | ✓     | ✓           | ✓              | -              | -     | ✓           | -          |
     | Audio.GptAudio           | ✓           | -           | ✓          | -                | ✓     | ✓           | -              | -              | ✓     | -           | -          |
     | Audio.GPT4oMiniAudio     | ✓           | -           | ✓          | -                | ✓     | ✓           | -              | -              | ✓     | -           | -          |
     | Audio.GPT4oAudio         | ✓           | -           | ✓          | -                | ✓     | ✓           | -              | -              | ✓     | -           | -          |
@@ -406,13 +411,19 @@ In the tables below:
 ??? "Anthropic models"
     #### Anthropic models
 
+    Models of the 5 generation (`Opus_5`, `Sonnet_5`) no longer accept the sampling parameters
+    `temperature`, `top_p` and `top_k`, so they do not declare the Temperature capability and the
+    Anthropic client never sends `temperature` for them.
+
     | Model      | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) |
     |------------|-------------|-------------|------------|-------|-------------|----------------|
     | Fable_5    | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
+    | Opus_5     | -           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Opus_4_6   | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Opus_4_5   | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Opus_4_1   | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
     | Opus_4     | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
+    | Sonnet_5   | -           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Sonnet_4_6 | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Sonnet_4_5 | ✓           | Full        | ✓          | ✓     | ✓           | ✓              |
     | Sonnet_4   | ✓           | -           | ✓          | ✓     | ✓           | ✓              |
@@ -506,6 +517,8 @@ In the tables below:
     | Model                       | Temperature | JSON Schema | Completion | Tools | Tool Choice | Vision (Image) | Document |
     |-----------------------------|-------------|-------------|------------|-------|-------------|----------------|----------|
     | AnthropicClaudeFable5       | ✓           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaudeOpus5        | -           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
+    | AnthropicClaudeSonnet5      | -           | Full        | ✓          | ✓     | ✓           | ✓              | ✓        |
     | AnthropicClaude47Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
     | AnthropicClaude46Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |
     | AnthropicClaude45Opus       | ✓           | -           | ✓          | ✓     | ✓           | ✓              | ✓        |

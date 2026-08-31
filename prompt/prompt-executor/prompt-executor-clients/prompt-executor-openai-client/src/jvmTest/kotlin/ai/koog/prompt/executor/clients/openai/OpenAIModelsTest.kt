@@ -63,4 +63,44 @@ class OpenAIModelsTest {
         assertNotNull(OpenAIModels.Chat.GPT5_5Pro.capabilities) shouldContain LLMCapability.OpenAIEndpoint.Responses
         assertNotNull(OpenAIModels.Chat.GPT5_5Pro.capabilities) shouldNotContain LLMCapability.OpenAIEndpoint.Completions
     }
+
+    @Test
+    fun testGpt5_6ModelsAdvertiseThinkingCapability() {
+        assertNotNull(OpenAIModels.Chat.GPT5_6Sol.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.GPT5_6Terra.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(OpenAIModels.Chat.GPT5_6Luna.capabilities) shouldContain LLMCapability.Thinking
+    }
+
+    @Test
+    fun testGpt5_6ModelsExposeDocumentedModelProfiles() {
+        val expectedIds = mapOf(
+            OpenAIModels.Chat.GPT5_6Sol to "gpt-5.6-sol",
+            OpenAIModels.Chat.GPT5_6Terra to "gpt-5.6-terra",
+            OpenAIModels.Chat.GPT5_6Luna to "gpt-5.6-luna",
+        )
+
+        expectedIds.forEach { (model, expectedId) ->
+            model.id shouldBe expectedId
+            model.contextLength shouldBe 1_050_000
+            model.maxOutputTokens shouldBe 128_000
+            assertNotNull(model.capabilities) shouldContain LLMCapability.Document
+            assertNotNull(model.capabilities) shouldContain LLMCapability.Vision.Image
+            assertNotNull(model.capabilities) shouldContain LLMCapability.Schema.JSON.Standard
+            assertNotNull(model.capabilities) shouldContain LLMCapability.OpenAIEndpoint.Completions
+            assertNotNull(model.capabilities) shouldContain LLMCapability.OpenAIEndpoint.Responses
+        }
+    }
+
+    @Test
+    fun testGpt5_6ReasoningModelsDoNotAdvertiseTemperature() {
+        val reasoningModels = listOf(
+            OpenAIModels.Chat.GPT5_6Sol,
+            OpenAIModels.Chat.GPT5_6Terra,
+            OpenAIModels.Chat.GPT5_6Luna,
+        )
+
+        reasoningModels.forEach { model ->
+            assertNotNull(model.capabilities) shouldNotContain LLMCapability.Temperature
+        }
+    }
 }

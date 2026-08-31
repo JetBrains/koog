@@ -6,6 +6,7 @@ import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -47,5 +48,47 @@ class BedrockModelsTest {
         assertEquals(128_000, model.maxOutputTokens)
         assertTrue(model.supports(LLMCapability.Vision.Image))
         assertTrue(model.supports(LLMCapability.Tools))
+    }
+
+    @Test
+    fun testClaudeOpus5BedrockModelExposesDocumentedModelProfile() {
+        val model = BedrockModels.AnthropicClaudeOpus5
+
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals("us.anthropic.claude-opus-5", model.id)
+        assertEquals(1_000_000, model.contextLength)
+        assertEquals(128_000, model.maxOutputTokens)
+        assertTrue(model.supports(LLMCapability.Vision.Image))
+        assertTrue(model.supports(LLMCapability.Document))
+        assertTrue(model.supports(LLMCapability.Tools))
+    }
+
+    @Test
+    fun testClaudeSonnet5BedrockModelExposesDocumentedModelProfile() {
+        val model = BedrockModels.AnthropicClaudeSonnet5
+
+        assertEquals(LLMProvider.Bedrock, model.provider)
+        assertEquals("us.anthropic.claude-sonnet-5", model.id)
+        assertEquals(1_000_000, model.contextLength)
+        assertEquals(128_000, model.maxOutputTokens)
+        assertTrue(model.supports(LLMCapability.Vision.Image))
+        assertTrue(model.supports(LLMCapability.Document))
+        assertTrue(model.supports(LLMCapability.Tools))
+    }
+
+    @Test
+    fun testGeneration5ClaudeBedrockModelsDoNotAdvertiseTemperature() {
+        val generation5Models = listOf(
+            BedrockModels.AnthropicClaudeOpus5,
+            BedrockModels.AnthropicClaudeSonnet5,
+        )
+
+        generation5Models.forEach { model ->
+            assertFalse(
+                model.supports(LLMCapability.Temperature),
+                "Model ${model.id} must NOT support Temperature: the sampling parameters were removed " +
+                    "with the 5 generation and are rejected by the Anthropic API"
+            )
+        }
     }
 }

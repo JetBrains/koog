@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldContain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -37,6 +38,8 @@ class AnthropicModelsTest {
             AnthropicModels.Opus_4_5,
             AnthropicModels.Opus_4_6,
             AnthropicModels.Opus_4_7,
+            AnthropicModels.Opus_5,
+            AnthropicModels.Sonnet_5,
         )
 
         modelsWithSchema.forEach { model ->
@@ -117,6 +120,8 @@ class AnthropicModelsTest {
         assertNotNull(AnthropicModels.Sonnet_4.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Opus_4_6.capabilities) shouldContain LLMCapability.Thinking
         assertNotNull(AnthropicModels.Opus_4_7.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(AnthropicModels.Opus_5.capabilities) shouldContain LLMCapability.Thinking
+        assertNotNull(AnthropicModels.Sonnet_5.capabilities) shouldContain LLMCapability.Thinking
     }
 
     @Test
@@ -129,5 +134,83 @@ class AnthropicModelsTest {
         assertTrue(model.supports(LLMCapability.Vision.Image))
         assertTrue(model.supports(LLMCapability.Tools))
         assertTrue(model.supports(LLMCapability.ToolChoice))
+    }
+
+    @Test
+    fun testGeneration5ModelsDoNotAdvertiseTemperature() {
+        val generation5Models = listOf(
+            AnthropicModels.Opus_5,
+            AnthropicModels.Sonnet_5,
+        )
+
+        generation5Models.forEach { model ->
+            assertFalse(
+                model.supports(LLMCapability.Temperature),
+                "Model ${model.id} must NOT support Temperature: the sampling parameters were removed " +
+                    "with the 5 generation and are rejected by the Anthropic API"
+            )
+        }
+    }
+
+    @Test
+    fun testPreGeneration5ModelsAdvertiseTemperature() {
+        val olderModels = listOf(
+            AnthropicModels.Opus_4_7,
+            AnthropicModels.Sonnet_4_6,
+            AnthropicModels.Haiku_4_5,
+        )
+
+        olderModels.forEach { model ->
+            assertTrue(
+                model.supports(LLMCapability.Temperature),
+                "Model ${model.id} should support Temperature"
+            )
+        }
+    }
+
+    @Test
+    fun testClaudeOpus5ExposesDocumentedModelProfile() {
+        val model = AnthropicModels.Opus_5
+
+        assertEquals("claude-opus-5", model.id)
+        assertEquals(1_000_000, model.contextLength)
+        assertEquals(128_000, model.maxOutputTokens)
+        assertTrue(model.supports(LLMCapability.Vision.Image))
+        assertTrue(model.supports(LLMCapability.Document))
+        assertTrue(model.supports(LLMCapability.Tools))
+        assertTrue(model.supports(LLMCapability.ToolChoice))
+        assertTrue(model.supports(LLMCapability.PromptCaching))
+        assertFalse(model.supports(LLMCapability.MultipleChoices))
+    }
+
+    @Test
+    fun testClaudeSonnet5ExposesDocumentedModelProfile() {
+        val model = AnthropicModels.Sonnet_5
+
+        assertEquals("claude-sonnet-5", model.id)
+        assertEquals(1_000_000, model.contextLength)
+        assertEquals(128_000, model.maxOutputTokens)
+        assertTrue(model.supports(LLMCapability.Vision.Image))
+        assertTrue(model.supports(LLMCapability.Document))
+        assertTrue(model.supports(LLMCapability.Tools))
+        assertTrue(model.supports(LLMCapability.ToolChoice))
+        assertTrue(model.supports(LLMCapability.PromptCaching))
+        assertFalse(model.supports(LLMCapability.MultipleChoices))
+    }
+
+    @Test
+    fun testGeneration5ModelsMapToDefaultModelVersions() {
+        assertEquals("claude-opus-5", DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP[AnthropicModels.Opus_5])
+        assertEquals("claude-sonnet-5", DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP[AnthropicModels.Sonnet_5])
+    }
+
+    @Test
+    fun testEverySupportedModelHasDefaultModelVersion() {
+        AnthropicModels.models.forEach { model ->
+            assertNotNull(
+                DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP[model],
+                "Model ${model.id} is missing an entry in DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP"
+            )
+        }
     }
 }

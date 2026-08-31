@@ -172,6 +172,36 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt5_4pro)
         assertEquals(LLMProvider.OpenAI, gpt5_4pro.provider)
         assertEquals(OpenAIModels.Chat.GPT5_4Pro, gpt5_4pro)
+
+        // Test GPT-5.5
+        val gpt5_5 = getModelFromIdentifier("openai.chat.gpt5_5")
+        assertNotNull(gpt5_5)
+        assertEquals(LLMProvider.OpenAI, gpt5_5.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_5, gpt5_5)
+
+        // Test GPT-5.5-Pro
+        val gpt5_5pro = getModelFromIdentifier("openai.chat.gpt5_5pro")
+        assertNotNull(gpt5_5pro)
+        assertEquals(LLMProvider.OpenAI, gpt5_5pro.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_5Pro, gpt5_5pro)
+
+        // Test GPT-5.6 sol
+        val gpt5_6sol = getModelFromIdentifier("openai.chat.gpt5_6sol")
+        assertNotNull(gpt5_6sol)
+        assertEquals(LLMProvider.OpenAI, gpt5_6sol.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_6Sol, gpt5_6sol)
+
+        // Test GPT-5.6 terra
+        val gpt5_6terra = getModelFromIdentifier("openai.chat.gpt5_6terra")
+        assertNotNull(gpt5_6terra)
+        assertEquals(LLMProvider.OpenAI, gpt5_6terra.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_6Terra, gpt5_6terra)
+
+        // Test GPT-5.6 luna
+        val gpt5_6luna = getModelFromIdentifier("openai.chat.gpt5_6luna")
+        assertNotNull(gpt5_6luna)
+        assertEquals(LLMProvider.OpenAI, gpt5_6luna.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_6Luna, gpt5_6luna)
     }
 
     @Test
@@ -230,10 +260,12 @@ class ModelIdentifierParsingTest {
             "anthropic.opus_4_5" to AnthropicModels.Opus_4_5,
             "anthropic.opus_4_6" to AnthropicModels.Opus_4_6,
             "anthropic.opus_4_7" to AnthropicModels.Opus_4_7,
+            "anthropic.opus_5" to AnthropicModels.Opus_5,
             "anthropic.haiku_4_5" to AnthropicModels.Haiku_4_5,
             "anthropic.sonnet_4" to AnthropicModels.Sonnet_4,
             "anthropic.sonnet_4_5" to AnthropicModels.Sonnet_4_5,
             "anthropic.sonnet_4_6" to AnthropicModels.Sonnet_4_6,
+            "anthropic.sonnet_5" to AnthropicModels.Sonnet_5,
         )
     )
 
