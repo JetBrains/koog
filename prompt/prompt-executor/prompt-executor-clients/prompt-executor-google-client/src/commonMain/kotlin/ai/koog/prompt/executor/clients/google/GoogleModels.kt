@@ -9,6 +9,9 @@ import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_1FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_1FlashLite_Preview
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_1Pro_Preview
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_5Flash
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_5FlashLite
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_6Flash
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_7Flash
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini3_Flash_Preview
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -30,6 +33,11 @@ import kotlin.jvm.JvmField
  * | [Gemini3_1FlashLite_Preview]| Very fast | $0.25-$0.50 / $1.50          | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
  * | [Gemini3_1FlashLite]        | Very fast | $0.25-$0.50 / $1.50          | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
  * | [Gemini3_5Flash]            | Fast      | $1.50 / $9.00                | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_5FlashLite]        | Very fast | —                            | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_6Flash]            | Fast      | —                            | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ * | [Gemini3_7Flash]            | Fast      | $0.75 / $3.75¹               | Audio, Image, Video, Text, Tools, Document  | Text, Tools         |
+ *
+ * ¹ Introductory pricing through December 31, 2026.
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -204,6 +212,51 @@ public object GoogleModels : LLModelDefinitions {
     )
 
     /**
+     * Gemini 3.5 Flash-Lite is the most cost-effective model of the Gemini 3.5 class,
+     * optimized for low latency and high-volume workloads.
+     *
+     * @see <a href="https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite">
+     */
+    @JvmField
+    public val Gemini3_5FlashLite: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-3.5-flash-lite",
+        capabilities = fullCapabilities + LLMCapability.Thinking,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
+     * Gemini 3.6 Flash is Google's workhorse model with improved coding, knowledge work,
+     * and multimodal performance while reducing token usage.
+     *
+     * @see <a href="https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash">
+     */
+    @JvmField
+    public val Gemini3_6Flash: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-3.6-flash",
+        capabilities = fullCapabilities + LLMCapability.Thinking,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
+     * Gemini 3.7 Flash is Google's most intelligent workhorse model for coding and agents,
+     * with substantial improvements across software engineering, web development, and agentic workflows.
+     *
+     * @see <a href="https://ai.google.dev/gemini-api/docs/models/gemini-3.7-flash">
+     */
+    @JvmField
+    public val Gemini3_7Flash: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-3.7-flash",
+        capabilities = fullCapabilities + LLMCapability.Thinking,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
      * Models for generating text embeddings.
      */
     public object Embeddings {
@@ -236,6 +289,9 @@ public object GoogleModels : LLModelDefinitions {
         Gemini3_1FlashLite_Preview,
         Gemini3_1FlashLite,
         Gemini3_5Flash,
+        Gemini3_5FlashLite,
+        Gemini3_6Flash,
+        Gemini3_7Flash,
         Embeddings.GeminiEmbedding001,
     )
 

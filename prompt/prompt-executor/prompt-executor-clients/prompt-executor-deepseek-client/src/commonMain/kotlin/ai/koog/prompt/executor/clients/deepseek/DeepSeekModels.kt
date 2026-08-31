@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4Flash
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4FlashVisionExp
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4Pro
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -15,10 +16,11 @@ import kotlin.jvm.JvmField
  * DeepSeek provides powerful language models with competitive pricing and advanced reasoning capabilities.
  * All models support JSON output, function calling, and chat prefix completion features.
  *
- * | Name               | Speed  | Price                | Input       | Output      |
- * |--------------------|--------|----------------------|-------------|-------------|
- * | [DeepSeekV4Flash]  | Fast   | $0.14 / $0.28 per 1M | Text, Tools | Text, Tools |
- * | [DeepSeekV4Pro]    | Medium | $1.74 / $3.48 per 1M | Text, Tools | Text, Tools |
+ * | Name                        | Speed  | Price                | Input              | Output      |
+ * |-----------------------------|--------|----------------------|--------------------|-------------|
+ * | [DeepSeekV4Flash]           | Fast   | $0.44 / $1.32 per 1M | Text, Tools        | Text, Tools |
+ * | [DeepSeekV4FlashVisionExp]  | Fast   | $0.44 / $1.32 per 1M | Text, Image, Tools | Text, Tools |
+ * | [DeepSeekV4Pro]             | Medium | $1.74 / $3.48 per 1M | Text, Tools        | Text, Tools |
  *
  * @see <a href="https://platform.deepseek.com/api-docs/pricing">DeepSeek Pricing Documentation</a>
  */
@@ -73,10 +75,37 @@ public object DeepSeekModels : LLModelDefinitions {
     )
 
     /**
+     * DeepSeek V4 Flash Vision (experimental) is a multimodal vision understanding model
+     * with stronger visual agent performance, staying on par with [DeepSeekV4Flash] for pure text tasks.
+     * Supports both thinking and non-thinking modes in the DeepSeek API.
+     *
+     * @see <a href="https://api-docs.deepseek.com/api/create-chat-completion/">Chat Completion API</a>
+     */
+    @JvmField
+    public val DeepSeekV4FlashVisionExp: LLModel = LLModel(
+        provider = LLMProvider.DeepSeek,
+        id = "deepseek-v4-flash-vision-exp",
+        capabilities = listOf(
+            LLMCapability.Completion,
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.MultipleChoices,
+            LLMCapability.Thinking,
+            LLMCapability.Vision.Image,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 384_000
+    )
+
+    /**
      * List of the supported models by the DeepSeek provider.
      */
     private val supportedModels: List<LLModel> = listOf(
         DeepSeekV4Flash,
+        DeepSeekV4FlashVisionExp,
         DeepSeekV4Pro,
     )
 
