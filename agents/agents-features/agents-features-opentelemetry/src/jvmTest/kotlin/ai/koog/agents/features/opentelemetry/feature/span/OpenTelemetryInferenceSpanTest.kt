@@ -50,8 +50,10 @@ import io.ktor.client.request.HttpRequestPipeline
 import io.opentelemetry.kotlin.tracing.data.SpanData
 import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
@@ -552,12 +554,16 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
         assertNotNull(exception, "Unexpected successful result $result")
         assertFalse(exception is CancellationException, "Unexpected cancellation exception")
 
-        testData.collectedSpans = withTimeout(10.seconds) {
-            // Wait until the root create-agent span is exported (it ends last), so all child spans are
-            // present. `first()` would return the StateFlow's current value without waiting, racing the
-            // async export and intermittently leaving filterAgentInvokeSpans() empty (flaky on Windows CI).
-            spanExporter.isCollected.first { it }
-            spanExporter.collectedSpans
+        // Wait until the root create-agent span is exported (it ends last), so all child spans are
+        // present. The wait must run on a real dispatcher: under `runTest` the test scheduler owns the
+        // clock, so `withTimeout` would burn its whole budget in virtual time without ever waiting for
+        // the async export, and fail on slower CI runners. Same reasoning as
+        // OpenTelemetryTestAPI.waitSpansCollected and the waits in OpenTelemetryConfigTest.
+        testData.collectedSpans = withContext(Dispatchers.Default) {
+            withTimeout(10.seconds) {
+                spanExporter.isCollected.first { it }
+                spanExporter.collectedSpans
+            }
         }
 
         // CHECKS
