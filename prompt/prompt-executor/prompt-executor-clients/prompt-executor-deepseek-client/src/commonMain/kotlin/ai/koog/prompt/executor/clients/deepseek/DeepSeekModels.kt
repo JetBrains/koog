@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4Flash
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4_1Flash
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels.DeepSeekV4Pro
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -18,11 +19,37 @@ import kotlin.jvm.JvmField
  * | Name               | Speed  | Price                | Input       | Output      |
  * |--------------------|--------|----------------------|-------------|-------------|
  * | [DeepSeekV4Flash]  | Fast   | $0.14 / $0.28 per 1M | Text, Tools | Text, Tools |
+ * | [DeepSeekV4_1Flash]| Fast   | See current pricing  | Text, Images, Tools | Text, Tools |
  * | [DeepSeekV4Pro]    | Medium | $1.74 / $3.48 per 1M | Text, Tools | Text, Tools |
  *
  * @see <a href="https://platform.deepseek.com/api-docs/pricing">DeepSeek Pricing Documentation</a>
  */
 public object DeepSeekModels : LLModelDefinitions {
+
+    /**
+     * DeepSeek V4.1 Flash model with native image understanding.
+     * Supports both thinking and non-thinking modes in the DeepSeek API.
+     *
+     * @see <a href="https://api-docs.deepseek.com/guides/vision/">DeepSeek Vision Guide</a>
+     */
+    @JvmField
+    public val DeepSeekV4_1Flash: LLModel = LLModel(
+        provider = LLMProvider.DeepSeek,
+        id = "deepseek-v4.1-flash",
+        capabilities = listOf(
+            LLMCapability.Completion,
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.MultipleChoices,
+            LLMCapability.Thinking,
+            LLMCapability.Vision.Image,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 384_000
+    )
 
     /**
      * DeepSeek V4 Flash model optimized for fast, cost-effective generation.
@@ -76,6 +103,7 @@ public object DeepSeekModels : LLModelDefinitions {
      * List of the supported models by the DeepSeek provider.
      */
     private val supportedModels: List<LLModel> = listOf(
+        DeepSeekV4_1Flash,
         DeepSeekV4Flash,
         DeepSeekV4Pro,
     )

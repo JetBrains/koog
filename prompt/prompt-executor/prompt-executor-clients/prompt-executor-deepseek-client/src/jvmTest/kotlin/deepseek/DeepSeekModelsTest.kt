@@ -2,11 +2,13 @@ package deepseek
 
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.list
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import kotlin.test.Test
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class DeepSeekModelsTest {
 
@@ -40,7 +42,13 @@ class DeepSeekModelsTest {
     fun `DeepSeek models should include v4 entries`() {
         DeepSeekModels.models.map { it.id } shouldContainAll listOf(
             "deepseek-v4-flash",
+            "deepseek-v4.1-flash",
             "deepseek-v4-pro",
         )
+    }
+
+    @Test
+    fun testDeepSeekV4_1FlashSupportsImageInput() {
+        assertTrue(DeepSeekModels.DeepSeekV4_1Flash.supports(LLMCapability.Vision.Image))
     }
 }
