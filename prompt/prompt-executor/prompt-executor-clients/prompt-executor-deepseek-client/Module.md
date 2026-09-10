@@ -8,12 +8,13 @@ This module provides a client implementation for the DeepSeek API, allowing you 
 
 ### Supported Models
 
-| Name               | Speed  | Price                | Input       | Output      |
-|--------------------|--------|----------------------|-------------|-------------|
-| [DeepSeekV4Flash]  | Fast   | $0.14 / $0.28 per 1M | Text, Tools | Text, Tools |
-| [DeepSeekV4Pro]    | Medium | $1.74 / $3.48 per 1M | Text, Tools | Text, Tools |
-| [DeepSeekChat]     | Fast   | Deprecated alias     | Text, Tools | Text, Tools |
-| [DeepSeekReasoner] | Medium | Deprecated alias     | Text, Tools | Text, Tools |
+| Name                | Speed  | Price                | Input               | Output      |
+|---------------------|--------|----------------------|---------------------|-------------|
+| [DeepSeekV4_1Flash] | Fast   | See current pricing  | Text, Images, Tools | Text, Tools |
+| [DeepSeekV4Flash]   | Fast   | $0.14 / $0.28 per 1M | Text, Tools         | Text, Tools |
+| [DeepSeekV4Pro]     | Medium | $1.74 / $3.48 per 1M | Text, Tools         | Text, Tools |
+| [DeepSeekChat]      | Fast   | Deprecated alias     | Text, Tools         | Text, Tools |
+| [DeepSeekReasoner]  | Medium | Deprecated alias     | Text, Tools         | Text, Tools |
 
 
 ### Model-Specific Parameters Support
