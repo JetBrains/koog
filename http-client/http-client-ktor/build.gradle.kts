@@ -18,6 +18,13 @@ kotlin {
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(project(":test-utils"))
+                implementation(libs.ktor.client.mock)
+            }
+        }
+
         jvmTest {
             dependencies {
                 implementation(project(":http-client:http-client-test"))
