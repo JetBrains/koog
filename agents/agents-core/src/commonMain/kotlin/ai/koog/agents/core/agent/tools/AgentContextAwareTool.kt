@@ -19,6 +19,8 @@ import kotlinx.schema.generator.json.JsonSchemaConfig
  * (see [ai.koog.agents.core.environment.ContextualAgentEnvironment]). This subclass reads that
  * entry and forwards it to the user-facing overload, so implementors get a typed
  * `AIAgentContext` parameter rather than a `Map` lookup.
+ * Parallel graph tool batches provide a separate context for each call: execution paths and LLM
+ * state are isolated, while agent storage and the state manager remain shared with the caller.
  *
  * Use this when a tool needs the agent's full state (LLM context, run id, configuration, storage,
  * ...). For tools that only need the typed arguments, extend [Tool] instead; for tools that read
