@@ -476,6 +476,8 @@ internal class GooglePromptFeedback(
  * @property toolUsePromptTokenCount Number of tokens present in tool-use prompt(s).
  * @property thoughtsTokenCount Number of tokens of thoughts for thinking models.
  * @property totalTokenCount Total token count for the generation request (prompt plus response candidates).
+ * @property cachedContentTokenCount Number of tokens in the prompt that were served from an implicit
+ * or explicit cache, so were not billed or computed at the full prompt rate.
  */
 @Serializable
 internal class GoogleUsageMetadata(
@@ -484,6 +486,7 @@ internal class GoogleUsageMetadata(
     val toolUsePromptTokenCount: Int? = null,
     val thoughtsTokenCount: Int? = null,
     val totalTokenCount: Int? = null,
+    val cachedContentTokenCount: Int? = null,
 )
 
 /**
