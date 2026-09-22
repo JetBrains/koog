@@ -198,6 +198,9 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         totalTokensCount = it.totalTokenCount,
                         inputTokensCount = it.promptTokenCount,
                         outputTokensCount = it.candidatesTokenCount,
+                        metadata = it.cachedContentTokenCount?.let { cached ->
+                            buildJsonObject { put("cachedContentTokenCount", cached) }
+                        },
                     )
                 }
                 response.candidates.firstOrNull()?.let { candidate ->
@@ -772,12 +775,16 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         val inputTokensCount = response.usageMetadata?.promptTokenCount
         val outputTokensCount = response.usageMetadata?.candidatesTokenCount
         val totalTokensCount = response.usageMetadata?.totalTokenCount
+        val cachedContentTokenCount = response.usageMetadata?.cachedContentTokenCount
 
         val metaInfo = ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokensCount,
             inputTokensCount = inputTokensCount,
-            outputTokensCount = outputTokensCount
+            outputTokensCount = outputTokensCount,
+            metadata = cachedContentTokenCount?.let { cached ->
+                buildJsonObject { put("cachedContentTokenCount", cached) }
+            },
         )
 
         return response.candidates.map { candidate ->

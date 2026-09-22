@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleUsageMetadata
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
@@ -35,6 +36,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -546,6 +548,77 @@ class GoogleLLMClientTest {
         val reasoning = response.parts[0] as MessagePart.Reasoning
         reasoning.content.single() shouldBe "I am thinking..."
         reasoning.encrypted shouldBe "thought-sig"
+    }
+
+    @Test
+    fun `execute maps cachedContentTokenCount from usage metadata`() = runTest {
+        val model = GoogleModels.Gemini2_5Pro
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "GoogleCachedTokensTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            @Suppress("UNCHECKED_CAST")
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = GoogleResponse(
+                candidates = listOf(
+                    GoogleCandidate(
+                        content = GoogleContent(role = "model", parts = listOf(GooglePart.Text(text = "answer"))),
+                        finishReason = "STOP",
+                        index = 0
+                    )
+                ),
+                usageMetadata = GoogleUsageMetadata(
+                    promptTokenCount = 31911,
+                    candidatesTokenCount = 42,
+                    totalTokenCount = 31953,
+                    cachedContentTokenCount = 28643,
+                )
+            ) as R
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<O> = error("sse is not expected in this test")
+
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = GoogleLLMClient(httpClient = transport)
+
+        val result = client.execute(
+            prompt = Prompt(messages = listOf(Message.User("Hi", RequestMetaInfo.Empty)), id = "id"),
+            model = model,
+            tools = emptyList(),
+        )
+
+        result.metaInfo.metadata?.get("cachedContentTokenCount")?.jsonPrimitive?.int shouldBe 28643
     }
 
     @Test
