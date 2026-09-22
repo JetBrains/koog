@@ -15,7 +15,7 @@ Install the Koog plugin once, configure your LLM providers in application.conf/Y
 The `koog-ktor` module provides idiomatic Kotlin/Ktor integration for server‑side agentic development:
 
 - Drop‑in Ktor plugin: `install(Koog)` in your Application
-- First‑class support for OpenAI, Anthropic, Google, OpenRouter, DeepSeek, and Ollama
+- First‑class support for OpenAI, Anthropic, Google, OpenRouter, DeepSeek, Requesty, and Ollama
 - Centralized configuration via YAML/CONF and/or code
 - Agent setup with prompt, tools, features; simple extension functions for routes
 - Direct LLM usage (execute, executeStreaming, moderate)
@@ -53,6 +53,9 @@ koog:
   deepseek:
     apikey: ${DEEPSEEK_API_KEY}
     baseUrl: https://api.deepseek.com
+  requesty:
+    apikey: ${REQUESTY_API_KEY}
+    baseUrl: https://router.requesty.ai
   # Ollama is enabled when any koog.ollama.* key exists
   ollama:
     enable: true
@@ -180,6 +183,7 @@ install(Koog) {
         google(apiKey = System.getenv("GOOGLE_API_KEY") ?: "")
         openRouter(apiKey = System.getenv("OPENROUTER_API_KEY") ?: "")
         deepSeek(apiKey = System.getenv("DEEPSEEK_API_KEY") ?: "")
+        requesty(apiKey = System.getenv("REQUESTY_API_KEY") ?: "")
         ollama { baseUrl = "http://localhost:11434" }
 
         // Optional fallback used by PromptExecutor when a provider isn’t configured
@@ -218,6 +222,7 @@ When configuring llm.fallback in YAML/CONF, use these identifier formats:
 - Google: google.gemini2_5pro, google.gemini2_0flash001
 - OpenRouter: openrouter.gpt4o, openrouter.gpt4, openrouter.claude3sonnet
 - DeepSeek: deepseek.deepseek-v4-flash, deepseek.deepseek-v4-pro, deepseek.deepseek-chat, deepseek.deepseek-reasoner
+- Requesty: requesty.gpt4omini, requesty.gpt4_1, requesty.claude-sonnet-4-5, requesty.gemini25flash
 - Ollama: ollama.meta.llama3.2, ollama.alibaba.qwq:32b, ollama.groq.llama3-grok-tool-use:8b
 
 Note
