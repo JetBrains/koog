@@ -155,7 +155,10 @@ internal class LangfuseSpanAdapter(
         when (message) {
             is Message.Assistant -> {
                 val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+                // Reasoning parts with no content (e.g. Google's signature-only parts) must not
+                // suppress the text parts of the same message.
                 val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                    .filter { it.content.isNotEmpty() }
                 val textParts = message.parts.filterIsInstance<MessagePart.Text>()
 
                 when {
@@ -165,6 +168,9 @@ internal class LangfuseSpanAdapter(
                     }
                     reasoningParts.isNotEmpty() -> {
                         span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })))
+                        message.finishReason?.let { reason ->
+                            span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
+                        }
                     }
                     else -> {
                         span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))

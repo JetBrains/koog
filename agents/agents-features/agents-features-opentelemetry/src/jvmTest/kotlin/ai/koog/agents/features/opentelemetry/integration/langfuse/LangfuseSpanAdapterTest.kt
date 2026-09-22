@@ -191,6 +191,37 @@ class LangfuseSpanAdapterTest {
     }
 
     @Test
+    fun `onBeforeSpanFinished uses text content when reasoning part carries no content`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val inferenceSpan = createInferenceSpan(provider)
+
+        // Mirrors the Google client: a signature-only Reasoning part (empty content) alongside
+        // the real Text part of the same message. The empty reasoning part must not suppress
+        // the text content or the finish reason.
+        val assistantAnswer = "It's sunny in Rome."
+        val assistantMessage = Message.Assistant(
+            parts = listOf(
+                MessagePart.Reasoning(content = emptyList(), encrypted = "signature"),
+                MessagePart.Text(assistantAnswer),
+            ),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "stop",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+
+        val actualContent = attributes.requireValue("gen_ai.completion.0.content")
+        assertIs<HiddenString>(actualContent)
+        assertEquals(assistantAnswer, actualContent.value)
+        assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    }
+
+    @Test
     fun `onBeforeSpanStarted adds langgraph metadata to node execute spans`() {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
