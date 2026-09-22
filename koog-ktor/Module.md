@@ -8,7 +8,7 @@ The `koog-ktor` module provides seamless integration between the Koog AI agents 
 It includes:
 
 - A Ktor plugin for easy installation and configuration
-- Support for multiple LLM providers (OpenAI, Anthropic, Google, MistralAI, OpenRouter, DeepSeek, Ollama)
+- Support for multiple LLM providers (OpenAI, Anthropic, Google, MistralAI, OpenRouter, DeepSeek, Requesty, Ollama)
 - Agent configuration with tools, features, and prompt customization
 - Extension functions for routes to interact with LLMs and agents
 - JVM-specific support for Model Context Protocol (MCP) integration
@@ -36,6 +36,7 @@ koog:
   mistral.apikey: "$MISTRALAI_API_KEY:your-mistralai-api-key"
   openrouter.apikey: "$OPENROUTER_API_KEY:your-openrouter-api-key"
   deepseek.apikey: "$DEEPSEEK_API_KEY:your-deepseek-api-key"
+  requesty.apikey: "$REQUESTY_API_KEY:your-requesty-api-key"
   ollama.enabled: "$DEBUG:false"
 ```
 
@@ -55,6 +56,7 @@ fun Application.module() {
             mistral(apiKey = "your-mistral-api-key")
             openRouter(apiKey = "your-openrouter-api-key")
             deepSeek(apiKey = "your-deepseek-api-key")
+            requesty(apiKey = "your-requesty-api-key")
         }
     }
 
@@ -186,6 +188,10 @@ koog:
   deepseek:
     apikey: "your-deepseek-api-key"
     baseUrl: "https://api.deepseek.com"
+
+  requesty:
+    apikey: "your-requesty-api-key"
+    baseUrl: "https://router.requesty.ai"
 
   ollama:
     baseUrl: "http://localhost:11434"

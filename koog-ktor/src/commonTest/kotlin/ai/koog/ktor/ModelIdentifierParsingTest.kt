@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.executor.clients.requesty.RequestyModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -352,6 +353,34 @@ class ModelIdentifierParsingTest {
         assertEquals(DeepSeekModels.DeepSeekV4Pro, deepSeekV4Pro)
     }
 
+    // Requesty model identifier tests
+    @Test
+    fun testRequestyModels() = runTest {
+        // Test GPT-4o mini
+        val gpt4oMini = getModelFromIdentifier("requesty.gpt4omini")
+        assertNotNull(gpt4oMini)
+        assertEquals(LLMProvider.Requesty, gpt4oMini.provider)
+        assertEquals(RequestyModels.GPT4oMini, gpt4oMini)
+
+        // Test GPT-4.1 with separators in the identifier
+        val gpt4_1 = getModelFromIdentifier("requesty.gpt4_1")
+        assertNotNull(gpt4_1)
+        assertEquals(LLMProvider.Requesty, gpt4_1.provider)
+        assertEquals(RequestyModels.GPT4_1, gpt4_1)
+
+        // Test Claude Sonnet 4.5
+        val claudeSonnet4_5 = getModelFromIdentifier("requesty.claude-sonnet-4-5")
+        assertNotNull(claudeSonnet4_5)
+        assertEquals(LLMProvider.Requesty, claudeSonnet4_5.provider)
+        assertEquals(RequestyModels.ClaudeSonnet4_5, claudeSonnet4_5)
+
+        // Test Gemini 2.5 Flash
+        val gemini2_5Flash = getModelFromIdentifier("requesty.gemini25flash")
+        assertNotNull(gemini2_5Flash)
+        assertEquals(LLMProvider.Requesty, gemini2_5Flash.provider)
+        assertEquals(RequestyModels.Gemini2_5Flash, gemini2_5Flash)
+    }
+
     // Ollama model identifier tests
     @Test
     fun testOllamaGroqModels() = runTest {
@@ -478,6 +507,10 @@ class ModelIdentifierParsingTest {
         // Test invalid OpenRouter model
         val invalidOpenRouterModel = getModelFromIdentifier("openrouter.invalid")
         assertNull(invalidOpenRouterModel)
+
+        // Test invalid Requesty model
+        val invalidRequestyModel = getModelFromIdentifier("requesty.invalid")
+        assertNull(invalidRequestyModel)
 
         // Test invalid Ollama maker
         val invalidOllamaMaker = getModelFromIdentifier("ollama.invalid.model")
