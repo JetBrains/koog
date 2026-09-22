@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.requesty.RequestyLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -54,6 +55,7 @@ class KoogAutoConfigurationIntegrationTest {
             MistralAILLMClient::class,
             OpenAILLMClient::class,
             OpenRouterLLMClient::class,
+            RequestyLLMClient::class,
             OllamaClient::class,
         ]
     )
@@ -79,6 +81,7 @@ class KoogAutoConfigurationIntegrationTest {
             "ollamaExecutor",
             "openAIExecutor",
             "openRouterExecutor",
+            "requestyExecutor",
         ]
     )
     fun `Should register SingleLLMExecutors`(beanName: String) {
