@@ -75,6 +75,7 @@ val betaModules = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-requesty-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-litert-client",
     ":prompt:prompt-executor:prompt-executor-llms-all",

@@ -97,6 +97,8 @@ open class ai.koog.prompt.llm/LLMProvider { // ai.koog.prompt.llm/LLMProvider|nu
             final fun <get-OpenAI>(): ai.koog.prompt.llm/OpenAILLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.OpenAI.<get-OpenAI>|<get-OpenAI>(){}[0]
         final val OpenRouter // ai.koog.prompt.llm/LLMProvider.Companion.OpenRouter|{}OpenRouter[0]
             final fun <get-OpenRouter>(): ai.koog.prompt.llm/OpenRouterLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.OpenRouter.<get-OpenRouter>|<get-OpenRouter>(){}[0]
+        final val Requesty // ai.koog.prompt.llm/LLMProvider.Companion.Requesty|{}Requesty[0]
+            final fun <get-Requesty>(): ai.koog.prompt.llm/RequestyLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Requesty.<get-Requesty>|<get-Requesty>(){}[0]
         final val Vertex // ai.koog.prompt.llm/LLMProvider.Companion.Vertex|{}Vertex[0]
             final fun <get-Vertex>(): ai.koog.prompt.llm/VertexLLMProvider // ai.koog.prompt.llm/LLMProvider.Companion.Vertex.<get-Vertex>|<get-Vertex>(){}[0]
         final val ZhipuAI // ai.koog.prompt.llm/LLMProvider.Companion.ZhipuAI|{}ZhipuAI[0]
@@ -368,6 +370,11 @@ final object ai.koog.prompt.llm/OpenAILLMProvider : ai.koog.prompt.llm/LLMProvid
 final object ai.koog.prompt.llm/OpenRouterLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/OpenRouterLLMProvider|null[0]
     final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/OpenRouterLLMProvider> // ai.koog.prompt.llm/OpenRouterLLMProvider.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/OpenRouterLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+}
+
+final object ai.koog.prompt.llm/RequestyLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/RequestyLLMProvider|null[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.llm/RequestyLLMProvider> // ai.koog.prompt.llm/RequestyLLMProvider.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.llm/RequestyLLMProvider.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
 }
 
 final object ai.koog.prompt.llm/VertexLLMProvider : ai.koog.prompt.llm/LLMProvider, kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.llm/VertexLLMProvider|null[0]

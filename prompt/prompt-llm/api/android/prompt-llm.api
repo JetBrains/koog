@@ -253,6 +253,7 @@ public class ai/koog/prompt/llm/LLMProvider {
 	public static final field Ollama Lai/koog/prompt/llm/OllamaLLMProvider;
 	public static final field OpenAI Lai/koog/prompt/llm/OpenAILLMProvider;
 	public static final field OpenRouter Lai/koog/prompt/llm/OpenRouterLLMProvider;
+	public static final field Requesty Lai/koog/prompt/llm/RequestyLLMProvider;
 	public static final field Vertex Lai/koog/prompt/llm/VertexLLMProvider;
 	public static final field ZhipuAI Lai/koog/prompt/llm/ZhipuAILLMProvider;
 	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
@@ -355,6 +356,11 @@ public final class ai/koog/prompt/llm/OpenAILLMProvider : ai/koog/prompt/llm/LLM
 
 public final class ai/koog/prompt/llm/OpenRouterLLMProvider : ai/koog/prompt/llm/LLMProvider {
 	public static final field INSTANCE Lai/koog/prompt/llm/OpenRouterLLMProvider;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/llm/RequestyLLMProvider : ai/koog/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/koog/prompt/llm/RequestyLLMProvider;
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
