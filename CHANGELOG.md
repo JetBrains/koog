@@ -1,3 +1,15 @@
+# 1.3.0
+> Published 23 September 2026
+
+## Improvements
+
+- **Newest models from every provider**: Added ready-made `LLModel` definitions — with correct capabilities, context windows, and pricing — for the latest models, so they no longer have to be hand-written: Anthropic (`Sonnet_5`, `Opus_5`, `Opus_4_8`), OpenAI (`GPT5_6Sol`, `GPT5_6Terra`, `GPT5_6Luna`), Google (`Gemini3_5FlashLite`, `Gemini3_6Flash`, `Gemini3_7Flash`), Bedrock (Claude 5 Opus/Sonnet, Claude 4.8 Opus, Amazon Nova 2 Lite), DashScope (`QWEN3_5_PLUS`, `QWEN3_7_MAX`, `QWEN3_8_MAX`), DeepSeek (`DeepSeekV4FlashVisionExp`), Mistral (Ministral 3B/8B/14B), Ollama (`QWEN_3_6_27B`, `QWEN_3_8_27B`), and OpenRouter (new Claude, GPT-5.6, and Gemini 3 entries) (#2230)
+
+## Bug Fixes
+
+- **Google prompt-cache token counts**: `GoogleUsageMetadata` now reads `cachedContentTokenCount` and carries it into `ResponseMetaInfo.metadata` in both the streaming and non-streaming paths, so cache hits are no longer invisible and cost calculations on top of Koog stop counting cached prompt tokens as fresh ones. Like the Anthropic and Bedrock cache counts, the value also reaches the OpenTelemetry `gen_ai.response.metadata` attribute (#2249)
+- **Empty assistant content in Langfuse traces**: `LangfuseSpanAdapter` now skips reasoning parts that carry no content and writes `finish_reason` on every branch, so Gemini responses — which send a signature-only reasoning part next to the real text — are no longer traced as `{"role": "assistant", "content": ""}` (#2248)
+
 # 1.2.0
 > Published 27 August 2026
 
