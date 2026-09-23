@@ -129,6 +129,8 @@ public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Alibaba {
 	public static final field QWEN_2_5_05B Lai/koog/prompt/llm/LLModel;
 	public static final field QWEN_3_06B Lai/koog/prompt/llm/LLModel;
 	public static final field QWEN_3_5_9B Lai/koog/prompt/llm/LLModel;
+	public static final field QWEN_3_6_27B Lai/koog/prompt/llm/LLModel;
+	public static final field QWEN_3_8_27B Lai/koog/prompt/llm/LLModel;
 	public static final field QWEN_CODER_2_5_32B Lai/koog/prompt/llm/LLModel;
 	public static final field QWQ Lai/koog/prompt/llm/LLModel;
 	public static final field QWQ_32B Lai/koog/prompt/llm/LLModel;
