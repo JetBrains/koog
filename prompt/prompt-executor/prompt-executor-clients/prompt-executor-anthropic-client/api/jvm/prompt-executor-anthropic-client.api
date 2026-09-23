@@ -75,9 +75,12 @@ public final class ai/koog/prompt/executor/clients/anthropic/AnthropicModels : a
 	public static final field Opus_4_5 Lai/koog/prompt/llm/LLModel;
 	public static final field Opus_4_6 Lai/koog/prompt/llm/LLModel;
 	public static final field Opus_4_7 Lai/koog/prompt/llm/LLModel;
+	public static final field Opus_4_8 Lai/koog/prompt/llm/LLModel;
+	public static final field Opus_5 Lai/koog/prompt/llm/LLModel;
 	public static final field Sonnet_4 Lai/koog/prompt/llm/LLModel;
 	public static final field Sonnet_4_5 Lai/koog/prompt/llm/LLModel;
 	public static final field Sonnet_4_6 Lai/koog/prompt/llm/LLModel;
+	public static final field Sonnet_5 Lai/koog/prompt/llm/LLModel;
 	public fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
 	public fun getModels ()Ljava/util/List;
 }

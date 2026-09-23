@@ -110,6 +110,9 @@ public final class ai/koog/prompt/executor/clients/openai/OpenAIModels$Chat {
 	public static final field GPT5_4Pro Lai/koog/prompt/llm/LLModel;
 	public static final field GPT5_5 Lai/koog/prompt/llm/LLModel;
 	public static final field GPT5_5Pro Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_6Luna Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_6Sol Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_6Terra Lai/koog/prompt/llm/LLModel;
 	public static final field INSTANCE Lai/koog/prompt/executor/clients/openai/OpenAIModels$Chat;
 	public static final field O1 Lai/koog/prompt/llm/LLModel;
 	public static final field O3 Lai/koog/prompt/llm/LLModel;

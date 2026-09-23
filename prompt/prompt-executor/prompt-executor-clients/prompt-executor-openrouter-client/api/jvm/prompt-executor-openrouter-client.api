@@ -52,6 +52,10 @@ public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterModels :
 	public static final field Claude4_5Sonnet Lai/koog/prompt/llm/LLModel;
 	public static final field Claude4_6Opus Lai/koog/prompt/llm/LLModel;
 	public static final field Claude4_6Sonnet Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_7Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude4_8Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude5Opus Lai/koog/prompt/llm/LLModel;
+	public static final field Claude5Sonnet Lai/koog/prompt/llm/LLModel;
 	public static final field DeepSeekV30324 Lai/koog/prompt/llm/LLModel;
 	public static final field GPT35Turbo Lai/koog/prompt/llm/LLModel;
 	public static final field GPT4 Lai/koog/prompt/llm/LLModel;
@@ -64,10 +68,14 @@ public final class ai/koog/prompt/executor/clients/openrouter/OpenRouterModels :
 	public static final field GPT5Nano Lai/koog/prompt/llm/LLModel;
 	public static final field GPT5_2 Lai/koog/prompt/llm/LLModel;
 	public static final field GPT5_2Pro Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_6Luna Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_6Sol Lai/koog/prompt/llm/LLModel;
+	public static final field GPT5_6Terra Lai/koog/prompt/llm/LLModel;
 	public static final field GPT_OSS_120b Lai/koog/prompt/llm/LLModel;
 	public static final field Gemini2_5Flash Lai/koog/prompt/llm/LLModel;
 	public static final field Gemini2_5FlashLite Lai/koog/prompt/llm/LLModel;
 	public static final field Gemini2_5Pro Lai/koog/prompt/llm/LLModel;
+	public static final field Gemini3ProPreview Lai/koog/prompt/llm/LLModel;
 	public static final field INSTANCE Lai/koog/prompt/executor/clients/openrouter/OpenRouterModels;
 	public static final field Llama3 Lai/koog/prompt/llm/LLModel;
 	public static final field Llama3Instruct Lai/koog/prompt/llm/LLModel;

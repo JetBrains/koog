@@ -346,6 +346,63 @@ public object OllamaModels : LLModelDefinitions {
             ),
             contextLength = 256_000,
         )
+
+        /**
+         * Represents the Alibaba Qwen 3.6 dense model with 27 billion parameters.
+         *
+         * A strong single-GPU model for agentic coding and general work, outperforming
+         * much larger MoE models on agentic coding benchmarks.
+         *
+         * Supported capabilities:
+         * - `Schema.JSON.Basic`: Supports JSON schema-based tasks.
+         * - `Temperature`: Allows adjustment of the temperature setting.
+         * - `Thinking`: Represents the thinking/reasoning capability of the model.
+         * - `ToolChoice`: Represents how tools calling can be configured for the LLM.
+         * - `Tools`: Enables interaction with external tools.
+         *
+         * <a href="https://ollama.com/library/qwen3.6">
+         */
+        @JvmField
+        public val QWEN_3_6_27B: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "qwen3.6:27b",
+            capabilities = listOf(
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Temperature,
+                LLMCapability.Thinking,
+                LLMCapability.ToolChoice,
+                LLMCapability.Tools,
+            ),
+            contextLength = 256_000,
+        )
+
+        /**
+         * Represents the Alibaba Qwen 3.8 open-weight multimodal model with 27 billion parameters.
+         *
+         * Supported capabilities:
+         * - `Schema.JSON.Basic`: Supports JSON schema-based tasks.
+         * - `Temperature`: Allows adjustment of the temperature setting.
+         * - `Thinking`: Represents the thinking/reasoning capability of the model.
+         * - `ToolChoice`: Represents how tools calling can be configured for the LLM.
+         * - `Tools`: Enables interaction with external tools.
+         * - `Vision.Image`: Enables processing and understanding of image inputs alongside text.
+         *
+         * <a href="https://ollama.com/library/qwen3.8">
+         */
+        @JvmField
+        public val QWEN_3_8_27B: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "qwen3.8:27b",
+            capabilities = listOf(
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Temperature,
+                LLMCapability.Thinking,
+                LLMCapability.ToolChoice,
+                LLMCapability.Tools,
+                LLMCapability.Vision.Image,
+            ),
+            contextLength = 256_000,
+        )
     }
 
     /**
@@ -559,6 +616,8 @@ public object OllamaModels : LLModelDefinitions {
         Alibaba.QWQ,
         Alibaba.QWEN_CODER_2_5_32B,
         Alibaba.QWEN_3_5_9B,
+        Alibaba.QWEN_3_6_27B,
+        Alibaba.QWEN_3_8_27B,
         Granite.GRANITE_3_2_VISION,
         DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B,
         OpenAI.GPT_OSS_20B,

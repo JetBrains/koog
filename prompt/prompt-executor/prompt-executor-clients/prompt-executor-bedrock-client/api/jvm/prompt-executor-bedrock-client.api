@@ -224,6 +224,7 @@ public final class ai/koog/prompt/executor/clients/bedrock/BedrockModelFamilies$
 public final class ai/koog/prompt/executor/clients/bedrock/BedrockModels : ai/koog/prompt/executor/clients/LLModelDefinitions {
 	public static final field INSTANCE Lai/koog/prompt/executor/clients/bedrock/BedrockModels;
 	public fun addCustomModel (Lai/koog/prompt/llm/LLModel;)V
+	public final fun getAmazonNova2Lite ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAmazonNovaLite ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAmazonNovaMicro ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAmazonNovaPremier ()Lai/koog/prompt/llm/LLModel;
@@ -232,11 +233,14 @@ public final class ai/koog/prompt/executor/clients/bedrock/BedrockModels : ai/ko
 	public final fun getAnthropicClaude45Opus ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude46Opus ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude47Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude48Opus ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4Opus ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4Sonnet ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4_5Haiku ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4_5Sonnet ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaude4_6Sonnet ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude5Opus ()Lai/koog/prompt/llm/LLModel;
+	public final fun getAnthropicClaude5Sonnet ()Lai/koog/prompt/llm/LLModel;
 	public final fun getAnthropicClaudeFable5 ()Lai/koog/prompt/llm/LLModel;
 	public final fun getGoogleGemma3_12BIt ()Lai/koog/prompt/llm/LLModel;
 	public final fun getGoogleGemma3_27BIt ()Lai/koog/prompt/llm/LLModel;

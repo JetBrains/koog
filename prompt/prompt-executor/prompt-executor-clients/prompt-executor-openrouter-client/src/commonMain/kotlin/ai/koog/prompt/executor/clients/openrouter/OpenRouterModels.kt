@@ -227,6 +227,78 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * Claude Opus 4.7 is Anthropic's Opus model for advanced coding, long-running agents,
+     * knowledge work, and higher-resolution vision tasks.
+     */
+    @JvmField
+    public val Claude4_7Opus: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-opus-4.7",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
+     * Claude Opus 4.8 is the most capable model in the Opus 4 series — highly autonomous,
+     * with state-of-the-art long-horizon agentic execution, knowledge work, and memory.
+     */
+    @JvmField
+    public val Claude4_8Opus: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-opus-4.8",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
+     * Claude Opus 5 is the first Opus model of Anthropic's fifth generation — a step-change over
+     * Opus 4.8 for complex agentic coding and enterprise work. Thinking is enabled by default.
+     */
+    @JvmField
+    public val Claude5Opus: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-opus-5",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
+     * Claude Sonnet 5 is the first Sonnet model of Anthropic's fifth generation, delivering
+     * near-Opus quality on coding and agentic work at Sonnet pricing.
+     */
+    @JvmField
+    public val Claude5Sonnet: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-sonnet-5",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_000_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
      * Represents the GPT-4o-mini model hosted on OpenRouter.
      *
      * It leverages a standard set of capabilities for interaction.
@@ -430,6 +502,56 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * GPT-5.6 Sol is the flagship model of OpenAI's GPT-5.6 family, setting a new standard for
+     * both intelligence and efficiency across coding, knowledge work, and science.
+     */
+    @JvmField
+    public val GPT5_6Sol: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5.6-sol",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_050_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
+     * GPT-5.6 Terra is the balanced model of OpenAI's GPT-5.6 family for everyday work.
+     */
+    @JvmField
+    public val GPT5_6Terra: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5.6-terra",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_050_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
+     * GPT-5.6 Luna is the most cost-efficient model of OpenAI's GPT-5.6 family,
+     * designed for high-volume tasks like classification, extraction, and sub-agents.
+     */
+    @JvmField
+    public val GPT5_6Luna: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5.6-luna",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_050_000,
+        maxOutputTokens = 128_000,
+    )
+
+    /**
      * Represents the Llama3 model configuration provided by OpenRouter.
      * This model is identified by the unique ID "meta-llama/llama-3-70b" and
      * supports the standard set of language model capabilities.
@@ -610,6 +732,23 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * Gemini 3 Pro Preview — Google's Pro-class reasoning model on OpenRouter,
+     * with advanced intelligence and complex problem-solving skills.
+     */
+    @JvmField
+    public val Gemini3ProPreview: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "google/gemini-3-pro-preview",
+        capabilities = multimodalCapabilities + listOf(
+            LLMCapability.Schema.JSON.Standard,
+            LLMCapability.ToolChoice,
+            LLMCapability.Thinking,
+        ),
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
      * Qwen 2.5 model with 72B parameters from Alibaba.
      * Supports advanced language understanding and generation capabilities.
      */
@@ -661,6 +800,10 @@ public object OpenRouterModels : LLModelDefinitions {
         Claude4_5Opus,
         Claude4_6Sonnet,
         Claude4_6Opus,
+        Claude4_7Opus,
+        Claude4_8Opus,
+        Claude5Opus,
+        Claude5Sonnet,
         Claude3VisionSonnet,
         Claude3VisionOpus,
         Claude3VisionHaiku,
@@ -678,6 +821,9 @@ public object OpenRouterModels : LLModelDefinitions {
         GPT_OSS_120b,
         GPT5_2,
         GPT5_2Pro,
+        GPT5_6Sol,
+        GPT5_6Terra,
+        GPT5_6Luna,
         Llama3,
         Llama3Instruct,
 
@@ -688,10 +834,11 @@ public object OpenRouterModels : LLModelDefinitions {
         // DeepSeek Models
         DeepSeekV30324,
 
-        // Gemini 2.5 Models
+        // Gemini Models
         Gemini2_5FlashLite,
         Gemini2_5Flash,
         Gemini2_5Pro,
+        Gemini3ProPreview,
 
         // Qwen Models
         Qwen2_5,
