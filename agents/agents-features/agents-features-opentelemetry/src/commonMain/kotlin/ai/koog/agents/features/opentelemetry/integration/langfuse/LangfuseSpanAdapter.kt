@@ -44,6 +44,13 @@ internal class LangfuseSpanAdapter(
                 runId?.let { runId ->
                     span.addAttribute(CustomAttribute("langfuse.session.id", runId))
                 }
+
+                val inputMessages = span.attributes
+                    .filterIsInstance<GenAIAttributes.Input.Messages>()
+                    .firstOrNull()
+                inputMessages?.let { attribute ->
+                    copyToRootObservation(span, "langfuse.observation.input", attribute.value)
+                }
             }
 
             SpanType.INFERENCE -> {
@@ -99,11 +106,30 @@ internal class LangfuseSpanAdapter(
                     applyCompletionAttributes(span, index, message)
                 }
             }
+
+            SpanType.INVOKE_AGENT -> {
+                val outputMessages = span.attributes
+                    .filterIsInstance<GenAIAttributes.Output.Messages>()
+                    .firstOrNull()
+                outputMessages?.let { attribute ->
+                    copyToRootObservation(span, "langfuse.observation.output", attribute.value)
+                }
+            }
+
             else -> {}
         }
     }
 
     //region Private Methods
+
+    /**
+     * Copies a run-level attribute onto the trace-root `create_agent` span. Langfuse v4 expects the
+     * overall request/response on the root observation, which Koog's `create_agent` root doesn't carry.
+     */
+    private fun copyToRootObservation(span: GenAIAgentSpan, key: String, value: Any) {
+        val root = span.parentSpan?.takeIf { parent -> parent.type == SpanType.CREATE_AGENT } ?: return
+        root.addAttribute(CustomAttribute(key, value))
+    }
 
     private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
         when (message) {
