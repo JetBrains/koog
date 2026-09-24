@@ -67,6 +67,8 @@ internal data class OllamaShowModelResponseDTO(
 
         @SerialName("vision") VISION,
 
+        @SerialName("audio") AUDIO,
+
         @SerialName("thinking") THINKING,
 
         @SerialName("tools") TOOLS,

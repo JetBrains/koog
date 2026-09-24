@@ -36,6 +36,7 @@ private fun List<OllamaShowModelResponseDTO.Capability>.toLLMCapabilities(): Lis
             OllamaShowModelResponseDTO.Capability.VISION -> listOf(LLMCapability.Vision.Image)
             OllamaShowModelResponseDTO.Capability.THINKING -> listOf()
             OllamaShowModelResponseDTO.Capability.TOOLS -> listOf(LLMCapability.Tools)
+            OllamaShowModelResponseDTO.Capability.AUDIO -> listOf(LLMCapability.Audio)
         }
     } + listOf(
         LLMCapability.Temperature,
