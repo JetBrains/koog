@@ -40,7 +40,7 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Temperature,
             LLMCapability.Tools,
-            LLMCapability.ToolChoice,
+            // ToolChoice is not supported when thinking mode is enabled (always on for V4 models)
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.MultipleChoices,
@@ -64,7 +64,7 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.Completion,
             LLMCapability.Temperature,
             LLMCapability.Tools,
-            LLMCapability.ToolChoice,
+            // ToolChoice is not supported when thinking mode is enabled (always on for V4 models)
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.MultipleChoices,

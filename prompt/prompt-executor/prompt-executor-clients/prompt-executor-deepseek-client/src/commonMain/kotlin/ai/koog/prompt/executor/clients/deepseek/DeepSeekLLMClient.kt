@@ -19,6 +19,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -110,6 +111,15 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
         val deepSeekParams = params.toDeepSeekParams()
         val responseFormat = createResponseFormat(params.schema, model)
 
+        // DeepSeek's thinking mode (always on for V4 models) does not support tool_choice.
+        // If we send tool_choice alongside thinking, the API returns 400:
+        // "Thinking mode does not support this tool_choice"
+        val effectiveToolChoice = if (model.supports(LLMCapability.Thinking)) {
+            null
+        } else {
+            deepSeekParams.toolChoice?.toOpenAIToolChoice()
+        }
+
         val preparedMessages = prepareMessagesForDeepSeek(messages, addJsonResponseHint = params.schema != null)
 
         val request = DeepSeekChatCompletionRequest(
@@ -123,7 +133,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
             stop = deepSeekParams.stop,
             stream = stream,
             temperature = deepSeekParams.temperature,
-            toolChoice = deepSeekParams.toolChoice?.toOpenAIToolChoice(),
+            toolChoice = effectiveToolChoice,
             tools = tools,
             topLogprobs = deepSeekParams.topLogprobs,
             topP = deepSeekParams.topP,
