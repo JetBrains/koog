@@ -367,5 +367,12 @@ class DashscopeLLMClientTest {
         assertEquals(35, response.metaInfo.inputTokensCount)
         assertEquals(191, response.metaInfo.outputTokensCount)
         assertEquals(226, response.metaInfo.totalTokensCount)
+        assertEquals(
+            buildJsonObject {
+                put("cachedInputTokens", 0)
+                put("reasoningTokens", 100)
+            },
+            response.metaInfo.metadata
+        )
     }
 }
