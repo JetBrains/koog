@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.requesty.RequestyLLMClient
 import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -27,6 +28,7 @@ import ai.koog.spring.prompt.executor.clients.mistralai.MistralAILLMAutoConfigur
 import ai.koog.spring.prompt.executor.clients.ollama.OllamaLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.openai.OpenAILLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.openrouter.OpenRouterLLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.requesty.RequestyLLMAutoConfiguration
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -49,6 +51,7 @@ private const val PROVIDERS = """
     mistral, ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient,
     openrouter, ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient,
     deepseek, ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient,
+    requesty, ai.koog.prompt.executor.clients.requesty.RequestyLLMClient,
     ollama, ai.koog.prompt.executor.ollama.client.OllamaClient,
 """
 
@@ -66,6 +69,7 @@ class KoogAutoConfigurationTest {
                 OllamaLLMAutoConfiguration::class.java,
                 OpenAILLMAutoConfiguration::class.java,
                 OpenRouterLLMAutoConfiguration::class.java,
+                RequestyLLMAutoConfiguration::class.java,
                 MultiLLMAutoConfiguration::class.java,
             )
         )
@@ -501,6 +505,67 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
+    fun `should supply Requesty executor bean with default baseUrl`() {
+        val configApiKey = "some_api_key"
+        createApplicationContextRunner()
+            .withPropertyValues(
+                "ai.koog.requesty.enabled=true",
+                "ai.koog.requesty.api-key=$configApiKey"
+            )
+            .run { context ->
+                val executor = context.getBean<MultiLLMPromptExecutor>("multiLLMPromptExecutor")
+                val llmClient = getLlmClient(executor, "requesty")
+                assertInstanceOf<RequestyLLMClient>(llmClient)
+
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
+                val baseUrl = getPrivateFieldValue(settings, "baseUrl")
+
+                assertEquals("https://router.requesty.ai", baseUrl)
+            }
+    }
+
+    @Test
+    fun `should supply Requesty executor bean with provided baseUrl`() {
+        val configBaseUrl = "https://router.eu.requesty.ai"
+        createApplicationContextRunner()
+            .withPropertyValues(
+                "ai.koog.requesty.enabled=true",
+                "ai.koog.requesty.api-key=some_api_key",
+                "ai.koog.requesty.base-url=$configBaseUrl",
+            )
+            .run { context ->
+                val executor = context.getBean<MultiLLMPromptExecutor>("multiLLMPromptExecutor")
+                val llmClient = getLlmClient(executor, "requesty") as RequestyLLMClient
+
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
+                val baseUrl = getPrivateFieldValue(settings, "baseUrl")
+
+                assertEquals(configBaseUrl, baseUrl)
+            }
+    }
+
+    @Test
+    fun `should supply Requesty executor bean with retry client and default config`() {
+        createApplicationContextRunner()
+            .withPropertyValues(
+                "ai.koog.requesty.enabled=true",
+                "ai.koog.requesty.api-key=some_api_key",
+                "ai.koog.requesty.retry.enabled=true"
+            )
+            .run { context ->
+                val executor = context.getBean<MultiLLMPromptExecutor>("requestyExecutor")
+                val retryingClient = getLlmClients(executor).values.single()
+                assertInstanceOf<RetryingLLMClient>(retryingClient)
+
+                val config = getPrivateFieldValue(retryingClient, "config")
+                assertInstanceOf<RetryConfig>(config)
+
+                val llmClient = getPrivateFieldValue(retryingClient, "delegate")
+                assertInstanceOf<RequestyLLMClient>(llmClient)
+            }
+    }
+
+    @Test
     fun `should supply DeepSeek executor bean with default baseUrl`() {
         val configApiKey = "some_api_key"
         createApplicationContextRunner()
@@ -726,6 +791,7 @@ class KoogAutoConfigurationTest {
         "mistral" -> "mistralAIExecutor"
         "openrouter" -> "openRouterExecutor"
         "deepseek" -> "deepSeekExecutor"
+        "requesty" -> "requestyExecutor"
         "ollama" -> "ollamaExecutor"
         "anthropic" -> "anthropicExecutor"
         else -> error("Unknown provider: $provider")

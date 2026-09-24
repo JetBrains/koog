@@ -19,6 +19,7 @@ ready-to-use beans for dependency injection. It supports all major LLM providers
 - Google
 - OpenRouter
 - DeepSeek
+- Requesty
 - Mistral
 - Ollama
 
@@ -75,6 +76,10 @@ ai.koog.openrouter.base-url=https://openrouter.ai
 ai.koog.deepseek.enabled=true
 ai.koog.deepseek.api-key=${DEEPSEEK_API_KEY}
 ai.koog.deepseek.base-url=https://api.deepseek.com
+# Requesty Configuration
+ai.koog.requesty.enabled=true
+ai.koog.requesty.api-key=${REQUESTY_API_KEY}
+ai.koog.requesty.base-url=https://router.requesty.ai
 # Mistral Configuration
 ai.koog.mistral.enabled=true
 ai.koog.mistral.api-key=${MISTRALAI_API_KEY}
@@ -110,6 +115,10 @@ ai:
             enabled: true
             api-key: ${DEEPSEEK_API_KEY}
             base-url: https://api.deepseek.com
+        requesty:
+            enabled: true
+            api-key: ${REQUESTY_API_KEY}
+            base-url: https://router.requesty.ai
         mistral:
             enabled: true
             api-key: ${MISTRALAI_API_KEY}
@@ -144,6 +153,7 @@ application.
 | Google       | `GOOGLE_API_KEY`      |
 | OpenRouter   | `OPENROUTER_API_KEY`  |
 | DeepSeek     | `DEEPSEEK_API_KEY`    |
+| Requesty     | `REQUESTY_API_KEY`    |
 | Mistral      | `MISTRALAI_API_KEY`   |
 
 ### 3. Use in your project
@@ -358,6 +368,8 @@ To override the auto-configuration for your beans you can use `@Primary` annotat
 | `ai.koog.openrouter.base-url` | OpenRouter base URL | Optional                               | `https://openrouter.ai`                     |
 | `ai.koog.deepseek.api-key`    | DeepSeek API key    | Required for `deepSeekExecutor` bean   | -                                           |
 | `ai.koog.deepseek.base-url`   | DeepSeek base URL   | Optional                               | `https://api.deepseek.com`                  |
+| `ai.koog.requesty.api-key`    | Requesty API key    | Required for `requestyExecutor` bean   | -                                           |
+| `ai.koog.requesty.base-url`   | Requesty base URL   | Optional                               | `https://router.requesty.ai`                |
 | `ai.koog.mistral.api-key`     | Mistral API key     | Required for `mistralAIExecutor` bean  | -                                           |
 | `ai.koog.mistral.base-url`    | Mistral base URL    | Optional                               | `https://api.mistral.ai`                    |
 | `ai.koog.ollama.base-url`     | Ollama base URL     | Optional                               | `http://127.0.0.1:11434`                    |
@@ -371,6 +383,7 @@ The auto-configuration creates the following beans (when configured):
 - `googleExecutor` - Google executor (requires `ai.koog.google.api-key`)
 - `openRouterExecutor` - OpenRouter executor (requires `ai.koog.openrouter.api-key`)
 - `deepSeekExecutor` - DeepSeek executor (requires `ai.koog.deepseek.api-key`)
+- `requestyExecutor` - Requesty executor (requires `ai.koog.requesty.api-key`)
 - `mistralAIExecutor` - Mistral AI executor (requires `ai.koog.mistral.api-key`)
 - `ollamaExecutor` - Ollama executor (requires `ai.koog.ollama.enabled=true`)
 - `multiLLMPromptExecutor` - MultiLLMPromptExecutor

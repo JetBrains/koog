@@ -187,6 +187,7 @@ For a list of default values for each parameter, see the corresponding LLM provi
 - [Mistral](https://docs.mistral.ai/api/#operation/chatCompletions) β
 - [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request) β
 - [OpenRouter](https://openrouter.ai/docs/api/reference/parameters)
+- [Requesty](https://docs.requesty.ai/) β
 - Alibaba β ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference))
 - [Ollama](https://docs.ollama.com/api/openai-compatibility)
 
@@ -436,6 +437,7 @@ and add provider-specific functionality. The following classes include parameter
 - `MistralAIParams`: Parameters specific to Mistral models.
 - `DeepSeekParams`: Parameters specific to DeepSeek models.
 - `OpenRouterParams`: Parameters specific to OpenRouter models.
+- `RequestyParams`: Parameters specific to Requesty models.
 - `DashscopeParams`: Parameters specific to Alibaba models.
 - `OllamaParams`: Parameters specific to Ollama models.
 
@@ -546,6 +548,18 @@ Here is the complete reference of provider-specific parameters in Koog:
     llm-parameters-snippets.md:topLogprobs
     llm-parameters-snippets.md:topP
     llm-parameters-snippets.md:transforms
+    --8<--
+
+=== "Requesty"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
     --8<--
 
 === "Alibaba (DashScope)"
