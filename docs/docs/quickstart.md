@@ -1,18 +1,18 @@
 # Quickstart
 
-This guide will help you start using Koog in your project.
+This guide will help you start using jarvis in your project.
 
 ## Prerequisites
 
 --8<-- "quickstart-snippets.md:prerequisites"
 
-## Install Koog
+## Install Jarvis 
 
 --8<-- "quickstart-snippets.md:dependencies"
 
 ??? tip "Module Versioning"
 
-    Koog follows Semantic Versioning (`X.Y.Z`). Stable modules (e.g., `1.0.0`) have guaranteed APIs,
+    jarvis follows Semantic Versioning (`X.Y.Z`). Stable modules (e.g., `1.0.0`) have guaranteed APIs,
     while beta modules (e.g., `1.0.0-beta`) are experimental and may change between releases.
 
     See [Module versioning](module-versioning.md) for details.
@@ -24,27 +24,27 @@ This guide will help you start using Koog in your project.
     To use a nightly build, add the following repository to your build configuration:
     `https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public`.
     
-    Then update your Koog dependency to the desired nightly version. Nightly versions follow the pattern
+    Then update your jarvis dependency to the desired nightly version. Nightly versions follow the pattern
     `[next-major-version]-develop-[date]-[time]`.
     
     You can browse the available nightly builds [here](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/).
 
 ## Set up an API key
 
-Koog requires either an API key from a [supported LLM provider](llm-providers.md) or a locally running LLM.
+jarvis requires either an API key from a [supported LLM provider](llm-providers.md) or a locally running LLM.
 
 !!! warning
     Avoid hardcoding API keys in the source code.
     Use environment variables to store API keys.
 
-=== "OpenAI"
+== jarvis ai
 
-    Get your [OpenAI API key](https://platform.openai.com/api-keys) and assign it to the `OPENAI_API_KEY` environment variable.
+    Get your( jarvis ai api key) (https://platform.openai.com/api-keys) and assign it to the `jarvis ai_API_KEY` environment variable.
     
     === "Linux/macOS"
 
         ```shell
-        export OPENAI_API_KEY=your-api-key
+        export jarvisAI_API_KEY=your-api-key
         ```
 
     === "Windows"
