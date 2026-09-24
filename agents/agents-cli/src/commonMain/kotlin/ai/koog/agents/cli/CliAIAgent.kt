@@ -3,6 +3,7 @@ package ai.koog.agents.cli
 import ai.koog.agents.cli.claude.ClaudeCliConfig
 import ai.koog.agents.cli.claude.ClaudeCliStructuredConfig
 import ai.koog.agents.cli.claude.ClaudePermissionMode
+import ai.koog.agents.cli.copilot.CopilotCliConfig
 import ai.koog.agents.cli.codex.CodexApprovalPolicy
 import ai.koog.agents.cli.codex.CodexCliConfig
 import ai.koog.agents.cli.codex.CodexSandboxMode
@@ -602,8 +603,118 @@ public class CliAIAgent<Input, Output> internal constructor(
         }
 
         /**
-         * Creates a new instance of [CliAIAgent] using provided configuration of the cli.
+         * Creates a new instance of [CliAIAgent] using GitHub Copilot CLI.
          *
+         * @param transport The transport used to execute cli commands.
+         * @param githubToken The GitHub token for Copilot CLI authentication.
+         * @param binaryPath The path to the binary.
+         * @param model The LLM model to use. If null, Copilot CLI default model is used.
+         * @param name The name of the cli strategy.
+         * @param systemPrompt The system prompt for the agent.
+         * @param llModel The LLM model to be used for the agent.
+         * @param additionalFlags Additional flags to be passed to copilot cli.
+         * @param workspace The workspace directory for the agent.
+         * @param timeout The timeout duration for the agent.
+         * @param id The unique identifier for the agent.
+         * @param clock The clock used to calculate message timestamps.
+         * @param installFeatures Lambda for installing additional features.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun copilot(
+            transport: CliTransport,
+            githubToken: String? = null,
+            binaryPath: String? = null,
+            model: String? = null,
+            name: String? = null,
+            systemPrompt: String? = null,
+            llModel: LLModel? = null,
+            additionalFlags: List<String> = emptyList(),
+            workspace: String = ".",
+            timeout: Duration? = null,
+            id: String? = null,
+            clock: KoogClock = KoogClock.System,
+            installFeatures: FeatureContext.() -> Unit = {},
+        ): CliAIAgent<String, CliAIAgentResponse> = copilot(
+            transport = transport,
+            githubToken = githubToken,
+            binaryPath = binaryPath,
+            model = model,
+            name = name,
+            systemPrompt = systemPrompt,
+            llModel = llModel,
+            additionalFlags = additionalFlags,
+            workspace = workspace,
+            timeout = timeout,
+            id = id,
+            clock = clock,
+            generateRequest = { it },
+            installFeatures = installFeatures
+        )
+
+        /**
+         * Creates a new instance of [CliAIAgent] using GitHub Copilot CLI.
+         *
+         * @param transport The transport used to execute cli commands.
+         * @param githubToken The GitHub token for Copilot CLI authentication.
+         * @param binaryPath The path to the binary.
+         * @param model The LLM model to use. If null, Copilot CLI default model is used.
+         * @param name The name of the cli strategy.
+         * @param systemPrompt The system prompt for the agent.
+         * @param llModel The LLM model to be used for the agent.
+         * @param additionalFlags Additional flags to be passed to copilot cli.
+         * @param workspace The workspace directory for the agent.
+         * @param timeout The timeout duration for the agent.
+         * @param id The unique identifier for the agent.
+         * @param clock The clock used to calculate message timestamps.
+         * @param generateRequest Lambda for generating the request for the agent.
+         * @param installFeatures Lambda for installing additional features.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun <Input> copilot(
+            transport: CliTransport,
+            githubToken: String? = null,
+            binaryPath: String? = null,
+            model: String? = null,
+            name: String? = null,
+            systemPrompt: String? = null,
+            llModel: LLModel? = null,
+            additionalFlags: List<String> = emptyList(),
+            workspace: String = ".",
+            timeout: Duration? = null,
+            id: String? = null,
+            clock: KoogClock = KoogClock.System,
+            generateRequest: CliConfig.GenerateRequest<Input>,
+            installFeatures: FeatureContext.() -> Unit = {}
+        ): CliAIAgent<Input, CliAIAgentResponse> {
+            val strategy = AIAgentCliStrategy(
+                config = CopilotCliConfig(
+                    transport = transport,
+                    githubToken = githubToken,
+                    binaryPath = binaryPath,
+                    name = name,
+                    model = model ?: llModel?.id,
+                    additionalFlags = additionalFlags,
+                    workspace = workspace,
+                    timeout = timeout,
+                    generateRequest = generateRequest
+                )
+            )
+
+            return CliAIAgent(
+                systemPrompt = systemPrompt,
+                llModel = llModel,
+                strategy = strategy,
+                id = id,
+                clock = clock,
+                installFeatures = installFeatures
+            )
+        }
+
+        /**
+         * Creates a new instance of [CliAIAgent] using provided configuration of the cli.
+         * 
          * @param cliConfig The configuration for the cli.
          * @param systemPrompt The system prompt for the agent.
          * @param llModel The LLM model to be used for the agent.
