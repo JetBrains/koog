@@ -1,0 +1,366 @@
+# Agent persistence
+
+Agent Persistence is a feature that provides checkpoint functionality for AI agents in the Koog framework. It lets you save and restore the state of an agent at specific points during execution, enabling capabilities such as:
+
+- Resuming agent execution from a specific point
+- Rolling back to previous states
+- Persisting agent state across sessions
+
+## Key concepts
+
+### Checkpoints
+
+A checkpoint captures the complete state of an agent at a specific point in its execution, including:
+
+- Message history (all interactions between user, system, assistant, and tools)
+- Last node that was successfully executed
+- Output data from that node
+- Selected LLM
+- Common LLM parameters
+- Selected tools
+- `AIAgentStorage` contents (key-value data stored during execution)
+- Timestamp of creation
+
+Checkpoints are identified by unique IDs and are associated with a specific agent.
+
+### `AIAgentStorage` persistence
+
+When a checkpoint is created, the framework serializes all values currently held in `AIAgentStorage` and includes them in the checkpoint. On restore, those values are deserialized and made available to the resumed agent exactly as they were at the time of the checkpoint.
+
+**Only serializable values are persisted.** The serializer used is the one configured in `AIAgentConfig` via its `serializer` property. Values that cannot be encoded by that serializer are silently skipped and will not be present in the restored storage.
+
+Non-serializable values are dropped silently when the checkpoint is written. If a value is missing after restoring from a checkpoint, verify that its type is serializable by the configured serializer.
+
+See [Serialization](../../serialization/) for more information.
+
+## Installation
+
+To use the Agent Persistence feature, add it to your agent's configuration:
+
+```
+val agent = AIAgent(
+    promptExecutor = executor,
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+) {
+    install(Persistence) {
+        // Use in-memory storage for snapshots
+        storage = InMemoryPersistenceStorageProvider()
+    }
+}
+```
+
+```
+AIAgent<String, String> agent = AIAgent.builder()
+    .promptExecutor(executor)
+    .llmModel(OllamaModels.Meta.LLAMA_3_2)
+    .install(Persistence.Feature, cfg -> {
+        // Use in-memory storage for snapshots
+        cfg.setStorage(new InMemoryPersistenceStorageProvider());
+    })
+.build();
+```
+
+## Configuration options
+
+The Agent Persistence feature has three main configuration options:
+
+- **Storage provider**: the provider used to save and retrieve checkpoints.
+- **Continuous persistence**: automatic creation of checkpoints after each node is run.
+- **Rollback strategy**: determines which state will be restored when rolling back to a checkpoint.
+
+### Storage provider
+
+Set the storage provider that will be used to save and retrieve checkpoints:
+
+```
+install(Persistence) {
+    storage = InMemoryPersistenceStorageProvider()
+}
+```
+
+```
+AIAgent<String, String> agent = AIAgent.builder()
+    .promptExecutor(executor)
+    .llmModel(OllamaModels.Meta.LLAMA_3_2)
+    .install(Persistence.Feature, cfg -> {
+        cfg.setStorage(new InMemoryPersistenceStorageProvider());
+    })
+    .build();
+```
+
+The framework includes the following built-in providers:
+
+- `InMemoryPersistenceStorageProvider`: stores checkpoints in memory (lost when the application restarts).
+- `FilePersistenceStorageProvider`: persists checkpoints to the file system.
+- `NoPersistenceStorageProvider`: a no-op implementation that does not store checkpoints. This is the default provider.
+
+You can also implement custom storage providers by implementing the `PersistenceStorageProvider` interface. For more information, see [Custom storage providers](#custom-storage-providers).
+
+### Continuous persistence
+
+Continuous persistence means that a checkpoint is automatically created after each node is run. To disable continuous persistence, use the code below:
+
+```
+install(Persistence) {
+    enableAutomaticPersistence = false
+}
+```
+
+```
+AIAgent<String, String> agent = AIAgent.builder()
+    .promptExecutor(executor)
+    .llmModel(OllamaModels.Meta.LLAMA_3_2)
+    .install(Persistence.Feature, cfg -> {
+        cfg.setEnableAutomaticPersistence(true);
+    })
+    .build();
+```
+
+If continuous persistence is disabled, you can still create checkpoints manually.
+
+## Basic usage
+
+### Creating a checkpoint
+
+To learn how to create a checkpoint at a specific point in your agent's execution, see the code sample below:
+
+```
+suspend fun example(context: AIAgentContext) {
+    // Create a checkpoint with the current state
+    val checkpoint = context.persistence().createCheckpointAfterNode(
+        agentContext = context,
+        nodePath = context.executionInfo.path(),
+        lastOutput = outputData,
+        lastOutputType = outputType,
+        checkpointId = context.runId,
+        version = 0L
+    )
+
+    // The checkpoint ID can be stored for later use
+    val checkpointId = checkpoint?.checkpointId
+}
+```
+
+```
+// PersistenceKt.persistence() is the Java-accessible form of the Kotlin extension function
+Persistence persistence = PersistenceKt.persistence(context);
+
+// Create a checkpoint with the current state
+AgentCheckpointData checkpoint = persistence.createCheckpointAfterNode(
+    context,
+    context.getExecutionInfo().path(),
+    outputData,
+    TypeToken.of(String.class),
+    0L,
+    context.getRunId()
+);
+
+// The checkpoint ID can be stored for later use
+String checkpointId = checkpoint != null ? checkpoint.getCheckpointId() : null;
+```
+
+### Restoring from a checkpoint
+
+To restore the state of an agent from a specific checkpoint, follow the code sample below:
+
+```
+suspend fun example(context: AIAgentContext, checkpointId: String) {
+    // Roll back to a specific checkpoint
+    context.persistence().rollbackToCheckpoint(checkpointId, context)
+
+    // Or roll back to the latest checkpoint
+    context.persistence().rollbackToLatestCheckpoint(context)
+}
+```
+
+```
+Persistence persistence = PersistenceKt.persistence(context);
+
+// Roll back to a specific checkpoint
+persistence.rollbackToCheckpoint(checkpointId, context);
+
+// Or roll back to the latest checkpoint
+persistence.rollbackToLatestCheckpoint(context);
+```
+
+#### Rolling back all side-effects produced by tools
+
+It's quite common for some tools to produce side-effects. Specifically, when you are running your agents on the backend, some of the tools would likely perform some database transactions. This makes it much harder for your agent to travel back in time.
+
+Imagine you have a tool `createUser` that creates a new user in your database. And your agent has populated multiple tool calls overtime:
+
+```
+tool call: createUser "Alex"
+
+->>>> checkpoint-1 <<<<-
+
+tool call: createUser "Daniel"
+tool call: createUser "Maria"
+```
+
+And now you would like to roll back to a checkpoint. Restoring the agent's state (including message history, and strategy graph node) alone would not be sufficient to achieve the exact state of the world before the checkpoint. You should also restore the side-effects produced by your tool calls. In our example, this would mean removing `Maria` and `Daniel` from the database.
+
+With Koog Persistence you can achieve that by providing a `RollbackToolRegistry` to `Persistence` feature config:
+
+```
+install(Persistence) {
+    enableAutomaticPersistence = true
+    rollbackToolRegistry = RollbackToolRegistry {
+        // For every `createUser` tool call there will be a `removeUser` invocation in the reverse order 
+        // when rolling back to the desired execution point.
+        // Note: `removeUser` tool should take the same exact arguments as `createUser`. 
+        // It's the developer's responsibility to make sure that `removeUser` invocation rolls back all side-effects of `createUser`:
+        registerRollback(::createUser, ::removeUser)
+    }
+}
+```
+
+```
+AIAgent<String, String> agent = AIAgent.builder()
+    .promptExecutor(executor)
+    .llmModel(OllamaModels.Meta.LLAMA_3_2)
+    .install(Persistence.Feature, cfg -> {
+        cfg.setEnableAutomaticPersistence(true);
+        cfg.setRollbackToolRegistry(
+            RollbackToolRegistry.builder()
+                // For every tool in UserToolSet there will be a corresponding rollback tool
+                // in UserRollbackToolSet, invoked in reverse order when rolling back.
+                // UserRollbackToolSet methods must be annotated with @Reverts to link
+                // them to the corresponding tools in UserToolSet.
+                .registerRollbacks(new UserToolSet(), new UserRollbackToolSet())
+                .build()
+        );
+    })
+    .build();
+```
+
+### Using extension functions
+
+The Agent Persistence feature provides convenient extension functions for working with checkpoints:
+
+```
+suspend fun example(context: AIAgentContext) {
+    // Access the checkpoint feature
+    val checkpointFeature = context.persistence()
+
+    // Or perform an action with the checkpoint feature
+    context.withPersistence { ctx ->
+        // 'this' is the checkpoint feature
+        createCheckpointAfterNode(
+            agentContext = ctx,
+            nodePath = ctx.executionInfo.path(),
+            lastOutput = outputData,
+            lastOutputType = outputType,
+            checkpointId = ctx.runId,
+            version = 0L
+        )
+    }
+}
+```
+
+```
+// Access the persistence feature via PersistenceKt (the Kotlin extension function)
+Persistence persistence = PersistenceKt.persistence(context);
+
+// Use the persistence feature directly to create a checkpoint
+persistence.createCheckpointAfterNode(
+    context,
+    context.getExecutionInfo().path(),
+    outputData,
+    TypeToken.of(String.class),
+    0L,
+    context.getRunId()
+);
+```
+
+## Advanced usage
+
+### Custom storage providers
+
+You can implement custom storage providers by implementing the `PersistenceStorageProvider` interface:
+
+```
+class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilterType> {
+    override suspend fun getCheckpoints(sessionId: String, filter: MyFilterType?): List<AgentCheckpointData> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun saveCheckpoint(sessionId: String, agentCheckpointData: AgentCheckpointData) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getLatestCheckpoint(sessionId: String, filter: MyFilterType?): AgentCheckpointData? {
+        TODO("Not yet implemented")
+    }
+}
+```
+
+```
+class MyCustomStorageProvider extends AsyncPersistenceStorageProvider<Object> {
+    @Override
+    public CompletableFuture<List<AgentCheckpointData>> getCheckpointsAsync(
+            String agentId, Object filter) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public CompletableFuture<Boolean> saveCheckpointAsync(
+            String agentId, AgentCheckpointData checkpointData) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public CompletableFuture<AgentCheckpointData> getLatestCheckpointAsync(
+            String agentId, Object filter) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+}
+```
+
+To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistence feature in your agent.
+
+```
+install(Persistence) {
+    storage = MyCustomStorageProvider<Any>()
+}
+```
+
+```
+AIAgent<String, String> agent = AIAgent.builder()
+    .promptExecutor(executor)
+    .llmModel(OllamaModels.Meta.LLAMA_3_2)
+    .install(Persistence.Feature, cfg -> {
+        cfg.setStorage(new MyCustomStorageProvider());
+    })
+    .build();
+```
+
+### Setting execution points
+
+For advanced control, you can directly set the execution point of an agent:
+
+```
+suspend fun example(context: AIAgentContext) {
+    // You can set the execution point after some node and provide an output from the node:
+    context.persistence().setExecutionPointAfterNode(
+        agentContext = context,
+        nodePath = context.executionInfo.path(),
+        messageHistory = customMessageHistory,
+        output = customOutput
+    )
+}
+```
+
+```
+Persistence persistence = PersistenceKt.persistence(context);
+
+// Set the execution point after a node and provide an output from the node:
+persistence.setExecutionPointAfterNode(
+    context,
+    context.getExecutionInfo().path(),
+    customMessageHistory,
+    customOutput
+);
+```
+
+This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.
