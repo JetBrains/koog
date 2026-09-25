@@ -105,13 +105,27 @@ public final class ai/koog/prompt/executor/clients/LLModelDefinitionsKt {
 	public static final fun modelsById (Lai/koog/prompt/executor/clients/LLModelDefinitions;)Ljava/util/Map;
 }
 
+public final class ai/koog/prompt/executor/clients/retry/CompositeRetryAfterExtractor : ai/koog/prompt/executor/clients/retry/RetryAfterExtractor {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> ([Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;)V
+	public fun extract-LV8wdWc (Lai/koog/http/client/KoogHttpClientException;)Lkotlin/time/Duration;
+	public fun extract-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class ai/koog/prompt/executor/clients/retry/DefaultRetryAfterExtractor : ai/koog/prompt/executor/clients/retry/RetryAfterExtractor {
 	public static final field INSTANCE Lai/koog/prompt/executor/clients/retry/DefaultRetryAfterExtractor;
+	public fun extract-LV8wdWc (Lai/koog/http/client/KoogHttpClientException;)Lkotlin/time/Duration;
 	public fun extract-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
 }
 
 public abstract interface class ai/koog/prompt/executor/clients/retry/RetryAfterExtractor {
+	public fun extract-LV8wdWc (Lai/koog/http/client/KoogHttpClientException;)Lkotlin/time/Duration;
 	public abstract fun extract-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/RetryAfterExtractor$DefaultImpls {
+	public static fun extract-LV8wdWc (Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;Lai/koog/http/client/KoogHttpClientException;)Lkotlin/time/Duration;
 }
 
 public final class ai/koog/prompt/executor/clients/retry/RetryConfig {
@@ -120,6 +134,7 @@ public final class ai/koog/prompt/executor/clients/retry/RetryConfig {
 	public static final field Companion Lai/koog/prompt/executor/clients/retry/RetryConfig$Companion;
 	public static final field DEFAULT Lai/koog/prompt/executor/clients/retry/RetryConfig;
 	public static final field DEFAULT_PATTERNS Ljava/util/List;
+	public static final field DEFAULT_RETRY_AFTER_EXTRACTOR Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;
 	public static final field DISABLED Lai/koog/prompt/executor/clients/retry/RetryConfig;
 	public static final field PRODUCTION Lai/koog/prompt/executor/clients/retry/RetryConfig;
 	public synthetic fun <init> (IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -231,6 +246,23 @@ public final class ai/koog/prompt/executor/clients/retry/RetryingLLMClient : ai/
 public final class ai/koog/prompt/executor/clients/retry/RetryingLLMClientKt {
 	public static final fun toRetryingClient (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/clients/retry/RetryConfig;)Lai/koog/prompt/executor/clients/retry/RetryingLLMClient;
 	public static synthetic fun toRetryingClient$default (Lai/koog/prompt/executor/clients/LLMClient;Lai/koog/prompt/executor/clients/retry/RetryConfig;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/retry/RetryingLLMClient;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/StandardHeaderRetryAfterExtractor : ai/koog/prompt/executor/clients/retry/RetryAfterExtractor {
+	public static final field Companion Lai/koog/prompt/executor/clients/retry/StandardHeaderRetryAfterExtractor$Companion;
+	public static final field DEFAULT Lai/koog/prompt/executor/clients/retry/StandardHeaderRetryAfterExtractor;
+	public static final field DEFAULT_RESET_DURATION_HEADERS Ljava/util/List;
+	public static final field DEFAULT_RETRY_AFTER_HEADERS Ljava/util/List;
+	public fun <init> ()V
+	public fun <init> (Lai/koog/utils/time/KoogClock;)V
+	public fun <init> (Lai/koog/utils/time/KoogClock;Ljava/util/List;)V
+	public fun <init> (Lai/koog/utils/time/KoogClock;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lai/koog/utils/time/KoogClock;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun extract-LV8wdWc (Lai/koog/http/client/KoogHttpClientException;)Lkotlin/time/Duration;
+	public fun extract-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
+}
+
+public final class ai/koog/prompt/executor/clients/retry/StandardHeaderRetryAfterExtractor$Companion {
 }
 
 public abstract class ai/koog/prompt/executor/clients/serialization/AdditionalPropertiesFlatteningSerializer : kotlinx/serialization/json/JsonTransformingSerializer {
