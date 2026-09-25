@@ -305,6 +305,110 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
+    fun `parseAnthropicResponse splits cache read and write tokens`() {
+        val responseJson = """
+            {
+                "id": "msg_cache",
+                "type": "message",
+                "role": "assistant",
+                "content": [
+                    { "type": "text", "text": "cached" }
+                ],
+                "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "stop_reason": "end_turn",
+                "usage": {
+                    "input_tokens": 100,
+                    "output_tokens": 10,
+                    "cache_read_input_tokens": 80,
+                    "cache_creation_input_tokens": 20
+                }
+            }
+        """.trimIndent()
+
+        val message = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
+
+        assertEquals(80, message.metaInfo.cacheReadInputTokensCount)
+        assertEquals(20, message.metaInfo.cacheWriteInputTokensCount)
+    }
+
+    @Test
+    fun `parseAnthropicResponse leaves cache fields null when usage omits them`() {
+        val responseJson = """
+            {
+                "id": "msg_no_cache",
+                "type": "message",
+                "role": "assistant",
+                "content": [
+                    { "type": "text", "text": "no cache" }
+                ],
+                "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "stop_reason": "end_turn",
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 5
+                }
+            }
+        """.trimIndent()
+
+        val message = BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseJson, mockClock)
+
+        assertEquals(null, message.metaInfo.cacheReadInputTokensCount)
+        assertEquals(null, message.metaInfo.cacheWriteInputTokensCount)
+    }
+
+    @Test
+    fun `transformAnthropicStreamChunks carries cache read and write tokens`() = runTest {
+        val stopReason = "end_turn"
+        val chunkJsonStringFlow = flowOf(
+            """
+                {
+                    "type" : "message_start",
+                    "message" : {
+                        "model" : "claude-3-5-haiku-20241022",
+                        "id" : "msg_cache_stream",
+                        "type" : "message",
+                        "role" : "assistant",
+                        "content" : [ ],
+                        "stop_reason" : null,
+                        "stop_sequence" : null,
+                        "usage" : {
+                            "input_tokens" : 50,
+                            "cache_creation_input_tokens" : 15,
+                            "cache_read_input_tokens" : 40,
+                            "output_tokens" : 2
+                        }
+                    }
+                }
+            """.trimIndent(),
+            """
+                {
+                    "type" : "message_delta",
+                    "delta" : {
+                        "stop_reason" : "$stopReason",
+                        "stop_sequence" : null
+                    },
+                    "usage" : {
+                        "output_tokens" : 8
+                    }
+                }
+            """.trimIndent(),
+            """
+                {
+                    "type" : "message_stop"
+                }
+            """.trimIndent()
+        )
+
+        val content =
+            BedrockAnthropicClaudeSerialization.transformAnthropicStreamChunks(chunkJsonStringFlow, mockClock).toList()
+        val endFrame = content.last()
+        assertTrue(endFrame is StreamFrame.End)
+        assertEquals(stopReason, endFrame.finishReason)
+        assertEquals(40, endFrame.metaInfo.cacheReadInputTokensCount)
+        assertEquals(15, endFrame.metaInfo.cacheWriteInputTokensCount)
+    }
+
+    @Test
     fun `transformAnthropicStreamChunks with simple message`() = runTest {
         val chunkJsonStringFlow = flowOf(
             """
@@ -402,7 +506,9 @@ class BedrockAnthropicClaudeSerializationTest {
                     clock = mockClock,
                     totalTokensCount = 35,
                     inputTokensCount = 22,
-                    outputTokensCount = 13
+                    outputTokensCount = 13,
+                    cacheReadInputTokensCount = 0,
+                    cacheWriteInputTokensCount = 0,
                 )
             )
         )

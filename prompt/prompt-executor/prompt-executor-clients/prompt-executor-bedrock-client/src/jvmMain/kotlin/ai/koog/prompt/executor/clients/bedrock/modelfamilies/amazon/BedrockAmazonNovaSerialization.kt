@@ -190,6 +190,8 @@ internal object BedrockAmazonNovaSerialization {
         totalTokensCount = novaUsage?.totalTokens,
         inputTokensCount = novaUsage?.inputTokens,
         outputTokensCount = novaUsage?.outputTokens,
+        cacheReadInputTokensCount = novaUsage?.cacheReadInputTokenCount,
+        cacheWriteInputTokensCount = novaUsage?.cacheWriteInputTokenCount,
         metadata = buildJsonObject {
             put("cacheReadInputTokenCount", JsonPrimitive(novaUsage?.cacheReadInputTokenCount))
             put("cacheWriteInputTokenCount", JsonPrimitive(novaUsage?.cacheWriteInputTokenCount))

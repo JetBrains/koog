@@ -574,10 +574,12 @@ public data class AnthropicResponse(
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicUsage(
-    val inputTokens: Int? = null,
-    val outputTokens: Int? = null,
+    @SerialName("cache_creation_input_tokens")
+    val cacheCreationInputTokens: Int? = null,
+    @SerialName("cache_read_input_tokens")
     val cacheReadInputTokens: Int? = null,
-    val cacheCreationInputTokens: Int? = null
+    val inputTokens: Int? = null,
+    val outputTokens: Int? = null
 )
 
 /**

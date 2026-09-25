@@ -527,7 +527,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         clock,
         totalTokensCount = usage?.totalTokens,
         inputTokensCount = usage?.promptTokens,
-        outputTokensCount = usage?.completionTokens
+        outputTokensCount = usage?.completionTokens,
+        cacheReadInputTokensCount = usage?.promptTokensDetails?.cachedTokens
     )
 
     protected open fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {

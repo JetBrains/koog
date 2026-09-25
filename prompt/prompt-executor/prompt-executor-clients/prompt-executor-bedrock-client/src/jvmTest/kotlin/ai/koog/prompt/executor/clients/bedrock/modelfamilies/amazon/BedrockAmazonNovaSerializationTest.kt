@@ -217,6 +217,33 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
+    fun `parseNovaResponse splits cache read and write tokens`() {
+        val responseJson = """
+            {
+                "output": {
+                    "message": {
+                        "role": "assistant",
+                        "content": [ { "text": "cached" } ]
+                    }
+                },
+                "usage": {
+                    "inputTokens": 100,
+                    "outputTokens": 10,
+                    "totalTokens": 110,
+                    "cacheReadInputTokenCount": 75,
+                    "cacheWriteInputTokenCount": 25
+                },
+                "stopReason": "stop"
+            }
+        """.trimIndent()
+
+        val message = BedrockAmazonNovaSerialization.parseNovaResponse(responseJson, mockClock)
+
+        assertEquals(75, message.metaInfo.cacheReadInputTokensCount)
+        assertEquals(25, message.metaInfo.cacheWriteInputTokensCount)
+    }
+
+    @Test
     fun testParseNovaStreamChunk() {
         val chunkContent = "Paris is "
         val chunkJson = """
