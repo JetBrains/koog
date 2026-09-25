@@ -1,5 +1,6 @@
 package ai.koog.prompt.streaming
 
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -30,22 +31,26 @@ public sealed interface StreamFrame {
      * Represents a frame of a streaming response from a LLM with text delta.
      *
      * @property text The text to append to the response.
+     * @property phase Optional assistant text phase for this streamed text.
      */
     @Serializable
     public data class TextDelta(
         val text: String,
-        override val index: Int? = null
+        override val index: Int? = null,
+        val phase: MessagePart.Text.Phase? = null,
     ) : DeltaFrame, StreamFrame
 
     /**
      * Represents a completion of a streaming response text part.
      *
      * @property text The complete text of the response.
+     * @property phase Optional assistant text phase for this completed text.
      */
     @Serializable
     public data class TextComplete(
         val text: String,
-        override val index: Int? = null
+        override val index: Int? = null,
+        val phase: MessagePart.Text.Phase? = null,
     ) : CompleteFrame, StreamFrame
 
     /**

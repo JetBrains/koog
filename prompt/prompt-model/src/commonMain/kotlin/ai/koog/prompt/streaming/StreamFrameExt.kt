@@ -55,8 +55,8 @@ public fun Message.Assistant.toStreamFrames(): List<StreamFrame> {
                 }
 
                 is MessagePart.Text -> {
-                    add(StreamFrame.TextDelta(part.text, index))
-                    add(StreamFrame.TextComplete(part.text, index))
+                    add(StreamFrame.TextDelta(part.text, index, part.phase))
+                    add(StreamFrame.TextComplete(part.text, index, part.phase))
                 }
 
                 is MessagePart.Tool.Call -> {
@@ -99,7 +99,7 @@ public fun Iterable<StreamFrame>.toMessageResponse(): Message.Assistant {
             )
 
             is StreamFrame.TextComplete ->
-                MessagePart.Text(frame.text)
+                MessagePart.Text(frame.text, phase = frame.phase)
 
             is StreamFrame.ToolCallComplete ->
                 MessagePart.Tool.Call(

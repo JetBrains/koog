@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.prompt.message.MessagePart
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -219,13 +220,15 @@ internal sealed interface Item {
      * @property role The role of the output message. Always `assistant`.
      * @property status The status of the message input. One of `in_progress`, `completed`, or `incomplete`.
      * Populated when input items are returned via API.
+     * @property phase Labels an assistant message as intermediate commentary or the final answer.
      */
     @Serializable
     class OutputMessage(
         val content: List<OutputContent>,
         val id: String? = null,
         val role: String = "assistant",
-        val status: OpenAIInputStatus? = null
+        val status: OpenAIInputStatus? = null,
+        val phase: MessagePart.Text.Phase? = null
     ) : Item {
         val type: String = "message"
 
