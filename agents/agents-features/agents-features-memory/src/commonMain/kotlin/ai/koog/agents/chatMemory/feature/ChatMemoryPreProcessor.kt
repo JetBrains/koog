@@ -22,9 +22,36 @@ import ai.koog.prompt.message.Message
  *
  * @see WindowSizePreProcessor
  * @see FilterMessagesPreProcessor
+ * @see DropSystemMessagesPreProcessor
  */
 public interface ChatMemoryPreProcessor {
     public fun preprocess(messages: List<Message>): List<Message>
+}
+
+/**
+ * A [ChatMemoryPreProcessor] that removes all [Message.System] messages from the list.
+ *
+ * The system prompt is owned by the live agent and re-applied on each agent creation, so it is
+ * usually redundant to persist it in conversation history. Adding this preprocessor keeps the
+ * stored history free of system messages. This is opt-in: by default [ChatMemory] persists
+ * messages as-is.
+ *
+ * Note that [ChatMemory] already ignores any system messages found in loaded history and keeps
+ * the live agent's system prompt instead, so adding this preprocessor never changes the prompt
+ * the model sees — it only controls what gets written to the [ChatHistoryProvider].
+ *
+ * Example usage:
+ * ```kotlin
+ * installChatMemory {
+ *     chatHistoryProvider = MyChatHistoryProvider()
+ *     dropSystemMessages()
+ * }
+ * ```
+ */
+public class DropSystemMessagesPreProcessor : ChatMemoryPreProcessor {
+    override fun preprocess(messages: List<Message>): List<Message> {
+        return messages.filterNot { it is Message.System }
+    }
 }
 
 /**
