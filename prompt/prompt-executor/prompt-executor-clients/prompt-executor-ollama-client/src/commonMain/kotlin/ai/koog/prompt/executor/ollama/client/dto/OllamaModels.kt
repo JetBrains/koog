@@ -65,6 +65,8 @@ internal data class OllamaChatRequestDTO(
     val options: Options? = null,
     val stream: Boolean,
     val think: Boolean? = null,
+    val logprobs: Boolean? = null,
+    @SerialName("top_logprobs") val topLogprobs: Int? = null,
     @SerialName("keep_alive") val keepAlive: String? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) {
@@ -87,7 +89,29 @@ internal data class OllamaChatResponseDTO(
     val message: OllamaChatMessageDTO? = null,
     val done: Boolean,
     @SerialName("prompt_eval_count") val promptEvalCount: Int? = null,
-    @SerialName("eval_count") val evalCount: Int? = null
+    @SerialName("eval_count") val evalCount: Int? = null,
+    val logprobs: List<OllamaLogProbDTO>? = null,
+)
+
+/**
+ * Per-token log probability entry returned by the /api/chat endpoint.
+ */
+@Serializable
+internal data class OllamaLogProbDTO(
+    val token: String,
+    val logprob: Double,
+    val bytes: List<Int>? = null,
+    @SerialName("top_logprobs") val topLogprobs: List<OllamaTopLogProbDTO>? = null,
+)
+
+/**
+ * Alternative token candidate with its log probability, listed under a token's `top_logprobs`.
+ */
+@Serializable
+internal data class OllamaTopLogProbDTO(
+    val token: String,
+    val logprob: Double,
+    val bytes: List<Int>? = null,
 )
 
 /**

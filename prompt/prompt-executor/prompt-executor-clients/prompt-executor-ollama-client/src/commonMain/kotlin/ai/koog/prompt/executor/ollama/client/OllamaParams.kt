@@ -24,6 +24,9 @@ import kotlinx.serialization.json.JsonElement
  * implementation-specific configurations or custom options not directly covered by the primary class fields.
  * @property think Determines whether the LLM interaction enforces thoughtfulness, potentially impacting behavior or
  * processing strategies.
+ * @property logprobs Whether to return per-token log probabilities for the generated content.
+ * @property topLogprobs Number of most likely alternative tokens to return at each position, in `[0, 20]`.
+ * Requires [logprobs] to be enabled.
  */
 public class OllamaParams(
     temperature: Double? = null,
@@ -35,6 +38,8 @@ public class OllamaParams(
     user: String? = null,
     additionalProperties: Map<String, JsonElement>? = null,
     public val think: Boolean? = null,
+    public val logprobs: Boolean? = null,
+    public val topLogprobs: Int? = null,
 ) : LLMParams(
     temperature,
     maxTokens,
@@ -45,6 +50,13 @@ public class OllamaParams(
     user,
     additionalProperties
 ) {
+    init {
+        topLogprobs?.let {
+            require(logprobs != false) { "topLogprobs should not be provided when logprobs=false" }
+            require(it in 0..20) { "`topLogprobs` must be in [0, 20], but was $it" }
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -52,17 +64,23 @@ public class OllamaParams(
 
         other as OllamaParams
 
-        return think == other.think
+        if (think != other.think) return false
+        if (logprobs != other.logprobs) return false
+        if (topLogprobs != other.topLogprobs) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + (think?.hashCode() ?: 0)
+        result = 31 * result + (logprobs?.hashCode() ?: 0)
+        result = 31 * result + (topLogprobs ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "OllamaParams(think=$think, temperature=$temperature, maxTokens=$maxTokens, numberOfChoices=$numberOfChoices, speculation=$speculation, schema=$schema, toolChoice=$toolChoice, user=$user, additionalProperties=$additionalProperties)"
+        return "OllamaParams(think=$think, logprobs=$logprobs, topLogprobs=$topLogprobs, temperature=$temperature, maxTokens=$maxTokens, numberOfChoices=$numberOfChoices, speculation=$speculation, schema=$schema, toolChoice=$toolChoice, user=$user, additionalProperties=$additionalProperties)"
     }
 
     /**
@@ -78,6 +96,8 @@ public class OllamaParams(
         user: String? = this.user,
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         think: Boolean? = this.think,
+        logprobs: Boolean? = this.logprobs,
+        topLogprobs: Int? = this.topLogprobs,
     ): OllamaParams {
         return OllamaParams(
             temperature = temperature,
@@ -88,7 +108,9 @@ public class OllamaParams(
             toolChoice = toolChoice,
             user = user,
             additionalProperties = additionalProperties,
-            think = think
+            think = think,
+            logprobs = logprobs,
+            topLogprobs = topLogprobs,
         )
     }
 }

@@ -164,6 +164,8 @@ public sealed interface Message {
      * @property finishReason The reason the LLM stopped generating (e.g. `"stop"`, `"tool_calls"`), or null if unknown.
      * @property rawResponse The raw JSON response body from the provider, or null if not captured.
      * @property id Optional unique identifier for the message.
+     * @property logprobs Per-token log probabilities for the generated content, or null if not
+     *   requested or unsupported by the provider.
      */
     @Serializable
     public data class Assistant @JvmOverloads constructor(
@@ -173,6 +175,7 @@ public sealed interface Message {
         // TODO: replace with JSONObject?
         public val rawResponse: JsonObject? = null,
         override val id: String? = null,
+        public val logprobs: List<LogProb>? = null,
     ) : Message {
         override val role: Role = Role.Assistant
 
