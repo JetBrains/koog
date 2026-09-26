@@ -131,6 +131,57 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
+    fun testEmitReasoningDeltaWithEncrypted() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(text = "Thinking...", index = 0)
+            emitReasoningDelta(text = " step 2", index = 0)
+            emitReasoningDelta(encrypted = "sig-abc123", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
+                StreamFrame.ReasoningDelta(text = " step 2", index = 0),
+                StreamFrame.ReasoningDelta(index = 0),
+                StreamFrame.ReasoningComplete(
+                    id = null,
+                    text = listOf("Thinking... step 2"),
+                    encrypted = "sig-abc123",
+                    index = 0
+                ),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
+    fun testEmitReasoningDeltaEncryptedSurvivesTransition() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(text = "Thinking...", encrypted = "sig-xyz", index = 0)
+            emitTextDelta("Answer", 1)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
+                StreamFrame.ReasoningComplete(
+                    id = null,
+                    text = listOf("Thinking..."),
+                    encrypted = "sig-xyz",
+                    index = 0
+                ),
+                StreamFrame.TextDelta("Answer", 1),
+                StreamFrame.TextComplete("Answer", 1),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
     fun testEmitToolCallDelta() = runTest {
         val frames = buildStreamFrameFlow {
             emitToolCallDelta(id = "call_1", name = "calculator", args = "{\"a\":", 0)
