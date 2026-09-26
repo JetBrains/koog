@@ -100,4 +100,21 @@ public class AIAgentFunctionalContext(
         executionInfo = executionInfo,
         parentContext = parentRootContext
     )
+
+    /**
+     * Creates an independent fork of this context, taking snapshots of mutable state holders.
+     *
+     * The returned context has separate [llm], [stateManager], [storage] and [executionInfo] instances, so it can be
+     * mutated independently from the original context. Immutable configuration and environment references are reused.
+     *
+     * Stored values inside [storage] are copied by reference, matching [AIAgentStorage.copy] semantics.
+     */
+    public suspend fun fork(): AIAgentFunctionalContext = copy(
+        llm = llm.copy(
+            prompt = llm.prompt.copy(),
+        ),
+        stateManager = stateManager.copy(),
+        storage = storage.copy(),
+        executionInfo = executionInfo.copy(),
+    )
 }
