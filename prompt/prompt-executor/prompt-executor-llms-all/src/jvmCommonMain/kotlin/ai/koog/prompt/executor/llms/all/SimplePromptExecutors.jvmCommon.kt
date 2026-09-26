@@ -105,3 +105,22 @@ public fun simpleOllamaAIExecutor(
  */
 public fun simpleMistralAIExecutor(apiKey: String): MultiLLMPromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey))
+
+/**
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point.
+ * JVM and Android only.
+ *
+ * @see simpleAzureFoundryExecutor
+ */
+public fun simpleAzureFoundryExecutor(
+    projectEndpoint: String,
+    apiToken: String,
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to OpenAILLMClient(
+        apiKey = apiToken,
+        settings = OpenAIClientSettings(
+            baseUrl = projectEndpoint,
+            chatCompletionsPath = "chat/completions"
+        )
+    )
+)
