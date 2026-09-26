@@ -85,6 +85,7 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
@@ -1387,6 +1388,74 @@ abstract class ExecutorIntegrationTestBase {
 
             val finalAnswer = textDeltaFrames.joinToString("") { it.text }
             finalAnswer.shouldContain("72")
+        }
+    }
+
+    open fun integration_testExecuteStreamingOpenAIResponsesAPI(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model.provider == LLMProvider.OpenAI,
+            "This test is specific to the OpenAI Responses API"
+        )
+        assumeTrue(
+            model.supports(LLMCapability.OpenAIEndpoint.Responses),
+            "Model ${model.id} does not support the OpenAI Responses API"
+        )
+
+        val params = createNoReasoningParams(model)
+        withClue("This test must exercise the OpenAI Responses API, not the Chat Completions API") {
+            params.shouldBeInstanceOf<OpenAIResponsesParams>()
+        }
+
+        val prompt = Prompt.build("responses-api-streaming-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Count from 1 to 5. Like 1, 2, 3 ...")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testExecuteStreamingOpenAIResponsesAPI[${model.id}]") {
+            val endFrames = mutableListOf<StreamFrame.End>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val textCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
+            val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
+            val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
+
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                textDeltaFrames = textDeltaFrames,
+                textCompleteFrames = textCompleteFrames,
+                toolDeltaFrames = toolDeltaFrames,
+                toolCompleteFrames = toolCompleteFrames,
+                endFrame = endFrames,
+            )
+
+            toolDeltaFrames.shouldBeEmpty()
+            toolCompleteFrames.shouldBeEmpty()
+            textCompleteFrames.shouldNotBeEmpty()
+            textCompleteFrames.forEach { complete ->
+                withClue("Streaming should not emit empty text-complete frames for ${model.id}") {
+                    complete.text.shouldNotBeBlank()
+                }
+            }
+            endFrames.size shouldBe 1
+            endFrames.first() should { end ->
+                end.metaInfo should { meta ->
+                    withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                        listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                            .shouldForAny { it != null }
+                    }
+                }
+            }
+
+            textDeltaFrames.joinToString { it.text } shouldNotBeNull {
+                shouldContain("1")
+                shouldContain("2")
+                shouldContain("3")
+                shouldContain("4")
+                shouldContain("5")
+            }
         }
     }
 

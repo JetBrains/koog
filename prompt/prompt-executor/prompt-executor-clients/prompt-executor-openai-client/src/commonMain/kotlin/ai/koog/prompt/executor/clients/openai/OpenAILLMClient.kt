@@ -404,8 +404,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
-                                is Item.Text -> {
-                                    StreamFrame.TextComplete(item.value, it.outputIndex)
+                                is Item.OutputMessage -> {
+                                    StreamFrame.TextComplete(item.text(), it.outputIndex)
                                 }
 
                                 is Item.Reasoning -> {
