@@ -253,6 +253,51 @@ class SingleRunStrategyTests {
     }
 
     @Test
+    fun test_SingleRunStrategy_DropsToolCall_WhenMixedWithMessage_AfterToolResult() = runTest {
+        val actualToolCalls = mutableListOf<String>()
+
+        val testToolRegistry = ToolRegistry {
+            tool(CreateTool)
+            tool(DummyTool)
+        }
+        val mixedMessageText = "Here is my answer, but I also want to call another tool"
+
+        val mockLLMApi = getMockExecutor(serializer) {
+
+            // Round 1: initial request -> a single tool call.
+            mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
+
+            // Round 2: the first tool result ("created") comes back and the LLM replies
+            // with BOTH a text message AND another tool call in the same response.
+            mockLLMMixedResponse(
+                listOf(DummyTool to Unit),
+                listOf(mixedMessageText),
+            ) onRequestContains "created"
+
+            // Round 3: reached ONLY if the second (mixed-in) tool call is actually executed.
+            mockLLMAnswer("All done!") onRequestContains "Dummy result"
+
+            mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            mockLLMApi,
+            OllamaModels.Meta.LLAMA_3_2,
+            strategy = singleRunStrategy(),
+            toolRegistry = testToolRegistry
+        ) {
+            install(EventHandler) {
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolName }
+            }
+        }
+
+        val result = agent.run("Solve task", null)
+
+        assertEquals(listOf("create", "dummy_tool"), actualToolCalls)
+        assertEquals("All done!", result)
+    }
+
+    @Test
     fun test_SingleRunStrategy_Parallel_MixedResults() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
