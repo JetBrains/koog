@@ -68,7 +68,7 @@ internal fun LLMParams.toOpenAIResponsesParams(): OpenAIResponsesParams {
  * @property store Whether the provider may store outputs for improvement/evals.
  * @property audio Audio output configuration when using audio-capable models.
  * @property logprobs Whether to include log-probabilities for output tokens.
- * @property reasoningEffort Constrains reasoning effort (e.g., MINIMAL/LOW/MEDIUM/HIGH).
+ * @property reasoningEffort Constrains reasoning effort. Supported values vary by model.
  * @property stop Stop sequences (0–4 items); generation halts before any of these.
  * @property topLogprobs Number of top alternatives per position (0–20). Requires [logprobs] = true.
  * @property topP Nucleus sampling in (0.0, 1.0]; use **instead of** [temperature].

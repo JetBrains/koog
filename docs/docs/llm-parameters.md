@@ -676,6 +676,9 @@ You implement reasoning control through provider-specific parameters that contro
 When using the OpenAI Chat API and models that support reasoning, use the `reasoningEffort` parameter
 to control how many reasoning tokens the model generates before providing a response:
 
+Available values are `NONE`, `MINIMAL`, `LOW`, `MEDIUM`, `HIGH`, `XHIGH`, and `MAX`. Support varies by model;
+in particular, use `MAX` only with models that explicitly support it.
+
 === "Kotlin"
 
     <!--- INCLUDE
