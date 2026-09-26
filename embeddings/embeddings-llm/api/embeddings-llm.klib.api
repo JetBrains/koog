@@ -10,5 +10,6 @@ final class ai.koog.embeddings.local/LLMEmbedder : ai.koog.embeddings.base/Embed
     constructor <init>(ai.koog.prompt.executor.clients/LLMEmbeddingProvider, ai.koog.prompt.llm/LLModel) // ai.koog.embeddings.local/LLMEmbedder.<init>|<init>(ai.koog.prompt.executor.clients.LLMEmbeddingProvider;ai.koog.prompt.llm.LLModel){}[0]
 
     final fun diff(ai.koog.embeddings.base/Vector, ai.koog.embeddings.base/Vector): kotlin/Double // ai.koog.embeddings.local/LLMEmbedder.diff|diff(ai.koog.embeddings.base.Vector;ai.koog.embeddings.base.Vector){}[0]
+    final suspend fun embed(kotlin.collections/List<kotlin/String>): kotlin.collections/List<ai.koog.embeddings.base/Vector> // ai.koog.embeddings.local/LLMEmbedder.embed|embed(kotlin.collections.List<kotlin.String>){}[0]
     final suspend fun embed(kotlin/String): ai.koog.embeddings.base/Vector // ai.koog.embeddings.local/LLMEmbedder.embed|embed(kotlin.String){}[0]
 }

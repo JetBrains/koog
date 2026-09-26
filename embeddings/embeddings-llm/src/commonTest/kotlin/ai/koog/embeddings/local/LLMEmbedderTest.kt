@@ -9,6 +9,7 @@ import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class LLMEmbedderTest {
     // Using a pretty straightforward approach as commonTest doesn't support @ParametrizedTest annotation from JUnit5
@@ -76,22 +77,81 @@ class LLMEmbedderTest {
         }
     }
 
-    class MockEmbedderClient : LLMEmbeddingProvider() {
+    @Test
+    fun testEmbedBatch_delegatesToClientBatch() = runTest {
+        val model = OpenAIModels.Embeddings.TextEmbedding3Small
+        val client = MockEmbedderClient()
+        val embedder = LLMEmbedder(client, model)
+
+        val vA = Vector(listOf(0.1, 0.1))
+        val vB = Vector(listOf(0.2, 0.2))
+        val vC = Vector(listOf(0.3, 0.3))
+        client.mockEmbedding("a", vA)
+        client.mockEmbedding("b", vB)
+        client.mockEmbedding("c", vC)
+
+        val result = embedder.embed(listOf("a", "b", "c"))
+
+        assertEquals(listOf(vA, vB, vC), result)
+        assertEquals(1, client.batchCalls, "should issue a single batch call")
+        assertEquals(0, client.singleCalls, "should not loop single calls")
+    }
+
+    @Test
+    fun testEmbedBatch_propagatesUnsupportedFromClient() = runTest {
+        val model = OpenAIModels.Embeddings.TextEmbedding3Small
+        val client = MockEmbedderClient(batchSupported = false)
+        val embedder = LLMEmbedder(client, model)
+
+        assertFailsWith<UnsupportedOperationException> {
+            embedder.embed(listOf("a", "b"))
+        }
+    }
+
+    @Test
+    fun testEmbedBatch_emptyReturnsEmptyWithoutCallingClient() = runTest {
+        val model = OpenAIModels.Embeddings.TextEmbedding3Small
+        val client = MockEmbedderClient(batchSupported = false)
+        val embedder = LLMEmbedder(client, model)
+
+        val result = embedder.embed(emptyList())
+
+        assertEquals(emptyList<Vector>(), result)
+        assertEquals(0, client.batchCalls)
+        assertEquals(0, client.singleCalls)
+    }
+
+    class MockEmbedderClient(
+        private val batchSupported: Boolean = true
+    ) : LLMEmbeddingProvider() {
         private val embeddings = mutableMapOf<String, Vector>()
+
+        var singleCalls: Int = 0
+            private set
+        var batchCalls: Int = 0
+            private set
 
         fun mockEmbedding(text: String, vector: Vector) {
             embeddings[text] = vector
         }
 
+        private fun lookup(text: String): List<Double> =
+            embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
+
         override suspend fun embed(text: String, model: LLModel): List<Double> {
-            return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
+            singleCalls++
+            return lookup(text)
         }
 
         override suspend fun embed(
             inputs: List<String>,
             model: LLModel
         ): List<List<Double>> {
-            return inputs.map { embed(it, model) }
+            if (!batchSupported) {
+                throw UnsupportedOperationException("Batch embedding is not supported by this mock provider.")
+            }
+            batchCalls++
+            return inputs.map { lookup(it) }
         }
     }
 }
