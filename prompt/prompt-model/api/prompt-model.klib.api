@@ -1233,6 +1233,7 @@ final class ai.koog.prompt.streaming/IncompleteStreamException : kotlin/Exceptio
 final class ai.koog.prompt.streaming/StreamFrameFlowBuilder { // ai.koog.prompt.streaming/StreamFrameFlowBuilder|null[0]
     constructor <init>(kotlinx.coroutines.flow/FlowCollector<ai.koog.prompt.streaming/StreamFrame>) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.<init>|<init>(kotlinx.coroutines.flow.FlowCollector<ai.koog.prompt.streaming.StreamFrame>){}[0]
 
+    final fun attachToolCallSignature(kotlin/String) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.attachToolCallSignature|attachToolCallSignature(kotlin.String){}[0]
     final suspend fun emitEnd(kotlin/String? = ..., ai.koog.prompt.message/ResponseMetaInfo? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitEnd|emitEnd(kotlin.String?;ai.koog.prompt.message.ResponseMetaInfo?){}[0]
     final suspend fun emitReasoningDelta(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitReasoningDelta|emitReasoningDelta(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
     final suspend fun emitTextDelta(kotlin/String, kotlin/Int? = ...) // ai.koog.prompt.streaming/StreamFrameFlowBuilder.emitTextDelta|emitTextDelta(kotlin.String;kotlin.Int?){}[0]

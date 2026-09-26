@@ -1,5 +1,6 @@
 package ai.koog.prompt.streaming
 
+import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -468,6 +469,94 @@ class StreamFrameFlowBuilderTest {
                 StreamFrame.TextDelta(" World", 0),
                 StreamFrame.TextComplete("Hello World", 0),
                 StreamFrame.End("stop", ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    /**
+     * Gemini 3 (OpenAI-compat) streams an encrypted `thought_signature` on the chunk that opens a
+     * tool call and requires it to be echoed back on the next turn. A signature attached to the
+     * pending tool call must be emitted as a signature-only ReasoningComplete (empty content,
+     * `encrypted` set) immediately before its ToolCallComplete, so
+     * [toMessageResponse] reconstructs the `Reasoning(encrypted)` -> `Tool.Call` part order.
+     */
+    @Test
+    fun testAttachToolCallSignatureEmitsReasoningCompleteBeforeToolCallComplete() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = "call_1", name = "weather", args = "{\"city\":", index = 0)
+            attachToolCallSignature("SIG_ABC_123")
+            emitToolCallDelta(id = "call_1", name = null, args = " \"Sofia\"}", index = 0)
+            emitEnd("tool_calls")
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_1", "weather", "{\"city\":", 0),
+                StreamFrame.ToolCallDelta("call_1", null, " \"Sofia\"}", 0),
+                StreamFrame.ReasoningComplete(null, emptyList(), null, "SIG_ABC_123", 0),
+                StreamFrame.ToolCallComplete("call_1", "weather", "{\"city\": \"Sofia\"}", 0),
+                StreamFrame.End("tool_calls", ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+
+        val message = frames.toMessageResponse()
+        assertContentEquals(
+            listOf(
+                MessagePart.Reasoning(content = emptyList(), encrypted = "SIG_ABC_123"),
+                // toMessageResponse re-encodes the parsed arguments, so the JSON is compact here.
+                MessagePart.Tool.Call(id = "call_1", tool = "weather", args = "{\"city\":\"Sofia\"}"),
+            ),
+            message.parts
+        )
+    }
+
+    /**
+     * Companion to [testAttachToolCallSignatureEmitsReasoningCompleteBeforeToolCallComplete]:
+     * each of several tool calls keeps exactly its own signature, in stream order.
+     */
+    @Test
+    fun testAttachToolCallSignaturePairsEachSignatureWithItsOwnToolCall() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = "call_1", name = "search", args = "{\"q\": 1}", index = 0)
+            attachToolCallSignature("SIG_1")
+            emitToolCallDelta(id = "call_2", name = "calculator", args = "{\"a\": 2}", index = 1)
+            attachToolCallSignature("SIG_2")
+            emitEnd("tool_calls")
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_1", "search", "{\"q\": 1}", 0),
+                StreamFrame.ReasoningComplete(null, emptyList(), null, "SIG_1", 0),
+                StreamFrame.ToolCallComplete("call_1", "search", "{\"q\": 1}", 0),
+                StreamFrame.ToolCallDelta("call_2", "calculator", "{\"a\": 2}", 1),
+                StreamFrame.ReasoningComplete(null, emptyList(), null, "SIG_2", 1),
+                StreamFrame.ToolCallComplete("call_2", "calculator", "{\"a\": 2}", 1),
+                StreamFrame.End("tool_calls", ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    /**
+     * A signature is advisory metadata: attaching one without a pending tool call must be a no-op
+     * (no frame, no error), and a pending call without a signature stays byte-for-byte unchanged.
+     */
+    @Test
+    fun testAttachToolCallSignatureWithoutPendingToolCallIsNoOp() = runTest {
+        val frames = buildStreamFrameFlow {
+            attachToolCallSignature("SIG_ORPHAN")
+            emitToolCallDelta(id = "call_1", name = "weather", args = "{}", index = 0)
+            emitEnd("tool_calls")
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("call_1", "weather", "{}", 0),
+                StreamFrame.ToolCallComplete("call_1", "weather", "{}", 0),
+                StreamFrame.End("tool_calls", ResponseMetaInfo.Empty)
             ),
             frames
         )

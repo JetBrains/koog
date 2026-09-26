@@ -290,7 +290,8 @@ public class OpenAIAudio(
 @Serializable
 public class OpenAIToolCall(
     public val id: String,
-    public val function: OpenAIFunction
+    public val function: OpenAIFunction,
+    public val extraContent: JsonObject? = null,
 ) {
     /** The type of the tool. Currently, only `function` is supported. */
     public val type: String = "function"
@@ -303,13 +304,18 @@ public class OpenAIToolCall(
  * @property function The function object containing the name and arguments of the function invoked.
  * This value can be null if no function call is associated.
  * @property type The type of the tool call. Defaults to "function" for denoting function-based calls. Can be null.
+ * @property extraContent Provider-specific extension payload attached to this tool-call chunk, verbatim.
+ * Gemini 3 (OpenAI-compat mode) streams its `thought_signature` here as
+ * `extra_content.google.thought_signature` on the chunk that opens the tool call.
+ * Null for providers that send no extension payload.
  */
 @Serializable
 public class OpenAIStreamToolCall(
     public val index: Int,
     public val id: String?,
     public val function: OpenAIStreamFunction?,
-    public val type: String? = "function"
+    public val type: String? = "function",
+    public val extraContent: JsonObject? = null,
 )
 
 /**
