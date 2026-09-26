@@ -251,8 +251,10 @@ public fun Message.Assistant.toAcpEvents(tools: List<ToolDescriptor> = emptyList
                         SessionUpdateEvent(
                             update = SessionUpdate.ToolCall(
                                 toolCallId = ToolCallId(part.id ?: UNKNOWN_TOOL_CALL_ID),
+                                // The title is what an ACP client shows for the call. When the tool
+                                // is not among the descriptors, its name still says what is running.
                                 title = tools.firstOrNull { it.name == part.tool }?.description
-                                    ?: UNKNOWN_TOOL_DESCRIPTION,
+                                    ?: part.tool,
                                 // TODO: Support kind for tools
                                 status = ToolCallStatus.PENDING,
                                 rawInput = part.argsJson,

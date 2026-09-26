@@ -236,7 +236,7 @@ public class AcpAgent(
                     Event.SessionUpdateEvent(
                         update = SessionUpdate.ToolCall(
                             toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
-                            title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
+                            title = ctx.toolDescription ?: ctx.toolName,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.IN_PROGRESS,
                             rawInput = ctx.toolArgs.toKotlinxJsonObject(),
@@ -251,7 +251,7 @@ public class AcpAgent(
                     Event.SessionUpdateEvent(
                         update = SessionUpdate.ToolCallUpdate(
                             toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
-                            title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
+                            title = ctx.toolDescription ?: ctx.toolName,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.FAILED,
                             rawInput = ctx.toolArgs.toKotlinxJsonObject(),
@@ -266,7 +266,7 @@ public class AcpAgent(
                     Event.SessionUpdateEvent(
                         update = SessionUpdate.ToolCallUpdate(
                             toolCallId = ToolCallId(ctx.toolCallId ?: UNKNOWN_TOOL_CALL_ID),
-                            title = ctx.toolDescription ?: UNKNOWN_TOOL_DESCRIPTION,
+                            title = ctx.toolDescription ?: ctx.toolName,
                             // TODO: Support kind for tools
                             status = ToolCallStatus.COMPLETED,
                             rawInput = ctx.toolArgs.toKotlinxJsonObject(),

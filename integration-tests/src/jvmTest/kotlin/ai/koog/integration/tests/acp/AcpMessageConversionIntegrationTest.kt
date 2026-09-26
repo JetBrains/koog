@@ -102,4 +102,28 @@ class AcpMessageConversionIntegrationTest {
 
         updates.size shouldBe 4
     }
+
+    /**
+     * The title is what an ACP client displays for a tool call. When the called tool is not among
+     * the descriptors — a tool registered elsewhere, or a call the model invented — the tool name
+     * is still known, and showing it beats showing a placeholder.
+     */
+    @Test
+    fun integration_testToolCallOfAnUnknownToolIsTitledWithTheToolName() {
+        val assistant = Message.Assistant(
+            parts = listOf(
+                MessagePart.Tool.Call(
+                    id = "tool-call-1",
+                    tool = "lookup_order",
+                    args = buildJsonObject { put("orderId", "A-42") },
+                ),
+            ),
+            metaInfo = ResponseMetaInfo.create(KoogClock.System),
+            id = "assistant-message-1",
+        )
+
+        val update = assistant.toAcpEvents(tools = emptyList()).single().update
+
+        (update as SessionUpdate.ToolCall).title shouldBe "lookup_order"
+    }
 }
