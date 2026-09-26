@@ -15,6 +15,8 @@ Key components:
 - **ManualToolCallFixProcessor**: A processor that fixes invalid tool call JSONs, handling incorrect keys and missing escapes.
 - **LLMBasedToolCallFixProcessor**: An advanced processor that uses the LLM itself to iteratively fix incorrectly generated tool
   calls.
+- **ToolCallArgumentCoercionProcessor**: A processor that parses stringified object and array tool call arguments back into
+  the JSON shapes declared by the tool descriptors, leaving unknown and primitive values untouched.
 
 ### Example of usage
 
@@ -47,6 +49,23 @@ val processor2 = LLMBasedToolCallFixProcessor(toolRegistry)
 
 val chainedProcessor = processor1 + processor2
 val responses = executor.executeProcessed(prompt, model, tools, chainedProcessor)
+```
+
+Coercing stringified structured tool call arguments with `ToolCallArgumentCoercionProcessor`
+
+```kotlin
+val processor =
+    ManualToolCallFixProcessor(toolRegistry) +
+        ToolCallArgumentCoercionProcessor()
+```
+
+Using `ToolCallArgumentCoercionProcessor` as part of the `LLMBasedToolCallFixProcessor` preprocessor
+
+```kotlin
+val processor = LLMBasedToolCallFixProcessor(
+    toolRegistry = toolRegistry,
+    preprocessor = ManualToolCallFixProcessor(toolRegistry) + ToolCallArgumentCoercionProcessor()
+)
 ```
 
 Using processor with an agent
