@@ -484,6 +484,7 @@ Here is the complete reference of provider-specific parameters in Koog:
 
     --8<--
     llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:googleServiceTier
     llm-parameters-snippets.md:thinkingConfig
     llm-parameters-snippets.md:topK
     llm-parameters-snippets.md:topP
@@ -495,7 +496,7 @@ Here is the complete reference of provider-specific parameters in Koog:
     llm-parameters-snippets.md:heading
     llm-parameters-snippets.md:container
     llm-parameters-snippets.md:mcpServers
-    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:anthropicServiceTier
     llm-parameters-snippets.md:stopSequences
     llm-parameters-snippets.md:thinking
     llm-parameters-snippets.md:topK

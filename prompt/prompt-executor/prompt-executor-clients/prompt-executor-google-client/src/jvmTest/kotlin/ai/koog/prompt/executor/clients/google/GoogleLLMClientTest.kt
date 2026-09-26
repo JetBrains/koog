@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
+import ai.koog.prompt.executor.clients.google.models.GoogleServiceTier
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleUsageMetadata
 import ai.koog.prompt.message.AttachmentContent
@@ -245,6 +246,7 @@ class GoogleLLMClientTest {
             numberOfChoices = 2,
             topP = 0.8,
             topK = 10,
+            serviceTier = GoogleServiceTier.FLEX,
             thinkingConfig = GoogleThinkingConfig(
                 includeThoughts = true,
                 thinkingBudget = 99
@@ -264,6 +266,7 @@ class GoogleLLMClientTest {
         gen.candidateCount shouldBe 2
         gen.topP shouldBe 0.8
         gen.topK shouldBe 10
+        request.serviceTier shouldBe GoogleServiceTier.FLEX
         gen.thinkingConfig?.includeThoughts shouldBe true
         gen.thinkingConfig?.thinkingBudget shouldBe 99
         gen.additionalProperties shouldNotBe null
