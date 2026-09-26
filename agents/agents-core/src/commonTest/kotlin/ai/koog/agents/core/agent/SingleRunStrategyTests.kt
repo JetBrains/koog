@@ -291,4 +291,52 @@ class SingleRunStrategyTests {
         assertEquals(3, actualToolCalls.size)
         assertEquals(assistantResponse, result)
     }
+
+    @Test
+    fun test_SingleRunStrategy_PostToolMixedResponseExecutesNextToolCall() = runTest {
+        val actualToolCalls = mutableListOf<String>()
+
+        val testToolRegistry = ToolRegistry {
+            tool(CreateTool)
+        }
+
+        val intermediateResponse = "Need another tool."
+        val finalResponse = "Task solved after second tool."
+        var postFirstToolResultHandled = false
+
+        val mockLLMApi = getMockExecutor(serializer) {
+            mockLLMToolCall(CreateTool, CreateTool.Args("first")) onRequestEquals "Solve task"
+            mockLLMMixedResponse(
+                toolCalls = listOf(CreateTool to CreateTool.Args("second")),
+                responses = listOf(intermediateResponse)
+            ) onCondition { request ->
+                if (request == "created" && !postFirstToolResultHandled) {
+                    postFirstToolResultHandled = true
+                    true
+                } else {
+                    false
+                }
+            }
+            mockLLMAnswer(finalResponse) onCondition { request ->
+                request == "created" && postFirstToolResultHandled
+            }
+            mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            mockLLMApi,
+            OllamaModels.Meta.LLAMA_3_2,
+            strategy = singleRunStrategy(),
+            toolRegistry = testToolRegistry
+        ) {
+            install(EventHandler) {
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+            }
+        }
+
+        val result = agent.run("Solve task", null)
+
+        assertEquals(listOf("""{"name":"first"}""", """{"name":"second"}"""), actualToolCalls)
+        assertEquals(finalResponse, result)
+    }
 }
