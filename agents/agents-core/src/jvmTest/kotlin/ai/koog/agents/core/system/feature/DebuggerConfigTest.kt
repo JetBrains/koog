@@ -35,7 +35,6 @@ import kotlin.time.toDuration
 
 // System Properties set inside this test class affects other tests
 // Isolate the environment by @Isolated annotation for these tests and make sure they are running without the parallelism.
-@Disabled("Flaky, see #1124")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 class DebuggerConfigTest {
@@ -74,7 +73,7 @@ class DebuggerConfigTest {
     @Test
     fun `test read port from vm option`() = runBlocking {
         // Set VM option
-        val port = 56712
+        val port = findAvailablePort()
         val portVmOptionName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_VM_OPTION
         val portEnvVarName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_ENV_VAR
         System.setProperty(portVmOptionName, port.toString())
@@ -102,7 +101,7 @@ class DebuggerConfigTest {
         val portEnvVar = getEnvironmentVariableOrNull(portEnvVarName)
         assertNull(portEnvVar, "Expected '$portEnvVarName' env variable is not set, but it exists with value: $portEnvVar")
 
-        val portVMOption = getEnvironmentVariableOrNull(portEnvVarName)
+        val portVMOption = getVMOptionOrNull(portVmOptionName)
         assertNull(portVMOption, "Expected '$portVmOptionName' VM option is not set, but it exists with value: $portVMOption")
 
         // Check default port available
