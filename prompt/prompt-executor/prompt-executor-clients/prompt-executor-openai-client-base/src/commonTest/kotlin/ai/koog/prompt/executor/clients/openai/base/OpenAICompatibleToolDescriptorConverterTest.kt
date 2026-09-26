@@ -158,7 +158,7 @@ class OpenAICompatibleToolDescriptorConverterTest {
 
         val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
 
-        // Note: OpenAI converter does not emit "required" inside nested object; it preserves order: type, additionalProperties, properties
+        // Note: the converter preserves order: type, additionalProperties, properties, required
         val expected = """
         {
             "type": "object",
@@ -176,11 +176,78 @@ class OpenAICompatibleToolDescriptorConverterTest {
                             "type": "number",
                             "description": "Threshold value"
                         }
-                    }
+                    },
+                    "required": [
+                        "enabled"
+                    ]
                 }
             },
             "required": [
                 "config"
+            ]
+        }
+        """.trimIndent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testNestedObjectInListKeepsRequiredProperties() {
+        val descriptor = ToolDescriptor(
+            name = "add_events",
+            description = "Add events",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "events",
+                    description = "Events to add",
+                    type = ToolParameterType.List(
+                        ToolParameterType.Object(
+                            properties = listOf(
+                                ToolParameterDescriptor("type", "Event type", ToolParameterType.String),
+                                ToolParameterDescriptor("at", "YYYY-MM", ToolParameterType.String),
+                                ToolParameterDescriptor("note", "Optional note", ToolParameterType.String),
+                            ),
+                            requiredProperties = listOf("type", "at"),
+                        )
+                    )
+                )
+            )
+        )
+
+        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
+
+        val expected = """
+        {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "description": "Events to add",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "description": "Event type"
+                            },
+                            "at": {
+                                "type": "string",
+                                "description": "YYYY-MM"
+                            },
+                            "note": {
+                                "type": "string",
+                                "description": "Optional note"
+                            }
+                        },
+                        "required": [
+                            "type",
+                            "at"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "events"
             ]
         }
         """.trimIndent()
