@@ -28,6 +28,8 @@ import ai.koog.integration.tests.utils.structuredOutput.getNativeConfig
 import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
 import ai.koog.integration.tests.utils.tools.CalculatorTool
+import ai.koog.integration.tests.utils.tools.ComplexNestedTool
+import ai.koog.integration.tests.utils.tools.ComplexNestedToolArgs
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
 import ai.koog.integration.tests.utils.tools.PickColorTool
@@ -89,6 +91,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -160,9 +163,7 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
-        is AnthropicLLMProvider -> AnthropicParams(
-            thinking = AnthropicThinking.Disabled()
-        )
+        is AnthropicLLMProvider -> AnthropicParams(thinking = AnthropicThinking.Disabled())
 
         is OpenAILLMProvider ->
             if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
@@ -216,6 +217,30 @@ abstract class ExecutorIntegrationTestBase {
             id = toolCall.id,
             tool = toolCall.tool,
             output = "579"
+        )
+
+    private fun openAICompatibleFollowUpParams(model: LLModel): LLMParams = when (model.provider) {
+        is OpenAILLMProvider ->
+            if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
+                OpenAIResponsesParams(maxTokens = extendedLimit)
+            } else {
+                OpenAIChatParams(maxTokens = extendedLimit)
+            }
+
+        else -> LLMParams(maxTokens = extendedLimit)
+    }
+
+    private fun complexToolResultFor(toolCall: MessagePart.Tool.Call): MessagePart.Tool.Result =
+        MessagePart.Tool.Result(
+            id = toolCall.id,
+            tool = toolCall.tool,
+            output = """
+                {
+                  "status": "processed",
+                  "marker": "profile-tool-result-4242",
+                  "summary": "Ada Lovelace profile processed for Paris."
+                }
+            """.trimIndent()
         )
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -509,6 +534,63 @@ abstract class ExecutorIntegrationTestBase {
             val secondResponse = getExecutor(model).execute(secondPrompt, model, listOf(CalculatorTool.descriptor))
             secondResponse.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
                 text.shouldContain("579")
+            }
+        }
+    }
+
+    open fun integration_testOpenAICompatibleNestedToolResultRoundTrip(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.ToolChoice), "Model $model does not support tool choice")
+
+        val firstPrompt = Prompt.build("openai-compatible-tool-result-roundtrip-1", toolRoundTripParams(model)) {
+            system(
+                "You are a tool-calling assistant. You MUST call complex_nested_tool exactly once. " +
+                    "Do not answer without calling the tool."
+            )
+            user(
+                "Process a profile for Ada Lovelace, ada@example.com, with one HOME address: " +
+                    "12 Rue Example, Paris, Ile-de-France, 75001."
+            )
+        }
+
+        val firstResponse = withRetry(
+            times = 3,
+            testName = "integration_testOpenAICompatibleNestedToolResultRoundTrip_Turn1[${model.id}]"
+        ) {
+            getExecutor(model).execute(firstPrompt, model, listOf(ComplexNestedTool.descriptor))
+        }
+
+        val toolCall = firstResponse.parts.filterIsInstance<MessagePart.Tool.Call>().firstOrNull().shouldNotBeNull {
+            tool shouldBe ComplexNestedTool.name
+            val args = Json.decodeFromString<ComplexNestedToolArgs>(this.args)
+            args.profile.name shouldContain "Ada"
+            args.profile.addresses.firstOrNull().shouldNotBeNull {
+                city shouldContain "Paris"
+            }
+        }
+
+        val secondPrompt = Prompt(
+            id = "openai-compatible-tool-result-roundtrip-2",
+            messages = firstPrompt.messages + firstResponse + Message.User(
+                parts = listOf(
+                    complexToolResultFor(toolCall),
+                    MessagePart.Text(
+                        "Read the tool result JSON and reply with the marker value exactly, with no extra text."
+                    ),
+                ),
+                RequestMetaInfo.Empty
+            ),
+            params = openAICompatibleFollowUpParams(model)
+        )
+
+        withRetry(
+            times = 3,
+            testName = "integration_testOpenAICompatibleNestedToolResultRoundTrip_Turn2[${model.id}]"
+        ) {
+            val secondResponse = getExecutor(model).execute(secondPrompt, model)
+            secondResponse.parts.filterIsInstance<MessagePart.Text>().firstOrNull().shouldNotBeNull {
+                text shouldContain "profile-tool-result-4242"
             }
         }
     }
