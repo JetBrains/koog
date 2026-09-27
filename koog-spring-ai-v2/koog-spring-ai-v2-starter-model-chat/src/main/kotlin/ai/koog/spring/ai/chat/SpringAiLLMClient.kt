@@ -185,6 +185,9 @@ public class SpringAiLLMClient(
      * [StreamFrame.ToolCallDelta] with a corresponding [StreamFrame.ToolCallComplete] and
      * emits [StreamFrame.TextComplete] / [StreamFrame.ReasoningComplete] boundaries.
      *
+     * The terminal [StreamFrame.End] carries the finish reason and the token usage collected over
+     * the whole stream, since a provider may report them in separate chunks.
+     *
      * All blocking I/O runs on the configured [dispatcher] (default [Dispatchers.IO]).
      */
     override fun executeStreaming(
@@ -201,10 +204,10 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed: ${e.message}", e)
         }
-        var lastChatResponse: ChatResponse? = null
+        var finishReason: String? = null
+        var metaInfo: ResponseMetaInfo? = null
         try {
             flux.asFlow().collect { chatResponse ->
-                lastChatResponse = chatResponse
                 for ((generationIndex, generation) in chatResponse.results.withIndex()) {
                     val assistantMessage = generation.output
                     val text = assistantMessage.text
@@ -222,6 +225,23 @@ public class SpringAiLLMClient(
                         toolCallAssembler.accept(assistantMessage.toolCalls, generationIndex, this)
                     }
                 }
+                // Spring AI can report the finish reason and the token usage in different chunks:
+                // with stream-usage the last chunk carries the usage and no generations at all, so
+                // keep each as it arrives (see #2109). A chunk that has neither reports an empty
+                // finish reason and zero counts rather than nulls, so neither may overwrite a
+                // reported value.
+                chatResponse.results.firstOrNull()?.metadata?.finishReason
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { finishReason = it }
+                val usage = chatResponse.metadata.usage
+                if (metaInfo == null || usage.totalTokens > 0) {
+                    metaInfo = ResponseMetaInfo.create(
+                        clock = clock,
+                        totalTokensCount = usage.totalTokens,
+                        inputTokensCount = usage.promptTokens,
+                        outputTokensCount = usage.completionTokens
+                    )
+                }
             }
             toolCallAssembler.flush(this)
         } catch (e: CancellationException) {
@@ -232,18 +252,6 @@ public class SpringAiLLMClient(
             throw LLMClientException(clientName, "ChatModel.stream() failed during collection: ${e.message}", e)
         } finally {
             // Always emit End frame so downstream consumers are not left hanging
-            val finishReason = lastChatResponse?.results?.firstOrNull()?.metadata?.finishReason
-            val usage = lastChatResponse?.metadata?.usage
-            val metaInfo = if (usage != null) {
-                ResponseMetaInfo.create(
-                    clock = clock,
-                    totalTokensCount = usage.totalTokens,
-                    inputTokensCount = usage.promptTokens,
-                    outputTokensCount = usage.completionTokens
-                )
-            } else {
-                null
-            }
             emitEnd(finishReason = finishReason, metaInfo = metaInfo)
         }
     }.flowOn(dispatcher)

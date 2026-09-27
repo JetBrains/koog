@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.ai.chat.messages.AssistantMessage
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata
 import org.springframework.ai.chat.metadata.ChatResponseMetadata
 import org.springframework.ai.chat.metadata.Usage
 import org.springframework.ai.chat.model.ChatModel
@@ -43,6 +44,12 @@ class SpringAiLLMClientTest {
         Prompt(messages.toList(), "test-prompt", LLMParams())
 
     private fun requestMeta() = RequestMetaInfo.create(KoogClock.System)
+
+    private fun stubUsage(promptTokens: Int, completionTokens: Int) = object : Usage {
+        override fun getPromptTokens(): Int = promptTokens
+        override fun getCompletionTokens(): Int = completionTokens
+        override fun getNativeUsage(): Any = emptyMap<String, Any>()
+    }
 
     // ---- llmProvider ----
 
@@ -152,12 +159,9 @@ class SpringAiLLMClientTest {
 
     @Test
     fun `execute maps usage metadata to response meta info`() = runBlocking {
-        val usage = object : Usage {
-            override fun getPromptTokens(): Int = 5
-            override fun getCompletionTokens(): Int = 15
-            override fun getNativeUsage(): Any = emptyMap<String, Any>()
-        }
-        val metadata = ChatResponseMetadata.builder().usage(usage).build()
+        val metadata = ChatResponseMetadata.builder()
+            .usage(stubUsage(promptTokens = 5, completionTokens = 15))
+            .build()
         val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
             override fun call(prompt: SpringPrompt) =
                 ChatResponse(listOf(Generation(AssistantMessage("Done"))), metadata)
@@ -334,6 +338,86 @@ class SpringAiLLMClientTest {
         val textFrames = frames.filterIsInstance<StreamFrame.TextDelta>()
         assertEquals(1, textFrames.size)
         assertEquals("Hi", textFrames[0].text)
+    }
+
+    @Test
+    fun testExecuteStreamingKeepsFinishReasonWhenLastChunkCarriesOnlyUsage() = runBlocking {
+        val finishMetadata = ChatGenerationMetadata.builder().finishReason("STOP").build()
+        val usageMetadata = ChatResponseMetadata.builder()
+            .usage(stubUsage(promptTokens = 5, completionTokens = 10))
+            .build()
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
+            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+            override fun stream(prompt: SpringPrompt) = Flux.just(
+                ChatResponse(listOf(Generation(AssistantMessage("Hello"), finishMetadata))),
+                // With stream-usage enabled the terminal chunk reports the usage and no generations
+                ChatResponse(emptyList(), usageMetadata)
+            )
+        }).build()
+        val prompt = createPrompt(Message.User("Hi", requestMeta()))
+        val frames = client.executeStreaming(prompt, testModel, emptyList()).toList()
+
+        val end = frames.filterIsInstance<StreamFrame.End>().single()
+        assertEquals("STOP", end.finishReason)
+        assertEquals(15, end.metaInfo.totalTokensCount)
+    }
+
+    @Test
+    fun testExecuteStreamingKeepsTokenUsageWhenALaterChunkReportsNone() = runBlocking {
+        val usageMetadata = ChatResponseMetadata.builder()
+            .usage(stubUsage(promptTokens = 5, completionTokens = 10))
+            .build()
+        val finishMetadata = ChatGenerationMetadata.builder().finishReason("STOP").build()
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
+            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+            override fun stream(prompt: SpringPrompt) = Flux.just(
+                ChatResponse(listOf(Generation(AssistantMessage("Hello"))), usageMetadata),
+                ChatResponse(listOf(Generation(AssistantMessage(" world"), finishMetadata)))
+            )
+        }).build()
+        val prompt = createPrompt(Message.User("Hi", requestMeta()))
+        val frames = client.executeStreaming(prompt, testModel, emptyList()).toList()
+
+        val end = frames.filterIsInstance<StreamFrame.End>().single()
+        assertEquals("STOP", end.finishReason)
+        assertEquals(5, end.metaInfo.inputTokensCount)
+        assertEquals(10, end.metaInfo.outputTokensCount)
+        assertEquals(15, end.metaInfo.totalTokensCount)
+    }
+
+    @Test
+    fun testExecuteStreamingReportsZeroTokenCountsWhenNoChunkReportsUsage() = runBlocking {
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
+            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+            override fun stream(prompt: SpringPrompt) = Flux.just(
+                ChatResponse(listOf(Generation(AssistantMessage("Hello"))))
+            )
+        }).build()
+        val prompt = createPrompt(Message.User("Hi", requestMeta()))
+        val frames = client.executeStreaming(prompt, testModel, emptyList()).toList()
+
+        // A response without usage reports zero counts, not unknown ones, as it did before
+        val end = frames.filterIsInstance<StreamFrame.End>().single()
+        assertEquals(0, end.metaInfo.totalTokensCount)
+    }
+
+    @Test
+    fun testExecuteStreamingIgnoresAnEmptyFinishReasonFromALaterChunk() = runBlocking {
+        val finishMetadata = ChatGenerationMetadata.builder().finishReason("STOP").build()
+        // Mistral AI and DeepSeek pad every streamed chunk with an empty finish reason
+        val paddedMetadata = ChatGenerationMetadata.builder().finishReason("").build()
+        val client = SpringAiLLMClient.builder().chatModel(object : ChatModel {
+            override fun call(prompt: SpringPrompt) = throw UnsupportedOperationException()
+            override fun stream(prompt: SpringPrompt) = Flux.just(
+                ChatResponse(listOf(Generation(AssistantMessage("Hello"), finishMetadata))),
+                ChatResponse(listOf(Generation(AssistantMessage(" world"), paddedMetadata)))
+            )
+        }).build()
+        val prompt = createPrompt(Message.User("Hi", requestMeta()))
+        val frames = client.executeStreaming(prompt, testModel, emptyList()).toList()
+
+        val end = frames.filterIsInstance<StreamFrame.End>().single()
+        assertEquals("STOP", end.finishReason)
     }
 
     // ---- moderate ----
