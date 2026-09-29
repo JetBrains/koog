@@ -3,8 +3,13 @@ package prompt
 import ai.koog.skills.model.Skill
 import ai.koog.skills.prompt.SkillsPromptFormat
 import ai.koog.skills.prompt.generateSkillsPrompt
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class SkillsPromptTest {
     private val skills = listOf(
@@ -23,6 +28,53 @@ class SkillsPromptTest {
             location = "/home/user/project/.agents/skills/data-analysis/SKILL.md",
         ),
     )
+
+    @Test
+    fun testJsonEscapesAllControlCharacters() {
+        for (code in 0..0x1f) {
+            assertJsonRoundTrip("before${code.toChar()}after")
+        }
+    }
+
+    @Test
+    fun testJsonPreservesQuotesBackslashesAndUnicode() {
+        assertJsonRoundTrip("Quoted \"text\" and \\ paths / café 日本語 😀")
+    }
+
+    private fun assertJsonRoundTrip(value: String) {
+        val skill = Skill(
+            name = value,
+            description = value,
+            location = value,
+            license = value,
+            compatibility = value,
+            metadata = mapOf(value to value),
+            allowedTools = value,
+        )
+        val prompt = generateSkillsPrompt(
+            skills = listOf(skill),
+            format = SkillsPromptFormat.JSON,
+            includeLicense = true,
+            includeCompatibility = true,
+            includeMetadata = true,
+            includeAllowedTools = true,
+        )
+
+        // Some JSON parsers accept raw control characters, so check strings explicitly.
+        var insideString = false
+        var escaped = false
+        for (character in prompt) {
+            assertFalse(insideString && character < ' ', "Raw control character U+${character.code.toString(16)}")
+            when {
+                escaped -> escaped = false
+                insideString && character == '\\' -> escaped = true
+                character == '"' -> insideString = !insideString
+            }
+        }
+
+        val parsed = Json.parseToJsonElement(prompt).jsonObject.getValue("available_skills").jsonArray
+        assertEquals(listOf(skill), parsed.map { Json.decodeFromJsonElement<Skill>(it) })
+    }
 
     @Test
     fun `test generateSkillsPrompt generates xml prompt with location`() {
