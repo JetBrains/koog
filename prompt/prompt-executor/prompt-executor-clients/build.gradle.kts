@@ -10,6 +10,7 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-model"))
                 api(project(":agents:agents-tools"))
+                api(project(":http-client:http-client-core"))
                 api(libs.kotlinx.coroutines.core)
                 api(project(":prompt:prompt-structure"))
                 implementation(libs.oshai.kotlin.logging)
