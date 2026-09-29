@@ -63,6 +63,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -348,7 +350,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         model: LLModel,
         tools: List<ToolDescriptor>,
         params: OpenAIResponsesParams
-    ): Flow<StreamFrame> {
+    ): Flow<StreamFrame> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val llmTools = tools.takeIf { it.isNotEmpty() }?.map {
@@ -368,8 +370,9 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             params = params,
             stream = true
         )
+        val toolCallsByItemId = mutableMapOf<String, Item.FunctionToolCall>()
 
-        return try {
+        val frames = try {
             httpClient.sse(
                 path = settings.responsesAPIPath,
                 requestBody = request,
@@ -379,6 +382,14 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 },
                 processStreamingChunk = {
                     when (it) {
+                        is OpenAIStreamEvent.ResponseOutputItemAdded -> {
+                            val item = it.item
+                            if (item is Item.FunctionToolCall) {
+                                item.id?.let { itemId -> toolCallsByItemId[itemId] = item }
+                            }
+                            null
+                        }
+
                         is OpenAIStreamEvent.ResponseOutputTextDelta -> {
                             StreamFrame.TextDelta(text = it.delta, index = it.outputIndex)
                         }
@@ -394,9 +405,10 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                         }
 
                         is OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta -> {
+                            val toolCall = toolCallsByItemId[it.itemId]
                             StreamFrame.ToolCallDelta(
-                                id = it.itemId,
-                                name = null,
+                                id = toolCall?.callId ?: it.itemId,
+                                name = toolCall?.name,
                                 content = it.delta,
                                 index = it.outputIndex
                             )
@@ -425,6 +437,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                 }
 
                                 is Item.FunctionToolCall -> {
+                                    item.id?.let { itemId -> toolCallsByItemId.remove(itemId) }
                                     StreamFrame.ToolCallComplete(
                                         id = item.callId,
                                         name = item.name,
@@ -464,6 +477,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                 cause = e
             )
         }
+        emitAll(frames)
     }
 
     override suspend fun executeMultipleChoices(
