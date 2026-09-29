@@ -125,7 +125,9 @@ public fun buildStreamFrameFlow(block: suspend StreamFrameFlowBuilder.() -> Unit
 /**
  * Represents a wrapper around a [FlowCollector] that provides methods for emitting [StreamFrame] objects.
  *
- * This is mainly used for combining chunked tool calls and only emit completed tool calls.
+ * Combines chunked tool calls by index or ID, allowing their argument deltas to interleave.
+ * Tool calls complete in first-seen order when text, reasoning or an end frame arrives,
+ * or when [tryEmitPendingToolCall] is called explicitly.
  *
  * @property flowCollector The underlying [FlowCollector] used for emitting [StreamFrame] objects.
  */
@@ -134,7 +136,7 @@ public class StreamFrameFlowBuilder(
     private val flowCollector: FlowCollector<StreamFrame>,
 ) {
 
-    private val pendingToolCallRef = AtomicReference<PendingToolCall?>(null)
+    private val pendingToolCallsRef = AtomicReference<List<PendingToolCall>>(emptyList())
     private val pendingTextRef = AtomicReference<PendingText?>(null)
     private val pendingReasoningRef = AtomicReference<PendingReasoning?>(null)
 
@@ -182,10 +184,13 @@ public class StreamFrameFlowBuilder(
     }
 
     /**
-     * Updates the coroutine context to signal we're currently combining a tool call,
-     * this does not emit anything yet, that happens only in [tryEmitPendingToolCall].
+     * Emits a tool call delta and accumulates its arguments by index or ID.
+     * Missing identity fields are filled when a later delta supplies them.
+     * A delta without an index or ID continues the sole pending call.
      *
-     * @throws StreamFrameFlowBuilderError if there is
+     * @throws StreamFrameFlowBuilderError.NoPartialToolCallToComplete if an anonymous delta has no pending call.
+     * @throws IllegalStateException if an anonymous delta has multiple possible pending calls.
+     * @throws IllegalArgumentException if the ID and index conflict with pending call identity.
      */
     public suspend fun emitToolCallDelta(
         id: String? = null,
@@ -196,29 +201,26 @@ public class StreamFrameFlowBuilder(
         tryEmitPendingText()
         tryEmitPendingReasoning()
         val sanitizedId = id?.takeUnless { it.isBlank() }
-        val previous: PendingToolCall? = pendingToolCallRef.load()
-        // `id` and `index` are optional per-chunk signals. A new tool call begins only when a
-        // present signal differs from the pending call, not merely because `id` is non-null:
-        // some OpenAI-compatible providers send the same `id` on every chunk (see #2002).
-        val isNewToolCall =
-            (sanitizedId != null && sanitizedId != previous?.id) ||
-                (index != null && index != previous?.index)
-        val new: PendingToolCall = if (isNewToolCall) {
-            tryEmitPendingToolCall()
-            PendingToolCall(sanitizedId, name, args, index)
-        } else {
-            when {
-                previous == null ->
-                    throw StreamFrameFlowBuilderError.NoPartialToolCallToComplete()
-
-                previous.index != index ->
-                    throw StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex(previous.index, index)
-
-                else ->
-                    previous.appendArgumentsDelta(args)
-            }
+        val calls = pendingToolCallsRef.load()
+        // Adapted from Kroog's interleaved tool-call aggregation (Kreoh/kroog@4ef675dc1).
+        val indexPosition = index?.let { value -> calls.indexOfFirst { it.index == value }.takeIf { it >= 0 } }
+        val idPosition = sanitizedId?.let { value -> calls.indexOfFirst { it.id == value }.takeIf { it >= 0 } }
+        require(indexPosition == null || idPosition == null || indexPosition == idPosition) {
+            "Tool call ID $sanitizedId and index $index identify different pending calls."
         }
-        pendingToolCallRef.store(new)
+        val position = indexPosition ?: idPosition ?: when {
+            index != null || sanitizedId != null -> null
+            calls.isEmpty() -> throw StreamFrameFlowBuilderError.NoPartialToolCallToComplete()
+            calls.size == 1 -> 0
+            else -> error("A tool call delta without an ID or index is ambiguous while multiple calls are pending.")
+        }
+        val updated = if (position == null) {
+            calls + PendingToolCall(sanitizedId, name, args, index)
+        } else {
+            val call = calls[position].appendDelta(sanitizedId, name, args, index)
+            calls.mapIndexed { currentPosition, pending -> if (currentPosition == position) call else pending }
+        }
+        pendingToolCallsRef.store(updated)
         flowCollector.emitToolCallDelta(sanitizedId, name, args, index)
     }
 
@@ -251,11 +253,11 @@ public class StreamFrameFlowBuilder(
     }
 
     /**
-     * Emits a [pendingToolCallRef] if it exists and then clears it.
+     * Emits all pending tool calls in first-seen order and then clears them.
      */
     public suspend fun tryEmitPendingToolCall() {
-        val pendingToolCall = pendingToolCallRef.exchange(null)
-        if (pendingToolCall != null) {
+        val calls = pendingToolCallsRef.exchange(emptyList())
+        calls.forEach { pendingToolCall ->
             flowCollector.emitToolCallComplete(
                 id = pendingToolCall.id,
                 name = pendingToolCall.name ?: "",
@@ -271,11 +273,16 @@ public class StreamFrameFlowBuilder(
         val argumentsDelta: String?,
         val index: Int?,
     ) {
-        fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
-            require(this.index == index)
+        fun appendDelta(id: String?, name: String?, argumentsDelta: String?, index: Int?): PendingToolCall {
+            require(this.id == null || id == null || this.id == id) {
+                "Tool call index ${this.index} has conflicting IDs ${this.id} and $id."
+            }
+            require(this.index == null || index == null || this.index == index) {
+                "Tool call ID ${this.id} has conflicting indices ${this.index} and $index."
+            }
             val newArgs =
                 if (argumentsDelta == null) this.argumentsDelta else (this.argumentsDelta ?: "") + argumentsDelta
-            return copy(argumentsDelta = newArgs)
+            return copy(id = this.id ?: id, name = this.name ?: name, argumentsDelta = newArgs, index = this.index ?: index)
         }
     }
 
