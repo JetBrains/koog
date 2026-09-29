@@ -17,14 +17,23 @@ import ai.koog.test.utils.CapturingKoogHttpClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 class OpenAIPrimaryConstructorTest {
+    private val streamingJson = Json {
+        encodeDefaults = true
+        explicitNulls = false
+        namingStrategy = JsonNamingStrategy.SnakeCase
+    }
+
     private val responseJson = """
         {
           "id": "chatcmpl-123",
@@ -220,4 +229,239 @@ class OpenAIPrimaryConstructorTest {
         assertEquals(inputTokens, end.metaInfo.inputTokensCount)
         assertEquals(outputTokens, end.metaInfo.outputTokensCount)
     }
+
+    @Test
+    fun testResponsesStreamingToolCallDeltasUseCanonicalIdentity() = runTest {
+        val firstItemId = "item_first"
+        val firstCallId = "call_first"
+        val firstName = "firstTool"
+        val secondItemId = "item_second"
+        val secondCallId = "call_second"
+        val secondName = "secondTool"
+        val events = listOf(
+            OpenAIStreamEvent.ResponseOutputItemAdded(
+                item = Item.FunctionToolCall(
+                    arguments = "",
+                    callId = firstCallId,
+                    name = firstName,
+                    id = firstItemId,
+                    status = OpenAIInputStatus.IN_PROGRESS
+                ),
+                outputIndex = 0,
+                sequenceNumber = 1
+            ),
+            OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta(
+                itemId = firstItemId,
+                outputIndex = 0,
+                delta = "{\"first\":",
+                sequenceNumber = 2
+            ),
+            OpenAIStreamEvent.ResponseOutputItemAdded(
+                item = Item.FunctionToolCall(
+                    arguments = "",
+                    callId = secondCallId,
+                    name = secondName,
+                    id = secondItemId,
+                    status = OpenAIInputStatus.IN_PROGRESS
+                ),
+                outputIndex = 1,
+                sequenceNumber = 3
+            ),
+            OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta(
+                itemId = secondItemId,
+                outputIndex = 1,
+                delta = "{\"second\":true}",
+                sequenceNumber = 4
+            ),
+            OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta(
+                itemId = firstItemId,
+                outputIndex = 0,
+                delta = "true}",
+                sequenceNumber = 5
+            ),
+            OpenAIStreamEvent.ResponseOutputItemDone(
+                item = Item.FunctionToolCall(
+                    arguments = "{\"second\":true}",
+                    callId = secondCallId,
+                    name = secondName,
+                    id = secondItemId,
+                    status = OpenAIInputStatus.COMPLETED
+                ),
+                outputIndex = 1,
+                sequenceNumber = 6
+            ),
+            OpenAIStreamEvent.ResponseOutputItemDone(
+                item = Item.FunctionToolCall(
+                    arguments = "{\"first\":true}",
+                    callId = firstCallId,
+                    name = firstName,
+                    id = firstItemId,
+                    status = OpenAIInputStatus.COMPLETED
+                ),
+                outputIndex = 0,
+                sequenceNumber = 7
+            ),
+            completedResponseEvent(sequenceNumber = 8)
+        )
+        val client = OpenAILLMClient(
+            settings = OpenAIClientSettings(baseUrl = "https://unused.test"),
+            httpClient = streamingTransport { events }
+        )
+
+        val frames = client.executeStreaming(
+            prompt = Prompt(
+                messages = listOf(Message.User("Use both tools", RequestMetaInfo.Empty)),
+                id = "test",
+                params = OpenAIResponsesParams()
+            ),
+            model = OpenAIModels.Chat.GPT4o
+        ).toList()
+
+        assertEquals(
+            listOf(
+                StreamFrame.ToolCallDelta(firstCallId, firstName, "{\"first\":", 0),
+                StreamFrame.ToolCallDelta(secondCallId, secondName, "{\"second\":true}", 1),
+                StreamFrame.ToolCallDelta(firstCallId, firstName, "true}", 0),
+                StreamFrame.ToolCallComplete(secondCallId, secondName, "{\"second\":true}", 1),
+                StreamFrame.ToolCallComplete(firstCallId, firstName, "{\"first\":true}", 0)
+            ),
+            frames.dropLast(1)
+        )
+        assertIs<StreamFrame.End>(frames.last())
+    }
+
+    @Test
+    fun testResponsesStreamingFallsBackForUnknownAndCompletedItems() = runTest {
+        val events = listOf(
+            OpenAIStreamEvent.ResponseOutputItemAdded(Item.Text("ignored"), 0, 1),
+            OpenAIStreamEvent.ResponseOutputItemAdded(toolCall(id = null), 0, 2),
+            argumentDelta("unknown", 3),
+            OpenAIStreamEvent.ResponseOutputItemAdded(toolCall(), 0, 4),
+            argumentDelta("item", 5),
+            OpenAIStreamEvent.ResponseOutputItemDone(toolCall(), 0, 6),
+            argumentDelta("item", 7),
+            OpenAIStreamEvent.ResponseOutputItemDone(toolCall(id = null), 0, 8),
+            completedResponseEvent(9)
+        )
+        val frames = toolCallStream(streamingTransport { events }).toList()
+
+        assertEquals(
+            listOf(
+                StreamFrame.ToolCallDelta("unknown", null, "{}", 0),
+                StreamFrame.ToolCallDelta("call", "lookup", "{}", 0),
+                StreamFrame.ToolCallComplete("call", "lookup", "{}", 0),
+                StreamFrame.ToolCallDelta("item", null, "{}", 0),
+                StreamFrame.ToolCallComplete("call", "lookup", "{}", 0)
+            ),
+            frames.dropLast(1)
+        )
+        assertIs<StreamFrame.End>(frames.last())
+    }
+
+    @Test
+    fun testResponsesStreamingDoesNotRetainIdentityAfterCancelledCollection() = runTest {
+        var collection = 0
+        val stream = toolCallStream(
+            streamingTransport {
+                collection++
+                if (collection == 1) {
+                    listOf(
+                        OpenAIStreamEvent.ResponseOutputItemAdded(toolCall(), 0, 1),
+                        argumentDelta("item", 2),
+                        completedResponseEvent(3)
+                    )
+                } else {
+                    listOf(argumentDelta("item", 1), completedResponseEvent(2))
+                }
+            }
+        )
+
+        assertEquals(listOf(StreamFrame.ToolCallDelta("call", "lookup", "{}", 0)), stream.take(1).toList())
+        val recollected = stream.toList()
+        assertEquals(StreamFrame.ToolCallDelta("item", null, "{}", 0), recollected.first())
+        assertIs<StreamFrame.End>(recollected.last())
+    }
+
+    private fun toolCall(id: String? = "item") = Item.FunctionToolCall(
+        arguments = "{}",
+        callId = "call",
+        name = "lookup",
+        id = id
+    )
+
+    private fun argumentDelta(itemId: String, sequenceNumber: Int) =
+        OpenAIStreamEvent.ResponseFunctionCallArgumentsDelta(itemId, 0, "{}", sequenceNumber)
+
+    private fun toolCallStream(transport: KoogHttpClient): Flow<StreamFrame> = OpenAILLMClient(
+        settings = OpenAIClientSettings(baseUrl = "https://unused.test"),
+        httpClient = transport
+    ).executeStreaming(
+        prompt = Prompt(
+            messages = listOf(Message.User("Use lookup", RequestMetaInfo.Empty)),
+            id = "test",
+            params = OpenAIResponsesParams()
+        ),
+        model = OpenAIModels.Chat.GPT4o
+    )
+
+    private fun streamingTransport(events: () -> List<OpenAIStreamEvent>): KoogHttpClient = object : KoogHttpClient {
+        override val clientName: String = "StreamingOpenAIClient"
+
+        override suspend fun <R : Any> get(
+            path: String,
+            responseType: KClass<R>,
+            parameters: Map<String, String>,
+            headers: Map<String, String>,
+        ): R = error("GET is not expected in this test")
+
+        override suspend fun <T : Any, R : Any> post(
+            path: String,
+            requestBody: T,
+            requestBodyType: KClass<T>,
+            responseType: KClass<R>,
+            parameters: Map<String, String>,
+            headers: Map<String, String>,
+        ): R = error("POST is not expected in this test")
+
+        override fun <T : Any, R : Any, O : Any> sse(
+            path: String,
+            requestBody: T,
+            requestBodyType: KClass<T>,
+            dataFilter: (String?) -> Boolean,
+            decodeStreamingResponse: (String) -> R,
+            processStreamingChunk: (R) -> O?,
+            parameters: Map<String, String>,
+            headers: Map<String, String>,
+        ): Flow<O> = flow {
+            events().forEach { event ->
+                val data = streamingJson.encodeToString(OpenAIStreamEvent.serializer(), event)
+                processStreamingChunk(decodeStreamingResponse(data))?.let { emit(it) }
+            }
+        }
+
+        override fun <T : Any> lines(
+            path: String,
+            requestBody: T,
+            requestBodyType: KClass<T>,
+            parameters: Map<String, String>,
+            headers: Map<String, String>,
+        ): Flow<String> = error("lines is not expected in this test")
+
+        override fun close(): Unit = Unit
+    }
+
+    private fun completedResponseEvent(sequenceNumber: Int): OpenAIStreamEvent.ResponseCompleted =
+        OpenAIStreamEvent.ResponseCompleted(
+            response = OpenAIResponsesAPIResponse(
+                created = 1716920005,
+                id = "response_id",
+                model = "gpt-5",
+                output = emptyList(),
+                parallelToolCalls = true,
+                status = OpenAIInputStatus.COMPLETED,
+                text = OpenAITextConfig(),
+                usage = null
+            ),
+            sequenceNumber = sequenceNumber
+        )
 }
