@@ -230,9 +230,30 @@ private fun escapeJson(value: String): String = buildString {
     }
 }
 
-private fun escapeYml(value: String): String = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+private fun escapeYml(value: String): String = buildString {
+    append('"')
+    value.forEach { character ->
+        when (character) {
+            '\\' -> append("\\\\")
+            '"' -> append("\\\"")
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '\t' -> append("\\t")
+            in '\u0000'..'\u001f', in '\u007f'..'\u009f', '\u2028', '\u2029' -> {
+                append("\\u")
+                append(character.code.toString(16).padStart(4, '0'))
+            }
+            else -> append(character)
+        }
+    }
+    append('"')
+}
 
 private fun escapeYmlKey(value: String): String =
-    value
-        .replace("\\", "\\\\")
-        .replace(":", "\\:")
+    if (value.matches(Regex("[A-Za-z_][A-Za-z0-9_-]*")) &&
+        value.lowercase() !in setOf("true", "false", "null", "yes", "no", "on", "off", "y", "n")
+    ) {
+        value
+    } else {
+        escapeYml(value)
+    }
