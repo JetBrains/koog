@@ -116,8 +116,6 @@ public class KtorKoogHttpClient internal constructor(
             }
         }
     }
-    private fun Headers.toResponseHeaderMap(): Map<String, List<String>> =
-        entries().associate { it.key to it.value }.lowercaseHeaderKeys()
 
     override suspend fun <R : Any> get(
         path: String,

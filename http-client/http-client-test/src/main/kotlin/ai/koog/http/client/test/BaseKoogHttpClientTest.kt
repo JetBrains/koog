@@ -206,7 +206,7 @@ abstract class BaseKoogHttpClientTest {
         try {
             client.post<String, String>(
                 path = mockServer.url("/rate-limited"),
-                request = "PAYLOAD",
+                requestBody = "PAYLOAD",
             )
             fail("Expected a KoogHttpClientException for 429")
         } catch (e: KoogHttpClientException) {
@@ -266,7 +266,7 @@ abstract class BaseKoogHttpClientTest {
 
         val flow = client.sse(
             path = mockServer.url("/stream"),
-            request = "{}",
+            requestBody = "{}",
             requestBodyType = String::class,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = { it },
