@@ -25,11 +25,13 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 
 class RetryingLLMClientTest {
@@ -533,6 +535,123 @@ class RetryingLLMClientTest {
         assertEquals(mockClient.standardJsonSchemaGeneratorDefault, result)
     }
 
+    @Test
+    fun testWrappedCancellationIsNotRetried() = runTest {
+        val cancellation = CancellationException("Cancelled operation")
+        val delegate = MockLLMClient(
+            streamResponse = flow {
+                throw IllegalStateException("429 Too Many Requests", cancellation)
+            }
+        )
+        val client = RetryingLLMClient(
+            delegate,
+            RetryConfig(maxAttempts = 3, initialDelay = 10.milliseconds)
+        )
+
+        val failure = runCatching {
+            client.executeStreaming(testPrompt, testModel).collect()
+        }.exceptionOrNull()
+
+        assertEquals(1, delegate.streamCalls)
+        assertSame(cancellation, failure)
+    }
+
+    @Test
+    fun testCancellationCausesInExecute() = runTest {
+        val cancellation = CancellationException("Delegate cancelled")
+        val failures = listOf(
+            cancellation,
+            IllegalStateException("429 Too Many Requests", cancellation),
+            IllegalStateException("429 Too Many Requests", RuntimeException("Nested", cancellation)),
+            IllegalArgumentException("Invalid request", cancellation)
+        )
+        for (failure in failures) {
+            val mockClient = MockLLMClient(executeFailure = failure)
+            val client = RetryingLLMClient(mockClient, RetryConfig(maxAttempts = 3))
+
+            val actual = runCatching { client.execute(testPrompt, testModel) }.exceptionOrNull()
+
+            assertEquals(1, mockClient.executeCalls)
+            assertSame(cancellation, actual)
+            assertTrue(coroutineContext.isActive)
+        }
+    }
+
+    @Test
+    fun testStreamingCancellationCauses() = runTest {
+        val cancellation = CancellationException("Delegate cancelled")
+        val failures = listOf(
+            cancellation,
+            IllegalStateException("429 Too Many Requests", RuntimeException("Nested", cancellation)),
+            IllegalArgumentException("Invalid request", cancellation)
+        )
+        for (failure in failures) {
+            for (emitFirstFrame in listOf(false, true)) {
+                val frames = mutableListOf<StreamFrame>()
+                val mockClient = MockLLMClient(
+                    streamResponse = flow {
+                        if (emitFirstFrame) emit(StreamFrame.TextDelta("first"))
+                        throw failure
+                    }
+                )
+                val client = RetryingLLMClient(mockClient, RetryConfig(maxAttempts = 3))
+
+                val actual = runCatching {
+                    client.executeStreaming(testPrompt, testModel).collect { frames += it }
+                }.exceptionOrNull()
+
+                assertEquals(1, mockClient.streamCalls)
+                assertSame(cancellation, actual)
+                assertEquals(if (emitFirstFrame) listOf(StreamFrame.TextDelta("first")) else emptyList(), frames)
+                assertTrue(coroutineContext.isActive)
+            }
+        }
+    }
+
+    @Test
+    fun testCancellationAtCauseTraversalBoundary() = runTest {
+        val cancellation = CancellationException("Delegate cancelled")
+        val failure = (1..31).fold<Int, Throwable>(cancellation) { cause, _ ->
+            IllegalStateException("429 Too Many Requests", cause)
+        }
+        val mockClient = MockLLMClient(executeFailure = failure)
+        val client = RetryingLLMClient(mockClient)
+
+        val actual = runCatching { client.execute(testPrompt, testModel) }.exceptionOrNull()
+
+        assertSame(cancellation, actual)
+        assertEquals(1, mockClient.executeCalls)
+    }
+
+    @Test
+    fun testCauseTraversalStopsAtBound() = runTest {
+        val cancellation = CancellationException("Delegate cancelled")
+        val failure = (1..32).fold<Int, Throwable>(cancellation) { cause, _ ->
+            IllegalStateException("429 Too Many Requests", cause)
+        }
+        val mockClient = MockLLMClient(executeFailure = failure)
+        val client = RetryingLLMClient(mockClient, RetryConfig(maxAttempts = 2))
+
+        val actual = runCatching { client.execute(testPrompt, testModel) }.exceptionOrNull()
+
+        assertSame(failure, actual)
+        assertEquals(2, mockClient.executeCalls)
+    }
+
+    @Test
+    fun testCyclicCausesPreserveRetry() = runTest {
+        val failure = object : RuntimeException("429 Too Many Requests") {
+            override val cause: Throwable get() = this
+        }
+        val mockClient = MockLLMClient(executeFailure = failure)
+        val client = RetryingLLMClient(mockClient, RetryConfig(maxAttempts = 2))
+
+        val actual = runCatching { client.execute(testPrompt, testModel) }.exceptionOrNull()
+
+        assertSame(failure, actual)
+        assertEquals(2, mockClient.executeCalls)
+    }
+
     // Mock LLMClient for testing
     private class MockLLMClient(
         private val executeResponse: Message.Assistant? = null,
@@ -545,6 +664,7 @@ class RetryingLLMClientTest {
         private var streamFailuresBeforeSuccess: Int = 0,
         private val failureMessage: String = "Mock failure",
         private val throwCancellation: Boolean = false,
+        private val executeFailure: Throwable? = null,
         private val llmProvider: LLMProvider = LLMProvider.OpenAI,
     ) : LLMClient() {
 
@@ -573,6 +693,7 @@ class RetryingLLMClientTest {
             tools: List<ToolDescriptor>
         ): Message.Assistant {
             executeCalls++
+            executeFailure?.let { throw it }
 
             if (throwCancellation) {
                 throw CancellationException("Cancelled")

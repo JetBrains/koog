@@ -55,6 +55,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
 
     private companion object {
         private val logger = KotlinLogging.logger { }
+        private const val MAX_CAUSE_DEPTH = 32
     }
 
     override suspend fun execute(
@@ -84,6 +85,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
                 } catch (e: CancellationException) {
                     throw e // Never retry cancellations
                 } catch (e: Throwable) {
+                    e.cancellationCause()?.let { throw it }
                     // If we already received tokens, don't retry - pass error through
                     if (firstFrameReceived) {
                         throw e
@@ -162,6 +164,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
             } catch (e: CancellationException) {
                 throw e // Never retry cancellations
             } catch (e: Throwable) {
+                e.cancellationCause()?.let { throw it }
                 lastException = e
 
                 if (!shouldRetry(e) || attempt >= config.maxAttempts - 1) {
@@ -178,6 +181,18 @@ public class RetryingLLMClient @JvmOverloads constructor(
         }
 
         throw lastException!!
+    }
+
+    private fun Throwable.cancellationCause(): CancellationException? {
+        val visited = mutableListOf<Throwable>()
+        var current: Throwable? = this
+        // Bound traversal and compare by identity to handle malformed cause chains safely.
+        while (current != null && visited.size < MAX_CAUSE_DEPTH && visited.none { it === current }) {
+            if (current is CancellationException) return current
+            visited += current
+            current = current.cause
+        }
+        return null
     }
 
     private fun shouldRetry(error: Throwable): Boolean {
