@@ -34,7 +34,7 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun testEmitReasoningDelta() = runTest {
         val frames = buildStreamFrameFlow {
-            emitReasoningDelta(text = "Thinking...", index = 0)
+            emitReasoningDelta(null, "Thinking...", null, 0)
             emitReasoningDelta(text = " step 2", index = 0)
             emitEnd()
         }.toList()
@@ -77,7 +77,7 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun testEmitReasoningTextAndSummary() = runTest {
         val frames = buildStreamFrameFlow {
-            emitReasoningDelta(text = "Thinking...", index = 0)
+            emitReasoningDelta(null, "Thinking...", null, 0)
             emitReasoningDelta(text = " step 2", index = 0)
             emitReasoningDelta(summary = "Summary part 1", index = 0)
             emitReasoningDelta(summary = " part 2", index = 0)
@@ -476,9 +476,9 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun testEncryptedReasoningDeltaIsCarriedIntoReasoningComplete() = runTest {
         val frames = buildStreamFrameFlow {
-            emitReasoningDelta(text = "Thinking...", index = 0)
+            emitReasoningDelta(null, "Thinking...", null, 0)
             // Signature-only update (e.g. Anthropic signature_delta): no delta frame of its own.
-            emitReasoningDelta(encrypted = "signature", index = 0)
+            attachReasoningEncrypted("signature", index = 0)
             tryEmitPendingReasoning()
             emitEnd()
         }.toList()
@@ -497,7 +497,7 @@ class StreamFrameFlowBuilderTest {
     fun testEncryptedReasoningIsFlushedAtEnd() = runTest {
         val frames = buildStreamFrameFlow {
             emitReasoningDelta(text = "Deep thought", index = 0)
-            emitReasoningDelta(encrypted = "signature", index = 0)
+            attachReasoningEncrypted("signature", index = 0)
             emitEnd()
         }.toList()
 
@@ -505,6 +505,42 @@ class StreamFrameFlowBuilderTest {
             listOf(
                 StreamFrame.ReasoningDelta(text = "Deep thought", index = 0),
                 StreamFrame.ReasoningComplete(id = null, content = listOf("Deep thought"), encrypted = "signature", index = 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
+    fun testEncryptedAttachmentRequiresPendingReasoning() = runTest {
+        buildStreamFrameFlow {
+            assertFailsWith<IllegalStateException> { attachReasoningEncrypted("signature") }
+        }.collect()
+    }
+
+    @Test
+    fun testEncryptedAttachmentRequiresMatchingIndex() = runTest {
+        buildStreamFrameFlow {
+            emitReasoningDelta(text = "Thought", index = 0)
+            assertFailsWith<IllegalArgumentException> { attachReasoningEncrypted("signature", index = 1) }
+        }.collect()
+    }
+
+    @Test
+    fun testEncryptedAttachmentSurvivesLaterTextAndCanBeReplaced() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(text = "First")
+            attachReasoningEncrypted("initial")
+            emitReasoningDelta(text = " second")
+            attachReasoningEncrypted("final")
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(text = "First"),
+                StreamFrame.ReasoningDelta(text = " second"),
+                StreamFrame.ReasoningComplete(id = null, content = listOf("First second"), encrypted = "final"),
                 StreamFrame.End(null, ResponseMetaInfo.Empty)
             ),
             frames

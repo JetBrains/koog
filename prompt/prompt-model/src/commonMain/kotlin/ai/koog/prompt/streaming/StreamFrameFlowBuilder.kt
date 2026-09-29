@@ -156,33 +156,32 @@ public class StreamFrameFlowBuilder(
     /**
      * Emits a [StreamFrame.ReasoningDelta] with the given [text].
      */
-    public suspend fun emitReasoningDelta(
-        id: String? = null,
-        text: String? = null,
-        summary: String? = null,
-        encrypted: String? = null,
-        index: Int? = null
-    ) {
+    public suspend fun emitReasoningDelta(id: String? = null, text: String? = null, summary: String? = null, index: Int? = null) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
         val previous: PendingReasoning? = pendingReasoningRef.load()
         if (previous == null) {
-            pendingReasoningRef.store(
-                PendingReasoning(id = id, textDelta = text, summaryDelta = summary, encryptedDelta = encrypted, index = index)
-            )
+            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
         } else if (id != previous.id) {
             tryEmitPendingReasoning()
-            pendingReasoningRef.store(
-                PendingReasoning(id = id, textDelta = text, summaryDelta = summary, encryptedDelta = encrypted, index = index)
-            )
+            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
         } else {
-            pendingReasoningRef.store(previous.appendDelta(id, text, summary, encrypted, index))
+            pendingReasoningRef.store(previous.appendDelta(id, text, summary, index))
         }
-        // Signature-only updates (e.g. Anthropic `signature_delta`) carry no content;
-        // emitting an empty delta frame would only surprise downstream collectors.
-        if (text != null || summary != null || encrypted == null) {
-            flowCollector.emitReasoningDelta(id, text, summary, index)
-        }
+        flowCollector.emitReasoningDelta(id, text, summary, index)
+    }
+
+    /**
+     * Attaches opaque encrypted content to the pending reasoning without emitting a delta frame.
+     * Call [emitReasoningDelta] first, using the same [index]. A later attachment replaces the previous value.
+     *
+     * @throws IllegalStateException if there is no pending reasoning.
+     * @throws IllegalArgumentException if [index] differs from the pending reasoning index.
+     */
+    public fun attachReasoningEncrypted(encrypted: String, index: Int? = null) {
+        val previous = checkNotNull(pendingReasoningRef.load()) { "No pending reasoning to attach encrypted content to" }
+        require(previous.index == index) { "Reasoning index does not match" }
+        pendingReasoningRef.store(previous.copy(encryptedDelta = encrypted))
     }
 
     /**
@@ -316,15 +315,13 @@ public class StreamFrameFlowBuilder(
             id: String?,
             textDelta: String?,
             summaryDelta: String?,
-            encryptedDelta: String? = null,
             index: Int?
         ): PendingReasoning {
             require(this.index == index)
             require(this.id == id)
             val newTextDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
             val newSummaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
-            val newEncryptedDelta = encryptedDelta ?: this.encryptedDelta
-            return copy(textDelta = newTextDelta, summaryDelta = newSummaryDelta, encryptedDelta = newEncryptedDelta)
+            return copy(textDelta = newTextDelta, summaryDelta = newSummaryDelta)
         }
     }
 }
