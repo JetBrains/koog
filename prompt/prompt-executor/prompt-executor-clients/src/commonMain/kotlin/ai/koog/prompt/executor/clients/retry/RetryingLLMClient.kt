@@ -227,7 +227,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
         // collapses to zero (jitterFactor == 0.0 or initialDelay == Duration.ZERO).
         val jitterUpper = boundedMs * config.jitterFactor
         val jitterMs = if (jitterUpper > 0.0) Random.nextDouble(0.0, jitterUpper) else 0.0
-        return (boundedMs + jitterMs).toLong().milliseconds
+        return (boundedMs + jitterMs).toLong().milliseconds.coerceAtMost(config.maxDelay)
     }
 
     override fun close() {

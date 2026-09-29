@@ -31,6 +31,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -543,6 +544,48 @@ class RetryingLLMClientTest {
     }
 
     @Test
+    fun testJitterNeverExceedsMaxDelay() = runTest {
+        repeat(20) {
+            val mockClient = MockLLMClient(
+                executeResponse = testResponse,
+                failuresBeforeSuccess = 1,
+                failureMessage = "Error: 503"
+            )
+            val retryingClient = RetryingLLMClient(
+                mockClient,
+                RetryConfig(maxAttempts = 2, initialDelay = 1.seconds, maxDelay = 1.seconds, jitterFactor = 1.0)
+            )
+
+            val startTime = testScheduler.currentTime
+            val result = retryingClient.execute(testPrompt, testModel, emptyList())
+
+            assertEquals(testResponse, result)
+            assertEquals(2, mockClient.executeCalls)
+            assertEquals(1_000L, testScheduler.currentTime - startTime)
+        }
+    }
+
+    @Test
+    fun testJitterBelowMaxDelayRetainsItsRange() = runTest {
+        val mockClient = MockLLMClient(
+            executeResponse = testResponse,
+            failuresBeforeSuccess = 1,
+            failureMessage = "Error: 503"
+        )
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(maxAttempts = 2, initialDelay = 100.milliseconds, maxDelay = 1.seconds, jitterFactor = 1.0)
+        )
+
+        val startTime = testScheduler.currentTime
+        val result = retryingClient.execute(testPrompt, testModel, emptyList())
+
+        assertEquals(testResponse, result)
+        assertEquals(2, mockClient.executeCalls)
+        assertTrue(testScheduler.currentTime - startTime in 100L..199L)
+    }
+
+    @Test
     fun testJitterFactorZeroRetriesWithoutThrowing() = runTest {
         // jitterFactor = 0.0 is documented as a valid "no jitter" setting and accepted by
         // RetryConfig's require(). Before the fix, calculateDelay called Random.nextDouble(0.0, 0.0)
@@ -559,10 +602,12 @@ class RetryingLLMClientTest {
             RetryConfig(maxAttempts = 2, initialDelay = 10.milliseconds, jitterFactor = 0.0)
         )
 
+        val startTime = testScheduler.currentTime
         val result = retryingClient.execute(testPrompt, testModel, emptyList())
 
         assertEquals(testResponse, result)
         assertEquals(2, mockClient.executeCalls)
+        assertEquals(10L, testScheduler.currentTime - startTime)
     }
 
     @Test
