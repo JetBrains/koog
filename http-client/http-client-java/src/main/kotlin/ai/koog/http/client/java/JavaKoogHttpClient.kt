@@ -8,10 +8,15 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
@@ -21,6 +26,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.minutes
 
@@ -32,6 +38,8 @@ import kotlin.time.Duration.Companion.minutes
  * configurability for underlying Java HttpClient instances.
  *
  * SSE dispatches complete UTF-8 data events, preserving multiline payloads and ignoring event metadata.
+ * Streaming delivery suspends when collectors are slow. Cancellation interrupts pending requests and
+ * closes response bodies, including idle streams.
  *
  * @property clientName The name of the client, used for logging and traceability.
  * @property logger A logging instance of type KLogger for recording client-related events and errors.
@@ -190,73 +198,34 @@ public class JavaKoogHttpClient internal constructor(
             // Note: "Connection" header is restricted in Java HttpClient and managed automatically
             .build()
 
-        try {
-            val response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofLines())
-
-            if (response.statusCode() !in 200..299) {
-                close(
-                    KoogHttpClientException(
-                        clientName = clientName,
-                        statusCode = response.statusCode(),
-                    )
-                )
-                return@callbackFlow
-            }
-
+        readStreamingResponse(httpRequest, HttpResponse.BodyHandlers.ofInputStream()) { body ->
+            val reader = body.bufferedReader(Charsets.UTF_8)
             logger.debug { "SSE connection opened for $clientName" }
-
             val data = StringBuilder()
             var firstLine = true
-            response.body().forEach { rawLine ->
-                try {
-                    val line = if (firstLine) rawLine.removePrefix("\uFEFF") else rawLine
-                    firstLine = false
-                    if (line.isEmpty()) {
-                        if (data.isNotEmpty()) {
-                            val payload = data.dropLast(1).toString()
-                            data.setLength(0)
-                            if (dataFilter(payload)) {
-                                processStreamingChunk(decodeStreamingResponse(payload))?.let { trySend(it) }
-                            }
-                        }
-                    } else if (!line.startsWith(":")) {
-                        val colon = line.indexOf(':')
-                        val field = if (colon < 0) line else line.substring(0, colon)
-                        if (field == "data") {
-                            val value = if (colon < 0) "" else line.substring(colon + 1).removePrefix(" ")
-                            data.append(value).append('\n')
+            while (isActive) {
+                val rawLine = reader.readLine() ?: break
+                val line = if (firstLine) rawLine.removePrefix("\uFEFF") else rawLine
+                firstLine = false
+                if (line.isEmpty()) {
+                    if (data.isNotEmpty()) {
+                        val payload = data.dropLast(1).toString()
+                        data.setLength(0)
+                        if (dataFilter(payload)) {
+                            processStreamingChunk(decodeStreamingResponse(payload))?.let { send(it) }
                         }
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    close(
-                        KoogHttpClientException(
-                            clientName = clientName,
-                            message = "Error processing SSE event: ${e.message}",
-                            cause = e
-                        )
-                    )
+                } else if (!line.startsWith(":")) {
+                    val colon = line.indexOf(':')
+                    val field = if (colon < 0) line else line.substring(0, colon)
+                    if (field == "data") {
+                        val value = if (colon < 0) "" else line.substring(colon + 1).removePrefix(" ")
+                        data.append(value).append('\n')
+                    }
                 }
             }
-
             // Pending data without a terminating empty line belongs to an incomplete event.
             logger.debug { "SSE connection closed for $clientName" }
-            close()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            close(
-                KoogHttpClientException(
-                    clientName = clientName,
-                    message = "Exception during streaming: ${e.message}",
-                    cause = e
-                )
-            )
-        }
-
-        awaitClose {
-            // Cleanup if needed
         }
     }
 
@@ -282,51 +251,64 @@ public class JavaKoogHttpClient internal constructor(
             .POST(HttpRequest.BodyPublishers.ofString(preparedRequestBody.body))
             .build()
 
-        val responseFuture = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofLines())
+        readStreamingResponse(httpRequest, HttpResponse.BodyHandlers.ofLines()) { lines ->
+            logger.debug { "Lines flow opened for $clientName" }
+            val iterator = lines.iterator()
+            while (isActive && iterator.hasNext()) {
+                val line = iterator.next()
+                if (line.isBlank()) continue
+                send(line)
+            }
+            logger.debug { "Lines flow closed for $clientName" }
+        }
+    }
+
+    private suspend fun <O : Any, B : AutoCloseable> ProducerScope<O>.readStreamingResponse(
+        request: HttpRequest,
+        bodyHandler: HttpResponse.BodyHandler<B>,
+        process: suspend ProducerScope<O>.(B) -> Unit,
+    ) {
+        val body = AtomicReference<B?>()
         val readerJob = launch(Dispatchers.SuitableForIO) {
             try {
-                val response = responseFuture.get()
-                if (response.statusCode() !in 200..299) {
-                    close(
-                        KoogHttpClientException(
-                            clientName = clientName,
-                            statusCode = response.statusCode(),
-                        )
-                    )
-                    return@launch
-                }
-
-                logger.debug { "Lines flow opened for $clientName" }
-                response.body().use { lines ->
-                    val iterator = lines.iterator()
-                    while (iterator.hasNext()) {
-                        val line = iterator.next()
-                        if (line.isBlank()) continue
-                        if (trySend(line).isClosed) {
-                            responseFuture.cancel(true)
-                            return@launch
-                        }
+                // Keep ownership if cancellation races with receiving the response headers.
+                val response = runInterruptible {
+                    httpClient.send(request, bodyHandler).also {
+                        body.set(it.body())
                     }
                 }
-
-                logger.debug { "Lines flow closed for $clientName" }
+                if (response.statusCode() !in 200..299) {
+                    throw KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response.statusCode(),
+                    )
+                }
+                process(response.body())
                 close()
             } catch (e: CancellationException) {
+                // Callback cancellation must also terminate the producer waiting in awaitClose.
+                this@readStreamingResponse.cancel(e)
                 throw e
+            } catch (e: KoogHttpClientException) {
+                coroutineContext.ensureActive()
+                close(e)
             } catch (e: Exception) {
+                coroutineContext.ensureActive()
                 close(
                     KoogHttpClientException(
                         clientName = clientName,
                         message = "Exception during streaming: ${e.message}",
-                        cause = e
+                        cause = e,
                     )
                 )
+            } finally {
+                body.getAndSet(null)?.close()
             }
         }
-
         awaitClose {
-            responseFuture.cancel(true)
             readerJob.cancel()
+            // JDK body reads can ignore interruption, so closing the body releases an idle reader.
+            body.getAndSet(null)?.close()
         }
     }
 
