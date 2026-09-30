@@ -96,7 +96,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
                     val delay = calculateDelay(attempt, e)
                     logger.warn {
                         "Stream connection failed before first token (attempt ${attempt + 1}/${config.maxAttempts}). " +
-                            "Retrying in ${delay.inWholeMilliseconds}ms. Error: ${e.message}"
+                            "Retrying in ${delay.inWholeMilliseconds}ms."
                     }
                     delay(delay)
                 }
@@ -171,7 +171,7 @@ public class RetryingLLMClient @JvmOverloads constructor(
                 val delay = calculateDelay(attempt, e)
                 logger.warn {
                     "$operation failed (attempt ${attempt + 1}/${config.maxAttempts}). " +
-                        "Retrying in ${delay.inWholeMilliseconds}ms. Error: ${e.message}"
+                        "Retrying in ${delay.inWholeMilliseconds}ms."
                 }
                 delay(delay)
             }
