@@ -99,6 +99,11 @@ val chatParams = OpenAIChatParams(
 )
 ```
 
+For OpenAI-compatible providers, configure arbitrary chat template arguments with
+`OpenAIChatParams().withChatTemplateKwargs(buildJsonObject { put("enable_thinking", false) })`.
+The object is sent unchanged as `chat_template_kwargs`. Passing null removes the arguments.
+Other additional properties and parameter values are preserved.
+
 #### OpenAI Responses API Parameters
 
 For the Responses API, use `OpenAIResponsesParams`:
