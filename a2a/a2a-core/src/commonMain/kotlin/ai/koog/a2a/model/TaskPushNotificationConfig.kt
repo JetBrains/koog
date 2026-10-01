@@ -31,6 +31,6 @@ public data class TaskPushNotificationConfig(
  */
 @Serializable
 public data class AuthenticationInfo(
-    public val schemes: List<String>,
+    public val schemes: List<String>, // TODO rename to `scheme`
     public val credentials: String? = null,
 )
