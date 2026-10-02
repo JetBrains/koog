@@ -29,6 +29,12 @@ public interface McpToolDescriptorParser {
 
 /**
  * Default implementation of [McpToolDescriptorParser].
+ *
+ * Supports `oneOf` alternatives with disjoint JSON types by representing them as
+ * [ToolParameterType.AnyOf]. For disjoint alternatives, matching at least one alternative
+ * also means matching exactly one. Overlapping alternatives and sibling constraints on
+ * `oneOf` are rejected because the descriptor cannot express their intersection or exclusivity.
+ * This parser describes parameter types; it is not a full JSON Schema validator.
  */
 public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     // Maximum depth of recursive parsing
@@ -61,7 +67,12 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         )
     }
 
-    private fun parseParameterType(element: JsonObject, defs: JsonObject?, depth: Int = 0): ToolParameterType {
+    private fun parseParameterType(
+        element: JsonObject,
+        defs: JsonObject?,
+        depth: Int = 0,
+        inOneOf: Boolean = false
+    ): ToolParameterType {
         if (depth > MAX_DEPTH) {
             throw IllegalArgumentException(
                 "Maximum recursion depth ($MAX_DEPTH) exceeded. " +
@@ -69,11 +80,31 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             )
         }
 
+        if ("oneOf" in element) {
+            return parseOneOf(element, defs, depth)
+        }
+
+        if (inOneOf) {
+            val typeArray = element["type"] as? JsonArray
+            if (typeArray != null) {
+                require(typeArray.isNotEmpty() && typeArray.all { it is JsonPrimitive && it.isString }) {
+                    "oneOf alternative type arrays must contain type names"
+                }
+                val typeNames = typeArray.map { it.jsonPrimitive.content }
+                require(typeNames.distinct().size == typeNames.size) {
+                    "oneOf alternative type arrays must contain unique type names"
+                }
+                require(typeNames.count { it != "null" } <= 1) {
+                    "oneOf alternatives with multiple non-null types cannot be represented"
+                }
+            }
+        }
+
         // Handle $ref resolution
         val ref = element["\$ref"]?.jsonPrimitive?.content
         if (ref != null) {
             val resolved = resolveRef(ref, defs)
-            return parseParameterType(resolved, defs, depth + 1)
+            return parseParameterType(resolved, defs, depth + 1, inOneOf)
         }
 
         // Extract the type - can be a string or an array of strings (JSON Schema type-array)
@@ -82,6 +113,9 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         if (typeStr == null) {
             val anyOf = element["anyOf"]?.jsonArray
             if (anyOf != null) {
+                require(!inOneOf || anyOf.isNotEmpty()) {
+                    "anyOf within oneOf must contain at least one alternative"
+                }
                 /**
                  * anyOf with multiple types.
                  * Schema example:
@@ -100,7 +134,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                         ToolParameterDescriptor(
                             name = "",
                             description = it["description"]?.jsonPrimitive?.content.orEmpty(),
-                            type = parseParameterType(it.jsonObject, defs)
+                            type = parseParameterType(it.jsonObject, defs, depth + 1, inOneOf)
                         )
                     }.toTypedArray()
                 )
@@ -149,7 +183,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 val items = element["items"]?.jsonObject
                     ?: throw IllegalArgumentException("Array type parameters must have items property")
 
-                val itemType = parseParameterType(items, defs, depth + 1)
+                val itemType = parseParameterType(items, defs, depth + 1, inOneOf)
 
                 ToolParameterType.List(itemsType = itemType)
             }
@@ -164,7 +198,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                         ToolParameterDescriptor(
                             name,
                             description,
-                            parseParameterType(property.jsonObject, defs, depth + 1)
+                            parseParameterType(property.jsonObject, defs, depth + 1, inOneOf)
                         )
                     }
                 } ?: emptyList()
@@ -185,7 +219,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     when (val ap = element.getValue("additionalProperties")) {
                         // Empty schema `{}` is equivalent to `true`: allow any additional property
                         // without a type constraint. Recursing would fail on missing `type`.
-                        is JsonObject -> if (ap.isEmpty()) null else parseParameterType(ap, defs, depth + 1)
+                        is JsonObject -> if (ap.isEmpty()) null else parseParameterType(ap, defs, depth + 1, inOneOf)
 
                         else -> null
                     }
@@ -220,6 +254,59 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         }
     }
 
+    private fun parseOneOf(element: JsonObject, defs: JsonObject?, depth: Int): ToolParameterType {
+        val annotations = setOf(
+            "oneOf", "title", "description", "\$comment", "default", "examples", "deprecated", "readOnly", "writeOnly"
+        )
+        val siblingConstraints = element.keys - annotations
+        require(siblingConstraints.isEmpty()) {
+            "oneOf sibling constraints cannot be represented: ${siblingConstraints.joinToString()}"
+        }
+
+        val alternatives = element["oneOf"] as? JsonArray
+            ?: throw IllegalArgumentException("oneOf must be a JSON array")
+        require(alternatives.isNotEmpty()) { "oneOf must contain at least one alternative" }
+
+        val types = alternatives.map { alternative ->
+            require(alternative is JsonObject) { "oneOf alternatives must be JSON objects" }
+            ToolParameterDescriptor(
+                name = "",
+                description = alternative["description"]?.jsonPrimitive?.content.orEmpty(),
+                type = parseParameterType(alternative, defs, depth + 1, inOneOf = true)
+            )
+        }
+
+        val seenTypes = mutableSetOf<String>()
+        for (type in types) {
+            val jsonTypes = possibleJsonTypes(type.type)
+            require(jsonTypes.none { it in seenTypes }) {
+                "oneOf alternatives must have disjoint JSON types; overlapping alternatives cannot be represented"
+            }
+            seenTypes.addAll(jsonTypes)
+        }
+
+        return ToolParameterType.AnyOf(types.toTypedArray())
+    }
+
+    private fun possibleJsonTypes(type: ToolParameterType): Set<String> = when (type) {
+        ToolParameterType.String -> setOf("string")
+
+        ToolParameterType.Null -> setOf("null")
+
+        ToolParameterType.Integer, ToolParameterType.Float -> setOf("number")
+
+        ToolParameterType.Boolean -> setOf("boolean")
+
+        is ToolParameterType.List -> setOf("array")
+
+        is ToolParameterType.Object -> setOf("object")
+
+        is ToolParameterType.AnyOf -> type.types.flatMap { possibleJsonTypes(it.type) }.toSet()
+
+        // Enum entries have already been stringified, so their original JSON types are unknown.
+        is ToolParameterType.Enum -> setOf("string", "null", "number", "boolean", "array", "object")
+    }
+
     /**
      * Parses the JSON Schema `type` keyword, which can be either a single string
      * (e.g. `"string"`) or an array of strings (e.g. `["string", "null"]`).
@@ -230,6 +317,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
      */
     private fun parseTypeInfo(typeElement: JsonElement?): TypeInfo = when (typeElement) {
         is JsonPrimitive -> TypeInfo(typeStr = typeElement.content, isNullableTypeArray = false)
+
         is JsonArray -> {
             val types = typeElement.map { it.jsonPrimitive.content }
             val nonNullTypes = types.filter { it != "null" }
@@ -238,6 +326,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 isNullableTypeArray = types.size != nonNullTypes.size,
             )
         }
+
         else -> TypeInfo(typeStr = null, isNullableTypeArray = false)
     }
 
