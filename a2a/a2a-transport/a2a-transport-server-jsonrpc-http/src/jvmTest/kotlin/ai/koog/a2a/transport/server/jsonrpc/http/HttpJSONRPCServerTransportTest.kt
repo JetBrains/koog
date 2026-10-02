@@ -18,7 +18,9 @@ import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SecurityRequirement
 import ai.koog.a2a.model.SendMessageRequest
+import ai.koog.a2a.model.StringList
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -74,9 +76,9 @@ class HttpJSONRPCServerTransportTest {
             capabilities = AgentCapabilities(),
             defaultInputModes = listOf("text/plain"),
             defaultOutputModes = listOf("text/plain"),
-            security = listOf(
-                mapOf("oauth" to listOf("read")),
-                mapOf("api-key" to listOf("mtls")),
+            securityRequirements = listOf(
+                SecurityRequirement(mapOf("oauth" to StringList(listOf("read")))),
+                SecurityRequirement(mapOf("api-key" to StringList(listOf("mtls")))),
             ),
             skills = listOf(
                 AgentSkill(

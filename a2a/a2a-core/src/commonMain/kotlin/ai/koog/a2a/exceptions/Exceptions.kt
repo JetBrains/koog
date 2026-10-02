@@ -19,8 +19,42 @@ public object A2AErrorCodes {
     public const val UNSUPPORTED_OPERATION: Int = -32004
     public const val CONTENT_TYPE_NOT_SUPPORTED: Int = -32005
     public const val INVALID_AGENT_RESPONSE: Int = -32006
-    public const val AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED: Int = -32007
+    public const val EXTENDED_AGENT_CARD_NOT_CONFIGURED: Int = -32007
+    public const val EXTENSION_SUPPORT_REQUIRED: Int = -32008
     public const val VERSION_NOT_SUPPORTED: Int = -32009
+}
+
+/**
+ * `google.rpc.ErrorInfo.reason` values for A2A errors: the UPPER_SNAKE_CASE error name without the `Error` suffix.
+ * They are used together with the [ErrorInfo.domain] `a2a-protocol.org`.
+ */
+public object A2AErrorReasons {
+    public const val TASK_NOT_FOUND: String = "TASK_NOT_FOUND"
+    public const val TASK_NOT_CANCELABLE: String = "TASK_NOT_CANCELABLE"
+    public const val PUSH_NOTIFICATION_NOT_SUPPORTED: String = "PUSH_NOTIFICATION_NOT_SUPPORTED"
+    public const val UNSUPPORTED_OPERATION: String = "UNSUPPORTED_OPERATION"
+    public const val CONTENT_TYPE_NOT_SUPPORTED: String = "CONTENT_TYPE_NOT_SUPPORTED"
+    public const val INVALID_AGENT_RESPONSE: String = "INVALID_AGENT_RESPONSE"
+    public const val EXTENDED_AGENT_CARD_NOT_CONFIGURED: String = "EXTENDED_AGENT_CARD_NOT_CONFIGURED"
+    public const val EXTENSION_SUPPORT_REQUIRED: String = "EXTENSION_SUPPORT_REQUIRED"
+    public const val VERSION_NOT_SUPPORTED: String = "VERSION_NOT_SUPPORTED"
+
+    /**
+     * Returns the [ErrorInfo.reason] for the given A2A error [errorCode], or `null` if the protocol defines none
+     * (e.g. for the standard JSON-RPC error codes).
+     */
+    public fun forCode(errorCode: Int): String? = when (errorCode) {
+        A2AErrorCodes.TASK_NOT_FOUND -> TASK_NOT_FOUND
+        A2AErrorCodes.TASK_NOT_CANCELABLE -> TASK_NOT_CANCELABLE
+        A2AErrorCodes.PUSH_NOTIFICATION_NOT_SUPPORTED -> PUSH_NOTIFICATION_NOT_SUPPORTED
+        A2AErrorCodes.UNSUPPORTED_OPERATION -> UNSUPPORTED_OPERATION
+        A2AErrorCodes.CONTENT_TYPE_NOT_SUPPORTED -> CONTENT_TYPE_NOT_SUPPORTED
+        A2AErrorCodes.INVALID_AGENT_RESPONSE -> INVALID_AGENT_RESPONSE
+        A2AErrorCodes.EXTENDED_AGENT_CARD_NOT_CONFIGURED -> EXTENDED_AGENT_CARD_NOT_CONFIGURED
+        A2AErrorCodes.EXTENSION_SUPPORT_REQUIRED -> EXTENSION_SUPPORT_REQUIRED
+        A2AErrorCodes.VERSION_NOT_SUPPORTED -> VERSION_NOT_SUPPORTED
+        else -> null
+    }
 }
 
 /**
@@ -31,6 +65,12 @@ public sealed class A2AException(
     public val errorCode: Int,
     public val details: List<ErrorData>,
 ) : Exception(message) {
+    /**
+     * The `google.rpc.ErrorInfo.reason` value for this error as defined by the A2A protocol
+     * (e.g. `TASK_NOT_FOUND`), or `null` if the protocol defines none for this error.
+     */
+    public val reason: String? get() = A2AErrorReasons.forCode(errorCode)
+
     public companion object {
         /**
          * Create appropriate [A2AException] based on the provided errorCode.
@@ -53,7 +93,8 @@ public sealed class A2AException(
                 A2AErrorCodes.UNSUPPORTED_OPERATION -> A2AUnsupportedOperationException(message, details)
                 A2AErrorCodes.CONTENT_TYPE_NOT_SUPPORTED -> A2AContentTypeNotSupportedException(message, details)
                 A2AErrorCodes.INVALID_AGENT_RESPONSE -> A2AInvalidAgentResponseException(message, details)
-                A2AErrorCodes.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED -> A2AAuthenticatedExtendedCardNotConfiguredException(message, details)
+                A2AErrorCodes.EXTENDED_AGENT_CARD_NOT_CONFIGURED -> A2AExtendedAgentCardNotConfiguredException(message, details)
+                A2AErrorCodes.EXTENSION_SUPPORT_REQUIRED -> A2AExtensionSupportRequiredException(message, details)
                 A2AErrorCodes.VERSION_NOT_SUPPORTED -> A2AVersionNotSupportedException(message, details)
                 else -> A2AUnknownException(message, errorCode, details)
             }
@@ -168,12 +209,21 @@ public class A2AInvalidAgentResponseException(
 ) : A2AServerException(message, A2AErrorCodes.INVALID_AGENT_RESPONSE, details)
 
 /**
- * The agent does not have an Authenticated Extended Card configured.
+ * The agent declares support for the extended agent card (`capabilities.extendedAgentCard`),
+ * but does not have one configured.
  */
-public class A2AAuthenticatedExtendedCardNotConfiguredException(
-    message: String = "Authenticated Extended Card not configured",
+public class A2AExtendedAgentCardNotConfiguredException(
+    message: String = "Extended agent card not configured",
     details: List<ErrorData> = emptyList(),
-) : A2AServerException(message, A2AErrorCodes.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED, details)
+) : A2AServerException(message, A2AErrorCodes.EXTENDED_AGENT_CARD_NOT_CONFIGURED, details)
+
+/**
+ * The client did not declare support for an extension that the agent marked as required.
+ */
+public class A2AExtensionSupportRequiredException(
+    message: String = "Extension support required",
+    details: List<ErrorData> = emptyList(),
+) : A2AServerException(message, A2AErrorCodes.EXTENSION_SUPPORT_REQUIRED, details)
 
 /**
  * The agent doesn't support provided A2A protocol version.

@@ -6,7 +6,10 @@ import kotlinx.serialization.Serializable
  * A container associating a push notification configuration with a specific task.
  *
  * @property url The callback URL where the agent should send push notifications.
- * @property taskId The unique identifier (e.g. UUID) of the task.
+ * @property taskId The unique identifier (e.g. UUID) of the task this configuration is associated with.
+ * Required when creating a configuration with `CreateTaskPushNotificationConfig`. Should be omitted when the
+ * configuration is sent inline in [SendMessageConfiguration.taskPushNotificationConfig], because the task may not exist
+ * yet: the server associates the configuration with the task it creates or continues.
  * @property id A unique identifier (e.g. UUID) for the push notification configuration, set by the client to support multiple notification callbacks.
  * @property token A unique token for this task or session to validate incoming push notifications.
  * @property authentication Authentication details for the agent to use when calling the notification URL.
@@ -16,7 +19,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class TaskPushNotificationConfig(
     public val url: String,
-    public val taskId: String,
+    public val taskId: String? = null,
     public val id: String? = null,
     public val token: String? = null,
     public val authentication: AuthenticationInfo? = null,

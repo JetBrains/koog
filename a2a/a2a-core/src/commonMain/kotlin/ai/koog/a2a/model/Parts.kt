@@ -3,6 +3,7 @@ package ai.koog.a2a.model
 import ai.koog.a2a.serialization.ByteArrayAsBase64Serializer
 import ai.koog.a2a.serialization.PartSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -101,11 +102,11 @@ public data class FileUrlPart(
 /**
  * Represents a structured data part (e.g., JSON).
  *
- * @property data The structured data content.
+ * @property data The structured data content. Can be any JSON value (`google.protobuf.Value`), not only an object.
  */
 @Serializable
 public data class DataPart(
-    public val data: JsonObject,
+    public val data: JsonElement,
     override val filename: String? = null,
     override val mediaType: String? = null,
     override val metadata: JsonObject? = null,

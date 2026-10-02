@@ -123,7 +123,7 @@ public interface ClientTransport : AutoCloseable {
     ): TaskPushNotificationConfig
 
     /**
-     * Calls [ListTaskPushNotificationConfigs](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
+     * Calls [ListTaskPushNotificationConfigs](https://a2a-protocol.org/v1.0.1/specification/#1049-listtaskpushnotificationconfigs)
      *
      * @throws A2AException if server returned an error.
      */

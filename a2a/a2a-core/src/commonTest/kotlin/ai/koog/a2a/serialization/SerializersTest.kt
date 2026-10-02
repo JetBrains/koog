@@ -32,13 +32,13 @@ class SerializersTest {
     @Test
     fun testPropertyWrappingPolymorphicSerializer() {
         // SecuritySchemeSerializer is a real PropertyWrappingPolymorphicSerializer; the variant is wrapped in a single-property object.
-        val scheme: SecurityScheme = APIKeySecurityScheme(`in` = In.Header, name = "Authorization")
+        val scheme: SecurityScheme = APIKeySecurityScheme(location = In.Header, name = "Authorization")
 
         //language=JSON
         val expectedJson = """
             {
                 "apiKeySecurityScheme": {
-                    "in": "header",
+                    "location": "header",
                     "name": "Authorization"
                 }
             }

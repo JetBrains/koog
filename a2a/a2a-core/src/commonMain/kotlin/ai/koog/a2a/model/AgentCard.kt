@@ -19,9 +19,8 @@ import kotlin.jvm.JvmInline
  *
  *   Best practices:
  *   - SHOULD include all supported transports
- *   - SHOULD include an entry matching the main 'url' and 'preferredTransport'
  *   - MAY reuse URLs if multiple transports are available at the same endpoint
- *   - MUST accurately declare the transport available at each URL.
+ *   - MUST accurately declare the protocol binding and protocol version available at each URL.
  *
  *   Clients can select any interface from this list based on their transport capabilities and preferences, enabling transport
  *   negotiation and fallback scenarios.
@@ -39,13 +38,11 @@ import kotlin.jvm.JvmInline
  * @property capabilities A declaration of optional capabilities supported by the agent.
  *
  * @property securitySchemes A declaration of the security schemes available to authorize requests. The key is the scheme name.
- *   Follows the OpenAPI 3.0 Security Scheme Object.
+ *   Follows the OpenAPI Security Scheme Object.
  *
- * @property security A list of security requirement objects that apply to all agent interactions. Each object lists security schemes that can be used.
- *   Follows the OpenAPI 3.0 Security Requirement Object. This list can be seen as an OR of ANDs. Each object in the list describes one possible set
- *   of security requirements that must be present on a request. This allows specifying, for example, "callers must either use OAuth OR an API Key AND mTLS."
- *
- *   Examples: [{"oauth": ["read"]}, {"api-key": [], "mtls": []}].
+ * @property securityRequirements A list of security requirements that apply to all agent interactions. This list can be seen as an OR of ANDs:
+ *   each [SecurityRequirement] describes one possible set of security schemes that must be present on a request. This allows specifying,
+ *   for example, "callers must either use OAuth OR an API Key AND mTLS."
  *
  * @property defaultInputModes Default set of supported input MIME types for all skills, which can be overridden on a per-skill basis.
  *
@@ -69,7 +66,7 @@ public data class AgentCard(
     public val documentationUrl: String? = null,
     public val capabilities: AgentCapabilities,
     public val securitySchemes: SecuritySchemes? = null,
-    public val security: Security? = null,
+    public val securityRequirements: List<SecurityRequirement>? = null,
     public val signatures: List<AgentCardSignature>? = null
 )
 
@@ -89,9 +86,9 @@ public value class TransportProtocol(public val value: String) {
         public val JSONRPC: TransportProtocol = TransportProtocol("JSONRPC")
 
         /**
-         * HTTP+JSON/REST protocol.
+         * HTTP+JSON protocol.
          */
-        public val HTTP_JSON_REST: TransportProtocol = TransportProtocol("HTTP+JSON/REST")
+        public val HTTP_JSON: TransportProtocol = TransportProtocol("HTTP+JSON")
 
         /**
          * GRPC protocol.
@@ -165,7 +162,7 @@ public data class AgentCapabilities(
  */
 @Serializable
 public data class AgentExtension(
-    public val uri: String,
+    public val uri: String? = null,
     public val description: String? = null,
     public val required: Boolean? = null,
     public val params: Map<String, JsonElement>? = null
@@ -173,34 +170,35 @@ public data class AgentExtension(
 
 /**
  * A declaration of the security schemes available to authorize requests. The key is the scheme name. The value is the
- * declaration of the security scheme object, which follows the OpenAPI 3.0 Security Scheme Object.
+ * declaration of the security scheme object, which follows the OpenAPI Security Scheme Object.
  */
 public typealias SecuritySchemes = Map<String, SecurityScheme>
 
 /**
- * A list of alternative security requirements (a logical OR). To authorize a request, a client must satisfy one of the
- * [SecurityRequirement]s in this list.
+ * A list of strings. Used as the value of [SecurityRequirement.schemes], where it holds the required scopes.
  *
- * For example, `[{"oauth": ["read"]}, {"apiKey": [], "mtls": []}]` means a client can use either OAuth with the "read" scope
- * or both an API key and mTLS.
- *
- * @see [https://swagger.io/specification/#security-requirement-object]
+ * @property list The individual string values.
  */
-public typealias Security = List<SecurityRequirement>
+@Serializable
+public data class StringList(
+    public val list: List<String> = emptyList(),
+)
 
 /**
- * A set of security schemes that must be satisfied together (a logical AND). The key is a security scheme name, and the
- * value is a list of required scopes.
+ * A set of security schemes that must be satisfied together (a logical AND).
  *
  * For example, `{"apiKey": [], "mtls": []}` requires both an API key and mTLS.
  *
- * @see [https://swagger.io/specification/#security-requirement-object]
+ * @property schemes A map of security scheme names (keys of [AgentCard.securitySchemes]) to the required scopes.
  */
-public typealias SecurityRequirement = Map<String, List<String>>
+@Serializable
+public data class SecurityRequirement(
+    public val schemes: Map<String, StringList> = emptyMap(),
+)
 
 /**
  * Defines a security scheme that can be used to secure an agent's endpoints.
- * This is a discriminated union type based on the OpenAPI 3.0 Security Scheme Object.
+ * This is a discriminated union type based on the OpenAPI Security Scheme Object.
  *
  * @see [https://swagger.io/specification/#security-scheme-object]
  */
@@ -211,13 +209,12 @@ public sealed interface SecurityScheme
  * Defines a security scheme using an API key.
  *
  * @property description An optional description for the security scheme.
- * @property in The location of the API key.
+ * @property location The location of the API key.
  * @property name The name of the header, query, or cookie parameter to be used.
  */
 @Serializable
 public data class APIKeySecurityScheme(
-    @SerialName("in")
-    public val `in`: In,
+    public val location: In,
     public val name: String,
     public val description: String? = null,
 ) : SecurityScheme {
@@ -340,8 +337,8 @@ public data class ClientCredentialsOAuthFlow(
 @Deprecated("Deprecated in A2A 1.0. Use Authorization Code + PKCE instead")
 @Serializable
 public data class ImplicitOAuthFlow(
-    public val authorizationUrl: String,
-    override val scopes: Map<String, String>,
+    public val authorizationUrl: String? = null,
+    override val scopes: Map<String, String> = emptyMap(),
     override val refreshUrl: String? = null
 ) : OAuthFlow {
     public companion object {
@@ -357,8 +354,8 @@ public data class ImplicitOAuthFlow(
 @Deprecated("Deprecated in A2A 1.0. Use Authorization Code + PKCE instead")
 @Serializable
 public data class PasswordOAuthFlow(
-    public val tokenUrl: String,
-    override val scopes: Map<String, String>,
+    public val tokenUrl: String? = null,
+    override val scopes: Map<String, String> = emptyMap(),
     override val refreshUrl: String? = null
 ) : OAuthFlow {
     public companion object {
@@ -374,7 +371,7 @@ public data class PasswordOAuthFlow(
  * @property deviceAuthorizationUrl The device authorization endpoint URL.
  * @property tokenUrl The token URL to be used for this flow.
  * @property scopes The available scopes for the OAuth2 security scheme.
- * @property refreshUrl The available scopes for the OAuth2 security scheme.
+ * @property refreshUrl The URL to be used for obtaining refresh tokens.
  */
 @Serializable
 public data class DeviceCodeOAuthFlow(
@@ -439,11 +436,9 @@ public data class MutualTLSSecurityScheme(
  *
  * @property outputModes The set of supported output MIME types for this skill, overriding the agent's defaults.
  *
- * @property security Security schemes necessary for the agent to leverage this skill. As in the overall AgentCard.security,
- *   this list represents a logical OR of security requirement objects. Each object is a set of security schemes that must be
+ * @property securityRequirements Security requirements necessary for the agent to leverage this skill. As in [AgentCard.securityRequirements],
+ *   this list represents a logical OR of [SecurityRequirement]s. Each one is a set of security schemes that must be
  *   used together (a logical AND).
- *
- *   Examples: [{"google": ["oidc"]}].
  */
 @Serializable
 public data class AgentSkill(
@@ -454,7 +449,7 @@ public data class AgentSkill(
     public val examples: List<String>? = null,
     public val inputModes: List<String>? = null,
     public val outputModes: List<String>? = null,
-    public val security: Security? = null
+    public val securityRequirements: List<SecurityRequirement>? = null
 )
 
 /**

@@ -33,5 +33,4 @@ public sealed interface ResponseEvent : Event
 @Serializable(with = TaskEventSerializer::class)
 public sealed interface TaskEvent : Event {
     override val taskId: String
-    override val contextId: String
 }

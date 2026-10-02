@@ -87,7 +87,7 @@ abstract class BaseA2AProtocolTest {
                 extendedAgentCard = true,
             ),
             securitySchemes = null,
-            security = null,
+            securityRequirements = null,
             defaultInputModes = listOf("text"),
             defaultOutputModes = listOf("text"),
             skills = listOf(
@@ -99,7 +99,7 @@ abstract class BaseA2AProtocolTest {
                     examples = listOf("hi", "hello world"),
                     inputModes = null,
                     outputModes = null,
-                    security = null
+                    securityRequirements = null
                 ),
                 AgentSkill(
                     id = "super_hello_world",
@@ -109,7 +109,7 @@ abstract class BaseA2AProtocolTest {
                     examples = listOf("super hi", "give me a super hello"),
                     inputModes = null,
                     outputModes = null,
-                    security = null
+                    securityRequirements = null
                 )
             ),
             signatures = null

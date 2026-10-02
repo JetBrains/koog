@@ -31,6 +31,6 @@ public data class ListTasksResponse(
  */
 @Serializable
 public data class ListTaskPushNotificationConfigsResponse(
-    public val configs: List<TaskPushNotificationConfig>,
+    public val configs: List<TaskPushNotificationConfig> = emptyList(),
     public val nextPageToken: String = "",
 ) : Response

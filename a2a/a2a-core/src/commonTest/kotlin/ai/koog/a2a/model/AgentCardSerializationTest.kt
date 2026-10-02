@@ -20,7 +20,7 @@ class AgentCardSerializationTest {
                 AgentInterface(
                     url = "https://api.example.com/a2a",
                     protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "1.0.0"
+                    protocolVersion = "1.0"
                 )
             ),
             version = "1.0.0",
@@ -46,7 +46,7 @@ class AgentCardSerializationTest {
                     {
                         "url": "https://api.example.com/a2a",
                         "protocolBinding": "JSONRPC",
-                        "protocolVersion": "1.0.0"
+                        "protocolVersion": "1.0"
                     }
                 ],
                 "version": "1.0.0",
@@ -87,17 +87,17 @@ class AgentCardSerializationTest {
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/v1",
                     protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "1.0.0"
+                    protocolVersion = "1.0"
                 ),
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/grpc",
                     protocolBinding = TransportProtocol.GRPC,
-                    protocolVersion = "1.0.0"
+                    protocolVersion = "1.0"
                 ),
                 AgentInterface(
                     url = "https://georoute-agent.example.com/a2a/json",
-                    protocolBinding = TransportProtocol.HTTP_JSON_REST,
-                    protocolVersion = "1.0.0"
+                    protocolBinding = TransportProtocol.HTTP_JSON,
+                    protocolVersion = "1.0"
                 )
             ),
             provider = AgentProvider(
@@ -117,8 +117,10 @@ class AgentCardSerializationTest {
                     openIdConnectUrl = "https://accounts.google.com/.well-known/openid-configuration"
                 )
             ),
-            security = listOf(
-                mapOf("google" to listOf("openid", "profile", "email"))
+            securityRequirements = listOf(
+                SecurityRequirement(
+                    schemes = mapOf("google" to StringList(listOf("openid", "profile", "email")))
+                )
             ),
             defaultInputModes = listOf("application/json", "text/plain"),
             defaultOutputModes = listOf("application/json", "image/png"),
@@ -174,17 +176,17 @@ class AgentCardSerializationTest {
                 {
                     "url": "https://georoute-agent.example.com/a2a/v1",
                     "protocolBinding": "JSONRPC",
-                    "protocolVersion": "1.0.0"
+                    "protocolVersion": "1.0"
                 },
                 {
                     "url": "https://georoute-agent.example.com/a2a/grpc",
                     "protocolBinding": "GRPC",
-                    "protocolVersion": "1.0.0"
+                    "protocolVersion": "1.0"
                 },
                 {
                     "url": "https://georoute-agent.example.com/a2a/json",
-                    "protocolBinding": "HTTP+JSON/REST",
-                    "protocolVersion": "1.0.0"
+                    "protocolBinding": "HTTP+JSON",
+                    "protocolVersion": "1.0"
                 }
             ],
             "version": "1.2.0",
@@ -265,13 +267,17 @@ class AgentCardSerializationTest {
                     }
                 }
             },
-            "security": [
+            "securityRequirements": [
                 {
-                    "google": [
-                        "openid",
-                        "profile",
-                        "email"
-                    ]
+                    "schemes": {
+                        "google": {
+                            "list": [
+                                "openid",
+                                "profile",
+                                "email"
+                            ]
+                        }
+                    }
                 }
             ],
             "signatures": [
@@ -295,19 +301,19 @@ class AgentCardSerializationTest {
     @Test
     fun testTransportProtocolSerialization() {
         val jsonRpc = TransportProtocol.JSONRPC
-        val httpJson = TransportProtocol.HTTP_JSON_REST
+        val httpJson = TransportProtocol.HTTP_JSON
         val grpc = TransportProtocol.GRPC
         val custom = TransportProtocol("CUSTOM")
 
         // Test serialization
         assertEquals("\"JSONRPC\"", TestJson.encodeToString(jsonRpc))
-        assertEquals("\"HTTP+JSON/REST\"", TestJson.encodeToString(httpJson))
+        assertEquals("\"HTTP+JSON\"", TestJson.encodeToString(httpJson))
         assertEquals("\"GRPC\"", TestJson.encodeToString(grpc))
         assertEquals("\"CUSTOM\"", TestJson.encodeToString(custom))
 
         // Test deserialization
         assertEquals(jsonRpc, TestJson.decodeFromString("\"JSONRPC\""))
-        assertEquals(httpJson, TestJson.decodeFromString("\"HTTP+JSON/REST\""))
+        assertEquals(httpJson, TestJson.decodeFromString("\"HTTP+JSON\""))
         assertEquals(grpc, TestJson.decodeFromString("\"GRPC\""))
         assertEquals(custom, TestJson.decodeFromString("\"CUSTOM\""))
     }
@@ -316,7 +322,7 @@ class AgentCardSerializationTest {
     fun testSecuritySchemeSerialization() {
         // API Key Security Scheme
         val apiKeyScheme = APIKeySecurityScheme(
-            `in` = In.Header,
+            location = In.Header,
             name = "Authorization",
             description = "Bearer token"
         )
@@ -324,7 +330,7 @@ class AgentCardSerializationTest {
         val apiKeyJson = """
             {
                 "apiKeySecurityScheme": {
-                    "in": "header",
+                    "location": "header",
                     "name": "Authorization",
                     "description": "Bearer token"
                 }
@@ -504,9 +510,9 @@ class AgentCardSerializationTest {
             examples = listOf("How to test?", "Show me a demo"),
             inputModes = listOf("text/plain", "application/json"),
             outputModes = listOf("text/plain"),
-            security = listOf(
-                mapOf("oauth" to listOf("read", "write")),
-                mapOf("api-key" to emptyList())
+            securityRequirements = listOf(
+                SecurityRequirement(mapOf("oauth" to StringList(listOf("read", "write")))),
+                SecurityRequirement(mapOf("api-key" to StringList()))
             )
         )
 
@@ -531,15 +537,21 @@ class AgentCardSerializationTest {
                 "outputModes": [
                     "text/plain"
                 ],
-                "security": [
+                "securityRequirements": [
                     {
-                        "oauth": [
-                            "read",
-                            "write"
-                        ]
+                        "schemes": {
+                            "oauth": {
+                                "list": [
+                                    "read",
+                                    "write"
+                                ]
+                            }
+                        }
                     },
                     {
-                        "api-key": []
+                        "schemes": {
+                            "api-key": {}
+                        }
                     }
                 ]
             }
@@ -561,6 +573,27 @@ class AgentCardSerializationTest {
         assertEquals(In.Cookie, TestJson.decodeFromString("\"cookie\""))
         assertEquals(In.Header, TestJson.decodeFromString("\"header\""))
         assertEquals(In.Query, TestJson.decodeFromString("\"query\""))
+    }
+
+    @Test
+    fun testAgentExtensionWithoutUriDecodes() {
+        assertEquals(
+            AgentExtension(description = "No uri"),
+            TestJson.decodeFromString<AgentExtension>("""{"description": "No uri"}""")
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun testDeprecatedOAuthFlowsWithOmittedFieldsDecode() {
+        assertEquals(
+            ImplicitOAuthFlow(authorizationUrl = "https://auth.example.com/authorize"),
+            TestJson.decodeFromString<OAuthFlow>("""{"implicit": {"authorizationUrl": "https://auth.example.com/authorize"}}""")
+        )
+        assertEquals(
+            PasswordOAuthFlow(tokenUrl = "https://auth.example.com/token"),
+            TestJson.decodeFromString<OAuthFlow>("""{"password": {"tokenUrl": "https://auth.example.com/token"}}""")
+        )
     }
 
     @Test

@@ -126,10 +126,17 @@ public abstract class PropertyWrappingPolymorphicSerializer<T : Any>(
         val jsonElement = jsonDecoder.decodeJsonElement() as? JsonObject
             ?: throw SerializationException("Expected JSON object")
 
-        val variant = jsonElement.keys.singleOrNull()
-            ?: throw SerializationException("Expected exactly one discriminator property")
-        val actualSerializer = variants[variant]
-            ?: throw SerializationException("Unknown discriminator property: $variant")
+        // Unknown sibling keys are ignored, as ProtoJSON parsers should ignore unrecognized fields.
+        val variant = jsonElement.keys.filter { it in variants }.let { matching ->
+            matching.singleOrNull() ?: throw SerializationException(
+                if (matching.isEmpty()) {
+                    "Unknown ${baseClass.simpleName} variant. Expected one of the ${variants.keys} to be present as property, found ${jsonElement.keys}"
+                } else {
+                    "Ambiguous ${baseClass.simpleName} variant. Multiple discriminator properties found: $matching"
+                }
+            )
+        }
+        val actualSerializer = variants.getValue(variant)
 
         val serializedValue = jsonElement[variant]!!
 
@@ -140,6 +147,7 @@ public abstract class PropertyWrappingPolymorphicSerializer<T : Any>(
 @OptIn(ExperimentalEncodingApi::class)
 public object ByteArrayAsBase64Serializer : KSerializer<ByteArray> {
     private val base64 = Base64.Default
+    private val lenientBase64 = Base64.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL)
 
     override val descriptor: SerialDescriptor
         get() = PrimitiveSerialDescriptor("ByteArrayAsBase64Serializer", PrimitiveKind.STRING)
@@ -153,8 +161,13 @@ public object ByteArrayAsBase64Serializer : KSerializer<ByteArray> {
     }
 
     override fun deserialize(decoder: Decoder): ByteArray {
-        val base64Decoded = decoder.decodeString()
-        return base64.decode(base64Decoded)
+        // ProtoJSON parsers accept both the standard and the URL-safe alphabet, with or without padding.
+        val base64Decoded = decoder.decodeString().replace('-', '+').replace('_', '/')
+        return try {
+            lenientBase64.decode(base64Decoded)
+        } catch (e: IllegalArgumentException) {
+            throw SerializationException("Invalid base64 value", e)
+        }
     }
 }
 
