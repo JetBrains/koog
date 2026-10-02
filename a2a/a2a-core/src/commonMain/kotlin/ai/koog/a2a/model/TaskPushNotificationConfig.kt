@@ -26,11 +26,11 @@ public data class TaskPushNotificationConfig(
 /**
  * Defines authentication details for a push notification endpoint.
  *
- * @property schemes A list of supported authentication schemes (e.g., 'Basic', 'Bearer').
+ * @property scheme A supported authentication scheme (e.g., 'Basic', 'Bearer').
  * @property credentials Optional credentials required by the push notification endpoint.
  */
 @Serializable
 public data class AuthenticationInfo(
-    public val schemes: List<String>, // TODO rename to `scheme`
+    public val scheme: String,
     public val credentials: String? = null,
 )

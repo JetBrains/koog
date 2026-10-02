@@ -1,7 +1,7 @@
 package ai.koog.a2a.test
 
 import ai.koog.a2a.client.A2AClient
-import ai.koog.a2a.exceptions.A2AInternalErrorException
+import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
@@ -302,7 +302,7 @@ abstract class BaseA2AProtocolTest {
                 contextId = "test-context"
             ),
             configuration = SendMessageConfiguration(
-                blocking = false
+                returnImmediately = true,
             )
         )
 
@@ -361,7 +361,7 @@ abstract class BaseA2AProtocolTest {
             url = "https://localhost:3000",
             token = "push-token",
             authentication = AuthenticationInfo(
-                schemes = listOf("bearer"),
+                scheme = "bearer",
                 credentials = "very-secret-credential"
             )
         )
@@ -391,7 +391,7 @@ abstract class BaseA2AProtocolTest {
 
         client.deleteTaskPushNotificationConfig(deletePushConfigRequest)
 
-        shouldThrowExactly<A2AInternalErrorException> {
+        shouldThrowExactly<A2ATaskNotFoundException> {
             client.getTaskPushNotificationConfig(getPushConfigRequest)
         }
     }

@@ -36,12 +36,10 @@ public data class SendMessageRequest(
  * @property acceptedOutputModes A list of output MIME types the client is prepared to accept in the response.
  * @property historyLength The number of most recent messages from the task's history to retrieve in the response.
  * @property taskPushNotificationConfig Configuration for the agent to send push notifications for updates after the initial response.
- * @property blocking If true, the client will wait for the task to complete. The server may reject this if the task is long-running.
  * @property returnImmediately If `true`, the operation returns immediately after creating the task, even if processing is still in progress.
  */
 @Serializable
 public data class SendMessageConfiguration(
-    public val blocking: Boolean? = null,
     public val acceptedOutputModes: List<String>? = null,
     public val historyLength: Int? = null,
     public val taskPushNotificationConfig: TaskPushNotificationConfig? = null,
