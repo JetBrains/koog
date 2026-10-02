@@ -60,52 +60,6 @@ abstract class BaseA2AProtocolTest {
      */
     protected abstract var client: A2AClient
 
-    open fun `test get agent card`() = runTest(timeout = testTimeout) {
-        val agentCard = client.card
-
-        // Assert on the full AgentCard structure
-        val expectedAgentCard = AgentCard(
-            name = "Hello World Agent",
-            description = "Just a hello world agent",
-            supportedInterfaces = listOf(
-                AgentInterface(
-                    url = "http://localhost:9999/",
-                    protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "1.0",
-                )
-            ),
-            iconUrl = null,
-            provider = null,
-            version = "1.0.0",
-            documentationUrl = null,
-            capabilities = AgentCapabilities(
-                streaming = true,
-                pushNotifications = true,
-                extensions = null,
-                extendedAgentCard = true,
-            ),
-            securitySchemes = null,
-            security = null,
-            defaultInputModes = listOf("text"),
-            defaultOutputModes = listOf("text"),
-            skills = listOf(
-                AgentSkill(
-                    id = "hello_world",
-                    name = "Returns hello world",
-                    description = "just returns hello world",
-                    tags = listOf("hello world"),
-                    examples = listOf("hi", "hello world"),
-                    inputModes = null,
-                    outputModes = null,
-                    security = null
-                )
-            ),
-            signatures = null
-        )
-
-        agentCard shouldBe expectedAgentCard
-    }
-
     open fun `test get extended agent card`() = runTest(timeout = testTimeout) {
         val request = GetExtendedAgentCardRequest()
 

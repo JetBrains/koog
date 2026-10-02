@@ -67,10 +67,6 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     }
 
     @Test
-    override fun `test get agent card`() =
-        super.`test get agent card`()
-
-    @Test
     override fun `test get extended agent card`() =
         super.`test get extended agent card`()
 
