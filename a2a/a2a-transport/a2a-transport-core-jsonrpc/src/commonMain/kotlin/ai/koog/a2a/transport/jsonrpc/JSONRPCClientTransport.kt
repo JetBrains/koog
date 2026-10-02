@@ -2,6 +2,7 @@ package ai.koog.a2a.transport.jsonrpc
 
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.ErrorData
+import ai.koog.a2a.exceptions.GenericErrorData
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
@@ -31,7 +32,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -96,8 +101,40 @@ public abstract class JSONRPCClientTransport : ClientTransport {
                 JSONRPCJson.decodeFromJsonElement(serializer, response.result)
 
             is JSONRPCErrorResponse -> response.error.let {
-                val details = JSONRPCJson.decodeFromJsonElement(ListSerializer(ErrorData.serializer()), it.data)
-                throw A2AException.create(it.message, it.code, details)
+                throw A2AException.create(it.message, it.code, toErrorDetails(it.data))
+            }
+        }
+    }
+
+    /**
+     * Convert JSON-RPC error `data` to [A2AException.details].
+     * Malformed `data` must not prevent the typed [A2AException] from being thrown, so decoding is lenient:
+     * - an array is decoded entry by entry;
+     * - a single object is treated as a one-element array;
+     * - absent `data` or any other value yields no details;
+     * - entries that are not objects with a string `@type` are dropped;
+     * - `@type`-tagged entries that fail to decode as their known type are kept as [GenericErrorData].
+     *
+     * @param data The `data` member of the JSON-RPC error object.
+     */
+    protected open fun toErrorDetails(data: JsonElement): List<ErrorData> {
+        val entries = when (data) {
+            is JsonArray -> data
+            is JsonObject -> listOf(data)
+            else -> emptyList()
+        }
+
+        return entries.mapNotNull { entry ->
+            val jsonObject = entry as? JsonObject ?: return@mapNotNull null
+            val type = (jsonObject[ErrorData.TYPE_KEY] as? JsonPrimitive)
+                ?.takeIf { it.isString }
+                ?.content
+                ?: return@mapNotNull null
+
+            try {
+                JSONRPCJson.decodeFromJsonElement(ErrorData.serializer(), jsonObject)
+            } catch (_: SerializationException) {
+                GenericErrorData(raw = jsonObject, type = type)
             }
         }
     }
