@@ -125,6 +125,22 @@ async def do_long_running_task(
         )
 
 
+    await event_queue.enqueue_event(
+        TaskStatusUpdateEvent(
+            context_id=task.context_id,
+            task_id=task.id,
+            status=TaskStatus(
+                state=TaskState.TASK_STATE_COMPLETED,
+                message=new_text_message(
+                    text="Task completed",
+                    context_id=task.context_id,
+                    task_id=task.id,
+                ),
+            ),
+        )
+    )
+
+
 class HelloWorldAgentExecutor(AgentExecutor):
     """Test AgentProxy Implementation."""
 

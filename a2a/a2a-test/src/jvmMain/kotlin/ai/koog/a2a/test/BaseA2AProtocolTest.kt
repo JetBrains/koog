@@ -315,14 +315,17 @@ abstract class BaseA2AProtocolTest {
         val events = client
             .subscribeToTask(resubscribeTaskRequest)
             .toList()
-
-        events.shouldNotBeEmpty()
+            .shouldNotBeEmpty()
 
         events.shouldForAll {
-            it.shouldBeInstanceOf<TaskStatusUpdateEvent> {
-                it.taskId shouldBe taskId
-                it.contextId shouldBe "test-context"
+            it.taskId shouldBe taskId
+            it.contextId shouldBe "test-context"
+        }
 
+        events
+            .filterIsInstance<TaskStatusUpdateEvent>()
+            .shouldNotBeEmpty()
+            .shouldForAny {
                 it.status should {
                     it.state shouldBe TaskState.TASK_STATE_WORKING
                     it.message shouldNotBeNull {
@@ -336,7 +339,6 @@ abstract class BaseA2AProtocolTest {
                     }
                 }
             }
-        }
     }
 
     open fun `test push notification configs`() = runTest(timeout = testTimeout) {
