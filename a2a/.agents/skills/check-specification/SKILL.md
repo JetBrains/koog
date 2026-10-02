@@ -32,7 +32,7 @@ After the pull succeeds, read the checkout's applicable `AGENTS.md`, `CONTRIBUTI
 
 ## Pick the right revision
 
-The checkout's default branch (`main`) may contain unreleased changes ahead of the latest release tag (`v1.0.0`, `v1.0.1`, ...). This Kotlin SDK targets the A2A 1.0 line (see `a2a/a2a_1.0.0_changelog.md`).
+The checkout's default branch (`main`) may contain unreleased changes ahead of the latest release tag (`v1.0.0`, `v1.0.1`, ...). This Kotlin SDK targets the A2A 1.0 line.
 
 - Use the latest `v1.*` release tag as the baseline for "what the SDK must implement" unless the user asks about `main`. Read tagged content with `git -C <repo> show <tag>:<path>` or `git -C <repo> diff <tag> main -- <path>` rather than checking out a different branch.
 - When `main` differs from the release tag in a way relevant to the question, report both and label which is released and which is unreleased.
