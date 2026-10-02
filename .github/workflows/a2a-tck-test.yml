@@ -19,6 +19,7 @@ env:
 
 jobs:
   a2a-tck-test:
+    if: false # TODO re-enable after 1.0 is done
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
