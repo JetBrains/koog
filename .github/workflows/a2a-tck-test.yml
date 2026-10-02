@@ -76,25 +76,9 @@ jobs:
 
           echo "Server started successfully"
 
-      - name: Run TCK tests - Mandatory
+      - name: Run TCK tests
         working-directory: ./a2a/test-tck
-        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category mandatory --report
-
-      - name: Run TCK tests - Capabilities
-        working-directory: ./a2a/test-tck
-        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category capabilities --report
-
-      - name: Run TCK tests - Transport Equivalence
-        working-directory: ./a2a/test-tck
-        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category transport-equivalence --report
-
-      - name: Run TCK tests - Quality
-        working-directory: ./a2a/test-tck
-        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category quality --report
-
-      - name: Run TCK tests - Features
-        working-directory: ./a2a/test-tck
-        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category features --report
+        run: ./run_tck.sh --sut-host http://localhost:9999
 
       - name: Stop test server
         if: always()
