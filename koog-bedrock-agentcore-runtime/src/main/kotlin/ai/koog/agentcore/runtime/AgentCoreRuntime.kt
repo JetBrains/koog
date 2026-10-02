@@ -384,11 +384,21 @@ internal fun resolveResponseContentType(acceptHeader: String?): ContentType {
     }
 }
 
+private val sseLineBreak = Regex("\r\n|\r|\n")
+
+/**
+ * Frames [value] as a single SSE event. Per the SSE spec every line of an event needs its own
+ * `data:` prefix, so the value is split on any line terminator (`\r\n`, `\r`, `\n`); clients
+ * re-join the lines with `\n`.
+ */
+internal fun sseEvent(value: String): String =
+    value.split(sseLineBreak).joinToString(separator = "", postfix = "\n") { "data: $it\n" }
+
 /** Writes a textual one-shot result, choosing the responder by negotiated [contentType]. */
 internal suspend fun respondInvocationText(call: ApplicationCall, contentType: ContentType, value: String) {
     when (contentType) {
         ContentType.Text.EventStream -> call.respondBytesWriter(contentType = ContentType.Text.EventStream) {
-            writeStringUtf8("data: $value\n\n")
+            writeStringUtf8(sseEvent(value))
             flush()
         }
         ContentType.Application.OctetStream ->
@@ -404,7 +414,7 @@ internal suspend fun respondInvocationText(call: ApplicationCall, contentType: C
 internal suspend fun respondTextStream(call: ApplicationCall, chunks: Flow<String>) {
     call.respondBytesWriter(contentType = ContentType.Text.EventStream) {
         chunks.collect { chunk ->
-            writeStringUtf8("data: $chunk\n\n")
+            writeStringUtf8(sseEvent(chunk))
             flush()
         }
     }

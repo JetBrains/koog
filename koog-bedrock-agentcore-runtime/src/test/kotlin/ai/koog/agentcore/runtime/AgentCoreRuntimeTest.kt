@@ -416,6 +416,44 @@ class AgentCoreRuntimeTest {
     }
 
     @Test
+    fun testStreamingHandlerFramesMultiLineChunksWithDataPrefixPerLine() = testApplication {
+        application {
+            routing {
+                agentCoreRuntime {
+                    handler = { _, _ ->
+                        InvocationResult.TextStream(kotlinx.coroutines.flow.flowOf("Hello\nworld", "a\n\nb", "x\r\ny"))
+                    }
+                }
+            }
+        }
+        client.post("/invocations") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"prompt":"hi"}""")
+        }.apply {
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals(
+                "data: Hello\ndata: world\n\n" +
+                    "data: a\ndata: \ndata: b\n\n" +
+                    "data: x\ndata: y\n\n",
+                bodyAsText()
+            )
+        }
+    }
+
+    @Test
+    fun testOneShotTextWithEventStreamAcceptFramesMultiLineValueAsSingleEvent() = testApplication {
+        application { installAgentCoreTestModule(handler = { _, _ -> "line1\nline2\n\nline3\r\nline4" }) }
+        client.post("/invocations") {
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Text.EventStream)
+            setBody("""{"prompt":"hi"}""")
+        }.apply {
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals("data: line1\ndata: line2\ndata: \ndata: line3\ndata: line4\n\n", bodyAsText())
+        }
+    }
+
+    @Test
     fun `unified handler can dispatch on input variant`() = testApplication {
         application {
             install(ContentNegotiation) { json() }
