@@ -3,6 +3,8 @@ package ai.koog.a2a.client
 import ai.koog.a2a.consts.A2AHeaders
 import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.exceptions.A2AException
+import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
+import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
@@ -81,6 +83,7 @@ public open class A2AClient(
     /**
      * Calls [SendStreamingMessage](https://a2a-protocol.org/v1.0.1/specification/#312-send-streaming-message)
      *
+     * @throws A2AUnsupportedOperationException if the agent card doesn't declare the streaming capability.
      * @throws A2AException if server returned an error.
      */
     public open fun sendMessageStreaming(
@@ -131,12 +134,15 @@ public open class A2AClient(
     /**
      * Calls [SubscribeToTask](https://a2a-protocol.org/v1.0.1/specification/#316-subscribe-to-task)
      *
+     * @throws A2AUnsupportedOperationException if the agent card doesn't declare the streaming capability.
      * @throws A2AException if server returned an error.
      */
     public open fun subscribeToTask(
         request: SubscribeToTaskRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Event> {
+        checkStreamingSupported()
+
         return transport.subscribeToTask(request, prepareContext(ctx))
     }
 
@@ -169,7 +175,7 @@ public open class A2AClient(
     }
 
     /**
-     * Calls [ListTaskPushNotificationConfigs](https://a2a-protocol.org/v0.3.0/specification/#77-taskspushnotificationconfiglist)
+     * Calls [ListTaskPushNotificationConfigs](https://a2a-protocol.org/v1.0.1/specification/#319-list-push-notification-configs)
      *
      * @throws A2AException if server returned an error.
      */
@@ -202,6 +208,15 @@ public open class A2AClient(
 
     /**
      * Updates [ClientCallContext] with additional info before each request, e.g., version header.
+     *
+     * The [A2AHeaders.A2A_EXTENSIONS] header is not managed by the client. To activate extensions for a call,
+     * pass the header in [ClientCallContext.headers]; it is forwarded as is, e.g.:
+     * ```kotlin
+     * client.sendMessage(
+     *     request,
+     *     ClientCallContext(headers = mapOf(A2AHeaders.A2A_EXTENSIONS to listOf("https://example.com/ext/v1")))
+     * )
+     * ```
      */
     protected open fun prepareContext(ctx: ClientCallContext): ClientCallContext {
         val updatedHeaders = ctx.headers.toMutableMap()
@@ -216,21 +231,32 @@ public open class A2AClient(
         )
     }
 
+    /**
+     * @throws A2AUnsupportedOperationException if the [card] doesn't declare the extended agent card capability.
+     */
     protected fun checkExtendedAgentCardSupported() {
-        check(card.capabilities.extendedAgentCard == true) {
-            "Agent card reports that authenticated extended agent card is not supported."
+        if (card.capabilities.extendedAgentCard != true) {
+            throw A2AUnsupportedOperationException(
+                "Agent card reports that authenticated extended agent card is not supported."
+            )
         }
     }
 
+    /**
+     * @throws A2AUnsupportedOperationException if the [card] doesn't declare the streaming capability.
+     */
     protected fun checkStreamingSupported() {
-        check(card.capabilities.streaming == true) {
-            "Agent card reports that streaming is not supported."
+        if (card.capabilities.streaming != true) {
+            throw A2AUnsupportedOperationException("Agent card reports that streaming is not supported.")
         }
     }
 
+    /**
+     * @throws A2APushNotificationNotSupportedException if the [card] doesn't declare the push notifications capability.
+     */
     protected fun checkPushNotificationsSupported() {
-        check(card.capabilities.pushNotifications == true) {
-            "Agent card reports that push notifications are not supported."
+        if (card.capabilities.pushNotifications != true) {
+            throw A2APushNotificationNotSupportedException("Agent card reports that push notifications are not supported.")
         }
     }
 }
