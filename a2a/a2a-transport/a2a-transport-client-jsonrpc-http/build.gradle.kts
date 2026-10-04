@@ -33,6 +33,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.server.test.host)
                 runtimeOnly(libs.logback.classic)
             }
         }
