@@ -199,10 +199,14 @@ public class StreamFrameFlowBuilder(
         val previous: PendingToolCall? = pendingToolCallRef.load()
         // `id` and `index` are optional per-chunk signals. A new tool call begins only when a
         // present signal differs from the pending call, not merely because `id` is non-null:
-        // some OpenAI-compatible providers send the same `id` on every chunk (see #2002).
+        // - some OpenAI-compatible providers send the same `id` on every chunk (see #2002);
+        // - some providers (e.g. DeepSeek) start a tool call with `id = null` and only reveal
+        //   the real id on a later chunk of the same `index` (see #2111). Such a late id fills
+        //   the pending call instead of starting a new one.
         val isNewToolCall =
-            (sanitizedId != null && sanitizedId != previous?.id) ||
-                (index != null && index != previous?.index)
+            (previous == null && (sanitizedId != null || index != null)) ||
+                (previous?.id != null && sanitizedId != null && sanitizedId != previous.id) ||
+                (previous != null && index != null && index != previous.index)
         val new: PendingToolCall = if (isNewToolCall) {
             tryEmitPendingToolCall()
             PendingToolCall(sanitizedId, name, args, index)
@@ -215,7 +219,7 @@ public class StreamFrameFlowBuilder(
                     throw StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex(previous.index, index)
 
                 else ->
-                    previous.appendArgumentsDelta(args)
+                    previous.appendDelta(sanitizedId, name, args, index)
             }
         }
         pendingToolCallRef.store(new)
@@ -271,11 +275,15 @@ public class StreamFrameFlowBuilder(
         val argumentsDelta: String?,
         val index: Int?,
     ) {
-        fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall {
+        fun appendDelta(id: String?, name: String?, argumentsDelta: String?, index: Int?): PendingToolCall {
             require(this.index == index)
             val newArgs =
                 if (argumentsDelta == null) this.argumentsDelta else (this.argumentsDelta ?: "") + argumentsDelta
-            return copy(argumentsDelta = newArgs)
+            return copy(
+                id = this.id ?: id,
+                name = this.name ?: name,
+                argumentsDelta = newArgs,
+            )
         }
     }
 
