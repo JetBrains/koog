@@ -334,6 +334,9 @@ public class SpringWebClientKoogHttpClient(
             clientName = clientName,
             statusCode = statusCode().value(),
             errorBody = errorBody,
+            // HttpHeaders is a MultiValueMap<String, String>; the exception copies and
+            // lowercases the keys itself.
+            headers = headers().asHttpHeaders(),
         )
 
     private fun Flow<String>.chunkedToLines(): Flow<String> = flow {
