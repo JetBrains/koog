@@ -25,13 +25,13 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(project(":http-client:http-client-ktor"))
-                implementation(libs.ktor.client.cio)
             }
         }
     }
