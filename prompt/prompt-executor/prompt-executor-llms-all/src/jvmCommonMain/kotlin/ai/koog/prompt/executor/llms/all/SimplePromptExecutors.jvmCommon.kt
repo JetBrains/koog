@@ -4,6 +4,7 @@
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -105,3 +106,12 @@ public fun simpleOllamaAIExecutor(
  */
 public fun simpleMistralAIExecutor(apiKey: String): MultiLLMPromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey))
+
+/**
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
+ *
+ * @see simpleDeepSeekExecutor
+ */
+public fun simpleDeepSeekExecutor(apiKey: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.DeepSeek to DeepSeekLLMClient(apiKey))
