@@ -66,6 +66,7 @@ The following table provides an overview of the available Ollama embedding model
 | MULTILINGUAL_E5   | zylonai/multilingual-e5-large   | 300M       | 768        | 512            | Strong performance across 100+ languages                              | Larger model size but provides excellent multilingual capabilities |
 | BGE_LARGE         | bge-large         | 335M       | 1024       | 512            | Excellent for English text retrieval and semantic search              | Larger model size but provides high-quality embeddings             |
 | MXBAI_EMBED_LARGE | mxbai-embed-large | -          | -          | -              | High-dimensional embeddings of textual data                           | Designed for creating high-dimensional embeddings                  |
+| EMBEDDING_GEMMA_2_740M | embeddinggemma-2:740m | 740M | 768 | 8192 | State-of-the-art multilingual and code retrieval for its size | Larger download (1.3GB), optimized for on-device use |
 
 For more information about these models, see Ollama's [Embedding Models](https://ollama.com/blog/embedding-models)
 blog post.
@@ -79,6 +80,7 @@ Here are some general tips on which Ollama embedding model to select depending o
 - For maximum quality (at the cost of performance), use `BGE_LARGE`.
 - For maximum efficiency (at the cost of some quality), use `ALL_MINILM`.
 - For high-dimensional embeddings, use `MXBAI_EMBED_LARGE`.
+- For multilingual and code retrieval with a long context, use `EMBEDDING_GEMMA_2_740M`.
 
 ## OpenAI embeddings
 

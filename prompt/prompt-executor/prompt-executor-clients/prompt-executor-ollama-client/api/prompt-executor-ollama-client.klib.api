@@ -154,6 +154,8 @@ final object ai.koog.prompt.executor.ollama.client/OllamaModels : ai.koog.prompt
             final fun <get-ALL_MINI_LM>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.ALL_MINI_LM.<get-ALL_MINI_LM>|<get-ALL_MINI_LM>(){}[0]
         final val BGE_LARGE // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.BGE_LARGE|{}BGE_LARGE[0]
             final fun <get-BGE_LARGE>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.BGE_LARGE.<get-BGE_LARGE>|<get-BGE_LARGE>(){}[0]
+        final val EMBEDDING_GEMMA_2_740M // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.EMBEDDING_GEMMA_2_740M|{}EMBEDDING_GEMMA_2_740M[0]
+            final fun <get-EMBEDDING_GEMMA_2_740M>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.EMBEDDING_GEMMA_2_740M.<get-EMBEDDING_GEMMA_2_740M>|<get-EMBEDDING_GEMMA_2_740M>(){}[0]
         final val MULTILINGUAL_E5 // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MULTILINGUAL_E5|{}MULTILINGUAL_E5[0]
             final fun <get-MULTILINGUAL_E5>(): ai.koog.prompt.llm/LLModel // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MULTILINGUAL_E5.<get-MULTILINGUAL_E5>|<get-MULTILINGUAL_E5>(){}[0]
         final val MXBAI_EMBED_LARGE // ai.koog.prompt.executor.ollama.client/OllamaModels.Embeddings.MXBAI_EMBED_LARGE|{}MXBAI_EMBED_LARGE[0]

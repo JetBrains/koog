@@ -59,6 +59,8 @@ internal data class OllamaShowModelResponseDTO(
 ) {
     @Serializable
     enum class Capability {
+        @SerialName("audio") AUDIO,
+
         @SerialName("completion") COMPLETION,
 
         @SerialName("embedding") EMBEDDING,

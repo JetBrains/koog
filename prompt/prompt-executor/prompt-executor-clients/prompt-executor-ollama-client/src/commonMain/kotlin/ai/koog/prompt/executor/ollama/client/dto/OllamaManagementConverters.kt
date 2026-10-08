@@ -30,6 +30,7 @@ internal fun OllamaShowModelResponseDTO.toOllamaModelCard(name: String, size: Lo
 private fun List<OllamaShowModelResponseDTO.Capability>.toLLMCapabilities(): List<LLMCapability> {
     return flatMap { capability ->
         when (capability) {
+            OllamaShowModelResponseDTO.Capability.AUDIO -> listOf(LLMCapability.Audio)
             OllamaShowModelResponseDTO.Capability.COMPLETION -> listOf(LLMCapability.Completion)
             OllamaShowModelResponseDTO.Capability.EMBEDDING -> listOf(LLMCapability.Embed)
             OllamaShowModelResponseDTO.Capability.INSERT -> listOf()
