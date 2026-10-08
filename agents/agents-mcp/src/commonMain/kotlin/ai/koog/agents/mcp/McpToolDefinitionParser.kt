@@ -107,6 +107,54 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             }
 
             /**
+             * oneOf with multiple types.
+             *
+             * JSON Schema semantically distinguishes oneOf (exactly one) from anyOf (one or more),
+             * but our internal [ToolParameterType] only models a union (AnyOf). For tool-argument
+             * descriptors this is sound: argument values are validated by the MCP server, and the
+             * koog-side descriptor only enumerates the legal shapes for the LLM to choose from.
+             *
+             * Schema example:
+             * {
+             *   "oneOfParam": {
+             *     "oneOf": [
+             *       { "type": "string" },
+             *       { "type": "number" }
+             *     ],
+             *     "title": "string or number parameter"
+             *   }
+             * }
+             */
+            val oneOf = element["oneOf"]?.jsonArray
+            if (oneOf != null) {
+                return ToolParameterType.AnyOf(
+                    types = oneOf.map { it.jsonObject }.map {
+                        ToolParameterDescriptor(
+                            name = "",
+                            description = it["description"]?.jsonPrimitive?.content.orEmpty(),
+                            type = parseParameterType(it.jsonObject, defs)
+                        )
+                    }.toTypedArray()
+                )
+            }
+
+            /**
+             * const: a single permitted value. JSON Schema defines `const: X` as equivalent to
+             * `enum: [X]`, so we map it onto a singleton [ToolParameterType.Enum]. This commonly
+             * appears as a discriminator inside oneOf-of-objects (e.g. obsidian_write_note.target),
+             * which previously failed at the "must have type property" throw site below.
+             *
+             * Schema example:
+             * {
+             *   "kind": { "const": "path" }
+             * }
+             */
+            val const = element["const"]
+            if (const != null) {
+                return ToolParameterType.Enum(arrayOf(enumEntryToString(const)))
+            }
+
+            /**
              * Special case for enum string types.
              * Schema example:
              * {
