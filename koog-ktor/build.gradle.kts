@@ -31,34 +31,21 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.ktor.client.engine.defaults)
                 implementation(libs.ktor.server.test.host)
-            }
-        }
-
-        androidUnitTest {
-            dependencies {
-                implementation(libs.ktor.client.cio)
             }
         }
 
         jsTest {
             dependencies {
                 implementation(kotlin("test-js"))
-                implementation(libs.ktor.client.js)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.server.config.yaml)
-            }
-        }
-
-        appleTest {
-            dependencies {
-                implementation(libs.ktor.client.darwin)
             }
         }
     }
