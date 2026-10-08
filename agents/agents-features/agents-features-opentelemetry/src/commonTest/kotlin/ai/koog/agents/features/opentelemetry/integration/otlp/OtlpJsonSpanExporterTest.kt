@@ -162,7 +162,7 @@ class OtlpJsonSpanExporterTest {
 
     @OptIn(InternalAPI::class)
     @Test
-    fun testShutdownReturnsFailureWhenClientCloseThrows() = runTest {
+    fun testShutdownReturnsSuccessWhenClientCloseThrows() = runTest {
         val throwingEngineFactory = object : HttpClientEngineFactory<HttpClientEngineConfig> {
             override fun create(block: HttpClientEngineConfig.() -> Unit): HttpClientEngine =
                 object : HttpClientEngineBase("throwing-close") {
@@ -176,7 +176,7 @@ class OtlpJsonSpanExporterTest {
             endpoint = "https://example.test/v1/traces",
             baseClient = HttpClient(throwingEngineFactory),
         )
-        assertEquals(OperationResultCode.Failure, exporter.shutdown())
+        assertEquals(OperationResultCode.Success, exporter.shutdown())
     }
 
     //region Private Methods

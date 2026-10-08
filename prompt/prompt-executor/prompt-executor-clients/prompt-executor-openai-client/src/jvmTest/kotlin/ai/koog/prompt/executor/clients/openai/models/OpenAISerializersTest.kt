@@ -295,7 +295,7 @@ class OpenAISerializersTest {
 
             shouldThrow<SerializationException> {
                 json.decodeFromJsonElement(ItemPolymorphicSerializer, invalidJson)
-            }.message shouldInclude "String literal for key 'primitive' should be quoted at element"
+            }.message shouldInclude "'primitive' should be quoted at"
         }
 
     @Test

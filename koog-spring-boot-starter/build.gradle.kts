@@ -37,7 +37,7 @@ dependencies {
 
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)
-    testRuntimeOnly(libs.ktor.client.apache5)
+    testRuntimeOnly(libs.ktor.client.engine.defaults)
 }
 
 publishToMaven()

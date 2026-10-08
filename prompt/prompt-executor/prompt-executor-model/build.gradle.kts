@@ -28,7 +28,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
 
-                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
