@@ -49,6 +49,7 @@ kotlin {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+                implementation(libs.ktor.client.engine.defaults)
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
@@ -65,8 +66,6 @@ kotlin {
                 implementation(project(":integration-tests"))
                 implementation(project(":serialization:serialization-jackson"))
                 implementation(libs.mockk)
-
-                implementation(libs.ktor.client.cio)
             }
         }
     }

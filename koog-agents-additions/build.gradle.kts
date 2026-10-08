@@ -141,6 +141,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(libs.ktor.client.engine.defaults)
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {
@@ -189,30 +190,12 @@ kotlin {
             dependsOn(nonWasmJsMain)
         }
 
-        jvmMain.dependencies {
-            api(libs.ktor.client.apache5)
-        }
-
-        androidMain.dependencies {
-            api(libs.ktor.client.okhttp)
-        }
-
         appleMain {
             dependsOn(nonWasmJsMain)
-            dependencies {
-                api(libs.ktor.client.darwin)
-            }
         }
 
         jsMain {
             dependsOn(nonWasmJsMain)
-            dependencies {
-                api(libs.ktor.client.js)
-            }
-        }
-
-        wasmJsMain.dependencies {
-            api(libs.ktor.client.js)
         }
     }
 }

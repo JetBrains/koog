@@ -17,22 +17,16 @@ kotlin {
             }
         }
 
-        jsTest {
-            dependencies {
-                api(libs.ktor.client.js)
-            }
-        }
-
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
+                api(libs.ktor.client.engine.defaults)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(libs.ktor.client.cio)
             }
         }
     }

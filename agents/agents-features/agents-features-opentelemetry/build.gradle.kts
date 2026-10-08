@@ -77,6 +77,10 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.opentelemetry.kotlin.exporters.inMemory)
                 implementation(libs.ktor.client.mock)
+
+                // Real Ktor engine for jvmTest paths that need an actual HTTP transport
+                // (env-var-gated Langfuse / Weave integration tests against the real cloud).
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
@@ -86,10 +90,6 @@ kotlin {
                 implementation(project(":agents:agents-test"))
                 implementation(project(":http-client:http-client-ktor"))
                 implementation(libs.junit.jupiter.params)
-
-                // Real Ktor engine for jvmTest paths that need an actual HTTP transport
-                // (env-var-gated Langfuse / Weave integration tests against the real cloud).
-                implementation(libs.ktor.client.cio)
             }
         }
     }
