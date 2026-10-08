@@ -597,6 +597,25 @@ public object OllamaModels : LLModelDefinitions {
             capabilities = listOf(LLMCapability.Embed),
             contextLength = 512,
         )
+
+        /**
+         * EmbeddingGemma 2 multimodal embedding model from Google DeepMind, built on the Gemma 4 architecture.
+         *
+         * Parameters: 740M
+         * Dimensions: 768 (Matryoshka truncation to 512, 256, or 128)
+         * Context Length: 8192
+         * Performance: State-of-the-art multilingual (100+ languages) and code retrieval for its size
+         * Tradeoffs: Larger download (1.3GB) than text-only embedders, but optimized for on-device use
+         *
+         * @see <a href="https://ollama.com/library/embeddinggemma-2">
+         */
+        @JvmField
+        public val EMBEDDING_GEMMA_2_740M: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "embeddinggemma-2:740m",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 8_192,
+        )
     }
 
     /**
@@ -626,6 +645,7 @@ public object OllamaModels : LLModelDefinitions {
         Embeddings.MULTILINGUAL_E5,
         Embeddings.BGE_LARGE,
         Embeddings.MXBAI_EMBED_LARGE,
+        Embeddings.EMBEDDING_GEMMA_2_740M,
     )
 
     /**

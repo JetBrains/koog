@@ -42,7 +42,7 @@ class OllamaTestFixture {
 
     val model get() = prepareModel(OllamaModels.Meta.LLAMA_3_2)
     val toolChoiceModel get() = prepareModel(OllamaModels.Alibaba.QWEN_3_5_9B)
-    val embeddingsModel get() = prepareModel(OllamaModels.Embeddings.NOMIC_EMBED_TEXT)
+    val embeddingsModel get() = prepareModel(OllamaModels.Embeddings.EMBEDDING_GEMMA_2_740M)
     val visionModel get() = prepareModel(OllamaModels.Granite.GRANITE_3_2_VISION)
     val moderationModel get() = prepareModel(OllamaModels.Meta.LLAMA_GUARD_3)
     val thinkingModel get() = prepareModel(OllamaModels.DeepSeek.DEEPSEEK_R1_DISTILL_LLAMA_1_5B)
