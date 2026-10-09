@@ -446,7 +446,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
         // Always include max_tokens as it's required by the API
         val request = AnthropicMessageRequest(
-            model = settings.modelVersionsMap[model] ?: throw IllegalArgumentException("Unsupported model: $model"),
+            model = settings.modelVersionsMap[model] ?: model.id,
             messages = messages,
             maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
             cacheControl = anthropicParams.cacheControl?.toAnthropicCacheControl(),
