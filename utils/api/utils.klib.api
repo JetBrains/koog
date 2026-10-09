@@ -1,6 +1,6 @@
 // Klib ABI Dump
-// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
-// Alias: ios => [iosArm64, iosSimulatorArm64, iosX64]
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, macosArm64, wasmJs]
+// Alias: apple => [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: true
@@ -50,7 +50,7 @@ final fun ai.koog.utils.system/systemConfigReader(): ai.koog.utils.system/System
 final fun ai.koog.utils.system/systemSecretsReader(): ai.koog.utils.system/SystemSecretsReader // ai.koog.utils.system/systemSecretsReader|systemSecretsReader(){}[0]
 final suspend inline fun <#A: ai.koog.utils.io/Closeable, #B: kotlin/Any?> (#A).ai.koog.utils.io/use(kotlin.coroutines/SuspendFunction1<#A, #B>): #B // ai.koog.utils.io/use|use@0:0(kotlin.coroutines.SuspendFunction1<0:0,0:1>){0§<ai.koog.utils.io.Closeable>;1§<kotlin.Any?>}[0]
 
-// Targets: [ios]
+// Targets: [apple]
 final class ai.koog.utils.system/UserDefaultsSystemConfigReader : ai.koog.utils.system/SystemConfigReader { // ai.koog.utils.system/UserDefaultsSystemConfigReader|null[0]
     constructor <init>(platform.Foundation/NSUserDefaults) // ai.koog.utils.system/UserDefaultsSystemConfigReader.<init>|<init>(platform.Foundation.NSUserDefaults){}[0]
 
