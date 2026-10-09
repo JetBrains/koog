@@ -324,7 +324,10 @@ LLM requests are made when you explicitly call one of the request methods. The k
 1. **Explicit invocation**: requests only happen when you call methods like `requestLLM()`, `requestLLMWithoutTools()` and so on.
 2. **Immediate execution**: when you call a request method, the request is made immediately, and the method blocks
 until a response is received.
-3. **Automatic history update**: in a write session, the response is automatically added to the conversation history.
+3. **Automatic history update**: in a write session, non-streaming requests add assistant responses
+   automatically to the conversation history.
+   `requestLLMStreaming()` (and `requestLLMStreaming(definition)`) return stream frames, so they do **not** append
+   a full response automatically.
 
 ### Request methods with tools
 
@@ -615,9 +618,9 @@ You can also completely rewrite the prompt by assigning a new `Prompt` object to
     ```
     <!--- KNIT exampleSessionsJava08.java -->
 
-### Automatic history update on response
+### Automatic history update for non-streaming requests
 
-When you make an LLM request in a write session, the response is automatically added to the conversation history:
+When you make a non-streaming LLM request in a write session (`requestLLM()`, etc.), the response is automatically added to the conversation history:
 
 === "Kotlin"
 
@@ -683,7 +686,21 @@ When you make an LLM request in a write session, the response is automatically a
     ```
     <!--- KNIT exampleSessionsJava09.java -->
 
-This automatic history update is the key feature of write sessions, ensuring that the conversation flows naturally.
+`requestLLMStreaming()` is intentionally stream-based and does not automatically append a full `Message.Assistant`
+to the prompt; append it explicitly if you need the assistant response in the session history.
+
+For convenience, this keeps long responses available for follow-up turns:
+
+```kotlin
+llm.writeSession {
+    val response = requestLLMStreaming().collectText()
+    appendPrompt {
+        assistant(response)
+    }
+}
+```
+
+This automatic history update is the key feature of write sessions for non-streaming requests, ensuring that the conversation flows naturally.
 
 ### History compression
 
