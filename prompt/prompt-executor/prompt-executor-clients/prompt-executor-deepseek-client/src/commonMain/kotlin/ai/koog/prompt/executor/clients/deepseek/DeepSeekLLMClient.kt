@@ -148,7 +148,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
                 message.reasoningContent == null &&
                 !message.toolCalls.isNullOrEmpty()
             ) {
-                preparedMessages.removeLast()
+                preparedMessages.removeAt(preparedMessages.lastIndex)
                 preparedMessages += OpenAIMessage.Assistant(
                     content = previousMessage.content ?: message.content,
                     reasoningContent = previousMessage.reasoningContent,
