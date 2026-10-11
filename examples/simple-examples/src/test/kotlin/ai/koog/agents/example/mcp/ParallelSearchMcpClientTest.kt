@@ -5,6 +5,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.mcp.McpTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.utils.io.use
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

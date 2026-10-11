@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.metadata.McpServerInfo
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.utils.io.use
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
