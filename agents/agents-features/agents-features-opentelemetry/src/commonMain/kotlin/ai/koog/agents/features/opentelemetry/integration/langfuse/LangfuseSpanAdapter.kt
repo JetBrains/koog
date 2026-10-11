@@ -128,7 +128,7 @@ internal class LangfuseSpanAdapter(
 
             is Message.Assistant -> {
                 val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
-                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
+                val reasoningParts = message.parts.reasoningWithContent()
                 val textParts = message.parts.filterIsInstance<MessagePart.Text>()
 
                 span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
@@ -155,10 +155,7 @@ internal class LangfuseSpanAdapter(
         when (message) {
             is Message.Assistant -> {
                 val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
-                // Reasoning parts with no content (e.g. Google's signature-only parts) must not
-                // suppress the text parts of the same message.
-                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
-                    .filter { it.content.isNotEmpty() }
+                val reasoningParts = message.parts.reasoningWithContent()
                 val textParts = message.parts.filterIsInstance<MessagePart.Text>()
 
                 when {
@@ -186,6 +183,13 @@ internal class LangfuseSpanAdapter(
             }
         }
     }
+
+    /**
+     * Reasoning parts that carry text. Signature-only parts (Google sends an empty list,
+     * Anthropic sends a single empty string) must not suppress the text parts of the same message.
+     */
+    private fun List<MessagePart>.reasoningWithContent(): List<MessagePart.Reasoning> =
+        filterIsInstance<MessagePart.Reasoning>().filter { part -> part.content.any { it.isNotBlank() } }
 
     //endregion Private Methods
 }

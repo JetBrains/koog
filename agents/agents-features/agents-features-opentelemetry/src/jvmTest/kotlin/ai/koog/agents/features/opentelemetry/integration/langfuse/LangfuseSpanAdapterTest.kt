@@ -19,11 +19,19 @@ import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 class LangfuseSpanAdapterTest {
+
+    /** Shapes of a signature-only Reasoning part, as each provider client builds it. */
+    enum class SignatureOnlyReasoning(val content: List<String>) {
+        GOOGLE(emptyList()),
+        ANTHROPIC(listOf("")),
+    }
 
     @Test
     fun `onBeforeSpanStarted adds trace attributes to invoke span`() {
@@ -190,20 +198,45 @@ class LangfuseSpanAdapterTest {
         )
     }
 
-    @Test
-    fun `onBeforeSpanFinished uses text content when reasoning part carries no content`() {
+    @ParameterizedTest
+    @EnumSource(SignatureOnlyReasoning::class)
+    fun testPromptUsesTextWhenReasoningIsSignatureOnly(reasoning: SignatureOnlyReasoning) {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val assistantAnswer = "It's sunny in Rome."
+        val inputMessages = listOf(
+            Message.User("What's the forecast for Rome?", RequestMetaInfo.Empty),
+            Message.Assistant(
+                parts = listOf(
+                    MessagePart.Reasoning(content = reasoning.content, encrypted = "signature"),
+                    MessagePart.Text(assistantAnswer),
+                ),
+                metaInfo = ResponseMetaInfo.Empty,
+                finishReason = "stop",
+            ),
+        )
+        val inferenceSpan = createInferenceSpan(provider, messages = inputMessages)
+
+        adapter.onBeforeSpanStarted(inferenceSpan)
+
+        val actualContent = inferenceSpan.attributes.requireValue("gen_ai.prompt.1.content")
+        assertIs<HiddenString>(actualContent)
+        assertEquals(assistantAnswer, actualContent.value)
+    }
+
+    @ParameterizedTest
+    @EnumSource(SignatureOnlyReasoning::class)
+    fun testCompletionUsesTextWhenReasoningIsSignatureOnly(reasoning: SignatureOnlyReasoning) {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
         val provider = MockLLMProvider()
         val inferenceSpan = createInferenceSpan(provider)
 
-        // Mirrors the Google client: a signature-only Reasoning part (empty content) alongside
-        // the real Text part of the same message. The empty reasoning part must not suppress
-        // the text content or the finish reason.
         val assistantAnswer = "It's sunny in Rome."
         val assistantMessage = Message.Assistant(
             parts = listOf(
-                MessagePart.Reasoning(content = emptyList(), encrypted = "signature"),
+                MessagePart.Reasoning(content = reasoning.content, encrypted = "signature"),
                 MessagePart.Text(assistantAnswer),
             ),
             metaInfo = ResponseMetaInfo.Empty,
