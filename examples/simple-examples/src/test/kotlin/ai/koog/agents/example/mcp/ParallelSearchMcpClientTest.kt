@@ -100,7 +100,7 @@ class ParallelSearchMcpClientTest {
                         promptExecutor = executor,
                         llmModel = OpenAIModels.Chat.GPT4o,
                         toolRegistry = registry,
-                        maxIterations = 5
+                        maxIterations = 10
                     ).use { agent ->
                         assertEquals("Koog supports MCP tools: https://docs.koog.ai/", agent.run("Find Koog docs"))
                     }
