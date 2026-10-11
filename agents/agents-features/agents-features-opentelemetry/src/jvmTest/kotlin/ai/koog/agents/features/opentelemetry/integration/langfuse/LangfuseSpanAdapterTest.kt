@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 class LangfuseSpanAdapterTest {
 
@@ -115,7 +116,6 @@ class LangfuseSpanAdapterTest {
             ),
         )
         val inferenceSpan = createInferenceSpan(provider, messages = inputMessages)
-        val expectedToolCallJson = encodeToolCallsContent(listOf(toolCallPart))
 
         adapter.onBeforeSpanStarted(inferenceSpan)
 
@@ -146,9 +146,8 @@ class LangfuseSpanAdapterTest {
         assertEquals(toolResponseContent, actualToolResponseContent.value)
 
         assertEquals("assistant", attributes.requireValue("gen_ai.prompt.4.role"))
-        val actualToolCallContent = attributes.requireValue("gen_ai.prompt.4.content")
-        assertIs<HiddenString>(actualToolCallContent)
-        assertEquals(expectedToolCallJson, actualToolCallContent.value)
+        assertToolCall(attributes, "gen_ai.prompt.4.tool_calls.0", toolCallPart)
+        assertNull(attributes.valueOf("gen_ai.prompt.4.content"))
     }
 
     @Test
@@ -171,7 +170,6 @@ class LangfuseSpanAdapterTest {
             metaInfo = ResponseMetaInfo.Empty,
             finishReason = "tool_call",
         )
-        val expectedToolCallJson = encodeToolCallsContent(listOf(toolCallPart2))
         inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage, toolCallMessage2)))
 
         adapter.onBeforeSpanFinished(inferenceSpan)
@@ -189,9 +187,8 @@ class LangfuseSpanAdapterTest {
         assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
 
         assertEquals("assistant", attributes.requireValue("gen_ai.completion.1.role"))
-        val actualToolCallContent = attributes.requireValue("gen_ai.completion.1.content")
-        assertIs<HiddenString>(actualToolCallContent)
-        assertEquals(expectedToolCallJson, actualToolCallContent.value)
+        assertToolCall(attributes, "gen_ai.completion.1.tool_calls.0", toolCallPart2)
+        assertNull(attributes.valueOf("gen_ai.completion.1.content"))
         assertEquals(
             GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
             attributes.requireValue("gen_ai.completion.1.finish_reason"),
@@ -252,6 +249,122 @@ class LangfuseSpanAdapterTest {
         assertIs<HiddenString>(actualContent)
         assertEquals(assistantAnswer, actualContent.value)
         assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    }
+
+    @Test
+    fun `onBeforeSpanFinished keeps answer text next to reasoning that carries text`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        // Claude with extended thinking, or Gemini with includeThoughts, returns readable reasoning next to the answer.
+        val assistantMessage = Message.Assistant(
+            parts = listOf(
+                MessagePart.Reasoning(content = listOf("Dan is at seat 1, so Cara is at seat 2."), encrypted = "signature"),
+                MessagePart.Text("Eva"),
+            ),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "end_turn",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        assertEquals("reasoning", attributes.requireValue("gen_ai.completion.0.content.0.type"))
+        assertHidden("Dan is at seat 1, so Cara is at seat 2.", attributes.requireValue("gen_ai.completion.0.content.0.text"))
+        assertEquals("text", attributes.requireValue("gen_ai.completion.0.content.1.type"))
+        assertHidden("Eva", attributes.requireValue("gen_ai.completion.0.content.1.text"))
+        assertNull(attributes.valueOf("gen_ai.completion.0.content"))
+        assertEquals("end_turn", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    }
+
+    @Test
+    fun `onBeforeSpanFinished keeps text written next to a tool call`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        val toolCall = MessagePart.Tool.Call(id = "toolu_1", tool = "get_weather", args = "{\"city\":\"Prague\"}")
+        val assistantMessage = Message.Assistant(
+            parts = listOf(MessagePart.Text("I will check the weather in Prague."), toolCall),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "tool_use",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        assertHidden("I will check the weather in Prague.", attributes.requireValue("gen_ai.completion.0.content"))
+        assertToolCall(attributes, "gen_ai.completion.0.tool_calls.0", toolCall)
+        assertEquals(
+            GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
+            attributes.requireValue("gen_ai.completion.0.finish_reason"),
+        )
+    }
+
+    @Test
+    fun `onBeforeSpanFinished writes reasoning when the response was cut before any text`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        val assistantMessage = Message.Assistant(
+            parts = listOf(MessagePart.Reasoning(content = listOf("Let me check every order."), encrypted = "signature")),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "max_tokens",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        assertEquals("reasoning", attributes.requireValue("gen_ai.completion.0.content.0.type"))
+        assertHidden("Let me check every order.", attributes.requireValue("gen_ai.completion.0.content.0.text"))
+        assertNull(attributes.valueOf("gen_ai.completion.0.content.1.type"))
+        assertEquals("max_tokens", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    }
+
+    @Test
+    fun `onBeforeSpanStarted writes one tool message per result of parallel tool calls`() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val pragueCall = MessagePart.Tool.Call(id = "call-prague", tool = "get_weather", args = "{\"city\":\"Prague\"}")
+        val brnoCall = MessagePart.Tool.Call(id = "call-brno", tool = "get_weather", args = "{\"city\":\"Brno\"}")
+        val inputMessages = listOf(
+            Message.System("You are Koog.", RequestMetaInfo.Empty),
+            Message.User("Weather in Prague and Brno?", RequestMetaInfo.Empty),
+            Message.Assistant(
+                parts = listOf(MessagePart.Text("I will check both cities."), pragueCall, brnoCall),
+                metaInfo = ResponseMetaInfo.Empty,
+                finishReason = "tool_use",
+            ),
+            Message.User(
+                parts = listOf(
+                    MessagePart.Tool.Result(id = "call-prague", tool = "get_weather", output = "Prague: 18 C"),
+                    MessagePart.Tool.Result(id = "call-brno", tool = "get_weather", output = "Brno: 20 C"),
+                ),
+                metaInfo = RequestMetaInfo.Empty,
+            ),
+            Message.User("Thanks.", RequestMetaInfo.Empty),
+        )
+        val inferenceSpan = createInferenceSpan(MockLLMProvider(), messages = inputMessages)
+
+        adapter.onBeforeSpanStarted(inferenceSpan)
+
+        val attributes = inferenceSpan.attributes
+        assertEquals("assistant", attributes.requireValue("gen_ai.prompt.2.role"))
+        assertHidden("I will check both cities.", attributes.requireValue("gen_ai.prompt.2.content"))
+        assertToolCall(attributes, "gen_ai.prompt.2.tool_calls.0", pragueCall)
+        assertToolCall(attributes, "gen_ai.prompt.2.tool_calls.1", brnoCall)
+
+        assertEquals("tool", attributes.requireValue("gen_ai.prompt.3.role"))
+        assertEquals("call-prague", attributes.requireValue("gen_ai.prompt.3.tool_call_id"))
+        assertHidden("Prague: 18 C", attributes.requireValue("gen_ai.prompt.3.content"))
+        assertEquals("tool", attributes.requireValue("gen_ai.prompt.4.role"))
+        assertEquals("call-brno", attributes.requireValue("gen_ai.prompt.4.tool_call_id"))
+        assertHidden("Brno: 20 C", attributes.requireValue("gen_ai.prompt.4.content"))
+
+        assertEquals("user", attributes.requireValue("gen_ai.prompt.5.role"))
+        assertHidden("Thanks.", attributes.requireValue("gen_ai.prompt.5.content"))
     }
 
     @Test
@@ -404,5 +517,18 @@ class LangfuseSpanAdapterTest {
         LLModel(provider, "test-model", emptyList(), contextLength = 8192)
 
     private fun List<Attribute>.requireValue(key: String): Any =
-        firstOrNull { it.key == key }?.value ?: error("Expected attribute '$key' to be present")
+        valueOf(key) ?: error("Expected attribute '$key' to be present")
+
+    private fun List<Attribute>.valueOf(key: String): Any? = firstOrNull { it.key == key }?.value
+
+    private fun assertHidden(expected: String, actual: Any) {
+        assertEquals(expected, assertIs<HiddenString>(actual).value)
+    }
+
+    private fun assertToolCall(attributes: List<Attribute>, prefix: String, call: MessagePart.Tool.Call) {
+        assertEquals<Any?>(call.id, attributes.requireValue("$prefix.id"))
+        assertEquals("function", attributes.requireValue("$prefix.type"))
+        assertEquals(call.tool, attributes.requireValue("$prefix.function.name"))
+        assertHidden(call.args, attributes.requireValue("$prefix.function.arguments"))
+    }
 }
