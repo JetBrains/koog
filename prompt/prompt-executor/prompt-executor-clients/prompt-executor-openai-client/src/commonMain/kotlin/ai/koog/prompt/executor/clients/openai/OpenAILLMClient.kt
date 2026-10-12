@@ -315,19 +315,20 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         emitEnd(finishReason, metaInfo)
     }
 
+    // The endpoint is decided once, by determineParams, which is also where an endpoint capability
+    // is required when one is needed. Re-checking it here contradicted that decision: an Azure
+    // deployment takes the chat-completions branch without declaring the capability, so this method
+    // refused models that determineParams had already accepted and that executeStreaming — which
+    // never had the second check — was happy to run.
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         return selectExecutionStrategy(prompt, model) { params ->
             when (params) {
                 is OpenAIResponsesParams -> {
-                    model.requireCapability(LLMCapability.OpenAIEndpoint.Responses)
                     val response = getResponseWithResponsesAPI(prompt, params, model, tools)
                     processResponsesAPIResponse(response)
                 }
 
-                is OpenAIChatParams -> {
-                    model.requireCapability(LLMCapability.OpenAIEndpoint.Completions)
-                    super.execute(prompt, model, tools)
-                }
+                is OpenAIChatParams -> super.execute(prompt, model, tools)
             }
         }
     }
@@ -1057,6 +1058,16 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         is LLMParams.ToolChoice.Named -> OpenAIResponsesToolChoice.FunctionTool(name = name)
     }
 
+    /**
+     * Chooses the API to call for [model], and the parameter shape that goes with it.
+     *
+     * This is the single place where the endpoint is decided. A model that declares an endpoint
+     * capability gets that endpoint; params of an explicit type require the matching capability,
+     * because asking for responses params on a chat-completions model is a request that cannot be
+     * honoured. A model that declares neither capability falls back to chat completions: it is the
+     * API every OpenAI-compatible server implements, and it is what such a model — almost always a
+     * hand-written [LLModel] for a self-hosted server — is served by.
+     */
     internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
         "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
         params is OpenAIResponsesParams -> {
@@ -1077,7 +1088,15 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
-        else -> throw LLMClientException(clientName, "Cannot determine proper LLM params for OpenAI model: ${model.id}")
+        else -> {
+            logger.debug {
+                "Model ${model.id} declares neither ${LLMCapability.OpenAIEndpoint.Completions.id} nor " +
+                    "${LLMCapability.OpenAIEndpoint.Responses.id}; calling the chat completions API. " +
+                    "Declare LLMCapability.OpenAIEndpoint.Responses on the model to use the responses API " +
+                    "instead."
+            }
+            params.toOpenAIChatParams()
+        }
     }
 
     private inline fun <T> selectExecutionStrategy(
