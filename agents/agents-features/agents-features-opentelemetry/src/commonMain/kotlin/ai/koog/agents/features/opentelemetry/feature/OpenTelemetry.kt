@@ -313,6 +313,7 @@ public class OpenTelemetry {
                     id = eventContext.eventId,
                     model = eventContext.agent.agentConfig.model,
                     agentId = eventContext.context.agentId,
+                    runId = eventContext.runId,
                     messages = messages,
                     spanAdapter = spanAdapter,
                 )
@@ -364,7 +365,7 @@ public class OpenTelemetry {
 
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
-                    messages = eventContext.context.config.prompt.messages.toList(),
+                    messages = eventContext.context.llm.prompt.messages.toList(),
                     model = eventContext.context.config.model,
                     verbose = config.isVerbose,
                     spanAdapter = spanAdapter,
@@ -403,7 +404,7 @@ public class OpenTelemetry {
 
                 endInvokeAgentSpan(
                     span = invokeAgentSpan,
-                    messages = eventContext.context.config.prompt.messages.toList(),
+                    messages = eventContext.context.llm.prompt.messages.toList(),
                     model = eventContext.context.config.model,
                     error = eventContext.error,
                     verbose = config.isVerbose,
@@ -674,6 +675,7 @@ public class OpenTelemetry {
                     contextFactory = contextFactory,
                     parentSpan = parentSpan,
                     id = eventContext.eventId,
+                    runId = eventContext.runId,
                     toolName = eventContext.toolName,
                     toolArgs = eventContext.toolArgs.toKotlinxJsonObject(),
                     toolDescription = eventContext.toolDescription,

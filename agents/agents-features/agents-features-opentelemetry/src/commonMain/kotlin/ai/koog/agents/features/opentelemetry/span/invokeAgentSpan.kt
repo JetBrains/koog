@@ -168,7 +168,7 @@ internal fun startInvokeAgentSpan(
  * - gen_ai.output.messages (recommended)
  *
  * @param span The span to end.
- * @param messages The list of messages used in the inference.
+ * @param messages The messages of the run conversation.
  * @param model The model used for inference.
  * @param error The error that occurred during inference if any.
  * @param verbose Whether to log verbose information.
@@ -209,8 +209,10 @@ internal fun endInvokeAgentSpan(
     )
 
     // gen_ai.output.messages
-    if (messages.isNotEmpty()) {
-        span.addAttribute(GenAIAttributes.Output.Messages(messages))
+    // Only assistant responses — the request side is already on gen_ai.input.messages.
+    val responseMessages = messages.filterIsInstance<Message.Assistant>()
+    if (responseMessages.isNotEmpty()) {
+        span.addAttribute(GenAIAttributes.Output.Messages(responseMessages))
     }
 
     spanAdapter?.onBeforeSpanFinished(span)
