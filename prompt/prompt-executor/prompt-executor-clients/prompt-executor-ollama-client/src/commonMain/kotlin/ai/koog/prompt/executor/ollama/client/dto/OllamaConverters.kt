@@ -111,6 +111,10 @@ private fun Message.User.toOllamaTextChatMessage(model: LLModel): OllamaChatMess
                     }
                 }
 
+                is MessagePart.Tool.Result -> {
+                    // this is handled in the outer loop, so don't log warning
+                }
+
                 else -> {
                     logger.warn { "Skipping unsupported message part: $part" }
                 }
