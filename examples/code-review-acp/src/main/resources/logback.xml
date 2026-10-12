@@ -1,0 +1,16 @@
+<configuration>
+    <!--
+        Logs go to STDERR so that the code-review ACP agent can use STDOUT
+        exclusively for the JSON-RPC protocol stream.
+    -->
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDERR" />
+    </root>
+</configuration>
