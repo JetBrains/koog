@@ -137,3 +137,29 @@ public fun simpleOllamaAIExecutor(
  */
 public fun simpleMistralAIExecutor(apiKey: String, httpClientFactory: KoogHttpClient.Factory): MultiLLMPromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory))
+
+/**
+ * Creates a [MultiLLMPromptExecutor] for Azure AI Foundry project endpoints (v2).
+ *
+ * Unlike [simpleAzureOpenAIExecutor], this executor targets the new Azure AI Foundry
+ * unified endpoint (`/openai/v1`) which does not use `api-version` as a query parameter.
+ *
+ * @param projectEndpoint Full project endpoint URL, e.g.:
+ *   `https://<resource>.services.ai.azure.com/openai/v1`
+ * @param apiToken The API key from Azure AI Foundry.
+ * @param httpClientFactory Factory used to create the underlying HTTP client.
+ */
+public fun simpleAzureFoundryExecutor(
+    projectEndpoint: String,
+    apiToken: String,
+    httpClientFactory: KoogHttpClient.Factory,
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to OpenAILLMClient(
+        apiKey = apiToken,
+        settings = OpenAIClientSettings(
+            baseUrl = projectEndpoint,
+            chatCompletionsPath = "chat/completions"
+        ),
+        httpClientFactory = httpClientFactory
+    )
+)
