@@ -135,6 +135,64 @@ class SubgraphWithTaskTest {
     }
 
     @Test
+    @JsName("testSequentialSubgraphWithTaskAutoToolChoiceRetriesAssistantTextMessageSuccess")
+    fun `test sequential subgraphWithTask auto tool choice retries assistant text message success`() = runTest {
+        val blankTool = TestBlankTool()
+        val finishTool = TestFinishTool
+
+        val toolRegistry = ToolRegistry {
+            tool(blankTool)
+        }
+
+        val model = OpenAIModels.Chat.GPT4o
+
+        val inputRequest = "Test input"
+        val blankToolResult = "Blank tool result"
+        val mockResponse = "Test assistant response"
+        val expectedToolCallAssistantRequest =
+            "# DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.\n## IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!"
+
+        val mockExecutor = getMockExecutor(serializer) {
+            mockLLMAnswer(mockResponse) onRequestEquals inputRequest
+            mockLLMToolCall(blankTool, TestBlankTool.Args(blankToolResult)) onRequestContains expectedToolCallAssistantRequest
+            mockLLMToolCall(finishTool, TestFinishTool.Args()) onRequestContains blankToolResult
+        }
+
+        val blankToolArgsSerialized = blankTool.encodeArgsToString(TestBlankTool.Args(blankToolResult), serializer)
+        val finishToolArgsSerialized = finishTool.encodeArgsToString(TestFinishTool.Args(), serializer)
+
+        val expectedExecutionResult = listOf(
+            requestString(Message.Role.User, inputRequest),
+            responseString(Message.Role.Assistant, mockResponse),
+            requestString(Message.Role.User, expectedToolCallAssistantRequest),
+            responseString(Message.Role.Assistant, blankToolArgsSerialized),
+            toolCallString(blankTool.name, blankToolArgsSerialized),
+            requestString(Message.Role.User, "\"$blankToolResult\""),
+            responseString(Message.Role.Assistant, finishToolArgsSerialized),
+        )
+
+        val actualExecutionResult = mutableListOf<String>()
+
+        createAgent(
+            model = model,
+            parallelTools = false,
+            toolRegistry = toolRegistry,
+            executor = mockExecutor,
+            finishTool = finishTool,
+            toolChoice = LLMParams.ToolChoice.Auto,
+            installFeatures = {
+                installEventHandlerCaptureEvents(actualExecutionResult)
+            }
+        ).use { agent ->
+            val agentResult = agent.run(inputRequest, null)
+            logger.info { "Agent is finished with result: $agentResult" }
+        }
+
+        assertEquals(expectedExecutionResult.size, actualExecutionResult.size)
+        assertContentEquals(expectedExecutionResult, actualExecutionResult)
+    }
+
+    @Test
     @JsName("testParallelSubgraphWithTaskToolChoiceSupportSuccess")
     fun `test parallel subgraphWithTask tool_choice support success`() = runTest {
         val blankTool1 = TestBlankTool("blank-tool-1")
@@ -928,6 +986,7 @@ class SubgraphWithTaskTest {
         toolRegistry: ToolRegistry? = null,
         finishTool: Tool<TestFinishTool.Args, String>? = null,
         executor: PromptExecutor? = null,
+        toolChoice: LLMParams.ToolChoice = LLMParams.ToolChoice.Required,
         installFeatures: FeatureContext.() -> Unit = {},
     ): AIAgent<String, String> {
         val finishTool = finishTool ?: TestFinishTool
@@ -941,6 +1000,7 @@ class SubgraphWithTaskTest {
                 llmModel = model,
                 llmParams = llmParams,
                 parallelTools = parallelTools,
+                toolChoice = toolChoice,
             ) { input -> input }
 
             nodeStart then testSubgraphWithTask then nodeFinish
