@@ -10,6 +10,12 @@ internal data class OpenAIEmbeddingRequest(
 )
 
 @Serializable
+internal data class OpenAIEmbeddingBatchRequest(
+    val model: String,
+    val input: List<String>
+)
+
+@Serializable
 internal data class OpenAIEmbeddingResponse(
     val data: List<OpenAIEmbeddingData>,
     val model: String,
