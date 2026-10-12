@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonObject
  * Supported `Tools` are `Function` and `codeExecution`.
  * @property systemInstruction Developer set system instruction(s). Text only.
  * @property generationConfig Configuration options for model generation and outputs.
+ * @property serviceTier Processing tier selection for cost/reliability trade-offs.
  */
 @Serializable
 internal class GoogleRequest(
@@ -33,6 +34,7 @@ internal class GoogleRequest(
     @Serializable(with = GoogleGenerationConfigSerializer::class)
     val generationConfig: GoogleGenerationConfig? = null,
     val toolConfig: GoogleToolConfig? = null,
+    val serviceTier: GoogleServiceTier? = null,
 )
 
 /**
@@ -322,6 +324,34 @@ internal class GoogleGenerationConfig(
     val thinkingConfig: GoogleThinkingConfig? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 )
+
+/**
+ * Service tier used to process a Google GenerateContent request.
+ *
+ * - [STANDARD]: Standard pricing and reliability.
+ * - [FLEX]: Cost-optimized best-effort processing for latency-tolerant workloads.
+ * - [PRIORITY]: Reliability-optimized processing for critical workloads.
+ */
+@Serializable
+public enum class GoogleServiceTier {
+    /**
+     * Standard synchronous processing. Serialized as `"standard"`.
+     */
+    @SerialName("standard")
+    STANDARD,
+
+    /**
+     * Cost-optimized best-effort processing. Serialized as `"flex"`.
+     */
+    @SerialName("flex")
+    FLEX,
+
+    /**
+     * Reliability-optimized processing. Serialized as `"priority"`.
+     */
+    @SerialName("priority")
+    PRIORITY,
+}
 
 /**
  * Configuration for tool calling

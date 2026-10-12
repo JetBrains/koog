@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleServiceTier
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.test.utils.runWithBothJsonConfigurations
 import ai.koog.test.utils.verifyDeserialization
@@ -42,7 +43,26 @@ class GoogleSerializationTest {
             jsonObject["candidateCount"]?.jsonPrimitive?.intOrNull shouldBe 1
             jsonObject["topP"]?.jsonPrimitive?.doubleOrNull shouldBe 0.9
             jsonObject["topK"]?.jsonPrimitive?.intOrNull shouldBe 40
+            jsonObject["serviceTier"] shouldBe null
             jsonObject["additionalProperties"] shouldBe null
+        }
+
+    @Test
+    fun `test request serialization with serviceTier`() =
+        runWithBothJsonConfigurations("request serialization with serviceTier") { json ->
+            val request = GoogleRequest(
+                contents = emptyList(),
+                serviceTier = GoogleServiceTier.PRIORITY
+            )
+
+            json.encodeToString(GoogleRequest.serializer(), request) shouldEqualJson
+                // language=json
+                """
+            {
+                "contents": [],
+                "serviceTier": "priority"
+            }
+                """.trimIndent()
         }
 
     @Test
@@ -107,6 +127,26 @@ class GoogleSerializationTest {
             request.topP shouldBe 0.9
             request.topK shouldBe 40
             request.additionalProperties shouldBe null
+        }
+
+    @Test
+    fun `test request deserialization with serviceTier`() =
+        runWithBothJsonConfigurations("request deserialization with serviceTier") { json ->
+            val jsonString =
+                // language=json
+                """
+            {
+                "contents": [],
+                "serviceTier": "flex"
+            }
+                """.trimIndent()
+
+            val request: GoogleRequest = verifyDeserialization(
+                payload = jsonString,
+                json = json
+            )
+
+            request.serviceTier shouldBe GoogleServiceTier.FLEX
         }
 
     @Test
