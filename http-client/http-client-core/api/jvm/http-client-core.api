@@ -1,3 +1,7 @@
+public final class ai/koog/http/client/HeadersKt {
+	public static final fun lowercaseHeaderKeys (Ljava/util/Map;)Ljava/util/Map;
+}
+
 public final class ai/koog/http/client/HttpClientFactoryResolver {
 	public static final field INSTANCE Lai/koog/http/client/HttpClientFactoryResolver;
 	public final fun resolve ()Lai/koog/http/client/KoogHttpClient$Factory;
@@ -44,10 +48,16 @@ public final class ai/koog/http/client/KoogHttpClient$Factory$DefaultImpls {
 
 public final class ai/koog/http/client/KoogHttpClientException : java/lang/Exception {
 	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getClientName ()Ljava/lang/String;
 	public final fun getErrorBody ()Ljava/lang/String;
+	public final fun getHeaders ()Ljava/util/Map;
 	public final fun getStatusCode ()Ljava/lang/Integer;
 }
 

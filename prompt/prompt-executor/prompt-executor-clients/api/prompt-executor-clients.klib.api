@@ -12,6 +12,7 @@ open annotation class ai.koog.prompt.executor.clients/InternalLLMClientApi : kot
 
 abstract fun interface ai.koog.prompt.executor.clients.retry/RetryAfterExtractor { // ai.koog.prompt.executor.clients.retry/RetryAfterExtractor|null[0]
     abstract fun extract(kotlin/String): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/RetryAfterExtractor.extract|extract(kotlin.String){}[0]
+    open fun extract(ai.koog.http.client/KoogHttpClientException): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/RetryAfterExtractor.extract|extract(ai.koog.http.client.KoogHttpClientException){}[0]
 }
 
 abstract interface ai.koog.prompt.executor.clients/LLMClientAPI : kotlin/AutoCloseable { // ai.koog.prompt.executor.clients/LLMClientAPI|null[0]
@@ -56,6 +57,15 @@ abstract class ai.koog.prompt.executor.clients/LLMEmbeddingProvider : ai.koog.pr
     constructor <init>() // ai.koog.prompt.executor.clients/LLMEmbeddingProvider.<init>|<init>(){}[0]
 }
 
+final class ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor : ai.koog.prompt.executor.clients.retry/RetryAfterExtractor { // ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor|null[0]
+    constructor <init>(kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryAfterExtractor>) // ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor.<init>|<init>(kotlin.collections.List<ai.koog.prompt.executor.clients.retry.RetryAfterExtractor>){}[0]
+    constructor <init>(kotlin/Array<out ai.koog.prompt.executor.clients.retry/RetryAfterExtractor>...) // ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor.<init>|<init>(kotlin.Array<out|ai.koog.prompt.executor.clients.retry.RetryAfterExtractor>...){}[0]
+
+    final fun extract(ai.koog.http.client/KoogHttpClientException): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor.extract|extract(ai.koog.http.client.KoogHttpClientException){}[0]
+    final fun extract(kotlin/String): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor.extract|extract(kotlin.String){}[0]
+    final fun toString(): kotlin/String // ai.koog.prompt.executor.clients.retry/CompositeRetryAfterExtractor.toString|toString(){}[0]
+}
+
 final class ai.koog.prompt.executor.clients.retry/RetryConfig { // ai.koog.prompt.executor.clients.retry/RetryConfig|null[0]
     constructor <init>(kotlin/Int = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> = ..., ai.koog.prompt.executor.clients.retry/RetryAfterExtractor? = ...) // ai.koog.prompt.executor.clients.retry/RetryConfig.<init>|<init>(kotlin.Int;kotlin.time.Duration;kotlin.time.Duration;kotlin.Double;kotlin.Double;kotlin.collections.List<ai.koog.prompt.executor.clients.retry.RetryablePattern>;ai.koog.prompt.executor.clients.retry.RetryAfterExtractor?){}[0]
 
@@ -95,6 +105,8 @@ final class ai.koog.prompt.executor.clients.retry/RetryConfig { // ai.koog.promp
             final fun <get-DEFAULT>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT.<get-DEFAULT>|<get-DEFAULT>(){}[0]
         final val DEFAULT_PATTERNS // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT_PATTERNS|{}DEFAULT_PATTERNS[0]
             final fun <get-DEFAULT_PATTERNS>(): kotlin.collections/List<ai.koog.prompt.executor.clients.retry/RetryablePattern> // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT_PATTERNS.<get-DEFAULT_PATTERNS>|<get-DEFAULT_PATTERNS>(){}[0]
+        final val DEFAULT_RETRY_AFTER_EXTRACTOR // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT_RETRY_AFTER_EXTRACTOR|{}DEFAULT_RETRY_AFTER_EXTRACTOR[0]
+            final fun <get-DEFAULT_RETRY_AFTER_EXTRACTOR>(): ai.koog.prompt.executor.clients.retry/RetryAfterExtractor // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DEFAULT_RETRY_AFTER_EXTRACTOR.<get-DEFAULT_RETRY_AFTER_EXTRACTOR>|<get-DEFAULT_RETRY_AFTER_EXTRACTOR>(){}[0]
         final val DISABLED // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DISABLED|{}DISABLED[0]
             final fun <get-DISABLED>(): ai.koog.prompt.executor.clients.retry/RetryConfig // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.DISABLED.<get-DISABLED>|<get-DISABLED>(){}[0]
         final val PRODUCTION // ai.koog.prompt.executor.clients.retry/RetryConfig.Companion.PRODUCTION|{}PRODUCTION[0]
@@ -116,6 +128,22 @@ final class ai.koog.prompt.executor.clients.retry/RetryingLLMClient : ai.koog.pr
     final suspend fun executeMultipleChoices(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel, kotlin.collections/List<ai.koog.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.koog.prompt.message/Message.Assistant> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.executeMultipleChoices|executeMultipleChoices(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel;kotlin.collections.List<ai.koog.agents.core.tools.ToolDescriptor>){}[0]
     final suspend fun models(): kotlin.collections/List<ai.koog.prompt.llm/LLModel> // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.models|models(){}[0]
     final suspend fun moderate(ai.koog.prompt/Prompt, ai.koog.prompt.llm/LLModel): ai.koog.prompt.dsl/ModerationResult // ai.koog.prompt.executor.clients.retry/RetryingLLMClient.moderate|moderate(ai.koog.prompt.Prompt;ai.koog.prompt.llm.LLModel){}[0]
+}
+
+final class ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor : ai.koog.prompt.executor.clients.retry/RetryAfterExtractor { // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor|null[0]
+    constructor <init>(ai.koog.utils.time/KoogClock = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<kotlin/String> = ...) // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.<init>|<init>(ai.koog.utils.time.KoogClock;kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.String>){}[0]
+
+    final fun extract(ai.koog.http.client/KoogHttpClientException): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.extract|extract(ai.koog.http.client.KoogHttpClientException){}[0]
+    final fun extract(kotlin/String): kotlin.time/Duration? // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.extract|extract(kotlin.String){}[0]
+
+    final object Companion { // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion|null[0]
+        final val DEFAULT // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion.DEFAULT|{}DEFAULT[0]
+            final fun <get-DEFAULT>(): ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion.DEFAULT.<get-DEFAULT>|<get-DEFAULT>(){}[0]
+        final val DEFAULT_RESET_DURATION_HEADERS // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion.DEFAULT_RESET_DURATION_HEADERS|{}DEFAULT_RESET_DURATION_HEADERS[0]
+            final fun <get-DEFAULT_RESET_DURATION_HEADERS>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion.DEFAULT_RESET_DURATION_HEADERS.<get-DEFAULT_RESET_DURATION_HEADERS>|<get-DEFAULT_RESET_DURATION_HEADERS>(){}[0]
+        final val DEFAULT_RETRY_AFTER_HEADERS // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion.DEFAULT_RETRY_AFTER_HEADERS|{}DEFAULT_RETRY_AFTER_HEADERS[0]
+            final fun <get-DEFAULT_RETRY_AFTER_HEADERS>(): kotlin.collections/List<kotlin/String> // ai.koog.prompt.executor.clients.retry/StandardHeaderRetryAfterExtractor.Companion.DEFAULT_RETRY_AFTER_HEADERS.<get-DEFAULT_RETRY_AFTER_HEADERS>|<get-DEFAULT_RETRY_AFTER_HEADERS>(){}[0]
+    }
 }
 
 final class ai.koog.prompt.executor.clients/ConnectionTimeoutConfig { // ai.koog.prompt.executor.clients/ConnectionTimeoutConfig|null[0]

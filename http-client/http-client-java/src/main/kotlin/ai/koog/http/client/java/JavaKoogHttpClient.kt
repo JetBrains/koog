@@ -71,6 +71,7 @@ public class JavaKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.statusCode(),
             errorBody = response.body(),
+            headers = response.headers().map(),
         )
     }
 
@@ -196,6 +197,7 @@ public class JavaKoogHttpClient internal constructor(
                     KoogHttpClientException(
                         clientName = clientName,
                         statusCode = response.statusCode(),
+                        headers = response.headers().map(),
                     )
                 )
                 return@callbackFlow
@@ -285,6 +287,7 @@ public class JavaKoogHttpClient internal constructor(
                         KoogHttpClientException(
                             clientName = clientName,
                             statusCode = response.statusCode(),
+                            headers = response.headers().map(),
                         )
                     )
                     return@launch
