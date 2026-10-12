@@ -34,6 +34,7 @@ import ai.koog.serialization.typeToken
 import ai.koog.utils.io.use
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
@@ -60,7 +61,7 @@ internal object DebuggerTestAPI {
         get() = HttpClient {
             install(HttpRequestRetry) {
                 retryOnExceptionIf(maxRetries = 10) { _, cause ->
-                    cause is IOException
+                    cause is IOException || cause is SSEClientException
                 }
             }
         }
@@ -131,8 +132,10 @@ internal object DebuggerTestAPI {
 
                 val actualAgentClosingEvent = actualFilteredEvents.singleEvent<AgentClosingEvent>()
                 val actualAgentStartingEvent = actualFilteredEvents.singleEvent<AgentStartingEvent>()
+                val actualAgentCompletedEvent = actualFilteredEvents.singleEvent<AgentCompletedEvent>()
                 val actualStrategyStartingEvent = actualFilteredEvents.singleEvent<GraphStrategyStartingEvent>()
                 val actualNodeStartEvent = actualFilteredEvents.singleNodeEvent(START_NODE_PREFIX)
+                val actualNodeFinishEvent = actualFilteredEvents.singleNodeEvent(FINISH_NODE_PREFIX)
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 expectedFilteredEvents.addAll(
@@ -181,7 +184,7 @@ internal object DebuggerTestAPI {
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionStartingEvent(
-                            eventId = actualNodeStartEvent.eventId,
+                            eventId = actualNodeFinishEvent.eventId,
                             executionInfo = agentExecutionInfo(agentId, strategyName, FINISH_NODE_PREFIX),
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
@@ -190,7 +193,7 @@ internal object DebuggerTestAPI {
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         NodeExecutionCompletedEvent(
-                            eventId = actualNodeStartEvent.eventId,
+                            eventId = actualNodeFinishEvent.eventId,
                             executionInfo = agentExecutionInfo(agentId, strategyName, FINISH_NODE_PREFIX),
                             runId = clientEventsCollector.runId,
                             nodeName = FINISH_NODE_PREFIX,
@@ -209,7 +212,7 @@ internal object DebuggerTestAPI {
                             timestamp = testClock.now().toEpochMilliseconds()
                         ),
                         AgentCompletedEvent(
-                            eventId = actualAgentStartingEvent.eventId,
+                            eventId = actualAgentCompletedEvent.eventId,
                             executionInfo = agentExecutionInfo(agentId),
                             agentId = agentId,
                             runId = clientEventsCollector.runId,
