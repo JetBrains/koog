@@ -93,14 +93,14 @@ class KoogAgentSession(
 
 Important notes:
 
-* Use `channelFlow` to allow sending events from different corutines
+* Use `channelFlow` to allow sending events from different coroutines
 * Set `this.setDefaultNotifications = true` to automatically handle standard ACP notifications using agent pipeline
-  interseption. In case manual notification handling, please set `this.setDefaultNotifications = false` and process all
-  the agents events accoring to the spesificaion using vai protocol `AcpAgent` feature.
-* To convert ACP content blocks to Koog messages use `toKoogMessage` extension function and append recieved user message
+  interception. In case manual notification handling, please set `this.setDefaultNotifications = false` and process all
+  the agents events according to the specification via protocol `AcpAgent` feature.
+* To convert ACP content blocks to Koog messages use `toKoogMessage` extension function and append received user message
   to the prompt.
 * Run the agent in a separate coroutine to allow canceling in `AgentSession.cancel` method
-* Use mutex` to synchronize access to the agent instance, as by current protocol prompt should not trigger new execution
+* Use `mutex` to synchronize access to the agent instance, as by current protocol prompt should not trigger new execution
   until previous is finished
 
 #### Configuration Options
@@ -199,6 +199,6 @@ How to run the example:
 ```
 2. Enter the request for ACP Agent
 ```shell
-Move file `my-file.md` to folder `my-folder` and appent title `## My File` to the file content
+Move file `my-file.md` to folder `my-folder` and append title `## My File` to the file content
 ```
 3. Check the events traces in the console
