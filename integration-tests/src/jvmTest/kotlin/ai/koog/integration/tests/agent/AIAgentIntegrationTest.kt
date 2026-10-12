@@ -3,6 +3,7 @@ package ai.koog.integration.tests.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.execution.path
 import ai.koog.agents.core.agent.functionalStrategy
@@ -31,6 +32,7 @@ import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolBase
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -39,6 +41,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.asTool
+import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -60,6 +63,7 @@ import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -70,10 +74,15 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorOperation
+import ai.koog.prompt.executor.model.ResolvedModel
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
@@ -82,6 +91,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.serialization.JSONPrimitive
+import ai.koog.serialization.JSONSerializer
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import ai.koog.serialization.typeToken
 import ai.koog.utils.time.KoogClock
@@ -106,6 +116,7 @@ import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -140,6 +151,17 @@ fun finishSubgraphWithEvidence(
     result: String
 ): String = "finished:$result"
 
+@Serializable
+private sealed interface SealedSubgraphResult {
+    @Serializable
+    @SerialName("summary")
+    data class Summary(val value: String) : SealedSubgraphResult
+
+    @Serializable
+    @SerialName("blocked")
+    data class Blocked(val reason: String) : SealedSubgraphResult
+}
+
 class AIAgentIntegrationTest : AIAgentTestBase() {
 
     private fun forceOneToolNoReasoningParams(model: LLModel): LLMParams = when (model.provider.id) {
@@ -147,9 +169,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             thinkingConfig = GoogleThinkingConfig(includeThoughts = false)
         )
 
-        LLMProvider.Anthropic.id -> AnthropicParams(
-            thinking = AnthropicThinking.Disabled()
-        )
+        LLMProvider.Anthropic.id -> AnthropicParams(thinking = AnthropicThinking.Disabled())
 
         LLMProvider.OpenAI.id -> if (model.capabilities?.contains(LLMCapability.OpenAIEndpoint.Responses) == true) {
             OpenAIResponsesParams(reasoning = ReasoningConfig(effort = ReasoningEffort.NONE))
@@ -178,6 +198,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         @JvmStatic
         fun modelsWithVisionCapability(): Stream<Arguments> = AIAgentTestBase.modelsWithVisionCapability()
+
+        @JvmStatic
+        fun anthropicVisionToolModels(): Stream<LLModel> = Models.anthropicModels()
+            .filter { it.supports(LLMCapability.Tools) && it.supports(LLMCapability.Vision.Image) }
 
         @JvmStatic
         fun reasoningIntervals(): Stream<Int> {
@@ -228,6 +252,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @Serializable
     private data class RawMetadataToolResult(val echoed: String, val length: Int)
 
+    @Serializable
+    private data class VisualToolArgs(val label: String)
+
     private class RawMetadataTool : ToolBase<RawMetadataToolArgs, RawMetadataToolResult>(
         argsType = typeToken<RawMetadataToolArgs>(),
         resultType = typeToken<RawMetadataToolResult>(),
@@ -243,6 +270,34 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             observedMetadata += metadata
             return RawMetadataToolResult(echoed = "echo:${args.value}", length = args.value.length)
         }
+    }
+
+    private class VisualToolResultImageTool(
+        imageBytes: ByteArray,
+    ) : SimpleTool<VisualToolArgs>(
+        argsType = typeToken<VisualToolArgs>(),
+        name = "visual_tool_result_image",
+        description = "Returns a tool result with text and an attached image for inspection.",
+    ) {
+        private val imageBase64 = Base64.getEncoder().encodeToString(imageBytes)
+
+        override suspend fun execute(args: VisualToolArgs): String =
+            "Marker visual-tool-result-1979 for ${args.label}. Inspect the attached image and answer from the image."
+
+        override fun encodeResultToParts(
+            result: String,
+            serializer: JSONSerializer
+        ): List<MessagePart.ContentPart> = listOf(
+            MessagePart.Text(result),
+            MessagePart.Attachment(
+                AttachmentSource.Image(
+                    content = AttachmentContent.Binary.Base64(imageBase64),
+                    format = "png",
+                    mimeType = "image/png",
+                    fileName = "tool-result-image.png",
+                )
+            )
+        )
     }
 
     private class StaticMetadataFeatureConfig : FeatureConfig()
@@ -351,6 +406,119 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         override fun close() = Unit
     }
 
+    @OptIn(InternalAgentToolsApi::class)
+    private class SealedSubgraphExecutor : PromptExecutor() {
+        val prompts = mutableListOf<Prompt>()
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            prompts += prompt
+            val finishToolName = tools.single { it.name == SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME }.name
+            return Message.Assistant(
+                parts = listOf(
+                    MessagePart.Tool.Call(
+                        id = "sealed-finish-call",
+                        tool = finishToolName,
+                        args = buildJsonObject {
+                            put(
+                                "result",
+                                buildJsonObject {
+                                    put("type", "summary")
+                                    put("value", "sealed-result-from-subgraph")
+                                }
+                            )
+                        },
+                    )
+                ),
+                metaInfo = ResponseMetaInfo.create(KoogClock.System),
+                id = "sealed-subgraph-finish",
+            )
+        }
+
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> = emptyFlow()
+
+        override suspend fun moderate(
+            prompt: Prompt,
+            model: LLModel
+        ): ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap())
+
+        override fun close() = Unit
+    }
+
+    private class RecordingFallbackClient(
+        private val fallbackModel: LLModel
+    ) : LLMClient() {
+        val executedModels = mutableListOf<LLModel>()
+
+        override fun llmProvider(): LLMProvider = fallbackModel.provider
+
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Message.Assistant {
+            executedModels += model
+            return Message.Assistant(
+                content = "fallback model handled ${prompt.id}",
+                metaInfo = ResponseMetaInfo.Empty,
+            )
+        }
+
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> = emptyFlow()
+
+        override suspend fun executeMultipleChoices(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): List<Message.Assistant> = listOf(execute(prompt, model, tools))
+
+        override suspend fun moderate(
+            prompt: Prompt,
+            model: LLModel
+        ): ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap())
+
+        override suspend fun embed(text: String, model: LLModel): List<Double> = listOf(1.0)
+
+        override suspend fun embed(inputs: List<String>, model: LLModel): List<List<Double>> =
+            inputs.map { listOf(1.0) }
+
+        override suspend fun models(): List<LLModel> = listOf(fallbackModel)
+
+        override fun close() = Unit
+    }
+
+    private class CountingFallbackExecutor(
+        fallbackClient: RecordingFallbackClient,
+        fallbackModel: LLModel,
+    ) : MultiLLMPromptExecutor(
+        LLMProvider.OpenAI to fallbackClient,
+        fallback = FallbackPromptExecutorSettings(
+            fallbackProvider = LLMProvider.OpenAI,
+            fallbackModel = fallbackModel,
+        )
+    ) {
+        val resolutions = mutableListOf<Pair<LLModel, PromptExecutorOperation>>()
+
+        override suspend fun resolveModel(
+            model: LLModel,
+            promptExecutorOperation: PromptExecutorOperation
+        ): ResolvedModel {
+            resolutions += model to promptExecutorOperation
+            return super.resolveModel(model, promptExecutorOperation)
+        }
+    }
+
     val twoToolsPrompt = """
         I need you to perform two operations:
         1. Calculate 7 times 2
@@ -449,8 +617,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         Models.assumeAvailable(model.provider)
         Models.assumeEnumToolCallsAreStable(model, "single-run integration with calculator enum tool arguments")
         assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model.id !== OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
-        assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
+        assumeTrue(model.id != OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
+        assumeTrue(model.id != GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
         withRetry(5) {
             runWithTracking { eventHandlerConfig, state ->
@@ -605,6 +773,106 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 it.tool == "finishSubgraphWithEvidence" &&
                 it.output.contains("finished:koog")
         }
+    }
+
+    @Test
+    fun integration_SubgraphWithTaskDecodesSealedFinishToolOutput() = runTest(timeout = 30.seconds) {
+        val executor = SealedSubgraphExecutor()
+        val strategy = strategy<String, SealedSubgraphResult>("sealed-subgraph-finish-output") {
+            val subtask by subgraphWithTask<String, SealedSubgraphResult>(
+                toolSelectionStrategy = ToolSelectionStrategy.ALL,
+                parallelTools = false,
+            ) { input ->
+                "Finish the sealed subgraph for '$input'."
+            }
+
+            nodeStart then subtask then nodeFinish
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("sealed-subgraph-finish-output") {
+                    system("You execute sealed subgraph regression tests.")
+                },
+                model = OpenAIModels.Chat.GPT4_1,
+                maxAgentIterations = 20,
+            ),
+            toolRegistry = ToolRegistry.EMPTY,
+        )
+
+        agent.run("koog") shouldBe SealedSubgraphResult.Summary("sealed-result-from-subgraph")
+        executor.prompts.shouldHaveSize(1)
+    }
+
+    @Test
+    fun integration_AIAgentUsesMultiLLMFallbackModelResolution() = runTest(timeout = 30.seconds) {
+        val fallbackModel = OpenAIModels.Chat.GPT4_1
+        val fallbackClient = RecordingFallbackClient(fallbackModel)
+        val executor = CountingFallbackExecutor(fallbackClient, fallbackModel)
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = singleRunStrategy(),
+            agentConfig = AIAgentConfig(
+                prompt = prompt("agent-fallback-resolution") {
+                    system("Return the fallback response.")
+                },
+                model = GoogleModels.Gemini3_Flash_Preview,
+                maxAgentIterations = 3,
+            ),
+            toolRegistry = ToolRegistry {},
+        )
+
+        agent.run("Use the configured executor.") shouldContain "fallback model handled"
+        executor.resolutions shouldBe listOf(GoogleModels.Gemini3_Flash_Preview to PromptExecutorOperation.Execute)
+        fallbackClient.executedModels shouldBe listOf(fallbackModel)
+    }
+
+    @ParameterizedTest
+    @MethodSource("anthropicVisionToolModels")
+    fun integration_AIAgentForwardsNonTextToolResultPartsToLLM(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.provider == LLMProvider.Anthropic, "Non-text tool result regression runs on Anthropic only")
+        assumeTrue(model.supports(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.supports(LLMCapability.Vision.Image), "Model $model does not support image inputs")
+
+        val tool = VisualToolResultImageTool(testResourcesDir.resolve("test.png").readBytes())
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = singleRunStrategy(),
+            agentConfig = AIAgentConfig(
+                prompt = prompt(
+                    id = "agent-non-text-tool-result",
+                    params = AnthropicParams(
+                        toolChoice = ToolChoice.Auto,
+                        thinking = AnthropicThinking.Disabled(),
+                        maxTokens = 512,
+                    )
+                ) {
+                    system(
+                        "You must call the visual_tool_result_image tool exactly once before answering. " +
+                            "After the tool result arrives, inspect the attached image and answer in one sentence."
+                    )
+                },
+                model = model,
+                maxAgentIterations = 6,
+            ),
+            toolRegistry = ToolRegistry {
+                tool(tool)
+            },
+        )
+
+        val result =
+            withRetry(times = 3, testName = "integration_AIAgentForwardsNonTextToolResultPartsToLLM[${model.id}]") {
+                agent.run(
+                    "Call the image tool with label 'koog'. Then include marker visual-tool-result-1979 " +
+                        "and name one visible color from the attached image."
+                )
+            }
+
+        result shouldContain "visual-tool-result-1979"
     }
 
     @ParameterizedTest

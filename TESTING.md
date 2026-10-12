@@ -138,6 +138,12 @@ Integration tests that interact with LLM services require API tokens to be set a
 - `MISTRAL_AI_API_TEST_KEY` - Required for tests using MistralAI
 - `OPEN_AI_API_TEST_KEY` - Required for tests using OpenAI's models
 - `OPEN_ROUTER_API_TEST_KEY` - Required for tests using OpenRouter
+- `AWS_ACCESS_KEY_ID` - Required for tests using AWS Bedrock with standard AWS credentials
+- `AWS_SECRET_ACCESS_KEY` - Required for tests using AWS Bedrock with standard AWS credentials
+- `AWS_SESSION_TOKEN` - Optional AWS session token for temporary Bedrock credentials
+- `AWS_BEARER_TOKEN_BEDROCK` - Required for Bedrock API key authentication smoke tests
+- `AWS_BEDROCK_GUARDRAIL_ID` - Required for Bedrock moderation/guardrail integration tests
+- `AWS_BEDROCK_GUARDRAIL_VERSION` - Required for Bedrock moderation/guardrail integration tests
 
 You need to set these environment variables before running the integration tests that use the corresponding LLM clients.
 To simplify development, you can also create `env.properties` file (already gitignored) using [env.template.propertes](./integration-tests/env.template.properties) as a template.
