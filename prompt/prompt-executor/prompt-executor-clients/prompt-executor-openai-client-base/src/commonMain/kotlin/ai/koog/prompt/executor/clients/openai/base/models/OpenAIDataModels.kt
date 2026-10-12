@@ -462,7 +462,8 @@ public class OpenAIStaticContent(public val content: Content) {
  * Exact effects are model-dependent.
  * If not set, the model/provider default applies.
  *
- * Serialized as `"none" | "minimal" | "low" | "medium" | "high"`.
+ * Serialized as `"none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"`.
+ * Supported values vary by model.
  *
  * See [reasoning_effort](https://platform.openai.com/docs/api-reference/responses/create#responses_create-reasoning-effort)
  */
@@ -499,11 +500,25 @@ public enum class ReasoningEffort {
     MEDIUM,
 
     /**
-     * Maximizes the model’s reasoning depth for complex or ambiguous problems.
+     * Allows substantial reasoning depth for complex or ambiguous problems.
      * Expect higher latency and token usage. Serialized as `"high"`.
      */
     @SerialName("high")
-    HIGH
+    HIGH,
+
+    /**
+     * Allows extra-high reasoning effort for the most complex tasks.
+     * Expect higher latency and token usage than [HIGH]. Serialized as `"xhigh"`.
+     */
+    @SerialName("xhigh")
+    XHIGH,
+
+    /**
+     * Allows the maximum reasoning effort supported by the model.
+     * This setting is available only for models that explicitly support it. Serialized as `"max"`.
+     */
+    @SerialName("max")
+    MAX
 }
 
 /**

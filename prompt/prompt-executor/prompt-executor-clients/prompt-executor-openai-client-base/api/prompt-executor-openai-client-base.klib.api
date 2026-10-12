@@ -68,9 +68,11 @@ final enum class ai.koog.prompt.executor.clients.openai.base.models/OpenAIModali
 final enum class ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort : kotlin/Enum<ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort> { // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort|null[0]
     enum entry HIGH // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.HIGH|null[0]
     enum entry LOW // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.LOW|null[0]
+    enum entry MAX // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.MAX|null[0]
     enum entry MEDIUM // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.MEDIUM|null[0]
     enum entry MINIMAL // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.MINIMAL|null[0]
     enum entry NONE // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.NONE|null[0]
+    enum entry XHIGH // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.XHIGH|null[0]
 
     final val entries // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort> // ai.koog.prompt.executor.clients.openai.base.models/ReasoningEffort.entries.<get-entries>|<get-entries>#static(){}[0]

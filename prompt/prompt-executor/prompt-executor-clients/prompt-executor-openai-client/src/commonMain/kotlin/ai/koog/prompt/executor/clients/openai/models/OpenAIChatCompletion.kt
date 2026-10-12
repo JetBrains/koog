@@ -81,7 +81,7 @@ import kotlin.collections.List
  * @property promptCacheKey Used by OpenAI to cache responses for similar requests to optimize your cache hit rates.
  * Replaces the `user` field.
  * @property reasoningEffort Constrains effort on reasoning for reasoning models.
- * Currently supported values are `low`, `medium`, and `high`.
+ * Supported values vary by model and can include `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`.
  * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
  * @property responseFormat An object specifying the format that the model must output.
  *
