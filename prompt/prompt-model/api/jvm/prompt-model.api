@@ -666,6 +666,42 @@ public final class ai/koog/prompt/message/AttachmentSource$Video$Companion {
 public abstract interface class ai/koog/prompt/message/CacheControl {
 }
 
+public final class ai/koog/prompt/message/LogProb {
+	public static final field Companion Lai/koog/prompt/message/LogProb$Companion;
+	public fun <init> (Ljava/lang/String;D)V
+	public fun <init> (Ljava/lang/String;DLjava/util/List;)V
+	public fun <init> (Ljava/lang/String;DLjava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;DLjava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()D
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;DLjava/util/List;Ljava/util/List;)Lai/koog/prompt/message/LogProb;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/LogProb;Ljava/lang/String;DLjava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/message/LogProb;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBytes ()Ljava/util/List;
+	public final fun getLogprob ()D
+	public final fun getToken ()Ljava/lang/String;
+	public final fun getTopLogprobs ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class ai/koog/prompt/message/LogProb$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/koog/prompt/message/LogProb$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/koog/prompt/message/LogProb;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/koog/prompt/message/LogProb;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/koog/prompt/message/LogProb$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public abstract interface class ai/koog/prompt/message/Message {
 	public static final field Companion Lai/koog/prompt/message/Message$Companion;
 	public abstract fun getId ()Ljava/lang/String;
@@ -692,17 +728,20 @@ public final class ai/koog/prompt/message/Message$Assistant : ai/koog/prompt/mes
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;)V
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
 	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/util/List;
 	public final fun component2 ()Lai/koog/prompt/message/ResponseMetaInfo;
 	public final fun component3 ()Ljava/lang/String;
 	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
 	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;)Lai/koog/prompt/message/Message$Assistant;
-	public static synthetic fun copy$default (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/List;)Lai/koog/prompt/message/Message$Assistant;
+	public static synthetic fun copy$default (Lai/koog/prompt/message/Message$Assistant;Ljava/util/List;Lai/koog/prompt/message/ResponseMetaInfo;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lai/koog/prompt/message/Message$Assistant;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFinishReason ()Ljava/lang/String;
 	public fun getId ()Ljava/lang/String;
+	public final fun getLogprobs ()Ljava/util/List;
 	public synthetic fun getMetaInfo ()Lai/koog/prompt/message/MessageMetaInfo;
 	public fun getMetaInfo ()Lai/koog/prompt/message/ResponseMetaInfo;
 	public fun getParts ()Ljava/util/List;
