@@ -124,12 +124,13 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
         is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
         is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
             val initialPrompt = prompt
+            val possibleTools = toolSelectionStrategy.tools ?: tools
 
             replaceHistoryWithTLDR()
 
             appendPrompt {
                 user {
-                    selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                    selectRelevantTools(possibleTools, toolSelectionStrategy.subtaskDescription)
                 }
             }
 
@@ -138,7 +139,10 @@ public open class AIAgentSubgraphBase<TInput, TOutput>(
                     default = StructuredRequest.Manual(
                         JsonStructure.create<SelectedTools>(
                             schemaGenerator = StandardJsonSchemaGenerator,
-                            examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                            examples = listOf(
+                                SelectedTools(listOf()),
+                                SelectedTools(possibleTools.map { it.name }.take(3))
+                            ),
                         ),
                     ),
                 ),
@@ -462,10 +466,12 @@ public sealed interface ToolSelectionStrategy {
      *
      * @property subtaskDescription A description of the subtask for which the relevant tools should be selected.
      * @property fixingParser Optional [StructureFixingParser] to attempt fixes when a malformed structured response with a tool list is received.
+     * @property tools Optional collection of `ToolDescriptor` to limit selection to.
      */
     public data class AutoSelectForTask(
         val subtaskDescription: String,
-        val fixingParser: StructureFixingParser? = null
+        val fixingParser: StructureFixingParser? = null,
+        val tools: List<ToolDescriptor>? = null
     ) : ToolSelectionStrategy
 
     /**
