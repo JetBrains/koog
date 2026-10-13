@@ -417,6 +417,32 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         )
     }
 
+    /**
+     * The model id to send.
+     *
+     * [AnthropicClientSettings.modelVersionsMap] pins a known model to the dated snapshot it was
+     * released as, and that pinning is the reason the map exists — `claude-sonnet-4-0` must keep
+     * resolving to the same version whatever Anthropic later makes the alias mean.
+     *
+     * A model the map does not hold is sent under its own id rather than refused. The map is keyed
+     * by the whole [LLModel] value, so it misses two models a caller has every right to build: one
+     * released after this library, and a predefined one copied with a field changed — narrowing a
+     * context window used to make a known model unknown. In both cases the id is what the caller
+     * wrote, and Anthropic resolves an alias to its current snapshot itself, which is what someone
+     * who wrote an alias rather than a date asked for. An id the API does not know comes back as an
+     * error from the API, naming the model, instead of as an argument error from inside a client
+     * the caller did not think they were configuring.
+     *
+     * The provider is still required to be Anthropic: sending an OpenAI model here is a caller
+     * mistake, and that half of the old refusal is worth keeping.
+     */
+    private fun anthropicModelId(model: LLModel): String {
+        require(model.provider == LLMProvider.Anthropic) {
+            "Model provider must be Anthropic, but ${model.id} declares ${model.provider}"
+        }
+        return settings.modelVersionsMap[model] ?: model.id
+    }
+
     private fun serializeAnthropicMessageRequest(
         messages: List<AnthropicMessage>,
         systemMessages: List<SystemAnthropicMessage>,
@@ -446,7 +472,7 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
 
         // Always include max_tokens as it's required by the API
         val request = AnthropicMessageRequest(
-            model = settings.modelVersionsMap[model] ?: throw IllegalArgumentException("Unsupported model: $model"),
+            model = anthropicModelId(model),
             messages = messages,
             maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
             cacheControl = anthropicParams.cacheControl?.toAnthropicCacheControl(),
