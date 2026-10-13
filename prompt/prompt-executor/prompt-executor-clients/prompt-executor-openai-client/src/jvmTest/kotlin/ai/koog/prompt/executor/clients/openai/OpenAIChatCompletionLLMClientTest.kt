@@ -142,11 +142,40 @@ class OpenAIChatCompletionLLMClientTest {
         }
         """.trimIndent()
 
+    //language=json
+    private val terminalStreamChunkWithoutDelta: String =
+        """
+        {
+          "id": "chatcmpl-stream",
+          "object": "chat.completion.chunk",
+          "created": 1716920005,
+          "model": "gpt-5.6-luna",
+          "choices": [
+            {
+              "index": 0,
+              "finish_reason": "stop"
+            }
+          ]
+        }
+        """.trimIndent()
+
     @Test
     fun testStreamDeltaDeserializesReasoningContent() {
         val delta = streamJson.decodeFromString<OpenAIChatCompletionStreamResponse>(streamChunkWithDelta).choices.single().delta
 
         assertEquals("Let me think about this.", delta.reasoningContent)
+    }
+
+    @Test
+    fun testTerminalStreamChoiceWithoutDeltaDeserializesAsEmptyDelta() {
+        val choice = streamJson
+            .decodeFromString<OpenAIChatCompletionStreamResponse>(terminalStreamChunkWithoutDelta)
+            .choices
+            .single()
+
+        assertEquals("stop", choice.finishReason)
+        assertEquals(null, choice.delta.content)
+        assertEquals(null, choice.delta.toolCalls)
     }
 
     @Test
