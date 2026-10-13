@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.time.KoogClock
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
@@ -47,6 +48,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStrea
 import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.MessageStopEvent
+import aws.sdk.kotlin.services.bedrockruntime.model.ReasoningContentBlockDelta
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.StopReason
@@ -636,6 +638,53 @@ class BedrockLLMClientTest {
 
             val request = requireNotNull(capturedRequest) { "Request should have been captured" }
             assertEquals(null, request.guardrailConfig, "Guardrail config should be null")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun `converseStream API emits reasoning content deltas`() = runTest {
+        val reasoningText = "I need to inspect the market context first."
+        val mockClient = createMockBedrockClient(
+            onConverseStream = {
+                ConverseStreamResponse {
+                    stream = kotlinx.coroutines.flow.flow {
+                        emit(
+                            ConverseStreamOutput.ContentBlockDelta(
+                                ContentBlockDeltaEvent {
+                                    delta = ContentBlockDelta.ReasoningContent(
+                                        ReasoningContentBlockDelta.Text(reasoningText)
+                                    )
+                                    contentBlockIndex = 0
+                                }
+                            )
+                        )
+                        emit(
+                            ConverseStreamOutput.MessageStop(
+                                MessageStopEvent { stopReason = StopReason.EndTurn }
+                            )
+                        )
+                    }
+                }
+            },
+        )
+
+        val client = BedrockLLMClient(
+            mockClient,
+            apiMethod = BedrockAPIMethod.Converse,
+        )
+
+        try {
+            val frames = client.executeStreaming(
+                Prompt.build("test") { user("Hello") },
+                BedrockModels.MiniMaxM2_5,
+                emptyList()
+            ).toList()
+
+            val reasoningFrame = frames.filterIsInstance<StreamFrame.ReasoningDelta>().single()
+            reasoningFrame.text shouldBe reasoningText
+            reasoningFrame.index shouldBe 0
         } finally {
             client.close()
         }
