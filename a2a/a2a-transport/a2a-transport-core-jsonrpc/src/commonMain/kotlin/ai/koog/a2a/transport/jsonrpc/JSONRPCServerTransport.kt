@@ -8,6 +8,7 @@ import ai.koog.a2a.exceptions.A2AInvalidRequestException
 import ai.koog.a2a.exceptions.A2AMethodNotFoundException
 import ai.koog.a2a.exceptions.A2AParseException
 import ai.koog.a2a.exceptions.ErrorData
+import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.ServerTransport
@@ -21,10 +22,16 @@ import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.produceIn
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
@@ -57,8 +64,11 @@ public open class JSONRPCServerTransport(
      *
      * @param requestRaw Raw request body
      * @param ctx Server call context associated with this request
-     * @param respond Lambda to respond with a single non-streaming response
-     * @param respondStreaming Lambda to respond with a streaming response
+     * @param respond Lambda to respond with a single non-streaming response. Also used for streaming methods
+     * when they fail before the first event.
+     * @param respondStreaming Lambda to respond with a streaming response. The flow must be collected, either within
+     * the lambda or after it returns: this function returns only once the stream is consumed or its collection is
+     * cancelled.
      */
     public suspend fun handleRequest(
         requestRaw: String,
@@ -88,7 +98,7 @@ public open class JSONRPCServerTransport(
 
         try {
             if (jsonRpcRequest.a2aMethod.streaming) {
-                respondStreaming(onRequestStreaming(jsonRpcRequest.request, ctx))
+                respondStreamingOrError(onRequestStreaming(jsonRpcRequest.request, ctx), respond, respondStreaming)
             } else {
                 respond(onRequest(jsonRpcRequest.request, ctx))
             }
@@ -96,6 +106,42 @@ public open class JSONRPCServerTransport(
             throw ce
         } catch (e: Exception) {
             respond(toJSONRPCErrorResponse(e, jsonRequest.requestId))
+        }
+    }
+
+    /**
+     * Responds to a streaming request. An error raised before the first stream event is sent as a plain
+     * JSON-RPC response with [respond], so the client gets it without a stream being opened.
+     * Errors raised after the first event are sent as the last stream event.
+     */
+    private suspend fun respondStreamingOrError(
+        responses: Flow<JSONRPCResponse>,
+        respond: suspend (JSONRPCResponse) -> Unit,
+        respondStreaming: suspend (Flow<JSONRPCResponse>) -> Unit,
+    ): Unit = coroutineScope {
+        val events = responses.buffer(Channel.RENDEZVOUS).produceIn(this)
+
+        try {
+            val first = events.receiveCatching()
+            first.exceptionOrNull()?.let { throw it }
+
+            when (val firstResponse = first.getOrNull()) {
+                is JSONRPCErrorResponse -> respond(firstResponse)
+
+                null -> respondStreaming(emptyFlow())
+
+                // The stream can still be collected after respondStreaming returns (e.g. by Ktor's test engine),
+                // so the events channel is not cancelled here; emitAll cancels it if the collection stops early.
+                else -> respondStreaming(
+                    flow {
+                        emit(firstResponse)
+                        emitAll(events)
+                    }
+                )
+            }
+        } catch (e: Throwable) {
+            events.cancel()
+            throw e
         }
     }
 
@@ -203,6 +249,8 @@ public open class JSONRPCServerTransport(
 
     /**
      * Convert [JSONRPCRequest] params to request [T].
+     * Missing params are treated as an empty object, so requests without required fields
+     * (e.g. [ai.koog.a2a.model.GetExtendedAgentCardRequest]) can omit them.
      *
      * @param request Request to convert.
      * @param serializer Serializer for the request parameters.
@@ -213,8 +261,10 @@ public open class JSONRPCServerTransport(
         request: JSONRPCRequest,
         serializer: KSerializer<T>,
     ): T {
+        val params = request.params.takeIf { it !is JsonNull } ?: JsonObject(emptyMap())
+
         return try {
-            JSONRPCJson.decodeFromJsonElement(serializer, request.params)
+            JSONRPCJson.decodeFromJsonElement(serializer, params)
         } catch (e: SerializationException) {
             throw A2AInvalidParamsException("Cannot parse request params:\n${e.message}")
         }
@@ -269,11 +319,30 @@ public open class JSONRPCServerTransport(
                 message = a2aException.message,
                 data = JSONRPCJson.encodeToJsonElement(
                     ListSerializer(ErrorData.serializer()),
-                    a2aException.details
+                    toErrorData(a2aException)
                 )
             ),
             jsonrpc = JSONRPC_VERSION,
         )
+    }
+
+    /**
+     * Build the `data` array entries for the error response from [A2AException.details].
+     *
+     * For A2A-specific errors, i.e. those with an [A2AException.reason], a leading [ErrorInfo] with that reason
+     * and the `a2a-protocol.org` domain is added, unless the details already contain an [ErrorInfo],
+     * [as per A2A spec](https://a2a-protocol.org/v1.0.1/specification/#95-error-handling).
+     *
+     * @param e Exception to build the error data for.
+     */
+    protected open fun toErrorData(e: A2AException): List<ErrorData> {
+        val reason = e.reason
+
+        return if (reason != null && e.details.none { it is ErrorInfo }) {
+            listOf(ErrorInfo(reason = reason)) + e.details
+        } else {
+            e.details
+        }
     }
 
     /**

@@ -87,7 +87,7 @@ public class HttpJSONRPCServerTransport(
                     allowNonSimpleContentTypes = true
                 }
 
-                a2aJsonRpcTransportRoute(path, this@HttpJSONRPCServerTransport, )
+                a2aJsonRpcTransportRoute(path, this@HttpJSONRPCServerTransport)
 
                 if (agentCard != null) {
                     a2aAgentCardRoute(agentCardPath, agentCard)

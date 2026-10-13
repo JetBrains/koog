@@ -11,6 +11,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -48,14 +49,14 @@ import io.ktor.util.toMap
  *
  *         // Transport agent routes
  *         route("/a2a") {
- *             a2aJsonRPCTransportRoute(firstTransport, "/agent-1")
- *             a2aJsonRPCTransportRoute(secondTransport, "/agent-2")
+ *             a2aJsonRpcTransportRoute("/agent-1", firstTransport)
+ *             a2aJsonRpcTransportRoute("/agent-2", secondTransport)
  *         }
  *
  *         // Agent card routes
  *         route("/agent-cards") {
- *             a2aAgentCardRoute(firstAgentCard, "/agent-1")
- *             a2aAgentCardRoute(secondAgentCard, "/agent-2")
+ *             a2aAgentCardRoute("/agent-1", firstAgentCard)
+ *             a2aAgentCardRoute("/agent-2", secondAgentCard)
  *         }
  *     }
  * }.startSuspend(wait = true)
@@ -85,7 +86,9 @@ public fun Route.a2aJsonRpcTransportRoute(
             requestRaw = call.receiveText(),
             ctx = ctx,
             respond = { response ->
-                call.respond(response)
+                // Bypass content negotiation: streaming requests send `Accept: text/event-stream`,
+                // but errors raised before the stream starts are still answered with plain JSON
+                call.respondText(JSONRPCJson.encodeToString(response), ContentType.Application.Json)
             },
             respondStreaming = { responseFlow ->
                 // Reply with SSE (implementation copied from SSE plugin code)

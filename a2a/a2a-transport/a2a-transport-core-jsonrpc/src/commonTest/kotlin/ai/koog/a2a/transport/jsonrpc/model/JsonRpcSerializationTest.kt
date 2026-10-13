@@ -133,20 +133,27 @@ class JsonRpcSerializationTest {
     }
 
     @Test
-    fun testJSONRPCErrorResponseWithoutId() {
+    fun testJSONRPCErrorResponseNullId() {
         val response: JSONRPCMessage = JSONRPCErrorResponse(
             id = null,
             error = JSONRPCError(code = -32700, message = "Parse error"),
             jsonrpc = JSONRPC_VERSION,
         )
 
+        // JSON-RPC 2.0 requires an explicit null id when the request id is unknown
         //language=JSON
-        val errorResponseWithoutIdJson = """{"error":{"code":-32700,"message":"Parse error"},"jsonrpc":"2.0"}"""
+        val errorResponseNullIdJson = """{"id":null,"error":{"code":-32700,"message":"Parse error"},"jsonrpc":"2.0"}"""
 
         val serialized = JSONRPCJson.encodeToString(response)
-        assertEquals(errorResponseWithoutIdJson, serialized)
+        assertEquals(errorResponseNullIdJson, serialized)
 
-        val deserialized = JSONRPCJson.decodeFromString<JSONRPCMessage>(errorResponseWithoutIdJson)
+        val deserialized = JSONRPCJson.decodeFromString<JSONRPCMessage>(errorResponseNullIdJson)
         assertEquals(response, deserialized)
+
+        // Be lenient and accept a missing id too
+        //language=JSON
+        val errorResponseMissingIdJson = """{"error":{"code":-32700,"message":"Parse error"},"jsonrpc":"2.0"}"""
+
+        assertEquals(response, JSONRPCJson.decodeFromString<JSONRPCMessage>(errorResponseMissingIdJson))
     }
 }

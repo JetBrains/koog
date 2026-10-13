@@ -2,6 +2,7 @@
 
 package ai.koog.a2a.transport.jsonrpc.model
 
+import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCErrorResponseSerializer
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCMessageSerializer
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCResponseSerializer
 import kotlinx.serialization.Serializable
@@ -50,7 +51,7 @@ public data class JSONRPCError(
     val data: JsonElement = JsonNull,
 )
 
-@Serializable
+@Serializable(with = JSONRPCErrorResponseSerializer::class)
 public data class JSONRPCErrorResponse(
     public val id: RequestId?,
     public val error: JSONRPCError,

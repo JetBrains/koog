@@ -1,6 +1,12 @@
 package ai.koog.a2a.transport.server.jsonrpc.http
 
 import ai.koog.a2a.exceptions.A2AErrorCodes
+import ai.koog.a2a.exceptions.A2AErrorReasons
+import ai.koog.a2a.exceptions.A2AInternalErrorException
+import ai.koog.a2a.exceptions.A2ATaskNotFoundException
+import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.exceptions.ErrorData
+import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
@@ -32,13 +38,16 @@ import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.accept
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -50,9 +59,11 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
@@ -485,9 +496,186 @@ class HttpJSONRPCServerTransportTest {
 
             assertEquals(HttpStatusCode.OK, response.status)
 
-            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
+            val responseBody = response.bodyAsText()
+
+            // JSON-RPC 2.0 requires an explicit null id when the request id cannot be determined
+            assertEquals(JsonNull, json.decodeFromString<JsonObject>(responseBody)["id"])
+
+            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(responseBody)
             assertNull(jsonRpcResponse.id)
             assertEquals(A2AErrorCodes.PARSE_ERROR, jsonRpcResponse.error.code)
+        }
+    }
+
+    @Test
+    fun testA2AErrorIncludesErrorInfo() = runTest {
+        val failingRequestHandler = object : RequestHandler by MockRequestHandler {
+            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task =
+                throw A2ATaskNotFoundException("Task not found: ${request.id}")
+        }
+
+        testApplication {
+            install(SSE)
+
+            val transport = HttpJSONRPCServerTransport(failingRequestHandler)
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", transport)
+            }
+
+            val requestId = RequestId.StringId("test-error-info")
+            val jsonRpcRequest = JSONRPCRequest(
+                id = requestId,
+                method = A2AMethod.GetTask.value,
+                params = json.encodeToJsonElement(GetTaskRequest(id = "task-1")),
+                jsonrpc = JSONRPC_VERSION,
+            )
+
+            val response = client.post("/a2a") {
+                contentType(ContentType.Application.Json)
+                setBody(json.encodeToString(jsonRpcRequest))
+            }
+
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val expectedResponse = JSONRPCErrorResponse(
+                id = requestId,
+                error = JSONRPCError(
+                    code = A2AErrorCodes.TASK_NOT_FOUND,
+                    message = "Task not found: task-1",
+                    data = json.encodeToJsonElement<List<ErrorData>>(
+                        listOf(ErrorInfo(reason = A2AErrorReasons.TASK_NOT_FOUND))
+                    ),
+                ),
+                jsonrpc = JSONRPC_VERSION,
+            )
+
+            assertEquals(expectedResponse, json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText()))
+        }
+    }
+
+    @Test
+    fun testStreamingErrorBeforeFirstEventIsPlainJson() = runTest {
+        val failingRequestHandler = object : RequestHandler by MockRequestHandler {
+            override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> =
+                flow { throw A2AUnsupportedOperationException("Task is in a terminal state: ${request.id}") }
+        }
+
+        testApplication {
+            install(SSE)
+
+            val transport = HttpJSONRPCServerTransport(failingRequestHandler)
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", transport)
+            }
+
+            val requestId = RequestId.StringId("test-pre-stream-error")
+            val jsonRpcRequest = JSONRPCRequest(
+                id = requestId,
+                method = A2AMethod.SubscribeToTask.value,
+                params = json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1")),
+                jsonrpc = JSONRPC_VERSION,
+            )
+
+            val response = client.post("/a2a") {
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Text.EventStream)
+                setBody(json.encodeToString(jsonRpcRequest))
+            }
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
+
+            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
+
+            assertEquals(requestId, jsonRpcResponse.id)
+            assertEquals(A2AErrorCodes.UNSUPPORTED_OPERATION, jsonRpcResponse.error.code)
+        }
+    }
+
+    @Test
+    fun testStreamingErrorAfterFirstEventIsStreamEvent() = runTest {
+        val failingRequestHandler = object : RequestHandler by MockRequestHandler {
+            override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> =
+                flow {
+                    emit(MockRequestHandler.taskGet)
+                    throw A2AInternalErrorException("Agent failed")
+                }
+        }
+
+        testApplication {
+            install(SSE)
+
+            val client = createClient {
+                install(SSEClient)
+            }
+
+            val transport = HttpJSONRPCServerTransport(failingRequestHandler)
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", transport)
+            }
+
+            val requestId = RequestId.StringId("test-mid-stream-error")
+            val jsonRpcRequest = JSONRPCRequest(
+                id = requestId,
+                method = A2AMethod.SubscribeToTask.value,
+                params = json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1")),
+                jsonrpc = JSONRPC_VERSION,
+            )
+
+            val jsonRpcResponses = buildList {
+                client.sse(
+                    urlString = "/a2a",
+                    request = {
+                        method = HttpMethod.Post
+
+                        contentType(ContentType.Application.Json)
+                        setBody(json.encodeToString(jsonRpcRequest))
+                    },
+                ) {
+                    incoming
+                        .map { event -> json.decodeFromString<JSONRPCResponse>(event.data!!) }
+                        .collect { add(it) }
+                }
+            }
+
+            assertEquals(2, jsonRpcResponses.size)
+
+            val (first, second) = jsonRpcResponses
+
+            assertEquals(
+                MockRequestHandler.taskGet,
+                json.decodeFromJsonElement<Event>((first as JSONRPCSuccessResponse).result)
+            )
+            assertEquals(A2AErrorCodes.INTERNAL_ERROR, (second as JSONRPCErrorResponse).error.code)
+        }
+    }
+
+    @Test
+    fun testRequestWithoutParams() = runTest {
+        testApplication {
+            install(SSE)
+
+            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", transport)
+            }
+
+            val response = client.post("/a2a") {
+                contentType(ContentType.Application.Json)
+                //language=JSON
+                setBody("""{"jsonrpc":"2.0","id":"test-no-params","method":"${A2AMethod.GetExtendedAgentCard.value}"}""")
+            }
+
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(response.bodyAsText())
+
+            assertEquals(RequestId.StringId("test-no-params"), jsonRpcResponse.id)
+            assertEquals(MockRequestHandler.agentCard, json.decodeFromJsonElement<AgentCard>(jsonRpcResponse.result))
         }
     }
 }
