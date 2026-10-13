@@ -9,7 +9,10 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import org.jetbrains.annotations.ApiStatus.Experimental
+
+private const val CHAT_TEMPLATE_KWARGS_PROPERTY: String = "chat_template_kwargs"
 
 internal sealed interface OpenAIParams
 
@@ -229,6 +232,31 @@ public class OpenAIChatParams(
         topP = topP,
         webSearchOptions = webSearchOptions,
     )
+
+    /**
+     * Returns a copy with provider-specific chat template arguments for Chat Completions requests.
+     *
+     * The object is sent unchanged as `chat_template_kwargs` through [additionalProperties].
+     * Its keys and values are defined by the OpenAI-compatible provider. Passing null removes
+     * previously configured arguments while preserving other additional properties.
+     */
+    public fun withChatTemplateKwargs(chatTemplateKwargs: JsonObject?): OpenAIChatParams {
+        val properties = additionalProperties.orEmpty().toMutableMap().apply {
+            if (chatTemplateKwargs == null) {
+                remove(CHAT_TEMPLATE_KWARGS_PROPERTY)
+            } else {
+                put(CHAT_TEMPLATE_KWARGS_PROPERTY, chatTemplateKwargs)
+            }
+        }
+        return copy(additionalProperties = properties.takeIf { it.isNotEmpty() })
+    }
+
+    /**
+     * Provider-specific chat template arguments from [additionalProperties], or null when the
+     * property is absent or its value is not a JSON object.
+     */
+    public val chatTemplateKwargs: JsonObject?
+        get() = additionalProperties?.get(CHAT_TEMPLATE_KWARGS_PROPERTY) as? JsonObject
 
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
