@@ -31,6 +31,8 @@ import kotlin.time.Duration.Companion.minutes
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying Java HttpClient instances.
  *
+ * SSE dispatches complete UTF-8 data events, preserving multiline payloads and ignoring event metadata.
+ *
  * @property clientName The name of the client, used for logging and traceability.
  * @property logger A logging instance of type KLogger for recording client-related events and errors.
  * @property httpClient The configured Java HttpClient instance used for making HTTP requests.
@@ -203,24 +205,27 @@ public class JavaKoogHttpClient internal constructor(
 
             logger.debug { "SSE connection opened for $clientName" }
 
-            // Process the stream of lines
-            response.body().forEach { line ->
+            val data = StringBuilder()
+            var firstLine = true
+            response.body().forEach { rawLine ->
                 try {
-                    val dataPrefix = "data: "
-                    // SSE format: "data: <content>"
-                    val data = if (line.startsWith(dataPrefix)) {
-                        line.substring(dataPrefix.length)
-                    } else if (line.isNotEmpty() && !line.startsWith(":")) {
-                        line
-                    } else {
-                        null
-                    }
-
-                    if (data != null && dataFilter(data)) {
-                        data.trim()
-                            .let(decodeStreamingResponse)
-                            .let(processStreamingChunk)
-                            ?.let { trySend(it) }
+                    val line = if (firstLine) rawLine.removePrefix("\uFEFF") else rawLine
+                    firstLine = false
+                    if (line.isEmpty()) {
+                        if (data.isNotEmpty()) {
+                            val payload = data.dropLast(1).toString()
+                            data.setLength(0)
+                            if (dataFilter(payload)) {
+                                processStreamingChunk(decodeStreamingResponse(payload))?.let { trySend(it) }
+                            }
+                        }
+                    } else if (!line.startsWith(":")) {
+                        val colon = line.indexOf(':')
+                        val field = if (colon < 0) line else line.substring(0, colon)
+                        if (field == "data") {
+                            val value = if (colon < 0) "" else line.substring(colon + 1).removePrefix(" ")
+                            data.append(value).append('\n')
+                        }
                     }
                 } catch (e: CancellationException) {
                     throw e
@@ -235,6 +240,7 @@ public class JavaKoogHttpClient internal constructor(
                 }
             }
 
+            // Pending data without a terminating empty line belongs to an incomplete event.
             logger.debug { "SSE connection closed for $clientName" }
             close()
         } catch (e: CancellationException) {
