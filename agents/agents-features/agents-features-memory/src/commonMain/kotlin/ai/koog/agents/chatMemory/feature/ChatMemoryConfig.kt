@@ -71,7 +71,7 @@ public class ChatMemoryConfig : FeatureConfig() {
      * Adds a [WindowSizePreProcessor] that limits messages to the most recent [size] entries.
      *
      * This prevents unbounded prompt growth in long conversations by keeping only a
-     * sliding window of messages.
+     * sliding window of messages. Tool results whose call falls outside the window are dropped too.
      *
      * Example:
      * ```kotlin
