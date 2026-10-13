@@ -6,6 +6,7 @@ import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCard
+import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
@@ -16,11 +17,13 @@ import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.ListTasksResponse
+import ai.koog.a2a.model.Request
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
+import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.ClientTransport
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +32,9 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * A2A client responsible for sending requests to A2A server.
+ *
+ * Requests that don't set [Request.tenant] get it from the [AgentInterface.tenant] of the JSON-RPC interface in the
+ * current [card]; see [prepareContext] for the other values the client fills in.
  *
  * @param card The initial [AgentCard].
  * @param transport The transport implementation to be used for sending requests.
@@ -63,7 +69,7 @@ public open class A2AClient(
     ): AgentCard {
         checkExtendedAgentCardSupported()
 
-        return transport.getExtendedAgentCard(request, prepareContext(ctx)).also {
+        return transport.getExtendedAgentCard(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx)).also {
             _card.exchange(it)
         }
     }
@@ -77,7 +83,7 @@ public open class A2AClient(
         request: SendMessageRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): ResponseEvent {
-        return transport.sendMessage(request, prepareContext(ctx))
+        return transport.sendMessage(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -92,7 +98,7 @@ public open class A2AClient(
     ): Flow<Event> {
         checkStreamingSupported()
 
-        return transport.sendMessageStreaming(request, prepareContext(ctx))
+        return transport.sendMessageStreaming(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -104,7 +110,7 @@ public open class A2AClient(
         request: GetTaskRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Task {
-        return transport.getTask(request, prepareContext(ctx))
+        return transport.getTask(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -116,7 +122,7 @@ public open class A2AClient(
         request: ListTasksRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): ListTasksResponse {
-        return transport.listTasks(request, prepareContext(ctx))
+        return transport.listTasks(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -128,7 +134,7 @@ public open class A2AClient(
         request: CancelTaskRequest,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Task {
-        return transport.cancelTask(request, prepareContext(ctx))
+        return transport.cancelTask(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -143,7 +149,7 @@ public open class A2AClient(
     ): Flow<Event> {
         checkStreamingSupported()
 
-        return transport.subscribeToTask(request, prepareContext(ctx))
+        return transport.subscribeToTask(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -157,7 +163,7 @@ public open class A2AClient(
     ): TaskPushNotificationConfig {
         checkPushNotificationsSupported()
 
-        return transport.createTaskPushNotificationConfig(request, prepareContext(ctx))
+        return transport.createTaskPushNotificationConfig(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -171,7 +177,7 @@ public open class A2AClient(
     ): TaskPushNotificationConfig {
         checkPushNotificationsSupported()
 
-        return transport.getTaskPushNotificationConfig(request, prepareContext(ctx))
+        return transport.getTaskPushNotificationConfig(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -185,7 +191,7 @@ public open class A2AClient(
     ): ListTaskPushNotificationConfigsResponse {
         checkPushNotificationsSupported()
 
-        return transport.listTaskPushNotificationConfigs(request, prepareContext(ctx))
+        return transport.listTaskPushNotificationConfigs(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     /**
@@ -199,7 +205,7 @@ public open class A2AClient(
     ) {
         checkPushNotificationsSupported()
 
-        transport.deleteTaskPushNotificationConfig(request, prepareContext(ctx))
+        transport.deleteTaskPushNotificationConfig(request.copy(tenant = resolveTenant(request.tenant)), prepareContext(ctx))
     }
 
     override fun close() {
@@ -230,6 +236,18 @@ public open class A2AClient(
             headers = updatedHeaders
         )
     }
+
+    /**
+     * Returns [requestTenant] if set, otherwise the tenant declared by the JSON-RPC [AgentInterface] of the current
+     * [card] (the first one, since earlier entries are preferred), or `null` if there is none.
+     *
+     * The interface is chosen by [TransportProtocol.JSONRPC] because it is the only binding the client supports.
+     * The tenant is read from the current [card] on each call, so it follows the card replaced by [getExtendedAgentCard].
+     */
+    // TODO revisit if multiple transports are supported, to pick the right tenant
+    private fun resolveTenant(requestTenant: String?): String? =
+        requestTenant ?: card.supportedInterfaces
+            .firstOrNull { it.protocolBinding == TransportProtocol.JSONRPC }?.tenant
 
     /**
      * @throws A2AUnsupportedOperationException if the [card] doesn't declare the extended agent card capability.
