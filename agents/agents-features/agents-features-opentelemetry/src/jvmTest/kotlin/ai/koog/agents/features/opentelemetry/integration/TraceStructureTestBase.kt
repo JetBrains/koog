@@ -74,6 +74,20 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
      */
     protected open val outputTokensAttributeName: String = "gen_ai.usage.output_tokens"
 
+    /**
+     * Prompt and completion attributes that the [SpanAdapter] writes for a system prompt,
+     * a user prompt and a text answer. Defaults to the indexed `gen_ai.prompt.{i}.*` shape.
+     */
+    protected open fun expectedTextExchangeAttributes(systemPrompt: String, userPrompt: String, answer: String): Map<String, Any> =
+        mapOf(
+            "gen_ai.prompt.0.role" to "system",
+            "gen_ai.prompt.0.content" to systemPrompt,
+            "gen_ai.prompt.1.role" to "user",
+            "gen_ai.prompt.1.content" to userPrompt,
+            "gen_ai.completion.0.role" to "assistant",
+            "gen_ai.completion.0.content" to answer,
+        )
+
     @Test
     fun testSingleLLMCall() = runBlocking {
         TestSpanProcessor().let { testProcessor ->
@@ -138,15 +152,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                             ),
                             "system_instructions" to getSystemInstructionsString(listOf(systemPrompt)),
                             "gen_ai.output.messages" to getMessagesString(listOf(assistantMessage(mockResponse))),
-
-                            // Langfuse/Weave specific attributes
-                            "gen_ai.prompt.0.role" to "system",
-                            "gen_ai.prompt.0.content" to systemPrompt,
-                            "gen_ai.prompt.1.role" to "user",
-                            "gen_ai.prompt.1.content" to userPrompt,
-                            "gen_ai.completion.0.role" to "assistant",
-                            "gen_ai.completion.0.content" to mockResponse,
-                        ),
+                        ) + expectedTextExchangeAttributes(systemPrompt, userPrompt, mockResponse),
                         "events" to emptyMap()
                     )
                 )
@@ -630,13 +636,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                                     assistantMessage(mockAssistantText)
                                 )
                             ),
-                            "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-                            "gen_ai.prompt.0.content" to systemPrompt,
-                            "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-                            "gen_ai.prompt.1.content" to userPrompt,
-                            "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-                            "gen_ai.completion.0.content" to mockAssistantText,
-                        ),
+                        ) + expectedTextExchangeAttributes(systemPrompt, userPrompt, mockAssistantText),
                         "events" to emptyMap()
                     )
                 )

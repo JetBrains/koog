@@ -8,6 +8,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
 /**
@@ -18,6 +19,13 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 @EnabledIfEnvironmentVariable(named = "LANGFUSE_HOST", matches = ".+")
 class LangfuseTraceStructureTest :
     TraceStructureTestBase(openTelemetryConfigurator = { addLangfuseExporter() }) {
+
+    override fun expectedTextExchangeAttributes(systemPrompt: String, userPrompt: String, answer: String): Map<String, Any> =
+        mapOf(
+            "gen_ai.prompt" to
+                """[{"role":"system","content":${JsonPrimitive(systemPrompt)}},{"role":"user","content":${JsonPrimitive(userPrompt)}}]""",
+            "gen_ai.completion" to """[{"role":"assistant","content":${JsonPrimitive(answer)}}]""",
+        )
 
     override fun testLLMCallToolCallLLMCallGetExpectedInitialLLMCallSpanAttributes(
         model: LLModel,
@@ -67,13 +75,9 @@ class LangfuseTraceStructureTest :
             "gen_ai.output.messages" to outputMessages,
             "gen_ai.tool.definitions" to toolDefinitions,
             "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls.id),
-            "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-            "gen_ai.prompt.0.content" to systemPrompt,
-            "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-            "gen_ai.prompt.1.content" to userPrompt,
-            "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-            "gen_ai.completion.0.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.completion.0.finish_reason" to GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
+            "gen_ai.prompt" to """[{"role":"system","content":"$systemPrompt"},{"role":"user","content":"$userPrompt"}]""",
+            "gen_ai.completion" to
+                """[{"role":"assistant","tool_calls":[{"id":"$toolCallId","type":"function","function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"}}],"finish_reason":"${GenAIAttributes.Response.FinishReasonType.ToolCalls.id}"}]""",
         )
     }
 
@@ -132,16 +136,9 @@ class LangfuseTraceStructureTest :
             "gen_ai.output.messages" to outputMessages,
             "gen_ai.tool.definitions" to toolDefinitions,
             "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
-            "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-            "gen_ai.prompt.0.content" to systemPrompt,
-            "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-            "gen_ai.prompt.1.content" to userPrompt,
-            "gen_ai.prompt.2.role" to "assistant",
-            "gen_ai.prompt.2.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.prompt.3.role" to "tool",
-            "gen_ai.prompt.3.content" to toolResponse,
-            "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-            "gen_ai.completion.0.content" to finalResponse,
+            "gen_ai.prompt" to
+                """[{"role":"system","content":"$systemPrompt"},{"role":"user","content":"$userPrompt"},{"role":"assistant","tool_calls":[{"id":"$toolCallId","type":"function","function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"}}]},{"role":"tool","tool_call_id":"$toolCallId","content":"$toolResponse"}]""",
+            "gen_ai.completion" to """[{"role":"assistant","content":"$finalResponse"}]""",
         )
     }
 
@@ -187,13 +184,9 @@ class LangfuseTraceStructureTest :
             "gen_ai.tool.definitions" to toolDefinitions,
             "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.ToolCalls.id),
 
-            "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-            "gen_ai.prompt.0.content" to systemPrompt,
-            "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-            "gen_ai.prompt.1.content" to userPrompt,
-            "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-            "gen_ai.completion.0.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.completion.0.finish_reason" to GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
+            "gen_ai.prompt" to """[{"role":"system","content":"$systemPrompt"},{"role":"user","content":"$userPrompt"}]""",
+            "gen_ai.completion" to
+                """[{"role":"assistant","tool_calls":[{"id":"$toolCallId","type":"function","function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"}}],"finish_reason":"${GenAIAttributes.Response.FinishReasonType.ToolCalls.id}"}]""",
         )
     }
 
@@ -254,17 +247,9 @@ class LangfuseTraceStructureTest :
             "gen_ai.tool.definitions" to toolDefinitions,
             "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
 
-            "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-            "gen_ai.prompt.0.content" to systemPrompt,
-            "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-            "gen_ai.prompt.1.content" to userPrompt,
-            "gen_ai.prompt.2.role" to "assistant",
-            "gen_ai.prompt.2.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},\"id\":\"get-weather-tool-call-id\",\"type\":\"function\"}]",
-            "gen_ai.prompt.3.role" to "tool",
-            "gen_ai.prompt.3.content" to toolResponse,
-
-            "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-            "gen_ai.completion.0.content" to finalResponse,
+            "gen_ai.prompt" to
+                """[{"role":"system","content":"$systemPrompt"},{"role":"user","content":"$userPrompt"},{"role":"assistant","tool_calls":[{"id":"$toolCallId","type":"function","function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"}}]},{"role":"tool","tool_call_id":"$toolCallId","content":"$toolResponse"}]""",
+            "gen_ai.completion" to """[{"role":"assistant","content":"$finalResponse"}]""",
         )
     }
 }
