@@ -281,6 +281,33 @@ class StreamFrameFlowBuilderTest {
         )
     }
 
+    /**
+     * Regression test for #2111.
+     *
+     * Some OpenAI-compatible providers (e.g. DeepSeek) start a streaming tool call with
+     * `id = null` and only reveal the real id on a later chunk of the same `index`. The late
+     * id must fill the pending call rather than start a new one, otherwise the tool call is
+     * completed with a null id and the provider later rejects the replayed `tool` message.
+     */
+    @Test
+    fun testEmitToolCallDeltaWithLateIdFillsPendingToolCall() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitToolCallDelta(id = null, name = "search", args = "{\"query\":", index = 0)
+            emitToolCallDelta(id = "call_1", name = null, args = "\"koog\"}", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ToolCallDelta(null, "search", "{\"query\":", 0),
+                StreamFrame.ToolCallDelta("call_1", null, "\"koog\"}", 0),
+                StreamFrame.ToolCallComplete("call_1", "search", "{\"query\":\"koog\"}", 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
     @Test
     fun testEmitToolCallDeltaWithoutPreviousCallThrowsError() = runTest {
         assertFailsWith<StreamFrameFlowBuilderError.NoPartialToolCallToComplete> {
