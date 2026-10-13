@@ -18,6 +18,7 @@ ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
