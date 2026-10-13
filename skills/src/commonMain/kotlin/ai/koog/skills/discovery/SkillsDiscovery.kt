@@ -5,6 +5,7 @@ import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.skills.model.Skill
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmName
 
 private val logger = KotlinLogging.logger {}
@@ -80,7 +81,9 @@ public suspend fun <Path> discoverSkills(
         val (directory, depth) = queue.removeFirst()
         visitedDirectories++
 
-        val children = runCatching { fs.list(directory) }.getOrDefault(emptyList())
+        val children = runCatching { fs.list(directory) }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrDefault(emptyList())
         val skillFile = children.firstOrNull { fs.name(it) == skillFileName }
         if (skillFile != null) {
             fs.parseSkill(skillFile, skillNamePattern, warningLogger)?.let { skill ->
@@ -139,7 +142,9 @@ private suspend fun <Path> FileSystemProvider.ReadOnly<Path>.parseSkill(
     skillNamePattern: Regex,
     warningLogger: (String) -> Unit,
 ): Skill? {
-    val content = runCatching { readBytes(skillFile).decodeToString() }.getOrNull() ?: return null
+    val content = runCatching { readBytes(skillFile).decodeToString() }
+        .onFailure { if (it is CancellationException) throw it }
+        .getOrNull() ?: return null
     val frontmatter = parseFrontmatter(content)
     val location = toAbsolutePathString(skillFile)
 
