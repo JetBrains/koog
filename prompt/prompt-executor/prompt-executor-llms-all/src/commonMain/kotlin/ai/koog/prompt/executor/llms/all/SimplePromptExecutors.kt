@@ -11,6 +11,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.requesty.RequestyLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
@@ -101,6 +102,19 @@ public fun simpleOpenRouterExecutor(
     httpClientFactory: KoogHttpClient.Factory,
 ): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenRouter to OpenRouterLLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory)
+)
+
+/**
+ * Creates an instance of `MultiLLMPromptExecutor` with a `RequestyLLMClient`.
+ *
+ * @param apiKey The API token used for authentication with the Requesty API.
+ * @param httpClientFactory Factory used to create the underlying HTTP client.
+ */
+public fun simpleRequestyExecutor(
+    apiKey: String,
+    httpClientFactory: KoogHttpClient.Factory,
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+    LLMProvider.Requesty to RequestyLLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory)
 )
 
 /**

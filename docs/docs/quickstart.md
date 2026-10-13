@@ -154,6 +154,22 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
 
     Run a local LLM in Ollama as described in the [Ollama documentation](https://docs.ollama.com/quickstart).
 
+=== "Requesty β"
+
+    Get your [Requesty API key](https://app.requesty.ai/api-keys) and assign it to the `REQUESTY_API_KEY` environment variable.
+
+    === "Linux/macOS"
+
+        ```shell
+        export REQUESTY_API_KEY=your-api-key
+        ```
+
+    === "Windows"
+
+        ```cmd
+        setx REQUESTY_API_KEY "your-api-key"
+        ```
+
 ## Create your first Koog agent
 
 === "OpenAI"
@@ -779,6 +795,78 @@ Koog requires either an API key from a [supported LLM provider](llm-providers.md
     I can assist with various tasks such as answering questions, providing information, and even helping with language-related tasks like proofreading or writing suggestions. What's on your mind today?
     ```
     <!--- KNIT example-getting-started-09.txt -->
+
+=== "Requesty β"
+
+    The following example creates and runs a simple Koog agent using the [`GPT-4o mini`](https://app.requesty.ai/model-list) model via the Requesty API.
+
+    === "Kotlin"
+
+        <!--- INCLUDE
+        import ai.koog.agents.core.agent.AIAgent
+        import ai.koog.prompt.executor.clients.requesty.RequestyLLMClient
+        import ai.koog.prompt.executor.clients.requesty.RequestyModels
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+        import kotlinx.coroutines.runBlocking
+        -->
+        ```kotlin
+        fun main() = runBlocking {
+            // Get the Requesty API key from the REQUESTY_API_KEY environment variable
+            val apiKey = System.getenv("REQUESTY_API_KEY")
+                ?: error("The API key is not set.")
+
+            // Create an agent
+            val agent = AIAgent(
+                promptExecutor = MultiLLMPromptExecutor(RequestyLLMClient(apiKey)),
+                llmModel = RequestyModels.GPT4oMini
+            )
+
+            // Run the agent
+            val result = agent.run("Hello! How can you help me?")
+            println(result)
+        }
+        ```
+        <!--- KNIT example-getting-started-09.kt -->
+
+    === "Java"
+
+        <!--- INCLUDE
+        import ai.koog.agents.core.agent.AIAgent;
+        import ai.koog.prompt.executor.clients.requesty.RequestyModels;
+        import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
+        import static ai.koog.prompt.executor.clients.requesty.RequestyClientFactory.requestyClient;
+        class exampleGettingStartedJava09 {
+            public static void main(String[] args) {
+        -->
+        <!--- SUFFIX
+            }
+        }
+        -->
+        ```java
+        // Get the Requesty API key from the REQUESTY_API_KEY environment variable
+        String apiKey = System.getenv("REQUESTY_API_KEY");
+        if (apiKey == null) {
+            throw new RuntimeException("The API key is not set.");
+        }
+
+        // Create an agent
+        AIAgent<String, String> agent = AIAgent.builder()
+            .promptExecutor(new MultiLLMPromptExecutor(requestyClient(apiKey)))
+            .llmModel(RequestyModels.GPT4oMini)
+            .build();
+
+        // Run the agent
+        String result = agent.run("Hello! How can you help me?");
+        System.out.println(result);
+        ```
+        <!--- KNIT example-getting-started-java-09.java -->
+
+    The example can produce the following output:
+
+    ```
+    Hello! I can answer questions, help with writing and research, explain concepts, and work through problems with you. What would you like to do?
+    ```
+    <!--- KNIT example-getting-started-10.txt -->
 
 ## Next steps
 

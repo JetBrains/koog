@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.requesty.RequestyLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
@@ -77,6 +78,15 @@ public fun simpleAnthropicExecutor(apiKey: String): MultiLLMPromptExecutor =
  */
 public fun simpleOpenRouterExecutor(apiKey: String): MultiLLMPromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.OpenRouter to OpenRouterLLMClient(apiKey))
+
+/**
+ * Convenience overload that constructs the underlying client via its JVM no-factory entry point
+ * (resolves the default [ai.koog.http.client.KoogHttpClient.Factory] at call time). JVM and Android only.
+ *
+ * @see simpleRequestyExecutor
+ */
+public fun simpleRequestyExecutor(apiKey: String): MultiLLMPromptExecutor =
+    MultiLLMPromptExecutor(LLMProvider.Requesty to RequestyLLMClient(apiKey))
 
 /**
  * Convenience overload that constructs the underlying client via its JVM no-factory entry point

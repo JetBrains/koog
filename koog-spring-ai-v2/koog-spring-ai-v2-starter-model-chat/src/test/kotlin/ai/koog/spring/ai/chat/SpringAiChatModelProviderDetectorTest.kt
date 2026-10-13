@@ -33,6 +33,7 @@ class SpringAiChatModelProviderDetectorTest {
             "huggingface" to LLMProvider.HuggingFace,
             "azure" to LLMProvider.Azure,
             "vertex" to LLMProvider.Vertex,
+            "requesty" to LLMProvider.Requesty,
         )
         for ((id, provider) in expected) {
             assertSame(provider, SpringAiChatModelProviderDetector.detect(chatModel, id)) {
