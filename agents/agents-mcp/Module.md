@@ -2,9 +2,9 @@
 
 A module provides integration with [Model Context Protocol (MCP)](https://modelcontextprotocol.io) servers.
 The main components of the MCP integration in Koog are:
-- [**McpToolRegistryProvider**](src/jvmMain/kotlin/ai/koog/agents/mcp/McpToolRegistryProvider.kt): Creates tool registries that connect to MCP servers
-- [**McpTool**](src/jvmMain/kotlin/ai/koog/agents/mcp/McpTool.kt): A bridge between the Koog agent framework's Tool interface and the MCP SDK
-- [**McpToolDescriptorParser**](src/jvmMain/kotlin/ai/koog/agents/mcp/McpToolDefinitionParser.kt): Parses tool definitions from the MCP SDK to the Koog tool descriptor format
+- [**McpToolRegistryProvider**](src/commonMain/kotlin/ai/koog/agents/mcp/McpToolRegistryProvider.kt): Creates tool registries that connect to MCP servers
+- [**McpTool**](src/commonMain/kotlin/ai/koog/agents/mcp/McpTool.kt): A bridge between the Koog agent framework's Tool interface and the MCP SDK
+- [**McpToolDescriptorParser**](src/commonMain/kotlin/ai/koog/agents/mcp/McpToolDefinitionParser.kt): Parses tool definitions from the MCP SDK to the Koog tool descriptor format
 
 
 ## Overview
