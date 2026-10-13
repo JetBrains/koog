@@ -25,6 +25,44 @@ import kotlin.test.assertTrue
 class OllamaClientTest {
 
     @Test
+    fun testTotalRequiresBothTokenCounts() = runTest {
+        val cases = listOf(
+            Triple(5, 3, 8),
+            Triple(0, 0, 0),
+            Triple(0, 3, 3),
+            Triple(5, 0, 5),
+            Triple(5, null, null),
+            Triple(null, 3, null),
+            Triple(null, null, null),
+            Triple(0, null, null),
+            Triple(null, 0, null),
+        )
+        for ((input, output, total) in cases) {
+            val counts = buildList {
+                input?.let { add("\"prompt_eval_count\":$it") }
+                output?.let { add("\"eval_count\":$it") }
+            }.joinToString(separator = ",", prefix = if (input != null || output != null) "," else "")
+            val mockEngine = MockEngine {
+                respond(
+                    content = """{"model":"llama3.2","message":{"role":"assistant","content":"Hello"},"done":true$counts}""",
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType to listOf("application/json")),
+                )
+            }
+            val client = OllamaClient(httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockEngine)))
+            try {
+                val result = client.execute(prompt("usage") { }, OllamaModels.Meta.LLAMA_3_2)
+                val case = "input=$input, output=$output"
+                assertEquals(input, result.metaInfo.inputTokensCount, case)
+                assertEquals(output, result.metaInfo.outputTokensCount, case)
+                assertEquals(total, result.metaInfo.totalTokensCount, case)
+            } finally {
+                client.close()
+            }
+        }
+    }
+
+    @Test
     fun testExecuteWithContentAndToolCalls() = runTest {
         val responseContent = "I will check the weather for you."
         val toolName = "get_weather"
