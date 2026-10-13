@@ -247,6 +247,9 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                         index = response.index
                                             ?: throw LLMClientException(clientName, "Thinking index is missing")
                                     )
+                                    contentBlock.signature.takeIf { it.isNotEmpty() }?.let { signature ->
+                                        attachReasoningEncrypted(signature, index = response.index)
+                                    }
                                 }
 
                                 else -> {
@@ -287,6 +290,15 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                                         )
                                     }
 
+                                    AnthropicStreamDeltaContentType.SIGNATURE_DELTA.value -> {
+                                        attachReasoningEncrypted(
+                                            encrypted = delta.signature
+                                                ?: throw LLMClientException(clientName, "Reasoning signature is missing"),
+                                            index = response.index
+                                                ?: throw LLMClientException(clientName, "Reasoning index is missing")
+                                        )
+                                    }
+
                                     else -> {
                                         logger.warn { "Unknown Anthropic stream delta type: ${delta.type}" }
                                     }
@@ -295,21 +307,10 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
                         }
 
                         AnthropicStreamEventType.CONTENT_BLOCK_STOP.value -> {
-                            response.delta?.let { delta ->
-                                when (delta.type) {
-                                    AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
-                                        tryEmitPendingText()
-                                    }
-
-                                    AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
-                                        tryEmitPendingToolCall()
-                                    }
-
-                                    AnthropicStreamDeltaContentType.THINKING_DELTA.value -> {
-                                        tryEmitPendingReasoning()
-                                    }
-                                }
-                            }
+                            // Anthropic sends content blocks sequentially; stop events contain only an index.
+                            tryEmitPendingText()
+                            tryEmitPendingToolCall()
+                            tryEmitPendingReasoning()
                         }
 
                         AnthropicStreamEventType.MESSAGE_DELTA.value -> {

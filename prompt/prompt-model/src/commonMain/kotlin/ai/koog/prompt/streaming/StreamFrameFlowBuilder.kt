@@ -172,6 +172,19 @@ public class StreamFrameFlowBuilder(
     }
 
     /**
+     * Attaches opaque encrypted content to the pending reasoning without emitting a delta frame.
+     * Call [emitReasoningDelta] first, using the same [index]. A later attachment replaces the previous value.
+     *
+     * @throws IllegalStateException if there is no pending reasoning.
+     * @throws IllegalArgumentException if [index] differs from the pending reasoning index.
+     */
+    public fun attachReasoningEncrypted(encrypted: String, index: Int? = null) {
+        val previous = checkNotNull(pendingReasoningRef.load()) { "No pending reasoning to attach encrypted content to" }
+        require(previous.index == index) { "Reasoning index does not match" }
+        pendingReasoningRef.store(previous.copy(encryptedDelta = encrypted))
+    }
+
+    /**
      * Emits a [StreamFrame.End] with the given [finishReason].
      */
     public suspend fun emitEnd(finishReason: String? = null, metaInfo: ResponseMetaInfo? = null) {
@@ -245,6 +258,7 @@ public class StreamFrameFlowBuilder(
                 id = pendingReasoning.id,
                 text = pendingReasoning.textDelta?.let { listOf(pendingReasoning.textDelta) } ?: emptyList(),
                 summary = pendingReasoning.summaryDelta?.let { listOf(pendingReasoning.summaryDelta) },
+                encrypted = pendingReasoning.encryptedDelta,
                 index = pendingReasoning.index
             )
         }
@@ -294,9 +308,15 @@ public class StreamFrameFlowBuilder(
         val id: String?,
         val textDelta: String?,
         val summaryDelta: String?,
+        val encryptedDelta: String? = null,
         val index: Int?
     ) {
-        fun appendDelta(id: String?, textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
+        fun appendDelta(
+            id: String?,
+            textDelta: String?,
+            summaryDelta: String?,
+            index: Int?
+        ): PendingReasoning {
             require(this.index == index)
             require(this.id == id)
             val newTextDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta

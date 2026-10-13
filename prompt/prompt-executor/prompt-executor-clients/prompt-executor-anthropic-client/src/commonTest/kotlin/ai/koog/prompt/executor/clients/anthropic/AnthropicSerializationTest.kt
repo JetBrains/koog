@@ -8,6 +8,8 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestS
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicOutputConfig
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicOutputFormat
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicServiceTier
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamDelta
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
@@ -455,5 +457,27 @@ class AnthropicSerializationTest {
               "stream": false
             }
                 """.trimIndent()
+        }
+
+    @Test
+    fun `test stream delta parses signature_delta`() =
+        runWithBothJsonConfigurations("stream delta parses signature_delta") { json ->
+            val payload = """
+                {
+                  "type": "content_block_delta",
+                  "index": 0,
+                  "delta": {
+                    "type": "signature_delta",
+                    "signature": "EqQBCkAIBA"
+                  }
+                }
+            """.trimIndent()
+
+            val response = json.decodeFromString<AnthropicStreamResponse>(payload)
+
+            response.delta shouldBe AnthropicStreamDelta(
+                type = "signature_delta",
+                signature = "EqQBCkAIBA"
+            )
         }
 }

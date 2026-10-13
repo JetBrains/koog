@@ -620,6 +620,8 @@ public data class AnthropicStreamResponse(
  * @property text Optional text content associated with the delta update.
  * @property partialJson Optional partial JSON content for tool use streaming.
  * @property stopReason Optional reason why the generation process was stopped, if applicable.
+ * @property thinking Optional incremental reasoning (thinking) content.
+ * @property signature Optional signature for reasoning content, provided by `signature_delta` updates.
  * @property toolUse Optional tool usage data associated with the delta update (deprecated).
  */
 @InternalLLMClientApi
@@ -630,6 +632,7 @@ public data class AnthropicStreamDelta(
     val partialJson: String? = null,
     val stopReason: String? = null,
     val thinking: String? = null,
+    val signature: String? = null,
     val toolUse: AnthropicContent.ToolUse? = null
 )
 
@@ -662,6 +665,7 @@ public enum class AnthropicStreamDeltaContentType(public val value: String) {
     TEXT_DELTA("text_delta"),
     INPUT_JSON_DELTA("input_json_delta"),
     THINKING_DELTA("thinking_delta"),
+    SIGNATURE_DELTA("signature_delta"),
 }
 
 /**
