@@ -18,7 +18,6 @@ import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.preparePost
@@ -32,7 +31,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.URLBuilder
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
-import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
@@ -103,10 +101,8 @@ public class KtorKoogHttpClient internal constructor(
             if (name.equals(HttpHeaders.ContentType, ignoreCase = true)) {
                 contentType(ContentType.parse(value))
             } else {
-                headers {
-                    remove(name)
-                    append(name, value)
-                }
+                this.headers.remove(name)
+                this.headers.append(name, value)
             }
         }
     }
@@ -314,8 +310,14 @@ public class KtorKoogHttpClient internal constructor(
 
             defaultRequest {
                 url.takeFrom(normalizedBaseUrl)
-                contentType(ContentType.Application.Json)
-                headers.forEach { (name, value) -> header(name, value) }
+                headers.forEach { (name, value) ->
+                    if (!this.headers.contains(name)) {
+                        this.headers.append(name, value)
+                    }
+                }
+                if (!this.headers.contains(HttpHeaders.ContentType)) {
+                    contentType(ContentType.Application.Json)
+                }
                 queryParameters.forEach { (name, value) -> url.parameters.append(name, value) }
             }
 
