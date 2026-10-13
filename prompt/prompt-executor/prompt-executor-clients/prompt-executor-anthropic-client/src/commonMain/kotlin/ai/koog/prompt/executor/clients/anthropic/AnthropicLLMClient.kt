@@ -786,7 +786,19 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             is ToolParameterType.AnyOf -> {
                 // FIXME this is hack, represent union types properly in ToolDescriptor
                 type.hackRepresentAnyOfWithNullAsTypeUnionWithNull(::getTypeMapForParameter)
-                    ?: throw LLMClientException(clientName, "AnyOf type is not supported")
+                    ?: JsonObject(
+                        mapOf(
+                            "anyOf" to JsonArray(
+                                type.types.map { option ->
+                                    val optionSchema = getTypeMapForParameter(option.type).toMutableMap()
+                                    if (option.description.isNotBlank()) {
+                                        optionSchema["description"] = JsonPrimitive(option.description)
+                                    }
+                                    JsonObject(optionSchema)
+                                }
+                            )
+                        )
+                    )
             }
         }
     }
