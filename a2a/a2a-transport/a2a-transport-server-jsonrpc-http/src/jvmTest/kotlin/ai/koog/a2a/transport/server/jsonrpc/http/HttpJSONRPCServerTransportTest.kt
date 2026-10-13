@@ -69,7 +69,7 @@ class HttpJSONRPCServerTransportTest {
                 AgentInterface(
                     url = "https://api.example.com/a2a",
                     protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "1.0.1",
+                    protocolVersion = "1.0",
                 )
             ),
             version = "1.0.0",
@@ -297,7 +297,7 @@ class HttpJSONRPCServerTransportTest {
     @Test
     fun testGetExtendedAgentCard() = runTest {
         testServerMethod(
-            method = A2AMethod.GetAuthenticatedExtendedAgentCard,
+            method = A2AMethod.GetExtendedAgentCard,
             requestId = RequestId.StringId("test-1"),
             request = GetExtendedAgentCardRequest(),
             expectedResponse = MockRequestHandler.agentCard,
@@ -415,7 +415,7 @@ class HttpJSONRPCServerTransportTest {
     @Test
     fun testListTaskPushNotificationConfigs() = runTest {
         testServerMethod(
-            method = A2AMethod.ListTaskPushNotificationConfig,
+            method = A2AMethod.ListTaskPushNotificationConfigs,
             requestId = RequestId.StringId("test-7"),
             request = ListTaskPushNotificationConfigsRequest(taskId = "task-1"),
             expectedResponse = MockRequestHandler.listConfigsResponse,

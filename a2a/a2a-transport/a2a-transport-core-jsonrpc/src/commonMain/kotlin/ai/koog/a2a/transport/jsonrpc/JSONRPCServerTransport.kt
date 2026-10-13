@@ -110,7 +110,7 @@ public open class JSONRPCServerTransport(
     ): JSONRPCResponse {
         return try {
             when (request.method) {
-                A2AMethod.GetAuthenticatedExtendedAgentCard.value ->
+                A2AMethod.GetExtendedAgentCard.value ->
                     onRequest(request, ctx, requestHandler::onGetExtendedAgentCard)
 
                 A2AMethod.SendMessage.value ->
@@ -134,7 +134,7 @@ public open class JSONRPCServerTransport(
                 A2AMethod.GetTaskPushNotificationConfig.value ->
                     onRequest(request, ctx, requestHandler::onGetTaskPushNotificationConfig)
 
-                A2AMethod.ListTaskPushNotificationConfig.value ->
+                A2AMethod.ListTaskPushNotificationConfigs.value ->
                     onRequest(request, ctx, requestHandler::onListTaskPushNotificationConfigs)
 
                 A2AMethod.DeleteTaskPushNotificationConfig.value ->

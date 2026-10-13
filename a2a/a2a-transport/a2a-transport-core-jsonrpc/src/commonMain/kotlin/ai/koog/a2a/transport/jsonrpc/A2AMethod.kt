@@ -7,7 +7,7 @@ public enum class A2AMethod(
     public val value: String,
     public val streaming: Boolean = false
 ) {
-    GetAuthenticatedExtendedAgentCard("GetExtendedAgentCard"),
+    GetExtendedAgentCard("GetExtendedAgentCard"),
     SendMessage("SendMessage"),
     SendMessageStreaming("SendStreamingMessage", streaming = true),
     GetTask("GetTask"),
@@ -16,6 +16,6 @@ public enum class A2AMethod(
     SubscribeToTask("SubscribeToTask", streaming = true),
     CreateTaskPushNotificationConfig("CreateTaskPushNotificationConfig"),
     GetTaskPushNotificationConfig("GetTaskPushNotificationConfig"),
-    ListTaskPushNotificationConfig("ListTaskPushNotificationConfigs"),
+    ListTaskPushNotificationConfigs("ListTaskPushNotificationConfigs"),
     DeleteTaskPushNotificationConfig("DeleteTaskPushNotificationConfig"),
 }

@@ -177,7 +177,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override suspend fun getExtendedAgentCard(
         request: GetExtendedAgentCardRequest,
         ctx: ClientCallContext
-    ): AgentCard = request(A2AMethod.GetAuthenticatedExtendedAgentCard, request, ctx)
+    ): AgentCard = request(A2AMethod.GetExtendedAgentCard, request, ctx)
 
     override suspend fun sendMessage(
         request: SendMessageRequest,
@@ -222,7 +222,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override suspend fun listTaskPushNotificationConfigs(
         request: ListTaskPushNotificationConfigsRequest,
         ctx: ClientCallContext
-    ): ListTaskPushNotificationConfigsResponse = request(A2AMethod.ListTaskPushNotificationConfig, request, ctx)
+    ): ListTaskPushNotificationConfigsResponse = request(A2AMethod.ListTaskPushNotificationConfigs, request, ctx)
 
     override suspend fun deleteTaskPushNotificationConfig(
         request: DeleteTaskPushNotificationConfigRequest,
