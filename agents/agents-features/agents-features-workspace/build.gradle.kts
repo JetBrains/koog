@@ -1,0 +1,38 @@
+import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+
+val isBeta by extra(true)
+
+plugins {
+    id("ai.kotlin.multiplatform")
+    alias(libs.plugins.kotlin.serialization)
+}
+
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(project(":agents:agents-core"))
+                api(project(":agents:agents-features:agents-features-snapshot"))
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+            }
+        }
+    }
+
+    explicitApi()
+}
+
+publishToMaven()
