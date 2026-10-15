@@ -378,6 +378,13 @@ public open class A2AServer(
         idGenerator = idGenerator,
     )
 
+    /**
+     * Returns [agentCardExtended].
+     *
+     * @throws A2AUnsupportedOperationException if the [agentCard] doesn't declare
+     * [extendedAgentCard][ai.koog.a2a.model.AgentCapabilities.extendedAgentCard].
+     * @throws A2AExtendedAgentCardNotConfiguredException if it is declared but [agentCardExtended] is `null`.
+     */
     override suspend fun onGetExtendedAgentCard(
         request: GetExtendedAgentCardRequest,
         ctx: ServerCallContext
@@ -939,12 +946,26 @@ public open class A2AServer(
         }
     }
 
+    /**
+     * Checks that the [agentCard] declares [streaming][ai.koog.a2a.model.AgentCapabilities.streaming], called in
+     * streaming operations after [checkRequiredExtensions] and before anything is emitted.
+     *
+     * @throws A2AUnsupportedOperationException if streaming is not declared or is `false`.
+     */
     protected open fun checkStreamingSupport() {
         if (agentCard.capabilities.streaming != true) {
             throw A2AUnsupportedOperationException("Streaming is not supported by the server")
         }
     }
 
+    /**
+     * Checks that the [agentCard] declares [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications]
+     * and that [pushConfigStorage] is configured, called in push notification config operations after
+     * [checkRequiredExtensions].
+     *
+     * @return The configured push notification config storage.
+     * @throws A2APushNotificationNotSupportedException if push notifications are not declared, or no storage is configured.
+     */
     protected open fun storageIfPushNotificationSupported(): PushNotificationConfigStorage {
         if (agentCard.capabilities.pushNotifications != true) {
             throw A2APushNotificationNotSupportedException("Push notifications are not supported by the server")
