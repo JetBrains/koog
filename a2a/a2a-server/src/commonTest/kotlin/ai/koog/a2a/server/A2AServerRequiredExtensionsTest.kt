@@ -108,10 +108,6 @@ class A2AServerRequiredExtensionsTest {
     )
 
     private fun operations(): Map<String, suspend (ServerCallContext) -> Unit> = mapOf(
-        "GetExtendedAgentCard" to { c ->
-            server.onGetExtendedAgentCard(GetExtendedAgentCardRequest(), c)
-            Unit
-        },
         "SendMessage" to { c ->
             server.onSendMessage(SendMessageRequest(message), c)
             Unit
@@ -164,6 +160,28 @@ class A2AServerRequiredExtensionsTest {
         operations().forEach { (name, operation) ->
             val e = assertFailsWith<A2AExtensionSupportRequiredException>(name) { operation(withoutExtensions) }
             assertEquals(A2AErrorCodes.EXTENSION_SUPPORT_REQUIRED, e.errorCode, name)
+        }
+    }
+
+    @Test
+    fun testGetExtendedAgentCardSkipsRequiredExtensionsCheck() = runTest {
+        val extendedCard = agentCard(AgentExtension(uri = REQUIRED, required = true)).copy(name = "Extended agent")
+        val cardServer = A2AServer(
+            agentExecutor = object : AgentExecutor {
+                override suspend fun execute(
+                    context: RequestContext<SendMessageRequest>,
+                    eventProcessor: SessionEventProcessor
+                ) = error("Not expected to be called")
+            },
+            agentCard = agentCard(AgentExtension(uri = REQUIRED, required = true)).let {
+                it.copy(capabilities = it.capabilities.copy(extendedAgentCard = true))
+            },
+            agentCardExtended = extendedCard,
+        )
+
+        assertEquals(extendedCard, cardServer.onGetExtendedAgentCard(GetExtendedAgentCardRequest(), withoutExtensions))
+        assertFailsWith<A2AExtensionSupportRequiredException> {
+            cardServer.onListTasks(ListTasksRequest(), withoutExtensions)
         }
     }
 

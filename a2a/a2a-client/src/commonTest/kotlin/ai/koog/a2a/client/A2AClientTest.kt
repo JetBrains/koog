@@ -1,5 +1,7 @@
 package ai.koog.a2a.client
 
+import ai.koog.a2a.consts.A2AHeaders
+import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
@@ -131,10 +133,35 @@ class A2AClientTest {
         )
     }
 
+    @Test
+    fun testVersionHeaderAddedWhenMissing() = runTest {
+        val transport = RecordingTransport()
+        val client = client(card(listOf(jsonRpcInterface(null))), transport)
+
+        client.getTask(GetTaskRequest("task-1"), ClientCallContext(headers = mapOf("X-Custom" to listOf("v"))))
+
+        assertEquals(
+            mapOf("X-Custom" to listOf("v"), A2AHeaders.A2A_VERSION to listOf(A2AVersions.CURRENT_VERSION)),
+            transport.contexts.single().headers
+        )
+    }
+
+    @Test
+    fun testVersionHeaderPresenceCheckIsCaseInsensitive() = runTest {
+        val transport = RecordingTransport()
+        val client = client(card(listOf(jsonRpcInterface(null))), transport)
+        val headers = mapOf("a2a-version" to listOf("0.3"))
+
+        client.getTask(GetTaskRequest("task-1"), ClientCallContext(headers = headers))
+
+        assertEquals(headers, transport.contexts.single().headers)
+    }
+
     private inner class RecordingTransport(
         private val extendedCard: AgentCard = card(emptyList()),
     ) : ClientTransport {
         val requests = mutableListOf<Request>()
+        val contexts = mutableListOf<ClientCallContext>()
 
         override suspend fun getExtendedAgentCard(
             request: GetExtendedAgentCardRequest,
@@ -156,6 +183,7 @@ class A2AClientTest {
 
         override suspend fun getTask(request: GetTaskRequest, ctx: ClientCallContext): Task {
             requests += request
+            contexts += ctx
             return task
         }
 

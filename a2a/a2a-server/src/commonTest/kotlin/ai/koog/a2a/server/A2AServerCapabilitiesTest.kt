@@ -176,7 +176,7 @@ class A2AServerCapabilitiesTest {
 
     @Test
     fun testOperationsOfDisabledCapabilityFailWithExpectedErrors() = runTest {
-        (streamingOperations + pushOperations + extendedCardOperation).forEach { operation ->
+        (streamingOperations + pushOperations).forEach { operation ->
             disabledCapabilities(operation.capability).forEach { capabilities ->
                 val label = "${operation.name} with $capabilities"
                 val server = createServer(capabilities, agentCardExtended = extendedCard)
@@ -273,7 +273,7 @@ class A2AServerCapabilitiesTest {
             AgentCapabilities(extensions = listOf(AgentExtension(uri = REQUIRED_EXTENSION, required = true)))
         )
 
-        (streamingOperations + pushOperations + extendedCardOperation).forEach { operation ->
+        (streamingOperations + pushOperations).forEach { operation ->
             val failure = assertFailsWith<A2AExtensionSupportRequiredException>(operation.name) {
                 operation.call(server, ctx)
             }

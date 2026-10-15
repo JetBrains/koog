@@ -227,8 +227,8 @@ public open class A2AClient(
     protected open fun prepareContext(ctx: ClientCallContext): ClientCallContext {
         val updatedHeaders = ctx.headers.toMutableMap()
 
-        // Append current version header, if the version header is missing
-        if (A2AHeaders.A2A_VERSION !in ctx.headers) {
+        // Append current version header, if the version header is missing (header names are case-insensitive)
+        if (ctx.headers.keys.none { it.equals(A2AHeaders.A2A_VERSION, ignoreCase = true) }) {
             updatedHeaders += (A2AHeaders.A2A_VERSION to listOf(A2AVersions.CURRENT_VERSION))
         }
 

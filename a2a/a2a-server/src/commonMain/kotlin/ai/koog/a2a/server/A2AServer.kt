@@ -373,7 +373,8 @@ public open class A2AServer(
     )
 
     /**
-     * Returns [agentCardExtended].
+     * Returns [agentCardExtended]. Unlike the other operations, this one doesn't run [checkRequiredExtensions]: the
+     * client may need the extended card to learn which extensions to request.
      *
      * @throws A2AUnsupportedOperationException if the [agentCard] doesn't declare
      * [extendedAgentCard][ai.koog.a2a.model.AgentCapabilities.extendedAgentCard].
@@ -383,8 +384,6 @@ public open class A2AServer(
         request: GetExtendedAgentCardRequest,
         ctx: ServerCallContext
     ): AgentCard {
-        checkRequiredExtensions(ctx)
-
         if (agentCard.capabilities.extendedAgentCard != true) {
             throw A2AUnsupportedOperationException("Extended agent card is not supported")
         }
@@ -862,7 +861,7 @@ public open class A2AServer(
 
     /**
      * Checks that the client requested all extensions that [agentCard] declares as required, called first in every
-     * [RequestHandler] operation (including [onGetExtendedAgentCard]). The extensions requested by the client are
+     * [RequestHandler] operation except [onGetExtendedAgentCard]. The extensions requested by the client are
      * [ServerCallContext.requestedExtensions]; requested extensions that the card doesn't declare are ignored.
      *
      * Only the public [agentCard] is consulted, not [agentCardExtended]. Override to customize the check,
