@@ -104,6 +104,12 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
 - **Exception documentation**: Use `@throws` with specific conditions
 - **Required**: All public APIs must have KDoc (enforced by `explicitApi()`)
 
+#### Comments
+- Keep comments and KDoc concise; explain *why* or non-obvious behavior, not what the code obviously does
+- No narration of history or refactors ("previously...", "after M8...") and no slice, milestone, or decision ids (`D-3`)
+- Write longer explanations only for genuinely complex behavior: concurrency, lock order, protocol edge cases
+- The KDoc requirement for public APIs still applies; keep it short and informative
+
 ## Testing Requirements
 
 ### Mandatory Test Execution
