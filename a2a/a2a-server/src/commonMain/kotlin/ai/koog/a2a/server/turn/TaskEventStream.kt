@@ -49,6 +49,10 @@ import kotlin.time.Clock
  * fan-out drops the subscriber and goes on. If the publisher itself is cancelled mid-fan-out, the event is already
  * persisted but the subscribers not reached yet don't receive it.
  *
+ * Every persisted [TaskEvent] is passed to [onPersisted] right after it is stored, before the fan-out and still under
+ * the stream lock, so its calls follow the storage order. User messages added to the history are not events and aren't
+ * passed.
+ *
  * ## History
  *
  * The stream adds user messages to [Task.history] (deduplicated by [Message.messageId], see [plusIfAbsent]), so
@@ -69,11 +73,14 @@ import kotlin.time.Clock
  * @param taskId the id of the task this stream belongs to
  * @param taskStorage the storage where task events are persisted
  * @param idGenerator generates the id of the message attached to the failure status
+ * @param onPersisted called with every persisted [TaskEvent] (e.g. to queue push notifications); must return quickly
+ * and must not be interrupted by cancellation, since the event is already stored
  */
 internal class TaskEventStream(
     val taskId: String,
     private val taskStorage: TaskStorage,
     private val idGenerator: IdGenerator,
+    private val onPersisted: (suspend (TaskEvent) -> Unit)? = null,
 ) {
     private companion object {
         private val logger = KotlinLogging.logger {}
@@ -205,12 +212,18 @@ internal class TaskEventStream(
     }
 
     private suspend fun persistAndDeliver(event: TaskEvent) {
-        taskStorage.update(event)
+        persist(event)
         fanOut(event) { true }
 
         if (event.isTerminal()) {
             closeAll()
         }
+    }
+
+    /** Stores [event] and reports it to [onPersisted]. Must be called under the stream lock. */
+    private suspend fun persist(event: TaskEvent) {
+        taskStorage.update(event)
+        onPersisted?.invoke(event)
     }
 
     /** Adds [userMessage] to the history of the stored task, see [publish]. Must be called under the stream lock. */
@@ -268,7 +281,7 @@ internal class TaskEventStream(
                 ),
             )
 
-            taskStorage.update(failed)
+            persist(failed)
             fanOut(failed) { true }
             closeAll()
         }

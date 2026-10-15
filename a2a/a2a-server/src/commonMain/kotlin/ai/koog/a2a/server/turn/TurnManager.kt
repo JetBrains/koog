@@ -8,7 +8,9 @@ import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.PushNotificationDispatcher
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
@@ -61,7 +63,8 @@ import kotlinx.coroutines.withContext
  * [withTaskProcessor] blocks (e.g. [ai.koog.a2a.server.A2AServer.onCancelTask]) don't take it, since a caller holding
  * it may be waiting for a running turn to end ([Turn.join]), and a turn can't end without the gate. The registry lock
  * and the stream lock are never nested: the registry lock is held only for short non-suspending bookkeeping and never
- * while acquiring a stream lock, so a stalled task can't block other tasks.
+ * while acquiring a stream lock, so a stalled task can't block other tasks. The stream lock may be followed by the push
+ * queue lock, a leaf lock held only for queue bookkeeping.
  *
  * ## Back-pressure
  *
@@ -87,10 +90,17 @@ import kotlinx.coroutines.withContext
  *
  * ## Push notifications
  *
- * If [pushConfigStorage] and [pushSender] are configured, after each turn that sent task events, a push notification
- * with the current state of the task is sent to every push notification config of the task.
+ * If [pushConfigStorage] and [pushSender] are configured, every [TaskEvent] persisted to a task
+ * (by the agent, or by the server, e.g. a failed or canceled status) is sent as a push notification to every push
+ * notification config of the task. [ai.koog.a2a.model.Message] replies, ignored [ai.koog.a2a.model.Task] events, and
+ * user messages added to the history are not pushed.
  *
- * @param coroutineScope The scope in which agent jobs and turn monitoring jobs are launched.
+ * Push notifications are queued when the event is persisted and sent in the background, holding no lock, so a slow
+ * webhook never delays the agent, the streams, or other tasks. The configs are read when an event is sent. Every config
+ * receives the events of its task in storage order. Failed sends are logged and not retried, and pending notifications
+ * are dropped when [coroutineScope] is cancelled.
+ *
+ * @param coroutineScope The scope in which agent jobs, turn monitoring jobs, and push notification jobs are launched.
  * @param taskStorage The storage for tasks.
  * @param pushConfigStorage The storage for push notification configurations.
  * @param pushSender The push notification sender.
@@ -100,13 +110,20 @@ import kotlinx.coroutines.withContext
 public class TurnManager(
     private val coroutineScope: CoroutineScope,
     private val taskStorage: TaskStorage,
-    private val pushConfigStorage: PushNotificationConfigStorage? = null,
-    private val pushSender: PushNotificationSender? = null,
+    pushConfigStorage: PushNotificationConfigStorage? = null,
+    pushSender: PushNotificationSender? = null,
     private val idGenerator: IdGenerator = UuidIdGenerator,
 ) {
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
+
+    private val pushDispatcher: PushNotificationDispatcher? =
+        if (pushConfigStorage != null && pushSender != null) {
+            PushNotificationDispatcher(coroutineScope, pushConfigStorage, pushSender)
+        } else {
+            null
+        }
 
     private class StreamEntry(val stream: TaskEventStream) {
         /** Number of turns, [withTaskProcessor] blocks, and subscribers using the stream. */
@@ -286,27 +303,6 @@ public class TurnManager(
         } finally {
             turn.completion.complete()
         }
-
-        if (turn.eventProcessor.isTaskEventSent) {
-            sendPushNotifications(turn.taskId)
-        }
-    }
-
-    /** Sends push notifications with the current state of the task, if configured. */
-    private suspend fun sendPushNotifications(taskId: String) {
-        if (pushSender == null || pushConfigStorage == null) return
-
-        val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) ?: return
-
-        pushConfigStorage.getAll(taskId).forEach { config ->
-            try {
-                pushSender.send(config, task)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn(e) { "Failed to send push notification for taskId='$taskId' configId='${config.id}'" }
-            }
-        }
     }
 
     /**
@@ -420,7 +416,10 @@ public class TurnManager(
 
     private suspend fun acquire(taskId: String): TaskEventStream = registryMutex.withLock {
         val entry = streams.getOrPut(taskId) {
-            StreamEntry(TaskEventStream(taskId, taskStorage, idGenerator))
+            val onPersisted: (suspend (TaskEvent) -> Unit)? = pushDispatcher?.let { dispatcher ->
+                { event -> dispatcher.enqueue(taskId, event) }
+            }
+            StreamEntry(TaskEventStream(taskId, taskStorage, idGenerator, onPersisted))
         }
         entry.holders++
 

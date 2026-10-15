@@ -4,13 +4,14 @@ package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskPushNotificationConfig
+import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
@@ -18,8 +19,10 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
+import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
-import ai.koog.a2a.server.notifications.PushNotificationSender
+import ai.koog.a2a.server.notifications.pushConfig
+import ai.koog.a2a.server.notifications.pushes
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
@@ -58,25 +61,17 @@ class TurnManagerTest {
 
     private lateinit var taskStorage: InMemoryTaskStorage
     private lateinit var pushConfigStorage: InMemoryPushNotificationConfigStorage
-    private lateinit var pushSender: MockPushNotificationSender
+    private lateinit var pushSender: GatedPushNotificationSender
 
     private val contextId = "context-1"
     private val taskId = "task-1"
     private val callContext = ServerCallContext()
 
-    private class MockPushNotificationSender : PushNotificationSender {
-        val sentNotifications = mutableListOf<Pair<TaskPushNotificationConfig, Event>>()
-
-        override suspend fun send(config: TaskPushNotificationConfig, event: Event) {
-            sentNotifications.add(config to event)
-        }
-    }
-
     @BeforeTest
     fun setUp() {
         taskStorage = InMemoryTaskStorage()
         pushConfigStorage = InMemoryPushNotificationConfigStorage()
-        pushSender = MockPushNotificationSender()
+        pushSender = GatedPushNotificationSender()
     }
 
     private fun createMessage(
@@ -496,31 +491,131 @@ class TurnManagerTest {
         assertEquals(canceled, taskStorage.get(taskId))
     }
 
+    private suspend fun savePushConfig() {
+        pushConfigStorage.save(pushConfig(taskId, "c1"), callContext)
+    }
+
     @Test
-    fun testTurnWithPushNotifications() = runTest(timeout = TEST_TIMEOUT) {
+    fun testEveryPersistedTaskEventIsPushedInOrder() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-
-        // Configure push notification
-        val config = TaskPushNotificationConfig(
-            taskId = "task-1",
-            id = "config-1",
-            url = "https://example.com/webhook"
+        savePushConfig()
+        val task = createTask(taskId, contextId)
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val artifact = TaskArtifactUpdateEvent(
+            taskId = taskId,
+            contextId = contextId,
+            artifact = Artifact(artifactId = "artifact-1", parts = listOf(TextPart("result"))),
         )
-        pushConfigStorage.save(config, ServerCallContext())
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
 
-        val task = createTask("task-1", contextId)
-        val completed = statusUpdate("task-1", contextId, TaskState.TASK_STATE_COMPLETED)
+        turnManager.startTurn(createContext(taskId, contextId)) { processor ->
+            listOf(task, working, artifact, completed).forEach { processor.sendTaskEvent(it) }
+        }.also { drain(it) }.join()
+        runCurrent()
+
+        // The initial task is pushed as persisted, with the user message.
+        assertEquals(pushes("c1", listOf(task.withUserMessage(), working, artifact, completed)), pushSender.sent)
+    }
+
+    @Test
+    fun testMessageReplyIsNotPushed() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        savePushConfig()
+
+        turnManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendMessage(createMessage("agent-msg", contextId, "Hi"))
+        }.also { drain(it) }.join()
+        runCurrent()
+
+        assertEquals(emptyList(), pushSender.started)
+    }
+
+    @Test
+    fun testIgnoredTaskOfExistingTaskIsNotPushed() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeInputRequiredTask()
+        savePushConfig()
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+
+        turnManager.startTurn(createContext(taskId, contextId, inputRequired)) { processor ->
+            processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_WORKING))
+            processor.sendTaskEvent(working)
+        }.also { drain(it) }.join()
+        runCurrent()
+
+        // Neither the ignored Task nor the user message added to the history is pushed.
+        assertEquals(listOf<Pair<String, Event>>("c1" to working), pushSender.sent)
+    }
+
+    @Test
+    fun testFailedStatusOfCrashedTurnIsPushed() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        savePushConfig()
+        val task = createTask(taskId, contextId)
 
         turnManager.startTurn(createContext(taskId, contextId)) { processor ->
             processor.sendTaskEvent(task)
-            processor.sendTaskEvent(completed)
+            throw IllegalStateException("boom")
         }.also { drain(it) }.join()
+        runCurrent()
 
-        // Let the push notifications be sent after the turn.
-        advanceUntilIdle()
+        val stored = assertNotNull(taskStorage.get(taskId))
+        val failed = TaskStatusUpdateEvent(
+            taskId = taskId,
+            contextId = contextId,
+            status = failedStatus(taskId, contextId, stored.status.timestamp),
+        )
+        assertEquals(listOf<Pair<String, Event>>("c1" to task.withUserMessage(), "c1" to failed), pushSender.sent)
+    }
 
-        // Verify push notification was sent with the current task state
-        assertEquals(listOf<Pair<TaskPushNotificationConfig, Event>>(config to task.copy(status = completed.status)), pushSender.sentNotifications)
+    @Test
+    fun testServerEventOnIdleTaskIsPushed() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        storeTask()
+        savePushConfig()
+        val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
+
+        turnManager.withTaskProcessor(taskId, contextId) { processor, _ ->
+            processor.sendServerTaskEvent(canceled)
+        }
+        runCurrent()
+
+        assertEquals(listOf<Pair<String, Event>>("c1" to canceled), pushSender.sent)
+    }
+
+    @Test
+    fun testBlockedPushSenderDoesNotBlockAgentStreamsOrTurnEnd() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeTask()
+        savePushConfig()
+        pushSender.block("c1")
+
+        val received = mutableListOf<Event>()
+        val subscriber = subscribeWith(turnManager) { received += it }
+        runCurrent()
+
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(working)
+            processor.sendTaskEvent(completed)
+        }
+        val requesterEvents = drain(turn)
+
+        withTimeout(5.seconds) {
+            turn.join()
+            subscriber.join()
+        }
+
+        assertEquals(listOf<Event>(inputRequired, working, completed), received)
+        assertEquals(listOf<Event>(working, completed), requesterEvents.await())
+        assertEquals(0, turnManager.activeStreams())
+        assertEquals(listOf<Pair<String, Event>>("c1" to working), pushSender.started)
+
+        pushSender.unblock("c1")
+        runCurrent()
+
+        assertEquals(listOf<Pair<String, Event>>("c1" to working, "c1" to completed), pushSender.sent)
     }
 
     /** Starts the SubscribeToTask flow in a new coroutine. [onEvent] is called for every received event. */
