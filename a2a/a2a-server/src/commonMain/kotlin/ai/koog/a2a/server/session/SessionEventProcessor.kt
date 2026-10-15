@@ -3,10 +3,10 @@ package ai.koog.a2a.server.session
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
-import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.exceptions.TaskOperationException
+import ai.koog.a2a.server.tasks.isTerminal
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -153,29 +153,21 @@ public class SessionEventProcessor internal constructor(
      * @throws [SessionNotActiveException] if the processor is closed.
      * @see SessionEventProcessor
      */
-    public suspend fun sendTaskEvent(event: TaskEvent): Unit = sessionMutex.withLock {
-        if (_isOpen.load()) {
-            isTaskEventSent = true
-            publishTaskEvent(event, persistFollowUpMessage = true)
-        } else {
-            throw SessionNotActiveException(SESSION_CLOSED)
-        }
-    }
+    public suspend fun sendTaskEvent(event: TaskEvent): Unit = send(event, persistFollowUpMessage = true)
 
     /**
      * Sends a [TaskEvent] originated by the server itself (e.g. the forced cancellation) rather than by the agent:
      * it is not counted as the agent's first event, so it doesn't persist the pending user message of a follow-up.
      */
-    internal suspend fun sendServerTaskEvent(event: TaskEvent): Unit = sessionMutex.withLock {
-        if (_isOpen.load()) {
-            isTaskEventSent = true
-            publishTaskEvent(event, persistFollowUpMessage = false)
-        } else {
+    internal suspend fun sendServerTaskEvent(event: TaskEvent): Unit = send(event, persistFollowUpMessage = false)
+
+    private suspend fun send(event: TaskEvent, persistFollowUpMessage: Boolean): Unit = sessionMutex.withLock {
+        if (!_isOpen.load()) {
             throw SessionNotActiveException(SESSION_CLOSED)
         }
-    }
 
-    private suspend fun publishTaskEvent(event: TaskEvent, persistFollowUpMessage: Boolean) {
+        isTaskEventSent = true
+
         if (event.contextId != this.contextId) {
             throw reject(InvalidEventException(INVALID_CONTEXT_ID))
         }
@@ -196,10 +188,7 @@ public class SessionEventProcessor internal constructor(
             pendingFollowUpMessage = null
         }
 
-        val isFinalEvent = (event is TaskStatusUpdateEvent && event.status.state.terminal) ||
-            (event is Task && event.status.state.terminal)
-
-        if (isApplied && isFinalEvent) {
+        if (isApplied && event.isTerminal()) {
             _isOpen.store(false)
         }
     }
@@ -210,9 +199,18 @@ public class SessionEventProcessor internal constructor(
     }
 
     /**
-     * Closes the processor: subsequent events are rejected with [SessionNotActiveException].
+     * Closes the processor: subsequent events are rejected with [SessionNotActiveException]. Waits for an event that
+     * is being sent right now to be published.
      */
     internal suspend fun close(): Unit = sessionMutex.withLock {
+        _isOpen.store(false)
+    }
+
+    /**
+     * Closes the processor like [close], but without waiting for an event that is being sent right now, which can take
+     * as long as the slowest stream of the task needs.
+     */
+    internal fun closeImmediately() {
         _isOpen.store(false)
     }
 }

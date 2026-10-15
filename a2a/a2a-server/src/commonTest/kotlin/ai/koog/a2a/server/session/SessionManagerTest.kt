@@ -15,6 +15,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
@@ -133,6 +134,7 @@ class SessionManagerTest {
     private fun createContext(
         taskId: String,
         contextId: String,
+        task: Task? = null,
     ) = RequestContext(
         callContext = callContext,
         params = SendMessageRequest(createMessage("user-msg", contextId, "Hello")),
@@ -140,7 +142,7 @@ class SessionManagerTest {
         messageStorage = ContextMessageStorage(contextId, InMemoryMessageStorage()),
         contextId = contextId,
         taskId = taskId,
-        task = null,
+        task = task,
     )
 
     /**
@@ -398,6 +400,21 @@ class SessionManagerTest {
     }
 
     @Test
+    fun testStandaloneProcessorIsClosedAfterWithTaskProcessor() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val leaked = sessionManager.withTaskProcessor(taskId, contextId) { processor, _ -> processor }
+
+        assertFailsWith<SessionNotActiveException> {
+            leaked.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
+        }
+        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
     fun testWithTaskProcessorKeepsRunningTurnOpen() = runTest(timeout = TEST_TIMEOUT) {
         val sessionManager = createManager()
         val task = createTask(taskId, contextId, TaskState.TASK_STATE_WORKING)
@@ -447,7 +464,7 @@ class SessionManagerTest {
         var storedWhenAgentStarted: Task? = null
         val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
 
-        val session = sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) {
+        val session = sessionManager.startTurn(createContext(taskId, contextId, inputRequired)) {
             storedWhenAgentStarted = taskStorage.get(taskId)
             it.sendTaskEvent(working)
         }
@@ -470,7 +487,7 @@ class SessionManagerTest {
         val sessionManager = createManager()
         val inputRequired = storeInputRequiredTask()
 
-        val session = sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) {}
+        val session = sessionManager.startTurn(createContext(taskId, contextId, inputRequired)) {}
         drain(session)
         session.join()
 
@@ -487,7 +504,7 @@ class SessionManagerTest {
         var agentStarted = false
 
         assertFailsWith<A2AUnsupportedOperationException> {
-            sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) { agentStarted = true }
+            sessionManager.startTurn(createContext(taskId, contextId, inputRequired)) { agentStarted = true }
         }
         advanceUntilIdle()
 

@@ -260,41 +260,47 @@ public class SessionManager(
      * Waits for the turn's agent job to complete (starting it, if needed), ends the turn, and cleans up.
      */
     private suspend fun monitorTurn(session: Session, stream: TaskEventStream, turnId: Long) {
+        // Also fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
+        val failure = try {
+            session.agentJob.await()
+            null
+        } catch (e: Throwable) {
+            e
+        }
+
+        if (failure != null && failure !is CancellationException) {
+            // The requester may have got its response already, so the failure must not go unnoticed.
+            logger.warn(failure) { "Agent execution failed for taskId='${session.taskId}'" }
+        }
+
         try {
-            val failure = try {
-                session.agentJob.await()
-                null
-            } catch (e: Throwable) {
-                e
-            }
+            // The turn is ended even if this monitor is cancelled, so its view completes and the session is removed.
+            withContext(NonCancellable) {
+                try {
+                    /*
+                     Wait for any withTaskProcessor block (e.g. cancellation) that may still publish through this
+                     turn's processor, then close the processor and the turn view (endTurn closes it even if it fails),
+                     and remove the session. The session is removed under the gate, so a withTaskProcessor block never
+                     gets the closed processor of an ended turn.
+                     */
+                    stream.processorGate.withLock {
+                        session.eventProcessor.close()
 
-            if (failure != null && failure !is CancellationException) {
-                // The requester may have got its response already, so the failure must not go unnoticed.
-                logger.warn(failure) { "Agent execution failed for taskId='${session.taskId}'" }
-            }
-
-            /*
-             Wait for any withTaskProcessor block (e.g. cancellation) that may still publish through this turn's
-             processor, then close the processor and the turn view, and remove the session.
-             */
-            stream.processorGate.withLock {
-                session.eventProcessor.close()
-                stream.endTurn(turnId, session.contextId, failure)
-                registryMutex.withLock { turns -= session.taskId }
+                        try {
+                            stream.endTurn(turnId, session.contextId, failure)
+                        } finally {
+                            registryMutex.withLock { turns -= session.taskId }
+                        }
+                    }
+                } finally {
+                    release(stream)
+                }
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logger.error(e) { "Failed to finish the turn of taskId='${session.taskId}'" }
         } finally {
-            withContext(NonCancellable) {
-                // Make sure the requester's view ends even if finishing the turn failed or was cancelled.
-                stream.closeTurnView(turnId)
-                registryMutex.withLock {
-                    if (turns[session.taskId] === session) turns -= session.taskId
-                }
-                release(stream)
-            }
             session.completion.complete()
         }
 
@@ -367,8 +373,9 @@ public class SessionManager(
      *
      * If a turn of the task is running, [block] receives that turn's processor and agent job, and the turn is kept
      * from finishing (its processor and [Session.events] stay open) until [block] returns, so everything [block]
-     * publishes reaches the turn's requester as well. Otherwise, [block] receives a new processor and `null`.
-     * Either way, the events [block] publishes reach every [subscribe] stream of the task.
+     * publishes reaches the turn's requester as well. Otherwise, [block] receives a new processor, which is closed when
+     * [block] returns (later events are rejected with [ai.koog.a2a.server.exceptions.SessionNotActiveException]), and
+     * `null`. Either way, the events [block] publishes reach every [subscribe] stream of the task.
      *
      * No turn of the task starts while [block] runs: a turn that is being started waits, and is rejected if [block]
      * left the task in a terminal state, see [startTurn].
@@ -400,7 +407,15 @@ public class SessionManager(
                     turnId = null,
                 )
 
-                block(processor, session?.agentJob)
+                try {
+                    block(processor, session?.agentJob)
+                } finally {
+                    /*
+                     Nothing may publish through a standalone processor once the block is done and the stream may be
+                     dropped. Closed without waiting for a send in progress, which could hold the gate for long.
+                     */
+                    if (session == null) processor.closeImmediately()
+                }
             }
         } finally {
             release(stream)

@@ -12,6 +12,7 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.tasks.TaskStorage
+import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.tasks.plusIfAbsent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
@@ -258,32 +259,26 @@ internal class TaskEventStream(
                 markFailed(contextId)
             }
         } finally {
-            closeTurnViewLocked(turnId)
+            closeTurnView(turnId)
         }
-    }
-
-    /**
-     * Closes the view of the turn [turnId], if it is still open. Idempotent.
-     */
-    suspend fun closeTurnView(turnId: Long): Unit = mutex.withLock {
-        closeTurnViewLocked(turnId)
     }
 
     private suspend fun markFailed(contextId: String) {
         val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
 
         if (task != null && !task.status.state.terminal) {
+            val taskContextId = task.contextId ?: contextId
             val failed = TaskStatusUpdateEvent(
                 taskId = taskId,
-                contextId = task.contextId ?: contextId,
+                contextId = taskContextId,
                 status = TaskStatus(
                     state = TaskState.TASK_STATE_FAILED,
                     // Deliberately generic: exception details must not leak to clients.
                     message = Message(
-                        messageId = idGenerator.generateMessageId(taskId, task.contextId ?: contextId),
+                        messageId = idGenerator.generateMessageId(taskId, taskContextId),
                         role = Role.ROLE_AGENT,
                         parts = listOf(TextPart(FAILURE_MESSAGE)),
-                        contextId = task.contextId ?: contextId,
+                        contextId = taskContextId,
                         taskId = taskId,
                     ),
                     timestamp = Clock.System.now(),
@@ -296,7 +291,7 @@ internal class TaskEventStream(
         }
     }
 
-    private fun closeTurnViewLocked(turnId: Long) {
+    private fun closeTurnView(turnId: Long) {
         subscribers.removeAll { subscriber ->
             (subscriber.turnId == turnId).also { if (it) subscriber.channel.close() }
         }
@@ -347,11 +342,5 @@ internal class TaskEventStream(
     private fun closeAll() {
         subscribers.forEach { it.channel.close() }
         subscribers.clear()
-    }
-
-    private fun TaskEvent.isTerminal(): Boolean = when (this) {
-        is Task -> status.state.terminal
-        is TaskStatusUpdateEvent -> status.state.terminal
-        else -> false
     }
 }

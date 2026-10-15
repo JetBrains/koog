@@ -19,6 +19,7 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
+import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.session.IdGenerator
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
@@ -333,6 +334,31 @@ class A2AServerCancelTest {
         assertEquals(false, followUpRan)
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
         assertEquals(canceled, taskStorage.get(TASK_ID, historyLength = 0, includeArtifacts = true))
+    }
+
+    @Test
+    fun testProcessorLeakedByFailedIdleCancelRejectsEventsAfterCancelReturns() = runTest(timeout = TEST_TIMEOUT) {
+        var leaked: SessionEventProcessor? = null
+        val leakingCancel = CancelHandler { processor, agentJob ->
+            assertEquals(null, agentJob)
+            leaked = processor
+            // Fails before anything ends the task, so nothing closes the processor on a terminal state.
+            throw IllegalStateException("cancel failed")
+        }
+        val server = createServer(emptyMap(), leakingCancel)
+        // An idle task: the executor gets a standalone processor.
+        val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(idle)
+
+        assertFailsWith<IllegalStateException> {
+            server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+        }
+
+        val processor = assertNotNull(leaked)
+        assertFailsWith<SessionNotActiveException> {
+            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
+        }
+        assertEquals(idle, taskStorage.get(TASK_ID))
     }
 
     @Test

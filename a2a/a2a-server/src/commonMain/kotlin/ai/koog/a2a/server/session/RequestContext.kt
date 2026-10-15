@@ -30,17 +30,4 @@ public class RequestContext<T>(
     public val contextId: String,
     public val taskId: String,
     public val task: Task?,
-) {
-    /**
-     * Returns a copy of this context with [task] replaced.
-     */
-    internal fun withTask(task: Task?): RequestContext<T> = RequestContext(
-        callContext = callContext,
-        params = params,
-        taskStorage = taskStorage,
-        messageStorage = messageStorage,
-        contextId = contextId,
-        taskId = taskId,
-        task = task,
-    )
-}
+)

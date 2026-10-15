@@ -48,6 +48,7 @@ import ai.koog.a2a.server.session.UuidIdGenerator
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
+import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.agents.lock.KeyedMutex
@@ -421,10 +422,11 @@ public open class A2AServer(
      *
      * @param request The SendMessage request.
      * @param ctx The context of the call.
-     * @param includeTaskSnapshot For a message to an existing task: whether to emit the task, as stored right before
-     * the turn's first event (before the agent's first event; the user message is persisted later, see [SessionManager]), before the agent's first event,
-     * so that the stream always begins with the task: a [Task] event of the agent for an existing task is ignored, see
-     * [SessionEventProcessor]. If the turn produces no events, the flow consists of the snapshot only.
+     * @param includeTaskSnapshot For a message to an existing task: whether to emit, before the agent's first event,
+     * the task as stored right before the turn's first event (without the user message of the request, which is
+     * persisted later, see [SessionManager]). This way the stream always begins with the task: a [Task] event of the
+     * agent for an existing task is ignored, see [SessionEventProcessor]. If the turn produces no events, the flow
+     * consists of the snapshot only.
      * @return A cold flow of the turn's events; each collection sends the message again.
      */
     @OptIn(InternalA2AApi::class)
@@ -447,9 +449,9 @@ public open class A2AServer(
             // If there's a currently running session for the same task, wait for it to finish.
             sessionManager.getSession(taskId)?.join()
 
-            // Check the task the message refers to, if any.
+            // Check the task the message refers to, if any. Read in full: the agent gets it as stored at turn start.
             val task: Task? = message.taskId?.let { referencedTaskId ->
-                val lookup = GetTaskRequest(id = referencedTaskId, historyLength = 0, tenant = request.tenant)
+                val lookup = GetTaskRequest(id = referencedTaskId, tenant = request.tenant)
                 val task = taskStorage.get(lookup, ctx)
                     ?: throw A2ATaskNotFoundException("Task '$referencedTaskId' not found")
 
@@ -472,25 +474,11 @@ public open class A2AServer(
                 ?: message.contextId
                 ?: idGenerator.generateContextId(message)
 
-            // Create request context based on the request information.
-            val requestContext = RequestContext(
-                callContext = ctx,
-                params = request,
-                taskStorage = ContextTaskStorage(contextId, taskStorage),
-                messageStorage = ContextMessageStorage(contextId, messageStorage),
-                contextId = contextId,
-                taskId = taskId,
-                task = task,
-            )
+            val requestContext = newRequestContext(ctx, request, contextId, taskId, task)
 
             // The session's event view is registered before the agent starts, so no event of this turn is missed.
             sessionManager.startTurn(requestContext) { eventProcessor ->
-                // The agent gets the full stored task as of the start of the turn: history and artifacts.
-                val fullTask = task?.let {
-                    taskStorage.get(GetTaskRequest(id = it.id, tenant = request.tenant), ctx)
-                }
-
-                agentExecutor.execute(requestContext.withTask(fullTask ?: task), eventProcessor)
+                agentExecutor.execute(requestContext, eventProcessor)
             }
         }
 
@@ -523,14 +511,12 @@ public open class A2AServer(
             }
         )
 
-        if (isRejected) {
+        if (isRejected || !isResponseComplete) {
+            // The turn has ended, or the agent failed: propagate the exception thrown by the agent execution, if any.
             awaitAgent(session)
         }
 
         if (!isResponseComplete && !isRejected) {
-            // The turn has ended: propagate the exception thrown by the agent execution, if any.
-            awaitAgent(session)
-
             if (session.eventProcessor.rejection != null && isFirstEvent) {
                 // The agent sent an invalid event, ignored the failure, and produced nothing else.
                 throw A2AInvalidAgentResponseException("Agent sent an invalid event")
@@ -542,11 +528,25 @@ public open class A2AServer(
         }
     }
 
+    private fun <T> newRequestContext(
+        ctx: ServerCallContext,
+        params: T,
+        contextId: String,
+        taskId: String,
+        task: Task?,
+    ): RequestContext<T> = RequestContext(
+        callContext = ctx,
+        params = params,
+        taskStorage = ContextTaskStorage(contextId, taskStorage),
+        messageStorage = ContextMessageStorage(contextId, messageStorage),
+        contextId = contextId,
+        taskId = taskId,
+        task = task,
+    )
+
     /**
-     * Waits for the agent job of an ended turn, rethrowing the exception the agent failed with. A cancelled agent job
-     * (e.g. by a cancel request) is not an error of this request: only the cancellation of the caller itself is
-     * propagated. An event of the agent that was rejected ([InvalidEventException], [TaskOperationException]) is
-     * reported as [A2AInvalidAgentResponseException].
+     * Whether the agent job has already failed because an event of the agent was rejected ([InvalidEventException],
+     * [TaskOperationException]).
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun Session.failedWithRejectedEvent(): Boolean {
@@ -554,6 +554,12 @@ public open class A2AServer(
         return failure is InvalidEventException || failure is TaskOperationException
     }
 
+    /**
+     * Waits for the agent job of an ended turn, rethrowing the exception the agent failed with. A cancelled agent job
+     * (e.g. by a cancel request) is not an error of this request: only the cancellation of the caller itself is
+     * propagated. An event of the agent that was rejected ([InvalidEventException], [TaskOperationException]) is
+     * reported as [A2AInvalidAgentResponseException].
+     */
     private suspend fun awaitAgent(session: Session) {
         try {
             session.agentJob.await()
@@ -638,12 +644,6 @@ public open class A2AServer(
         checkRequiredExtensions(ctx)
         checkStreamingSupport()
         emitAll(onSendMessageCommon(request, ctx, includeTaskSnapshot = true))
-    }
-
-    private fun Event.isTerminal(): Boolean = when (this) {
-        is Task -> status.state.terminal
-        is TaskStatusUpdateEvent -> status.state.terminal
-        else -> false
     }
 
     private fun Event.isInterrupted(): Boolean = when (this) {
@@ -733,16 +733,7 @@ public open class A2AServer(
                 throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
             }
 
-            // Create request context based on the request information.
-            val requestContext = RequestContext(
-                callContext = ctx,
-                params = request,
-                taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
-                messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
-                contextId = eventProcessor.contextId,
-                taskId = eventProcessor.taskId,
-                task = task,
-            )
+            val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
 
             // Attempt to cancel the agent execution and wait until it's finished.
             agentExecutor.cancel(requestContext, eventProcessor, agentJob)
