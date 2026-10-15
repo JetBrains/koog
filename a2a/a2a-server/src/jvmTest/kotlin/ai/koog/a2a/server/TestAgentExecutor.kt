@@ -2,11 +2,11 @@
 
 package ai.koog.a2a.server
 
+import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
@@ -68,8 +68,7 @@ private suspend fun doTask(
                     taskId = context.taskId
                 ),
                 timestamp = Clock.System.now()
-            ),
-            final = false
+            )
         )
     )
 
@@ -88,8 +87,7 @@ private suspend fun doTask(
                     taskId = context.taskId
                 ),
                 timestamp = Clock.System.now()
-            ),
-            final = true
+            )
         )
     )
 }
@@ -145,11 +143,29 @@ private suspend fun doLongRunningTask(
                         taskId = context.taskId
                     ),
                     timestamp = Clock.System.now()
-                ),
-                final = false
+                )
             )
         )
     }
+
+    // Complete the task, same as the Python test server does
+    eventProcessor.sendTaskEvent(
+        TaskStatusUpdateEvent(
+            taskId = context.taskId,
+            contextId = context.contextId,
+            status = TaskStatus(
+                state = TaskState.TASK_STATE_COMPLETED,
+                message = Message(
+                    messageId = Uuid.random().toString(),
+                    role = Role.ROLE_AGENT,
+                    parts = listOf(TextPart("Task completed")),
+                    contextId = context.contextId,
+                    taskId = context.taskId
+                ),
+                timestamp = Clock.System.now()
+            )
+        )
+    )
 }
 
 class TestAgentExecutor : AgentExecutor {
@@ -191,7 +207,7 @@ class TestAgentExecutor : AgentExecutor {
     }
 
     override suspend fun cancel(
-        context: RequestContext<TaskIdParams>,
+        context: RequestContext<CancelTaskRequest>,
         eventProcessor: SessionEventProcessor,
         agentJob: Deferred<Unit>?
     ) {
@@ -211,8 +227,7 @@ class TestAgentExecutor : AgentExecutor {
                         taskId = context.taskId
                     ),
                     timestamp = Clock.System.now()
-                ),
-                final = true
+                )
             )
         )
     }

@@ -5,6 +5,7 @@ import ai.koog.a2a.client.UrlAgentCardResolver
 import ai.koog.a2a.consts.A2APaths
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
+import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.A2AServer
@@ -79,18 +80,16 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
 
         clientTransport = HttpJSONRPCClientTransport(serverUrl, httpClient)
 
-        client = A2AClient(
-            transport = clientTransport,
-            agentCardResolver = UrlAgentCardResolver(
-                baseUrl = serverUrl,
-                path = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
-                baseHttpClient = httpClient,
-            )
-        )
-    }
+        val resolvedAgentCard = UrlAgentCardResolver(
+            baseUrl = serverUrl,
+            path = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
+            baseHttpClient = httpClient,
+        ).resolve()
 
-    open fun initClient(): Unit = runBlocking {
-        client.connect()
+        client = A2AClient(
+            card = resolvedAgentCard,
+            transport = clientTransport,
+        )
     }
 
     open fun tearDown() = runBlocking {
@@ -99,12 +98,15 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
     }
 
     private fun createAgentCard(): AgentCard = AgentCard(
-        protocolVersion = "0.3.0",
         name = "Hello World Agent",
         description = "Just a hello world agent",
-        url = "http://localhost:9999/",
-        preferredTransport = TransportProtocol.JSONRPC,
-        supportedInterfaces = null,
+        supportedInterfaces = listOf(
+            AgentInterface(
+                url = "http://localhost:9999/",
+                protocolBinding = TransportProtocol.JSONRPC,
+                protocolVersion = "1.0",
+            )
+        ),
         iconUrl = null,
         provider = null,
         version = "1.0.0",
@@ -112,11 +114,11 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
         capabilities = AgentCapabilities(
             streaming = true,
             pushNotifications = true,
-            stateTransitionHistory = null,
-            extensions = null
+            extensions = null,
+            extendedAgentCard = true,
         ),
         securitySchemes = null,
-        security = null,
+        securityRequirements = null,
         defaultInputModes = listOf("text"),
         defaultOutputModes = listOf("text"),
         skills = listOf(
@@ -128,20 +130,22 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
                 examples = listOf("hi", "hello world"),
                 inputModes = null,
                 outputModes = null,
-                security = null
+                securityRequirements = null
             )
         ),
-        supportsAuthenticatedExtendedCard = true,
         signatures = null
     )
 
     private fun createExtendedAgentCard(): AgentCard = AgentCard(
-        protocolVersion = "0.3.0",
         name = "Hello World Agent - Extended Edition",
         description = "The full-featured hello world agent for authenticated users.",
-        url = "http://localhost:9999/",
-        preferredTransport = TransportProtocol.Companion.JSONRPC,
-        supportedInterfaces = null,
+        supportedInterfaces = listOf(
+            AgentInterface(
+                url = "http://localhost:9999/",
+                protocolBinding = TransportProtocol.JSONRPC,
+                protocolVersion = "1.0",
+            )
+        ),
         iconUrl = null,
         provider = null,
         version = "1.0.1",
@@ -149,11 +153,11 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
         capabilities = AgentCapabilities(
             streaming = true,
             pushNotifications = true,
-            stateTransitionHistory = null,
-            extensions = null
+            extensions = null,
+            extendedAgentCard = true,
         ),
         securitySchemes = null,
-        security = null,
+        securityRequirements = null,
         defaultInputModes = listOf("text"),
         defaultOutputModes = listOf("text"),
         skills = listOf(
@@ -165,7 +169,7 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
                 examples = listOf("hi", "hello world"),
                 inputModes = null,
                 outputModes = null,
-                security = null
+                securityRequirements = null
             ),
             AgentSkill(
                 id = "super_hello_world",
@@ -175,10 +179,9 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
                 examples = listOf("super hi", "give me a super hello"),
                 inputModes = null,
                 outputModes = null,
-                security = null
+                securityRequirements = null
             )
         ),
-        supportsAuthenticatedExtendedCard = true,
         signatures = null
     )
 }

@@ -1,9 +1,9 @@
 package ai.koog.a2a.server.session
 
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
@@ -39,9 +39,9 @@ class SessionManagerTest {
     private val taskId = "task-1"
 
     private class MockPushNotificationSender : PushNotificationSender {
-        val sentNotifications = mutableListOf<Pair<PushNotificationConfig, Task>>()
+        val sentNotifications = mutableListOf<Pair<TaskPushNotificationConfig, Task>>()
 
-        override suspend fun send(config: PushNotificationConfig, task: Task) {
+        override suspend fun send(config: TaskPushNotificationConfig, task: Task) {
             sentNotifications.add(config to task)
         }
     }
@@ -148,8 +148,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = taskId,
                 contextId = contextId,
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-                final = true
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
             )
             eventProcessor.sendTaskEvent(statusUpdate)
         }
@@ -192,8 +191,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = "task-1",
                 contextId = "context-1",
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-                final = true
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
             )
             eventProcessor1.sendTaskEvent(statusUpdate)
         }
@@ -211,8 +209,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = "task-2",
                 contextId = "context-2",
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-                final = true
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
             )
             eventProcessor2.sendTaskEvent(statusUpdate)
         }
@@ -244,7 +241,8 @@ class SessionManagerTest {
         val eventProcessor = createProcessor(contextId, taskId)
 
         // Configure push notification
-        val config = PushNotificationConfig(
+        val config = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-1",
             url = "https://example.com/webhook"
         )
@@ -261,8 +259,7 @@ class SessionManagerTest {
             val statusUpdate = TaskStatusUpdateEvent(
                 taskId = "task-1",
                 contextId = contextId,
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-                final = true
+                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
             )
             eventProcessor.sendTaskEvent(statusUpdate)
         }

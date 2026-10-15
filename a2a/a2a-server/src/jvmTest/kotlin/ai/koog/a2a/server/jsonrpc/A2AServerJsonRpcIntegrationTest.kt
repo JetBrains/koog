@@ -1,15 +1,15 @@
 package ai.koog.a2a.server.jsonrpc
 
+import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Message
+import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
 import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.transport.Request
 import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
@@ -44,7 +43,6 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
-@Disabled("Flaky test")
 class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     override val testTimeout = 10.seconds
 
@@ -53,19 +51,10 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         super.setup()
     }
 
-    @BeforeTest
-    override fun initClient() {
-        super.initClient()
-    }
-
     @AfterAll
     override fun tearDown() {
         super.tearDown()
     }
-
-    @Test
-    override fun `test get agent card`() =
-        super.`test get agent card`()
 
     @Test
     override fun `test get extended agent card`() =
@@ -80,11 +69,11 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         super.`test send message streaming`()
 
     @Test
-    @Disabled("Flaky test, needs investigation")
     override fun `test get task`() =
         super.`test get task`()
 
     @Test
+    @Disabled("ListTasks is not implemented in the server yet, see plan item 3.9")
     override fun `test list tasks`() =
         super.`test list tasks`()
 
@@ -97,6 +86,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         super.`test subscribe to task`()
 
     @Test
+    @Disabled("Getting a deleted push config must fail with TaskNotFound, not InternalError, see plan item 3.11")
     override fun `test push notification configs`() =
         super.`test push notification configs`()
 
@@ -109,33 +99,31 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     fun `test cancel task cancellation events received`() = runTest(timeout = testTimeout) {
         // Need real time for this test
         withContext(Dispatchers.Default) {
-            val createTaskRequest = Request(
-                data = SendMessageRequest(
-                    message = Message(
-                        messageId = Uuid.Companion.random().toString(),
-                        role = Role.ROLE_USER,
-                        parts = listOf(
-                            TextPart("do long-running task"),
-                        ),
-                        contextId = "test-context",
+            val createTaskRequest = SendMessageRequest(
+                message = Message(
+                    messageId = Uuid.Companion.random().toString(),
+                    role = Role.ROLE_USER,
+                    parts = listOf(
+                        TextPart("do long-running task"),
                     ),
+                    contextId = "test-context",
+                ),
+                configuration = SendMessageConfiguration(
+                    returnImmediately = true,
                 ),
             )
 
-            val taskId = (client.sendMessage(createTaskRequest).data as Task).id
+            val taskId = (client.sendMessage(createTaskRequest) as Task).id
 
             joinAll(
                 launch {
-                    val resubscribeTaskRequest = Request(
-                        data = TaskIdParams(
-                            id = taskId,
-                        )
+                    val subscribeToTaskRequest = SubscribeToTaskRequest(
+                        id = taskId,
                     )
 
                     val events = client
-                        .resubscribeTask(resubscribeTaskRequest)
+                        .subscribeToTask(subscribeToTaskRequest)
                         .toList()
-                        .map { it.data }
 
                     // All the same task and context
                     events.shouldForAll {
@@ -176,14 +164,12 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                     // Let the task run for a while
                     delay(400)
 
-                    val cancelTaskRequest = Request(
-                        data = TaskIdParams(
-                            id = taskId,
-                        )
+                    val cancelTaskRequest = CancelTaskRequest(
+                        id = taskId,
                     )
 
                     val response = client.cancelTask(cancelTaskRequest)
-                    response.data should {
+                    response should {
                         it.id shouldBe taskId
                         it.contextId shouldBe "test-context"
                         it.status should {
@@ -208,48 +194,42 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     fun `test task send follow-up message`() = runTest(timeout = testTimeout) {
         fun createRequest(
             taskId: String?,
-            blocking: Boolean,
-        ) = Request(
-            data = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.Companion.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do long-running task"),
-                    ),
-                    taskId = taskId,
-                    contextId = "test-context"
+            returnImmediately: Boolean,
+        ) = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.Companion.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(
+                    TextPart("do long-running task"),
                 ),
-                configuration = SendMessageConfiguration(
-                    blocking = blocking
-                )
+                taskId = taskId,
+                contextId = "test-context"
+            ),
+            configuration = SendMessageConfiguration(
+                returnImmediately = returnImmediately
             )
         )
 
         // Create a long-running task and return without waiting
-        val initialRequest = createRequest(taskId = null, blocking = false)
+        val initialRequest = createRequest(taskId = null, returnImmediately = true)
         val initialResponse = client.sendMessage(initialRequest)
 
-        val taskId = initialResponse.data.shouldBeInstanceOf<Task>().taskId
+        val taskId = initialResponse.shouldBeInstanceOf<Task>().id
 
         // Immediately send a follow-up message to the same task and wait for the response
-        val followupRequest = createRequest(taskId = taskId, blocking = true)
+        val followupRequest = createRequest(taskId = taskId, returnImmediately = false)
         val followupResponse = client.sendMessage(followupRequest)
 
-        followupResponse.data.shouldBeInstanceOf<Task> {
-            it.taskId shouldBe taskId
+        followupResponse.shouldBeInstanceOf<Task> {
+            it.id shouldBe taskId
             it.contextId shouldBe "test-context"
 
+            // The blocking follow-up waits until the long-running task is done
             it.status should {
-                it.state shouldBe TaskState.TASK_STATE_WORKING
+                it.state shouldBe TaskState.TASK_STATE_COMPLETED
                 it.message shouldNotBeNull {
                     role shouldBe Role.ROLE_AGENT
-
-                    parts.shouldForAll {
-                        it.shouldBeInstanceOf<TextPart> {
-                            it.text shouldStartWith "Still working"
-                        }
-                    }
+                    parts shouldBe listOf(TextPart("Task completed"))
                 }
             }
         }

@@ -1,6 +1,6 @@
 package ai.koog.a2a.server.notifications
 
-import ai.koog.a2a.model.PushNotificationConfig
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -17,11 +17,13 @@ class InMemoryPushNotificationConfigStorageTest {
 
     @Test
     fun testSaveMultipleConfigsWithMixedIds() = runTest {
-        val configWithId = PushNotificationConfig(
+        val configWithId = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-1",
             url = "https://webhook1.example.com"
         )
-        val configWithoutId = PushNotificationConfig(
+        val configWithoutId = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = null,
             url = "https://webhook2.example.com"
         )
@@ -35,11 +37,13 @@ class InMemoryPushNotificationConfigStorageTest {
 
     @Test
     fun testOverwriteExistingConfig() = runTest {
-        val originalConfig = PushNotificationConfig(
+        val originalConfig = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-1",
             url = "https://webhook1.example.com"
         )
-        val updatedConfig = PushNotificationConfig(
+        val updatedConfig = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-1",
             url = "https://webhook-updated.example.com"
         )
@@ -53,7 +57,8 @@ class InMemoryPushNotificationConfigStorageTest {
 
     @Test
     fun testDeleteAllConfigsForTask() = runTest {
-        val config = PushNotificationConfig(
+        val config = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-1",
             url = "https://webhook.example.com"
         )
@@ -67,11 +72,13 @@ class InMemoryPushNotificationConfigStorageTest {
 
     @Test
     fun testDeleteSpecificConfig() = runTest {
-        val config1 = PushNotificationConfig(
+        val config1 = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-1",
             url = "https://webhook1.example.com"
         )
-        val config2 = PushNotificationConfig(
+        val config2 = TaskPushNotificationConfig(
+            taskId = "task-1",
             id = "config-2",
             url = "https://webhook2.example.com"
         )

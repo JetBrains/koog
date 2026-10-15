@@ -7,7 +7,6 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import kotlin.test.BeforeTest
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -23,11 +22,6 @@ class StressA2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     @BeforeAll
     override fun setup() {
         super.setup()
-    }
-
-    @BeforeTest
-    override fun initClient() {
-        super.initClient()
     }
 
     @AfterAll

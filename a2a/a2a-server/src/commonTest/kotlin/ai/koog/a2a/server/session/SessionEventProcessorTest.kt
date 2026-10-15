@@ -156,8 +156,7 @@ class SessionEventProcessorTest {
         val statusUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.TASK_STATE_WORKING),
-            final = false
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
         )
 
         processor.sendTaskEvent(statusUpdate)
@@ -187,8 +186,7 @@ class SessionEventProcessorTest {
         val finalStatusUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-            final = true
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
         )
         val anotherEvent = TaskArtifactUpdateEvent(
             taskId = taskId,
@@ -260,8 +258,7 @@ class SessionEventProcessorTest {
         val workingUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.TASK_STATE_WORKING),
-            final = false
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
         )
         processor.sendTaskEvent(workingUpdate)
 
@@ -282,8 +279,7 @@ class SessionEventProcessorTest {
         val completedUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-            final = true
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
         )
         processor.sendTaskEvent(completedUpdate)
 
@@ -363,8 +359,7 @@ class SessionEventProcessorTest {
         val workingUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
-            status = TaskStatus(state = TaskState.TASK_STATE_WORKING),
-            final = false
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
         )
 
         assertFailsWith<SessionNotActiveException>("Should not be possible to send events to closed session") {

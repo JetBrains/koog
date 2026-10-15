@@ -104,8 +104,7 @@ class InMemoryTaskStorageTest {
             taskId = "task-1",
             contextId = "context-1",
             status = newStatus,
-            metadata = updateMetadata,
-            final = true
+            metadata = updateMetadata
         )
 
         // Update task status
@@ -129,8 +128,7 @@ class InMemoryTaskStorageTest {
         val statusUpdateEvent = TaskStatusUpdateEvent(
             taskId = "non-existent",
             contextId = "context-1",
-            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
-            final = true
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
         )
 
         assertFailsWith<TaskOperationException> {
@@ -268,8 +266,7 @@ class InMemoryTaskStorageTest {
         val firstUpdate = TaskStatusUpdateEvent(
             taskId = "task-1",
             contextId = "context-1",
-            status = firstUpdateStatus,
-            final = false
+            status = firstUpdateStatus
         )
 
         storage.update(firstUpdate)
@@ -289,8 +286,7 @@ class InMemoryTaskStorageTest {
         val secondUpdate = TaskStatusUpdateEvent(
             taskId = "task-1",
             contextId = "context-1",
-            status = secondUpdateStatus,
-            final = false
+            status = secondUpdateStatus
         )
         storage.update(secondUpdate)
 
@@ -310,8 +306,7 @@ class InMemoryTaskStorageTest {
         val completionUpdate = TaskStatusUpdateEvent(
             taskId = "task-1",
             contextId = "context-1",
-            status = completionStatus,
-            final = true
+            status = completionStatus
         )
         storage.update(completionUpdate)
 
