@@ -122,8 +122,14 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                         .subscribeToTask(subscribeToTaskRequest)
                         .toList()
 
-                    // All the same task and context
-                    events.shouldForAll {
+                    // The first event is the snapshot of the task
+                    events.first().shouldBeInstanceOf<Task> {
+                        it.id shouldBe taskId
+                        it.contextId shouldBe "test-context"
+                    }
+
+                    // Then updates of the same task and context
+                    events.drop(1).shouldForAll {
                         it.shouldBeInstanceOf<TaskStatusUpdateEvent> {
                             it.taskId shouldBe taskId
                             it.contextId shouldBe "test-context"

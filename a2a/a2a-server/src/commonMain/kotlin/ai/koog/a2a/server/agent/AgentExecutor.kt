@@ -27,7 +27,12 @@ public interface AgentExecutor {
      *
      * All events must have context id from [RequestContext.contextId] and for task events task id from [RequestContext.taskId].
      *
-     * Can throw an exception if the input is invalid or the agent fails to execute the request.
+     * Can throw an exception if the input is invalid or the agent fails to execute the request. If the task exists and
+     * is not in a terminal state when this method throws (other than on cancellation), the server marks the task
+     * [TaskState.TASK_STATE_FAILED] and notifies all streams of the task.
+     *
+     * Events sent to the [eventProcessor] are persisted when the send call returns, and are delivered to the requester
+     * of this turn as well as to every client subscribed to the task (SubscribeToTask).
      *
      * Example implementation:
      * ```kotlin
@@ -87,7 +92,10 @@ public interface AgentExecutor {
      * identified by the task id in the [context] or throw an exception if cancellation is not supported or not possible,
      * e.g., [A2ATaskNotCancelableException].
      *
-     * Can also publish [TaskEvent]s to the [eventProcessor] to update the task state. Must ensure that the final
+     * Can also publish [TaskEvent]s to the [eventProcessor] to update the task state. The processor is bound to the
+     * task's event stream: if a turn is running, it's the processor of that turn (which stays open until this method
+     * returns, even after [agentJob] is cancelled), otherwise a new one; either way the events reach every stream of
+     * the task. Must ensure that the final
      * task state will be [TaskState.TASK_STATE_CANCELED], otherwise the task will not be considered canceled, and the requester will
      * get [A2ATaskNotCancelableException].
      *

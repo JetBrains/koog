@@ -33,7 +33,6 @@ import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.session.IdGenerator
-import ai.koog.a2a.server.session.LazySession
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.session.SessionManager
@@ -47,18 +46,14 @@ import ai.koog.agents.lock.KeyedMutex
 import ai.koog.agents.lock.withLock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.lastOrNull
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -341,7 +336,10 @@ public open class A2AServer(
     }
 
     /**
-     * Mutex for locking specific tasks by their IDs.
+     * Mutex for locking specific tasks by their IDs. This is the turn serialization layer: a new turn of a task is
+     * started only while holding the task's lock and after the previous turn of the task has fully ended, see
+     * [SessionManager]. It is independent of the per-task stream lock inside [SessionManager], which only orders
+     * the persisting and delivery of events.
      */
     protected val tasksMutex: KeyedMutex<String> = KeyedMutex()
 
@@ -350,10 +348,13 @@ public open class A2AServer(
      */
     protected fun cancelKey(taskId: String): String = "cancel:$taskId"
 
+    /**
+     * Manages turns ([ai.koog.a2a.server.session.Session]s) and per-task event streams. Override to customize it,
+     * e.g. to change [SessionManager]'s subscriber buffer capacity. The instance must use the same [taskStorage] and
+     * [coroutineScope] as this server.
+     */
     protected open val sessionManager: SessionManager = SessionManager(
         coroutineScope = coroutineScope,
-        cancelKey = ::cancelKey,
-        tasksMutex = tasksMutex,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
@@ -381,7 +382,7 @@ public open class A2AServer(
     protected open fun onSendMessageCommon(
         request: SendMessageRequest,
         ctx: ServerCallContext
-    ): Flow<Event> = channelFlow {
+    ): Flow<Event> = flow {
         val message = request.message
 
         if (message.parts.isEmpty()) {
@@ -390,7 +391,7 @@ public open class A2AServer(
 
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
 
-        val (session, monitoringStarted) = tasksMutex.withLock(taskId) {
+        val session = tasksMutex.withLock(taskId) {
             // If there's a currently running session for the same task, wait for it to finish.
             sessionManager.getSession(taskId)?.join()
 
@@ -403,66 +404,32 @@ public open class A2AServer(
                 task
             }
 
-            // Create event processor for the session based on the input data.
-            val eventProcessor = SessionEventProcessor(
-                contextId = task?.contextId
-                    ?: message.contextId
-                    ?: idGenerator.generateContextId(message),
-                taskId = taskId,
-                taskStorage = taskStorage,
-            )
+            val contextId = task?.contextId
+                ?: message.contextId
+                ?: idGenerator.generateContextId(message)
 
             // Create request context based on the request information.
             val requestContext = RequestContext(
                 callContext = ctx,
                 params = request,
-                taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
-                messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
-                contextId = eventProcessor.contextId,
-                taskId = eventProcessor.taskId,
+                taskStorage = ContextTaskStorage(contextId, taskStorage),
+                messageStorage = ContextMessageStorage(contextId, messageStorage),
+                contextId = contextId,
+                taskId = taskId,
                 task = task,
             )
 
-            LazySession(
-                coroutineScope = coroutineScope,
-                eventProcessor = eventProcessor,
-            ) {
+            // The session's event view is registered before the agent starts, so no event of this turn is missed.
+            sessionManager.startTurn(requestContext) { eventProcessor ->
                 agentExecutor.execute(requestContext, eventProcessor)
-            }.let {
-                it to sessionManager.addSession(it)
             }
         }
 
-        // Signal that event collection is started
-        val eventCollectinStarted: CompletableJob = Job()
-        // Signal that all events have been collected
-        val eventCollectionFinished: CompletableJob = Job()
+        // Stream the events of this turn; the view ends with the turn or at a terminal state.
+        emitAll(session.events)
 
-        // Subscribe to events stream and start emitting them.
-        launch {
-            session.events
-                .onStart {
-                    eventCollectinStarted.complete()
-                }
-                .collect { event ->
-                    send(event)
-                }
-
-            eventCollectionFinished.complete()
-        }
-
-        // Ensure event collection is setup to stream events in response.
-        eventCollectinStarted.join()
-        // Ensure monitoring is ready to monitor the session.
-        monitoringStarted.join()
-
-        /*
-         Start the session to execute the agent and wait for it to finish.
-         Using await here to propagate any exceptions thrown by the agent execution.
-         */
+        // Wait for the agent to finish, propagating any exception thrown by the agent execution.
         session.agentJob.await()
-        // Make sure all events have been collected and sent
-        eventCollectionFinished.join()
     }
 
     override suspend fun onSendMessage(
@@ -551,40 +518,44 @@ public open class A2AServer(
             /*
              The second lock is a per-task cancellation lock.
              It’s always taken during cancellation to serialize cancel operations and allow them to proceed even if the
-             regular task lock is held. It prevents overlapping cancels and delays session teardown so the event processor
-             isn’t closed immediately after the agent job is canceled. This allows the cancel handler to emit additional
-             cancellation events through the same processor and session, ensuring that existing subscribers receive all events.
+             regular task lock is held. It prevents overlapping cancels. Turn teardown is delayed separately by
+             SessionManager.withTaskProcessor, so the cancel handler can still emit cancellation events through the running
+             turn's processor after cancelling the agent job, and every stream of the task receives them.
              */
             tasksMutex.withLock(cancelKey(taskId)) {
-                val session = sessionManager.getSession(taskId)
+                val contextId = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+                    .let { it ?: throw A2ATaskNotFoundException("Task '$taskId' not found") }
+                    .contextId
+                    ?: throw A2AInternalErrorException("Task '$taskId' has no context id")
 
-                val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
-                    ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+                /*
+                 Get a processor bound to the task's event stream, so that cancellation events reach every stream of
+                 the task. If a turn is running, it's the turn's processor, and the turn can't end until we're done.
+                 */
+                sessionManager.withTaskProcessor(taskId, contextId) { eventProcessor, agentJob ->
+                    // Re-read the task: a turn may have ended in the meantime.
+                    val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                        ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
 
-                // Task is not running, check if it's already in a terminal state.
-                if (session == null && task.status.state.terminal) {
-                    throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
+                    // Task is not running, check if it's already in a terminal state.
+                    if (agentJob == null && task.status.state.terminal) {
+                        throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
+                    }
+
+                    // Create request context based on the request information.
+                    val requestContext = RequestContext(
+                        callContext = ctx,
+                        params = request,
+                        taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
+                        messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
+                        contextId = eventProcessor.contextId,
+                        taskId = eventProcessor.taskId,
+                        task = task,
+                    )
+
+                    // Attempt to cancel the agent execution and wait until it's finished.
+                    agentExecutor.cancel(requestContext, eventProcessor, agentJob)
                 }
-
-                val eventProcessor = session?.eventProcessor ?: SessionEventProcessor(
-                    contextId = task.contextId ?: throw A2AInternalErrorException("Task '$taskId' has no context id"),
-                    taskId = task.id,
-                    taskStorage = taskStorage,
-                )
-
-                // Create request context based on the request information.
-                val requestContext = RequestContext(
-                    callContext = ctx,
-                    params = request,
-                    taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
-                    messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
-                    contextId = eventProcessor.contextId,
-                    taskId = eventProcessor.taskId,
-                    task = task,
-                )
-
-                // Attempt to cancel the agent execution and wait until it's finished.
-                agentExecutor.cancel(requestContext, eventProcessor, session?.agentJob)
 
                 // Return the final task state.
                 taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
@@ -602,15 +573,20 @@ public open class A2AServer(
         }
     }
 
+    /**
+     * Streams the task snapshot followed by its live events until the task reaches a terminal state, see
+     * [SessionManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
+     *
+     * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
+     * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
+     */
     override fun onSubscribeToTask(
         request: SubscribeToTaskRequest,
         ctx: ServerCallContext
     ): Flow<Event> = flow {
         checkStreamingSupport()
 
-        val session = sessionManager.getSession(request.id) ?: return@flow
-
-        session.events.collect(this)
+        emitAll(sessionManager.subscribe(request, ctx))
     }
 
     @OptIn(ExperimentalUuidApi::class)

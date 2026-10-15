@@ -1,28 +1,20 @@
 package ai.koog.a2a.server.session
 
-import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.SessionNotActiveException
-import ai.koog.a2a.server.tasks.TaskStorage
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onSubscription
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.jvm.JvmInline
 
 /**
- * A session processor responsible for handling session events.
- * It validates the events, writes them to [taskStorage] and emits them to the subscribers via [events].
+ * A session processor responsible for handling the events the agent sends.
+ * It validates the events and publishes them to the task's event stream, which persists them to the task storage and
+ * delivers them to every stream of the task: the current turn's [Session.events] and all SubscribeToTask streams.
  *
  * Validation logic attempts to perform basic verification that events follow what is expected from a proper A2A server implementation.
  * These are the main rules:
@@ -32,8 +24,11 @@ import kotlin.jvm.JvmInline
  * - **Single message limit**: Only one [Message] can be sent per session, after which the processor closes.
  * - **Task ID consistency**: [TaskEvent] events must have task ids equal to provided [taskId].
  * - **Terminal state closure**: When the event with the terminal state is sent, processor closes.
+ * - **Turn closure**: When the turn ends, i.e. [ai.koog.a2a.server.agent.AgentExecutor.execute] returns, the processor
+ *   of the turn closes.
  *
- * @param taskStorage The storage where task events will be saved.
+ * Instances are created by [SessionManager].
+ *
  * @property contextId The contextId associated with this session, representing either an existing context
  * from the incoming request or a newly generated ID that must be used for all events in this session.
  * @property taskId The taskId associated with this session, representing either an existing task
@@ -42,10 +37,11 @@ import kotlin.jvm.JvmInline
  * identifier that will be validated against all [TaskEvent] in this session.
  */
 @OptIn(ExperimentalAtomicApi::class)
-public class SessionEventProcessor(
+public class SessionEventProcessor internal constructor(
     public val contextId: String,
     public val taskId: String,
-    private val taskStorage: TaskStorage,
+    private val stream: TaskEventStream,
+    private val turnId: Long?,
 ) {
     private companion object {
         private const val SESSION_CLOSED = "Session event processor is closed, can't send events"
@@ -58,46 +54,33 @@ public class SessionEventProcessor(
             "Task has already been initialized in this session, only TaskEvent's with the same taskId can be sent from now on"
     }
 
+    init {
+        require(stream.taskId == taskId) { "Event stream of task '${stream.taskId}' can't be used for task '$taskId'" }
+    }
+
     private val _isOpen: AtomicBoolean = AtomicBoolean(true)
 
     /**
-     * Whether the session is open.
+     * Whether the processor still accepts events.
      */
-    public val isOpen: Boolean get() = _isOpen.load()
+    internal val isOpen: Boolean get() = _isOpen.load()
 
     /**
-     * Tracks whether a task event was sent in this session, meaning we have to reject [Message] events now.
+     * Tracks whether a task event was sent through this processor, meaning we have to reject [Message] events now.
      */
-    private var isTaskEventSent: Boolean = false
+    internal var isTaskEventSent: Boolean = false
+        private set
 
     private val sessionMutex = Mutex()
 
     /**
-     * Helper interface to send actual events or termination signal to close current event stream subscribers on session closure.
-     */
-    private sealed interface FlowEvent {
-        @JvmInline
-        value class Data(val data: Event) : FlowEvent
-        object Close : FlowEvent
-    }
-
-    private val _events = MutableSharedFlow<FlowEvent>()
-
-    /**
-     * A hot flow of events in this session that can be subscribed to.
-     */
-    public val events: Flow<Event> = _events
-        .onSubscription { if (!_isOpen.load()) emit(FlowEvent.Close) }
-        .takeWhile { it !is FlowEvent.Close }
-        .filterIsInstance<FlowEvent.Data>()
-        .map { it.data }
-
-    /**
      * Sends a [Message] to the session event processor. Validates the message against the session context and updates
-     * the session state accordingly.
+     * the session state accordingly. The message is delivered only to the current turn's [Session.events]; it is not
+     * part of the task and is not persisted.
      *
      * @param message The message to be sent.
      * @throws [InvalidEventException] for invalid events.
+     * @throws [SessionNotActiveException] if the processor is closed.
      * @see SessionEventProcessor
      */
     public suspend fun sendMessage(message: Message): Unit = sessionMutex.withLock {
@@ -110,7 +93,7 @@ public class SessionEventProcessor(
                 throw InvalidEventException(INVALID_CONTEXT_ID)
             }
 
-            _events.emit(FlowEvent.Data(message))
+            stream.publish(message, turnId)
             _isOpen.store(false)
         } else {
             throw SessionNotActiveException(SESSION_CLOSED)
@@ -119,10 +102,12 @@ public class SessionEventProcessor(
 
     /**
      * Sends a [TaskEvent] to the session event processor.
-     * Validates the event against the session context and updates [taskStorage].
+     * Validates the event against the session context, persists it to the task storage, and delivers it to all streams
+     * of the task. When this method returns, the event is persisted.
      *
      * @param event The event to be sent.
      * @throws [InvalidEventException] for invalid events.
+     * @throws [SessionNotActiveException] if the processor is closed.
      * @see SessionEventProcessor
      */
     public suspend fun sendTaskEvent(event: TaskEvent): Unit = sessionMutex.withLock {
@@ -137,8 +122,7 @@ public class SessionEventProcessor(
                 throw InvalidEventException(INVALID_TASK_ID)
             }
 
-            taskStorage.update(event)
-            _events.emit(FlowEvent.Data(event))
+            stream.publish(event, turnId)
 
             val isFinalEvent = (event is TaskStatusUpdateEvent && event.status.state.terminal) ||
                 (event is Task && event.status.state.terminal)
@@ -152,10 +136,9 @@ public class SessionEventProcessor(
     }
 
     /**
-     * Closes the session event processor, also closing event stream.
+     * Closes the processor: subsequent events are rejected with [SessionNotActiveException].
      */
-    public suspend fun close(): Unit = sessionMutex.withLock {
+    internal suspend fun close(): Unit = sessionMutex.withLock {
         _isOpen.store(false)
-        _events.emit(FlowEvent.Close)
     }
 }

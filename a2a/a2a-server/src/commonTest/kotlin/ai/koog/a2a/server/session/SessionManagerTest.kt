@@ -3,29 +3,38 @@ package ai.koog.a2a.server.session
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SendMessageRequest
+import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.messages.ContextMessageStorage
+import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
+import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
-import ai.koog.agents.lock.KeyedMutex
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.job
-import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -40,6 +49,7 @@ class SessionManagerTest {
 
     private val contextId = "context-1"
     private val taskId = "task-1"
+    private val callContext = ServerCallContext()
 
     private class MockPushNotificationSender : PushNotificationSender {
         val sentNotifications = mutableListOf<Pair<TaskPushNotificationConfig, Event>>()
@@ -80,21 +90,37 @@ class SessionManagerTest {
         )
     )
 
-    private fun createProcessor(
-        contextId: String,
+    private fun statusUpdate(
         taskId: String,
-    ) = SessionEventProcessor(
-        contextId = contextId,
+        contextId: String,
+        state: TaskState,
+    ) = TaskStatusUpdateEvent(
         taskId = taskId,
-        taskStorage = taskStorage,
+        contextId = contextId,
+        status = TaskStatus(state = state, timestamp = Instant.parse("2023-01-01T10:00:01Z"))
     )
 
-    private fun createManager(
-        coroutineScope: CoroutineScope,
-    ) = SessionManager(
-        coroutineScope = coroutineScope,
-        cancelKey = { "cancel:$it" },
-        tasksMutex = KeyedMutex(),
+    private fun createContext(
+        taskId: String,
+        contextId: String,
+    ) = RequestContext(
+        callContext = callContext,
+        params = SendMessageRequest(createMessage("user-msg", contextId, "Hello")),
+        taskStorage = ContextTaskStorage(contextId, taskStorage),
+        messageStorage = ContextMessageStorage(contextId, InMemoryMessageStorage()),
+        contextId = contextId,
+        taskId = taskId,
+        task = null,
+    )
+
+    /**
+     * Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test.
+     */
+    private fun TestScope.agentScope(): CoroutineScope =
+        CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
+
+    private fun TestScope.createManager() = SessionManager(
+        coroutineScope = agentScope(),
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
@@ -102,146 +128,250 @@ class SessionManagerTest {
 
     @Test
     fun testSessionManagerCreation() = runTest(timeout = TEST_TIMEOUT) {
-        val sessionManager = createManager(this)
+        val sessionManager = createManager()
 
         assertEquals(0, sessionManager.activeSessions())
         assertNull(sessionManager.getSession("any-task-id"))
     }
 
     @Test
-    fun testAddMessageSession() = runTest(timeout = TEST_TIMEOUT) {
-        val sessionManager = createManager(this)
-        val eventProcessor = createProcessor(contextId, taskId)
-
+    fun testMessageTurn() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
         val message = createMessage("msg-1", contextId, "Hello")
 
-        val session = LazySession(
-            coroutineScope = this,
-            eventProcessor = eventProcessor
-        ) {
-            eventProcessor.sendMessage(message)
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendMessage(message)
         }
 
-        // Start session and wait for completion
-        sessionManager.addSession(session)
-        session.startAndJoin()
+        assertEquals(listOf<Event>(message), session.events.toList())
+        session.join()
 
-        // Let the session manager process it
-        yield()
-
-        // Session should be automatically cleaned up after completion
+        // Session and task stream should be automatically cleaned up after completion
         assertEquals(0, sessionManager.activeSessions())
+        assertEquals(0, sessionManager.activeStreams())
     }
 
     @Test
-    fun testAddTaskSession() = runTest(timeout = TEST_TIMEOUT) {
-        val sessionManager = createManager(this)
-        val eventProcessor = createProcessor(contextId, taskId)
+    fun testTaskTurn() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val gate = CompletableDeferred<Unit>()
+        val task = createTask(taskId, contextId)
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
 
-        val session = LazySession(
-            coroutineScope = this,
-            eventProcessor = eventProcessor
-        ) {
-            val task = createTask(taskId, contextId)
-            eventProcessor.sendTaskEvent(task)
-
-            // Simulate work
-            delay(400)
-
-            val statusUpdate = TaskStatusUpdateEvent(
-                taskId = taskId,
-                contextId = contextId,
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
-            )
-            eventProcessor.sendTaskEvent(statusUpdate)
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(task)
+            gate.await()
+            processor.sendTaskEvent(completed)
         }
 
-        sessionManager.addSession(session)
-        session.start()
+        assertSame(session, sessionManager.getSession(taskId))
+        assertEquals(1, sessionManager.activeSessions())
 
-        // Let the session manager process it
-        yield()
+        gate.complete(Unit)
 
-        assertEquals(session, sessionManager.getSession(taskId))
+        assertEquals(listOf(task, completed), session.events.toList())
+        session.join()
 
-        session.startAndJoin()
-
-        // Let the session manager process it
-        yield()
-
-        // Session should be automatically cleaned up after completion
         assertEquals(0, sessionManager.activeSessions())
+        assertEquals(0, sessionManager.activeStreams())
+        assertEquals(task.copy(status = completed.status), taskStorage.get(taskId))
+    }
+
+    @Test
+    fun testStartTurnWhileTurnIsRunningFails() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val gate = CompletableDeferred<Unit>()
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { gate.await() }
+
+        assertFailsWith<IllegalStateException> {
+            sessionManager.startTurn(createContext(taskId, contextId)) {}
+        }
+
+        gate.complete(Unit)
+        session.join()
     }
 
     @Test
     fun testMultipleSessions() = runTest(timeout = TEST_TIMEOUT) {
-        val sessionManager = createManager(this)
+        val sessionManager = createManager()
+        val gate = CompletableDeferred<Unit>()
 
-        // Create two task sessions
-        val eventProcessor1 = createProcessor("context-1", "task-1")
-        val eventProcessor2 = createProcessor("context-2", "task-2")
-
-        val session1 = LazySession(
-            coroutineScope = this,
-            eventProcessor = eventProcessor1
-        ) {
-            val task = createTask("task-1", "context-1")
-            eventProcessor1.sendTaskEvent(task)
-
-            // Simulate work
-            delay(150)
-
-            val statusUpdate = TaskStatusUpdateEvent(
-                taskId = "task-1",
-                contextId = "context-1",
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
-            )
-            eventProcessor1.sendTaskEvent(statusUpdate)
+        fun turn(taskId: String, contextId: String): suspend (SessionEventProcessor) -> Unit = { processor ->
+            processor.sendTaskEvent(createTask(taskId, contextId))
+            gate.await()
+            processor.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
         }
 
-        val session2 = LazySession(
-            coroutineScope = this,
-            eventProcessor = eventProcessor2
-        ) {
-            val task = createTask("task-2", "context-2")
-            eventProcessor2.sendTaskEvent(task)
+        val session1 = sessionManager.startTurn(createContext("task-1", "context-1"), turn("task-1", "context-1"))
+        val session2 = sessionManager.startTurn(createContext("task-2", "context-2"), turn("task-2", "context-2"))
 
-            // Simulate work
-            delay(150)
+        assertSame(session1, sessionManager.getSession("task-1"))
+        assertSame(session2, sessionManager.getSession("task-2"))
+        assertEquals(2, sessionManager.activeSessions())
 
-            val statusUpdate = TaskStatusUpdateEvent(
-                taskId = "task-2",
-                contextId = "context-2",
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
-            )
-            eventProcessor2.sendTaskEvent(statusUpdate)
-        }
-
-        sessionManager.addSession(session1)
-        sessionManager.addSession(session2)
-        session1.start()
-        session2.start()
-
-        // Let the session manager process it
-        yield()
-
-        assertEquals(session1, sessionManager.getSession("task-1"))
-        assertEquals(session2, sessionManager.getSession("task-2"))
-
+        gate.complete(Unit)
         session1.join()
         session2.join()
 
-        // Let the session manager process it
-        yield()
-
         // All sessions should be automatically cleaned up
+        assertEquals(0, sessionManager.activeSessions())
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testFailedTurnMarksTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val task = createTask(taskId, contextId)
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(task)
+            throw IllegalStateException("boom")
+        }
+
+        val events = session.events.toList()
+        assertFailsWith<IllegalStateException> { session.agentJob.await() }
+        session.join()
+
+        val stored = assertNotNull(taskStorage.get(taskId))
+        assertEquals(TaskState.TASK_STATE_FAILED, stored.status.state)
+        assertNotNull(stored.status.timestamp)
+        assertEquals(
+            listOf(task, TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = stored.status)),
+            events
+        )
+    }
+
+    @Test
+    fun testFailedTurnWithoutTaskCreatesNothing() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) {
+            throw IllegalStateException("boom")
+        }
+
+        assertEquals(emptyList(), session.events.toList())
+        assertFailsWith<IllegalStateException> { session.agentJob.await() }
+        session.join()
+
+        assertNull(taskStorage.get(taskId))
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testSubscribeFollowsTaskAcrossTurns() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val received = mutableListOf<Event>()
+        val snapshotReceived = CompletableDeferred<Unit>()
+        val subscriber = launch {
+            sessionManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
+                received += it
+                snapshotReceived.complete(Unit)
+            }
+        }
+        snapshotReceived.await()
+
+        // No turn is running, the subscriber alone keeps the stream.
+        assertEquals(0, sessionManager.activeSessions())
+        assertEquals(1, sessionManager.activeStreams())
+
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val inputRequiredAgain = statusUpdate(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(working)
+            processor.sendTaskEvent(inputRequiredAgain)
+        }.join()
+
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
+        sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(completed)
+        }.join()
+
+        subscriber.join()
+
+        assertEquals(listOf<Event>(inputRequired, working, inputRequiredAgain, completed), received)
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testCancelledSubscriberReleasesStream() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
+
+        val snapshotReceived = CompletableDeferred<Unit>()
+        val subscriber = launch {
+            sessionManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
+                snapshotReceived.complete(Unit)
+            }
+        }
+        snapshotReceived.await()
+        assertEquals(1, sessionManager.activeStreams())
+
+        subscriber.cancelAndJoin()
+
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testWithTaskProcessorOnIdleTaskReachesSubscribers() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val received = mutableListOf<Event>()
+        val snapshotReceived = CompletableDeferred<Unit>()
+        val subscriber = launch {
+            sessionManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
+                received += it
+                snapshotReceived.complete(Unit)
+            }
+        }
+        snapshotReceived.await()
+
+        val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
+        sessionManager.withTaskProcessor(taskId, contextId) { processor, agentJob ->
+            assertNull(agentJob)
+            processor.sendTaskEvent(canceled)
+        }
+
+        subscriber.join()
+        assertEquals(listOf<Event>(inputRequired, canceled), received)
+    }
+
+    @Test
+    fun testWithTaskProcessorKeepsRunningTurnOpen() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val task = createTask(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val taskSent = CompletableDeferred<Unit>()
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(task)
+            taskSent.complete(Unit)
+            CompletableDeferred<Unit>().await() // runs until cancelled
+        }
+        taskSent.await()
+
+        val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
+        sessionManager.withTaskProcessor(taskId, contextId) { processor, agentJob ->
+            assertSame(session.agentJob, agentJob)
+            agentJob?.cancelAndJoin()
+            // Give the turn a chance to finish, if it (wrongly) could.
+            advanceUntilIdle()
+            processor.sendTaskEvent(canceled)
+        }
+
+        // The requester of the turn receives the events published by the cancellation.
+        assertEquals(listOf(task, canceled), session.events.toList())
+        session.join()
         assertEquals(0, sessionManager.activeSessions())
     }
 
     @Test
     fun testSessionWithPushNotifications() = runTest(timeout = TEST_TIMEOUT) {
-        val sessionManager = createManager(this)
-        val eventProcessor = createProcessor(contextId, taskId)
+        val sessionManager = createManager()
 
         // Configure push notification
         val config = TaskPushNotificationConfig(
@@ -252,32 +382,17 @@ class SessionManagerTest {
         pushConfigStorage.save(config, ServerCallContext())
 
         val task = createTask("task-1", contextId)
+        val completed = statusUpdate("task-1", contextId, TaskState.TASK_STATE_COMPLETED)
 
-        val session = LazySession(
-            coroutineScope = this,
-            eventProcessor = eventProcessor
-        ) {
-            eventProcessor.sendTaskEvent(task)
+        sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(task)
+            processor.sendTaskEvent(completed)
+        }.join()
 
-            val statusUpdate = TaskStatusUpdateEvent(
-                taskId = "task-1",
-                contextId = contextId,
-                status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)
-            )
-            eventProcessor.sendTaskEvent(statusUpdate)
-        }
+        // Let the push notifications be sent after the turn.
+        advanceUntilIdle()
 
-        sessionManager.addSession(session)
-        session.startAndJoin()
-
-        // Let all coroutines finish, so that the push notifications background job is definitely completed.
-        currentCoroutineContext().job.children.toList().joinAll()
-
-        // Verify push notification was sent
-        assertEquals(1, pushSender.sentNotifications.size)
-        val (sentConfig, sentEvent) = pushSender.sentNotifications[0]
-        assertEquals(config, sentConfig)
-        assertIs<Task>(sentEvent)
-        assertEquals(TaskState.TASK_STATE_COMPLETED, sentEvent.status.state)
+        // Verify push notification was sent with the current task state
+        assertEquals(listOf<Pair<TaskPushNotificationConfig, Event>>(config to task.copy(status = completed.status)), pushSender.sentNotifications)
     }
 }

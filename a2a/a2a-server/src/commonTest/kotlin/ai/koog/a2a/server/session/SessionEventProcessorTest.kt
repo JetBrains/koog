@@ -13,16 +13,14 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
-import kotlinx.coroutines.flow.lastOrNull
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -32,12 +30,15 @@ class SessionEventProcessorTest {
     }
 
     private lateinit var taskStorage: InMemoryTaskStorage
+    private lateinit var stream: TaskEventStream
     private val contextId = "test-context-1"
     private val taskId = "task-1"
+    private val turnId = 1L
 
     @BeforeTest
     fun setUp() {
         taskStorage = InMemoryTaskStorage()
+        stream = TaskEventStream(taskId, taskStorage, bufferCapacity = 64)
     }
 
     private fun createMessage(
@@ -70,8 +71,17 @@ class SessionEventProcessorTest {
     ): SessionEventProcessor = SessionEventProcessor(
         contextId = contextId,
         taskId = taskId,
-        taskStorage = taskStorage,
+        stream = stream,
+        turnId = turnId,
     )
+
+    /**
+     * Ends the turn and returns all events its view received.
+     */
+    private suspend fun ReceiveChannel<Event>.endTurnAndCollect(): List<Event> {
+        stream.endTurn(turnId, contextId, failure = null)
+        return toList()
+    }
 
     @Test
     fun message_testSendMessageWithInvalidContextId() = runTest(timeout = TEST_TIMEOUT) {
@@ -120,28 +130,14 @@ class SessionEventProcessorTest {
         val processor = createProcessor(contextId, taskId)
         val task = createTask(taskId, contextId)
 
-        // Start collecting events before sending
-        val events = mutableListOf<Event>()
-        val eventsJob = launch {
-            processor.events.collect {
-                events.add(it)
-            }
-        }
-
-        // Let the eventJob job actually start
-        yield()
+        // Register the turn view before sending
+        val turnView = stream.openTurnView(turnId)
 
         processor.sendTaskEvent(task)
-        processor.close()
 
-        // Wait for event collection to complete
-        eventsJob.join()
-
-        // Verify task was stored and collected
-        val storedTask = taskStorage.get(taskId)
-
-        assertEquals(task, storedTask)
-        assertEquals(listOf(task), events.toList())
+        // Verify task was stored and delivered
+        assertEquals(task, taskStorage.get(taskId))
+        assertEquals(listOf(task), turnView.endTurnAndCollect())
     }
 
     @Test
@@ -163,8 +159,7 @@ class SessionEventProcessorTest {
         processor.close()
 
         // Verify event was processed
-        val updatedTask = taskStorage.get(taskId)
-        assertEquals(statusUpdate.status, updatedTask?.status)
+        assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.get(taskId))
     }
 
     @Test
@@ -294,34 +289,22 @@ class SessionEventProcessorTest {
     // Concurrent scenarios
 
     @Test
-    fun concurrent_message_testSendMessageBroadcast() = runTest(timeout = TEST_TIMEOUT) {
+    fun message_testMessageIsDeliveredOnlyToOwnTurnView() = runTest(timeout = TEST_TIMEOUT) {
+        taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
         val processor = createProcessor(contextId, taskId)
         val message = createMessage("msg-1", contextId, "Hello")
 
-        fun collectionJob(events: MutableList<Event>) = launch {
-            processor.events.collect {
-                events.add(it)
-            }
-        }
-
-        // Set up two collectors to test that events are broadcasted properly
-        val eventsOne = mutableListOf<Event>()
-        val eventsJobOne = collectionJob(eventsOne)
-
-        val eventsTwo = mutableListOf<Event>()
-        val eventsJobTwo = collectionJob(eventsTwo)
-
-        // Let event jobs actually start
-        yield()
+        val turnView = stream.openTurnView(turnId)
+        val otherTurnView = stream.openTurnView(turnId + 1)
+        val (_, taskSubscriber) = stream.subscribe { taskStorage.get(taskId) }
 
         processor.sendMessage(message)
-        processor.close()
+        stream.endTurn(turnId + 1, contextId, failure = null)
+        stream.unsubscribe(taskSubscriber)
 
-        eventsJobOne.join()
-        eventsJobTwo.join()
-
-        assertEquals(listOf(message), eventsOne.toList(), "First collector should collect the message")
-        assertEquals(listOf(message), eventsTwo.toList(), "Second collector should collect the message")
+        assertEquals(listOf(message), turnView.endTurnAndCollect(), "Own turn view should receive the message")
+        assertEquals(emptyList(), otherTurnView.toList(), "Other turn view should not receive the message")
+        assertEquals(emptyList(), taskSubscriber.toList(), "Task subscriber should not receive the message")
     }
 
     @Test
@@ -330,6 +313,8 @@ class SessionEventProcessorTest {
             val processor = createProcessor(contextId, taskId)
             val message1 = createMessage("msg-1", contextId, "Hello")
             val message2 = createMessage("msg-2", contextId, "World")
+
+            val turnView = stream.openTurnView(turnId)
 
             // Send first message
             processor.sendMessage(message1)
@@ -341,7 +326,7 @@ class SessionEventProcessorTest {
                 processor.sendMessage(message2)
             }
 
-            assertNull(processor.events.lastOrNull(), "Events stream should be empty after closing")
+            assertEquals(listOf(message1), turnView.endTurnAndCollect(), "Only the first message should be delivered")
             assertFalse(processor.isOpen)
         }
 
@@ -349,6 +334,7 @@ class SessionEventProcessorTest {
     fun concurrent_task_testClosedProcessorSendTaskEventFailsAndEventStreamIsEmpty() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
         val task = createTask(taskId, contextId)
+        val turnView = stream.openTurnView(turnId)
 
         // Send first task event
         processor.sendTaskEvent(task)
@@ -366,7 +352,8 @@ class SessionEventProcessorTest {
             processor.sendTaskEvent(workingUpdate)
         }
 
-        assertNull(processor.events.lastOrNull(), "Events stream should be empty after closing")
+        assertEquals(listOf(task), turnView.endTurnAndCollect(), "Only the first event should be delivered")
+        assertEquals(task, taskStorage.get(taskId))
         assertFalse(processor.isOpen)
     }
 }
