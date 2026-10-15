@@ -19,11 +19,11 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
-import ai.koog.a2a.server.exceptions.SessionNotActiveException
-import ai.koog.a2a.server.session.IdGenerator
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.turn.IdGenerator
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -69,25 +69,25 @@ class A2AServerCancelTest {
     }
 
     private fun interface Script {
-        suspend fun run(processor: SessionEventProcessor)
+        suspend fun run(processor: TurnEventProcessor)
     }
 
     private fun interface CancelHandler {
-        suspend fun cancel(processor: SessionEventProcessor, agentJob: Deferred<Unit>?)
+        suspend fun cancel(processor: TurnEventProcessor, agentJob: Deferred<Unit>?)
     }
 
     private class CancelAgentExecutor(
         private val scripts: Map<String, Script>,
         private val cancelHandler: CancelHandler,
     ) : AgentExecutor {
-        override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor) {
+        override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor) {
             val text = context.params.message.parts.filterIsInstance<TextPart>().joinToString(" ") { it.text }
             (scripts[text] ?: error("No script for '$text'")).run(eventProcessor)
         }
 
         override suspend fun cancel(
             context: RequestContext<CancelTaskRequest>,
-            eventProcessor: SessionEventProcessor,
+            eventProcessor: TurnEventProcessor,
             agentJob: Deferred<Unit>?,
         ) = cancelHandler.cancel(eventProcessor, agentJob)
     }
@@ -338,7 +338,7 @@ class A2AServerCancelTest {
 
     @Test
     fun testProcessorLeakedByFailedIdleCancelRejectsEventsAfterCancelReturns() = runTest(timeout = TEST_TIMEOUT) {
-        var leaked: SessionEventProcessor? = null
+        var leaked: TurnEventProcessor? = null
         val leakingCancel = CancelHandler { processor, agentJob ->
             assertEquals(null, agentJob)
             leaked = processor
@@ -355,7 +355,7 @@ class A2AServerCancelTest {
         }
 
         val processor = assertNotNull(leaked)
-        assertFailsWith<SessionNotActiveException> {
+        assertFailsWith<TurnNotActiveException> {
             processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
         }
         assertEquals(idle, taskStorage.get(TASK_ID))

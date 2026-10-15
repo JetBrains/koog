@@ -1,4 +1,4 @@
-package ai.koog.a2a.server.session
+package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
@@ -29,8 +29,8 @@ import kotlin.time.Clock
 /**
  * Per-task event stream: the single place where events of one task are persisted and broadcast.
  *
- * One instance exists per task while the task has a running turn, an active [SessionEventProcessor] (e.g. during
- * cancellation), or at least one subscriber; [SessionManager] creates it lazily and drops it when none of these
+ * One instance exists per task while the task has a running turn, an active [TurnEventProcessor] (e.g. during
+ * cancellation), or at least one subscriber; [TurnManager] creates it lazily and drops it when none of these
  * hold. The stream keeps no task state of its own: every read goes to [taskStorage], so a dropped stream can be
  * recreated at any time, e.g. for an idle input-required task.
  *
@@ -102,7 +102,7 @@ internal class TaskEventStream(
     private val subscribers = mutableListOf<Subscriber>()
 
     /**
-     * Held by [SessionManager] while a [SessionEventProcessor] obtained through [SessionManager.withTaskProcessor]
+     * Held by [TurnManager] while a [TurnEventProcessor] obtained through [TurnManager.withTaskProcessor]
      * is in use, while a turn is being started, and while a turn is being finished. It keeps a turn from being
      * finished (and its processor closed) while another party still publishes through that turn's processor, e.g. a
      * cancellation handler, and keeps a turn from starting while such a party decides on the state of the task.

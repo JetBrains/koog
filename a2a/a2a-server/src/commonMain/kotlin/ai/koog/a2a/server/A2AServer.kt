@@ -39,16 +39,16 @@ import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
-import ai.koog.a2a.server.session.IdGenerator
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.Session
-import ai.koog.a2a.server.session.SessionEventProcessor
-import ai.koog.a2a.server.session.SessionManager
-import ai.koog.a2a.server.session.UuidIdGenerator
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
+import ai.koog.a2a.server.turn.IdGenerator
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.Turn
+import ai.koog.a2a.server.turn.TurnEventProcessor
+import ai.koog.a2a.server.turn.TurnManager
+import ai.koog.a2a.server.turn.UuidIdGenerator
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.agents.lock.KeyedMutex
@@ -80,8 +80,8 @@ import kotlin.time.Clock
  * The A2AServer orchestrates the interaction between transport layer, agent executor, and storage components:
  * - Receives requests from [RequestHandler] interface methods
  * - Delegates actual agent logic to [AgentExecutor]
- * - Delegates event processing and persisting to [SessionEventProcessor]
- * - Delegates session management to [SessionManager]
+ * - Delegates event processing and persisting to [TurnEventProcessor]
+ * - Delegates turn management to [TurnManager]
  * - Handles push notifications using [PushNotificationSender]
  *
  * ## Production usage with authorization
@@ -174,7 +174,7 @@ import kotlin.time.Clock
  * class MyAgentExecutor : AgentExecutor {
  *     override suspend fun execute(
  *         context: RequestContext<SendMessageRequest>,
- *         eventProcessor: SessionEventProcessor
+ *         eventProcessor: TurnEventProcessor
  *     ) {
  *         // Retrieve authenticated user from the context
  *         val user = context.callContext.getFromState(AuthStateKeys.USER)
@@ -194,7 +194,7 @@ import kotlin.time.Clock
  *
  *     override suspend fun cancel(
  *         context: RequestContext<CancelTaskRequest>,
- *         eventProcessor: SessionEventProcessor,
+ *         eventProcessor: TurnEventProcessor,
  *         agentJob: Deferred<Unit>?,
  *     ) {
  *         agentJob?.cancelAndJoin()
@@ -214,7 +214,7 @@ import kotlin.time.Clock
  * val agentExecutor = object : AgentExecutor {
  *     override suspend fun execute(
  *         context: RequestContext<SendMessageRequest>,
- *         eventProcessor: SessionEventProcessor
+ *         eventProcessor: TurnEventProcessor
  *     ) {
  *         val userMessage = context.params.message
  *
@@ -320,7 +320,7 @@ import kotlin.time.Clock
  * @param pushConfigStorage Optional storage for push notification configurations (defaults to `null`)
  * @param pushSender Optional push notification sender implementation (defaults to `null`)
  * @param idGenerator Generator for new task, context and push notification config IDs (defaults to [UuidIdGenerator])
- * @param coroutineScope Scope for managing all sessions, agent jobs, event processing, etc.
+ * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -355,16 +355,16 @@ public open class A2AServer(
     /**
      * Mutex for locking specific tasks by their IDs. This is the turn serialization layer: a new turn of a task is
      * started only while holding the task's lock and after the previous turn of the task has fully ended, see
-     * [SessionManager]. It is independent of the per-task stream lock inside [SessionManager], which only orders
+     * [TurnManager]. It is independent of the per-task stream lock inside [TurnManager], which only orders
      * the persisting and delivery of events.
      */
     protected val tasksMutex: KeyedMutex<String> = KeyedMutex()
 
     /**
-     * Manages turns ([ai.koog.a2a.server.session.Session]s) and per-task event streams. Override to customize it.
+     * Manages turns ([ai.koog.a2a.server.turn.Turn]s) and per-task event streams. Override to customize it.
      * The instance must use the same [taskStorage] and [coroutineScope] as this server.
      */
-    protected open val sessionManager: SessionManager = SessionManager(
+    protected open val turnManager: TurnManager = TurnManager(
         coroutineScope = coroutineScope,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
@@ -407,7 +407,7 @@ public open class A2AServer(
      * - [A2AUnsupportedOperationException] if the referenced task is in a terminal state.
      *
      * The context id of the turn is the referenced task's context id, else [Message.contextId], else a generated one.
-     * For a referenced task, the agent can only send task events, see [SessionEventProcessor].
+     * For a referenced task, the agent can only send task events, see [TurnEventProcessor].
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state, or when the turn ends,
      * whichever comes first. Only in the last case is an exception thrown by the agent rethrown (if the task exists,
@@ -423,8 +423,8 @@ public open class A2AServer(
      * @param ctx The context of the call.
      * @param includeTaskSnapshot For a message to an existing task: whether to emit, before the agent's first event,
      * the task as stored right before the turn's first event (without the user message of the request, which is
-     * persisted later, see [SessionManager]). This way the stream always begins with the task: a [Task] event of the
-     * agent for an existing task is ignored, see [SessionEventProcessor]. If the turn produces no events, the flow
+     * persisted later, see [TurnManager]). This way the stream always begins with the task: a [Task] event of the
+     * agent for an existing task is ignored, see [TurnEventProcessor]. If the turn produces no events, the flow
      * consists of the snapshot only.
      * @return A cold flow of the turn's events; each collection sends the message again.
      */
@@ -444,9 +444,9 @@ public open class A2AServer(
 
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
 
-        val session = tasksMutex.withLock(taskId) {
-            // If there's a currently running session for the same task, wait for it to finish.
-            sessionManager.getSession(taskId)?.join()
+        val turn = tasksMutex.withLock(taskId) {
+            // If there's a currently running turn for the same task, wait for it to finish.
+            turnManager.getTurn(taskId)?.join()
 
             // Check the task the message refers to, if any. Read in full: the agent gets it as stored at turn start.
             val task: Task? = message.taskId?.let { referencedTaskId ->
@@ -475,21 +475,21 @@ public open class A2AServer(
 
             val requestContext = newRequestContext(ctx, request, contextId, taskId, task)
 
-            // The session's event view is registered before the agent starts, so no event of this turn is missed.
-            sessionManager.startTurn(requestContext) { eventProcessor ->
+            // The turn's event view is registered before the agent starts, so no event of this turn is missed.
+            turnManager.startTurn(requestContext) { eventProcessor ->
                 agentExecutor.execute(requestContext, eventProcessor)
             }
         }
 
-        val snapshot = if (includeTaskSnapshot) session.taskSnapshot else null
+        val snapshot = if (includeTaskSnapshot) turn.taskSnapshot else null
         var isFirstEvent = true
         var isResponseComplete = false
         var isRejected = false
 
         // Stream the events of this turn, until the response is complete or the turn ends.
         emitAll(
-            session.events.transformWhile { event ->
-                if (event.isTerminal() && session.failedWithRejectedEvent()) {
+            turn.events.transformWhile { event ->
+                if (event.isTerminal() && turn.failedWithRejectedEvent()) {
                     // The task was marked failed because the agent's event was rejected: the requester gets the error.
                     isRejected = true
                     return@transformWhile false
@@ -512,11 +512,11 @@ public open class A2AServer(
 
         if (isRejected || !isResponseComplete) {
             // The turn has ended, or the agent failed: propagate the exception thrown by the agent execution, if any.
-            awaitAgent(session)
+            awaitAgent(turn)
         }
 
         if (!isResponseComplete && !isRejected) {
-            if (session.eventProcessor.rejection != null && isFirstEvent) {
+            if (turn.eventProcessor.rejection != null && isFirstEvent) {
                 // The agent sent an invalid event, ignored the failure, and produced nothing else.
                 throw A2AInvalidAgentResponseException("Agent sent an invalid event")
             }
@@ -548,7 +548,7 @@ public open class A2AServer(
      * [TaskOperationException]).
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun Session.failedWithRejectedEvent(): Boolean {
+    private fun Turn.failedWithRejectedEvent(): Boolean {
         val failure = if (agentJob.isCompleted) agentJob.getCompletionExceptionOrNull() else null
         return failure is InvalidEventException || failure is TaskOperationException
     }
@@ -559,9 +559,9 @@ public open class A2AServer(
      * propagated. An event of the agent that was rejected ([InvalidEventException], [TaskOperationException]) is
      * reported as [A2AInvalidAgentResponseException].
      */
-    private suspend fun awaitAgent(session: Session) {
+    private suspend fun awaitAgent(turn: Turn) {
         try {
-            session.agentJob.await()
+            turn.agentJob.await()
         } catch (e: CancellationException) {
             currentCoroutineContext().ensureActive()
         } catch (e: InvalidEventException) {
@@ -723,7 +723,7 @@ public open class A2AServer(
          start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. The task
          lock isn't taken: a follow-up holding it may be waiting for the very turn being cancelled to end.
          */
-        return sessionManager.withTaskProcessor(taskId, initialTask.contextId.orEmpty()) { eventProcessor, agentJob ->
+        return turnManager.withTaskProcessor(taskId, initialTask.contextId.orEmpty()) { eventProcessor, agentJob ->
             // Re-read the task: a turn may have ended in the meantime.
             val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
                 ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
@@ -773,7 +773,7 @@ public open class A2AServer(
 
     /**
      * Streams the task snapshot followed by its live events until the task reaches a terminal state, see
-     * [SessionManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
+     * [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
      *
      * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
      * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
@@ -786,7 +786,7 @@ public open class A2AServer(
         checkRequiredExtensions(ctx)
         checkStreamingSupport()
 
-        emitAll(sessionManager.subscribe(request, ctx))
+        emitAll(turnManager.subscribe(request, ctx))
     }
 
     override suspend fun onCreateTaskPushNotificationConfig(
@@ -915,7 +915,7 @@ public open class A2AServer(
     }
 
     /**
-     * Cancels [coroutineScope] associated with this server, essentially cancelling all running jobs and sessions.
+     * Cancels [coroutineScope] associated with this server, essentially cancelling all running jobs and turns.
      *
      * @param cause Optional cause of the cancellation
      */

@@ -28,7 +28,7 @@ dependencies {
 ## Overview
 
 The A2A server acts as a bridge between the A2A protocol transport layer and your custom agent logic. 
-It orchestrates the entire request lifecycle while maintaining protocol compliance and providing robust session management.
+It orchestrates the entire request lifecycle while maintaining protocol compliance and providing robust turn management.
 
 ## Core components
 
@@ -37,7 +37,7 @@ It orchestrates the entire request lifecycle while maintaining protocol complian
 The main server class implementing the complete A2A protocol. It serves as the central coordinator that:
 
 - **Validates** incoming requests against protocol specifications
-- **Manages** concurrent sessions and task lifecycles
+- **Manages** concurrent turns and task lifecycles
 - **Orchestrates** communication between transport, storage, and business logic layers
 - **Handles** all protocol operations: message sending, task querying, cancellation, push notifications
 
@@ -59,14 +59,14 @@ To cancel the agent, you must implement the `cancel` method.
 class MyAgentExecutor : AgentExecutor {
     override suspend fun execute(
         context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         // Agent logic here
     }
 
     override suspend fun cancel(
         context: RequestContext<TaskIdParams>,
-        eventProcessor: SessionEventProcessor,
+        eventProcessor: TurnEventProcessor,
         agentJob: Deferred<Unit>?
     ) {
         // Cancel agent here, optional
@@ -75,9 +75,9 @@ class MyAgentExecutor : AgentExecutor {
 ```
 
 The `RequestContext` provides rich information about the current request,
-including the `contextId` and `taskId` of the current session, the `message` sent, and the `params` of the request.
+including the `contextId` and `taskId` of the current turn, the `message` sent, and the `params` of the request.
 
-The `SessionEventProcessor` communicates with clients:
+The `TurnEventProcessor` communicates with clients:
 
 - **`sendMessage(message)`**: Send immediate responses (chat-style interactions)
 - **`sendTaskEvent(event)`**: Send task-related updates (long-running operations)
@@ -266,7 +266,7 @@ In executor manages implement agent logic, handles incoming requests and sends r
 class EchoAgentExecutor : AgentExecutor {
     override suspend fun execute(
         context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         val userMessage = context.params.message
         val userText = userMessage.parts
@@ -320,7 +320,7 @@ It can be also used if agent execution logic is not complex and time-consuming.
 class SimpleAgentExecutor : AgentExecutor {
     override suspend fun execute(
         context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         val response = Message(
             messageId = UUID.randomUUID().toString(),
@@ -342,7 +342,7 @@ It can be also used if agent execution logic is time-consuming and suspending.
 class TaskAgentExecutor : AgentExecutor {
     override suspend fun execute(
         context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         // Send working status
         eventProcessor.sendTaskEvent(

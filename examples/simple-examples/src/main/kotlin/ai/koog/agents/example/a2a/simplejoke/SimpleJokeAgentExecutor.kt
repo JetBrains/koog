@@ -3,8 +3,8 @@ package ai.koog.agents.example.a2a.simplejoke
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.server.agent.AgentExecutor
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.agents.a2a.core.MessageA2AMetadata
 import ai.koog.agents.a2a.core.toA2AMessage
 import ai.koog.agents.a2a.core.toKoogMessage
@@ -32,7 +32,7 @@ class SimpleJokeAgentExecutor : AgentExecutor {
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(
         context: RequestContext<SendMessageRequest>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         val userMessage = context.params.message
 

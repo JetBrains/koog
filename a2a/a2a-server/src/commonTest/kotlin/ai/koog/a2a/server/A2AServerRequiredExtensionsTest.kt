@@ -25,9 +25,9 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -67,7 +67,7 @@ class A2AServerRequiredExtensionsTest {
             agentExecutor = object : AgentExecutor {
                 override suspend fun execute(
                     context: RequestContext<SendMessageRequest>,
-                    eventProcessor: SessionEventProcessor
+                    eventProcessor: TurnEventProcessor
                 ) {
                     seenExtensions += context.callContext.requestedExtensions
                     eventProcessor.sendMessage(
@@ -170,7 +170,7 @@ class A2AServerRequiredExtensionsTest {
             agentExecutor = object : AgentExecutor {
                 override suspend fun execute(
                     context: RequestContext<SendMessageRequest>,
-                    eventProcessor: SessionEventProcessor
+                    eventProcessor: TurnEventProcessor
                 ) = error("Not expected to be called")
             },
             agentCard = agentCard(AgentExtension(uri = REQUIRED, required = true)).let {
@@ -235,7 +235,7 @@ class A2AServerRequiredExtensionsTest {
             agentExecutor = object : AgentExecutor {
                 override suspend fun execute(
                     context: RequestContext<SendMessageRequest>,
-                    eventProcessor: SessionEventProcessor
+                    eventProcessor: TurnEventProcessor
                 ) = error("Not expected to be called")
             },
             agentCard = agentCard(AgentExtension(uri = OPTIONAL, required = false)),
@@ -250,7 +250,7 @@ class A2AServerRequiredExtensionsTest {
             agentExecutor = object : AgentExecutor {
                 override suspend fun execute(
                     context: RequestContext<SendMessageRequest>,
-                    eventProcessor: SessionEventProcessor
+                    eventProcessor: TurnEventProcessor
                 ) = error("Not expected to be called")
             },
             agentCard = agentCard(AgentExtension(uri = REQUIRED, required = true)),

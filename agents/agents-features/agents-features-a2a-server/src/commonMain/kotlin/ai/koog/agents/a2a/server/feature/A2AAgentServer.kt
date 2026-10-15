@@ -1,8 +1,8 @@
 package ai.koog.agents.a2a.server.feature
 
 import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
@@ -28,21 +28,21 @@ import kotlin.contracts.contract
  * - Access incoming A2A messages and task information
  * - Send outgoing messages and task events back to the client
  * - Interact with message and task storage
- * - Manage the A2A session lifecycle
+ * - Manage the A2A turn lifecycle
  *
  * The feature provides convenience nodes for common A2A operations like
  * sending messages, updating task status, and accessing storage.
  *
  * @property context The A2A [RequestContext] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
- * @property eventProcessor The A2A [SessionEventProcessor] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
+ * @property eventProcessor The A2A [TurnEventProcessor] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
  *
  * @see ai.koog.a2a.server.agent.AgentExecutor
- * @see ai.koog.a2a.server.session.RequestContext
- * @see ai.koog.a2a.server.session.SessionEventProcessor
+ * @see ai.koog.a2a.server.turn.RequestContext
+ * @see ai.koog.a2a.server.turn.TurnEventProcessor
  */
 public class A2AAgentServer(
     public val context: RequestContext<SendMessageRequest>,
-    public val eventProcessor: SessionEventProcessor
+    public val eventProcessor: TurnEventProcessor
 ) {
     /**
      * Configuration for the [A2AAgentServer] feature.
@@ -55,10 +55,10 @@ public class A2AAgentServer(
         public lateinit var context: RequestContext<SendMessageRequest>
 
         /**
-         * The A2A [SessionEventProcessor] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
-         * @see SessionEventProcessor
+         * The A2A [TurnEventProcessor] from [ai.koog.a2a.server.agent.AgentExecutor.execute]
+         * @see TurnEventProcessor
          */
-        public lateinit var eventProcessor: SessionEventProcessor
+        public lateinit var eventProcessor: TurnEventProcessor
     }
 
     /**

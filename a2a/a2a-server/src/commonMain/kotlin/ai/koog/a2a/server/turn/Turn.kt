@@ -1,4 +1,4 @@
-package ai.koog.a2a.server.session
+package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
@@ -8,23 +8,23 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * One turn of a task: a single [ai.koog.a2a.server.agent.AgentExecutor.execute] call, started with
- * [SessionManager.startTurn].
+ * [TurnManager.startTurn].
  *
- * A session only covers its own turn. Events of the task that happen outside this turn (earlier or later turns,
- * cancellation of an idle task) are not part of [events]; use [SessionManager.subscribe] to follow a task across
+ * A turn only covers its own turn. Events of the task that happen outside this turn (earlier or later turns,
+ * cancellation of an idle task) are not part of [events]; use [TurnManager.subscribe] to follow a task across
  * turns.
  *
- * @property taskId Task ID associated with this session. The task might not exist yet, e.g. when the agent has not
+ * @property taskId Task ID associated with this turn. The task might not exist yet, e.g. when the agent has not
  * created it yet or replies with a message instead.
- * @property contextId Context ID associated with this session.
- * @property agentJob The job executing the agent for this turn. [SessionManager] starts it right after creating the
- * session; awaiting it propagates the agent's exception, if any.
+ * @property contextId Context ID associated with this turn.
+ * @property agentJob The job executing the agent for this turn. [TurnManager] starts it right after creating the
+ * turn; awaiting it propagates the agent's exception, if any.
  */
-public class Session internal constructor(
+public class Turn internal constructor(
     public val taskId: String,
     public val contextId: String,
     public val agentJob: Deferred<Unit>,
-    internal val eventProcessor: SessionEventProcessor,
+    internal val eventProcessor: TurnEventProcessor,
     events: Flow<Event>,
     internal val completion: CompletableJob,
     /**
@@ -42,14 +42,14 @@ public class Session internal constructor(
      *
      * Delivery is back-pressured: the agent's event publishing waits until this flow's collector has accepted each
      * event, so the flow must be collected (and collection cancelled when the consumer goes away), see
-     * [SessionManager]. It was registered before the agent started, so no event of the turn is lost, but it can be
+     * [TurnManager]. It was registered before the agent started, so no event of the turn is lost, but it can be
      * collected **only once**.
      */
     public val events: Flow<Event> = events
 
     /**
      * Suspends until the turn has fully ended: the agent job has completed, its events have been published, and the
-     * session has been removed from [SessionManager].
+     * turn has been removed from [TurnManager].
      */
     public suspend fun join() {
         completion.join()

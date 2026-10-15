@@ -1,4 +1,4 @@
-package ai.koog.a2a.server.session
+package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
@@ -31,13 +31,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * Manages the turns ([Session]s) of tasks and the per-task event streams that connect the agent to every stream of a
+ * Manages the turns ([Turn]s) of tasks and the per-task event streams that connect the agent to every stream of a
  * task.
  *
  * ## Turns and task streams
  *
  * - A **turn** is one [ai.koog.a2a.server.agent.AgentExecutor.execute] call, started with [startTurn] and represented
- *   by a [Session]. Its [Session.events] only cover that turn.
+ *   by a [Turn]. Its [Turn.events] only cover that turn.
  * - The **task stream** is an internal, per-task broadcast through which every event of the task is persisted and
  *   delivered, in storage order, to the current turn's view and to every [subscribe] stream. It outlives turns: it
  *   exists while the task has a running turn, a [withTaskProcessor] block in progress, or at least one subscriber,
@@ -48,7 +48,7 @@ import kotlinx.coroutines.withContext
  * Two independent layers of locking are involved:
  * - **Turn serialization** is the caller's responsibility: [startTurn] fails if a turn for the same task is already
  *   running, so callers must serialize turns per task, e.g. by holding a per-task lock while waiting for
- *   [getSession]`(taskId)?.`[join][Session.join] and calling [startTurn], as [ai.koog.a2a.server.A2AServer] does.
+ *   [getTurn]`(taskId)?.`[join][Turn.join] and calling [startTurn], as [ai.koog.a2a.server.A2AServer] does.
  * - The **stream lock** is internal: each task stream persists an event, delivers it to every stream of the task, and
  *   updates its subscriber set under one per-task lock. This is what makes all streams of a task observe the same
  *   events in the same order, and makes [subscribe]'s snapshot and registration atomic.
@@ -62,7 +62,7 @@ import kotlinx.coroutines.withContext
  * Lock order: the caller's per-task task lock (see [ai.koog.a2a.server.A2AServer.tasksMutex]), then the turn gate, then
  * either the registry lock or the stream lock. The task lock is never acquired while holding the gate: a
  * [withTaskProcessor] block (e.g. [ai.koog.a2a.server.A2AServer.onCancelTask]) doesn't take it at all, since the task
- * lock can be held by a caller waiting for a running turn to end ([Session.join]), and a turn can't end without the
+ * lock can be held by a caller waiting for a running turn to end ([Turn.join]), and a turn can't end without the
  * gate. The registry lock and the stream lock are never nested: the registry lock is held only for short,
  * non-suspending bookkeeping and is **never** held while acquiring a stream lock (or anything else that can wait for a
  * fan-out), so a stalled task can't block the other tasks.
@@ -70,11 +70,11 @@ import kotlinx.coroutines.withContext
  * ## Back-pressure
  *
  * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task, i.e.
- * the requester's [Session.events], the collector of a blocking SendMessage, and every [subscribe] flow, has accepted
+ * the requester's [Turn.events], the collector of a blocking SendMessage, and every [subscribe] flow, has accepted
  * the event. Nothing is buffered or dropped, and no collector is disconnected for being slow. A slow collector
  * therefore slows the agent and the other collectors of the task, and operations that need the task's stream lock
  * ([subscribe], [startTurn], turn end, [withTaskProcessor] publishing) wait behind it. Only operations on that very
- * task are affected: other tasks, [getSession], and [activeSessions] never wait for it.
+ * task are affected: other tasks, [getTurn], and [activeTurns] never wait for it.
  *
  * A collector that is cancelled (e.g. the client went away) stops being a delivery target immediately: the delivery
  * that is waiting for it fails, the collector is dropped, and the agent and the other collectors go on.
@@ -104,7 +104,7 @@ import kotlinx.coroutines.withContext
  * @param idGenerator The generator of ids of messages created by the server, e.g. the status message of a task marked
  * as failed. Defaults to [UuidIdGenerator].
  */
-public class SessionManager(
+public class TurnManager(
     private val coroutineScope: CoroutineScope,
     private val taskStorage: TaskStorage,
     private val pushConfigStorage: PushNotificationConfigStorage? = null,
@@ -132,25 +132,25 @@ public class SessionManager(
     private val streams = mutableMapOf<String, StreamEntry>()
 
     /**
-     * Map of task id to the session of the running turn. All sessions have a task id, even if the task won't be
+     * Map of task id to the turn of the running turn. All turns have a task id, even if the task won't be
      * created. A turn is added once its view is registered, and removed once it has ended, both under the task's
      * [TaskEventStream.processorGate].
      */
-    private val turns = mutableMapOf<String, Session>()
+    private val turns = mutableMapOf<String, Turn>()
     private var nextTurnId = 0L
 
     /**
-     * Starts a new turn for [RequestContext.taskId]: runs [block] in [coroutineScope] with a [SessionEventProcessor]
+     * Starts a new turn for [RequestContext.taskId]: runs [block] in [coroutineScope] with a [TurnEventProcessor]
      * bound to the task stream.
      *
-     * The returned session's [Session.events] is registered before [block] starts, so it receives every event of the
+     * The returned turn's [Turn.events] is registered before [block] starts, so it receives every event of the
      * turn. If the turn continues an existing task ([RequestContext.task] is not `null`):
-     * - the processor starts in task mode, see [SessionEventProcessor];
+     * - the processor starts in task mode, see [TurnEventProcessor];
      * - the user message of the request ([ai.koog.a2a.model.SendMessageRequest.message]) is persisted into the history
      *   of the stored task when the agent sends its first status or artifact update, see "History" above;
-     * - the stored task is read atomically with the registration of [Session.events] (with the history limited to
+     * - the stored task is read atomically with the registration of [Turn.events] (with the history limited to
      *   the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts) and kept as the
-     *   session's task snapshot;
+     *   turn's task snapshot;
      * - if the stored task is in a terminal state by then (e.g. it was cancelled after the caller validated it), the
      *   turn isn't started.
      *
@@ -161,22 +161,22 @@ public class SessionManager(
      * - if it failed with an exception (other than a cancellation) and the task exists in a non-terminal state, the
      *   task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
      *   update;
-     * - the processor is closed, [Session.events] completes, and the session is removed.
+     * - the processor is closed, [Turn.events] completes, and the turn is removed.
      *
-     * Turns of the same task must be serialized by the caller, see [SessionManager].
+     * Turns of the same task must be serialized by the caller, see [TurnManager].
      *
      * @param context The request context of the turn; its [RequestContext.contextId] and [RequestContext.taskId] are
      * enforced by the processor.
      * @param block The agent logic of the turn.
-     * @return The session of the started turn.
+     * @return The turn of the started turn.
      * @throws IllegalStateException if a turn for the same task is already running.
      * @throws A2AUnsupportedOperationException if the turn continues an existing task that is in a terminal state.
      */
     @InternalA2AApi
     public suspend fun startTurn(
         context: RequestContext<SendMessageRequest>,
-        block: suspend (SessionEventProcessor) -> Unit,
-    ): Session {
+        block: suspend (TurnEventProcessor) -> Unit,
+    ): Turn {
         val taskId = context.taskId
         val contextId = context.contextId
         val taskExists = context.task != null
@@ -197,7 +197,7 @@ public class SessionManager(
             return stream.processorGate.withLock {
                 val turnId = registryMutex.withLock {
                     check(taskId !in turns) {
-                        "Session for taskId '$taskId' already runs."
+                        "Turn for taskId '$taskId' already runs."
                     }
 
                     nextTurnId++
@@ -218,7 +218,7 @@ public class SessionManager(
 
                 // The view is registered: from here on, the turn starts even if the caller is cancelled.
                 withContext(NonCancellable) {
-                    val processor = SessionEventProcessor(
+                    val processor = TurnEventProcessor(
                         contextId = contextId,
                         taskId = taskId,
                         stream = stream,
@@ -227,7 +227,7 @@ public class SessionManager(
                         userMessage = context.params.message,
                     )
 
-                    val session = Session(
+                    val turn = Turn(
                         taskId = taskId,
                         contextId = contextId,
                         agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) },
@@ -237,7 +237,7 @@ public class SessionManager(
                         taskSnapshot = snapshot,
                     )
 
-                    registryMutex.withLock { turns[taskId] = session }
+                    registryMutex.withLock { turns[taskId] = turn }
                     started = true
 
                     /*
@@ -247,10 +247,10 @@ public class SessionManager(
                      */
                     @OptIn(DelicateCoroutinesApi::class)
                     coroutineScope.launch(start = CoroutineStart.ATOMIC) {
-                        monitorTurn(session, stream, turnId)
+                        monitorTurn(turn, stream, turnId)
                     }
 
-                    session
+                    turn
                 }
             }
         } catch (e: Throwable) {
@@ -265,10 +265,10 @@ public class SessionManager(
     /**
      * Waits for the turn's agent job to complete (starting it, if needed), ends the turn, and cleans up.
      */
-    private suspend fun monitorTurn(session: Session, stream: TaskEventStream, turnId: Long) {
+    private suspend fun monitorTurn(turn: Turn, stream: TaskEventStream, turnId: Long) {
         // Also fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
         val failure = try {
-            session.agentJob.await()
+            turn.agentJob.await()
             null
         } catch (e: Throwable) {
             e
@@ -276,26 +276,26 @@ public class SessionManager(
 
         if (failure != null && failure !is CancellationException) {
             // The requester may have got its response already, so the failure must not go unnoticed.
-            logger.warn(failure) { "Agent execution failed for taskId='${session.taskId}'" }
+            logger.warn(failure) { "Agent execution failed for taskId='${turn.taskId}'" }
         }
 
         try {
-            // The turn is ended even if this monitor is cancelled, so its view completes and the session is removed.
+            // The turn is ended even if this monitor is cancelled, so its view completes and the turn is removed.
             withContext(NonCancellable) {
                 try {
                     /*
                      Wait for any withTaskProcessor block (e.g. cancellation) that may still publish through this
                      turn's processor, then close the processor and the turn view (endTurn closes it even if it fails),
-                     and remove the session. The session is removed under the gate, so a withTaskProcessor block never
+                     and remove the turn. The turn is removed under the gate, so a withTaskProcessor block never
                      gets the closed processor of an ended turn.
                      */
                     stream.processorGate.withLock {
-                        session.eventProcessor.close()
+                        turn.eventProcessor.close()
 
                         try {
-                            stream.endTurn(turnId, session.contextId, failure)
+                            stream.endTurn(turnId, turn.contextId, failure)
                         } finally {
-                            registryMutex.withLock { turns -= session.taskId }
+                            registryMutex.withLock { turns -= turn.taskId }
                         }
                     }
                 } finally {
@@ -305,13 +305,13 @@ public class SessionManager(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logger.error(e) { "Failed to finish the turn of taskId='${session.taskId}'" }
+            logger.error(e) { "Failed to finish the turn of taskId='${turn.taskId}'" }
         } finally {
-            session.completion.complete()
+            turn.completion.complete()
         }
 
-        if (session.eventProcessor.isTaskEventSent) {
-            sendPushNotifications(session.taskId)
+        if (turn.eventProcessor.isTaskEventSent) {
+            sendPushNotifications(turn.taskId)
         }
     }
 
@@ -375,18 +375,18 @@ public class SessionManager(
     }
 
     /**
-     * Runs [block] with a [SessionEventProcessor] bound to the task stream of [taskId], e.g. to cancel a task.
+     * Runs [block] with a [TurnEventProcessor] bound to the task stream of [taskId], e.g. to cancel a task.
      *
      * If a turn of the task is running, [block] receives that turn's processor and agent job, and the turn is kept
-     * from finishing (its processor and [Session.events] stay open) until [block] returns, so everything [block]
+     * from finishing (its processor and [Turn.events] stay open) until [block] returns, so everything [block]
      * publishes reaches the turn's requester as well. Otherwise, [block] receives a new processor, which is closed when
-     * [block] returns (later events are rejected with [ai.koog.a2a.server.exceptions.SessionNotActiveException]), and
+     * [block] returns (later events are rejected with [ai.koog.a2a.server.exceptions.TurnNotActiveException]), and
      * `null`. Either way, the events [block] publishes reach every [subscribe] stream of the task.
      *
      * No turn of the task starts while [block] runs: a turn that is being started waits, and is rejected if [block]
      * left the task in a terminal state, see [startTurn].
      *
-     * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. with [Session.join]) or
+     * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. with [Turn.join]) or
      * for a turn to start, since neither can happen while [block] runs.
      *
      * @param taskId The task id.
@@ -398,15 +398,15 @@ public class SessionManager(
     public suspend fun <T> withTaskProcessor(
         taskId: String,
         contextId: String,
-        block: suspend (processor: SessionEventProcessor, agentJob: Deferred<Unit>?) -> T,
+        block: suspend (processor: TurnEventProcessor, agentJob: Deferred<Unit>?) -> T,
     ): T {
         val stream = acquire(taskId)
 
         try {
             return stream.processorGate.withLock {
-                val session = registryMutex.withLock { turns[taskId] }
+                val turn = registryMutex.withLock { turns[taskId] }
 
-                val processor = session?.eventProcessor ?: SessionEventProcessor(
+                val processor = turn?.eventProcessor ?: TurnEventProcessor(
                     contextId = contextId,
                     taskId = taskId,
                     stream = stream,
@@ -414,13 +414,13 @@ public class SessionManager(
                 )
 
                 try {
-                    block(processor, session?.agentJob)
+                    block(processor, turn?.agentJob)
                 } finally {
                     /*
                      Nothing may publish through a standalone processor once the block is done and the stream may be
                      dropped. Closed without waiting for a send in progress, which could hold the gate for long.
                      */
-                    if (session == null) processor.closeImmediately()
+                    if (turn == null) processor.closeImmediately()
                 }
             }
         } finally {
@@ -429,17 +429,17 @@ public class SessionManager(
     }
 
     /**
-     * Returns the session of the running turn of the given task id, if any. A turn that is still being started by
-     * [startTurn] isn't reported until its [Session.events] is registered.
+     * Returns the turn of the running turn of the given task id, if any. A turn that is still being started by
+     * [startTurn] isn't reported until its [Turn.events] is registered.
      */
-    public suspend fun getSession(taskId: String): Session? = registryMutex.withLock {
+    public suspend fun getTurn(taskId: String): Turn? = registryMutex.withLock {
         turns[taskId]
     }
 
     /**
      * Returns the number of running turns.
      */
-    public suspend fun activeSessions(): Int = registryMutex.withLock {
+    public suspend fun activeTurns(): Int = registryMutex.withLock {
         turns.size
     }
 

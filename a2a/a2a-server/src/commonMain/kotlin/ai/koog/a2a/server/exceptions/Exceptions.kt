@@ -21,6 +21,6 @@ public class InvalidEventException(message: String, cause: Throwable? = null) : 
 public class PushNotificationException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
- * Indicates a session is not in the active state.
+ * Indicates a turn is not in the active state.
  */
-public class SessionNotActiveException(message: String, cause: Throwable? = null) : Exception(message, cause)
+public class TurnNotActiveException(message: String, cause: Throwable? = null) : Exception(message, cause)

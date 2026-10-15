@@ -28,9 +28,9 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -111,7 +111,7 @@ class A2AServerCapabilitiesTest {
             agentExecutor = object : AgentExecutor {
                 override suspend fun execute(
                     context: RequestContext<SendMessageRequest>,
-                    eventProcessor: SessionEventProcessor
+                    eventProcessor: TurnEventProcessor
                 ) {
                     eventProcessor.sendMessage(reply)
                 }

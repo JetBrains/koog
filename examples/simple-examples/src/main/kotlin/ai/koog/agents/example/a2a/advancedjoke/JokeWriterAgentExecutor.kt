@@ -11,8 +11,8 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.agents.a2a.core.A2AMessage
 import ai.koog.agents.a2a.core.toKoogMessage
 import ai.koog.agents.a2a.server.feature.A2AAgentServer
@@ -61,7 +61,7 @@ class JokeWriterAgentExecutor : AgentExecutor {
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(
         context: RequestContext<SendMessageRequest>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         val agent = jokeWriterAgent(promptExecutor, context, eventProcessor)
         agent.run(context.params.message)
@@ -71,7 +71,7 @@ class JokeWriterAgentExecutor : AgentExecutor {
 private fun jokeWriterAgent(
     promptExecutor: PromptExecutor,
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor
+    eventProcessor: TurnEventProcessor
 ): GraphAIAgent<A2AMessage, Unit> {
     val agentConfig = AIAgentConfig(
         prompt = prompt("joke-generation") {

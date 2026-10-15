@@ -24,10 +24,10 @@ import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
-import ai.koog.a2a.server.session.IdGenerator
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.turn.IdGenerator
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -84,14 +84,14 @@ class A2AServerSendMessageTest {
     }
 
     private fun interface Script {
-        suspend fun run(context: RequestContext<SendMessageRequest>, processor: SessionEventProcessor)
+        suspend fun run(context: RequestContext<SendMessageRequest>, processor: TurnEventProcessor)
     }
 
     /**
      * Runs the script registered for the text of the incoming message.
      */
     private inner class ScriptedAgentExecutor(private val scripts: Map<String, Script>) : AgentExecutor {
-        override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor) {
+        override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor) {
             executed += context
             val text = context.params.message.parts.filterIsInstance<TextPart>().joinToString(" ") { it.text }
             val script = scripts[text] ?: error("No script for '$text'")

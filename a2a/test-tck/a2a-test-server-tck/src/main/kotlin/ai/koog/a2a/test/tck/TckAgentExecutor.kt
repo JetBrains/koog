@@ -2,8 +2,8 @@ package ai.koog.a2a.test.tck
 
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskIdParams
@@ -12,8 +12,8 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.cancelAndJoin
@@ -26,7 +26,7 @@ import kotlin.uuid.Uuid
 class TckAgentExecutor : AgentExecutor {
     override suspend fun execute(
         context: RequestContext<SendMessageRequest>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         val userMessage = context.params.message
         val userInput = userMessage.parts.filterIsInstance<TextPart>()
@@ -81,7 +81,7 @@ class TckAgentExecutor : AgentExecutor {
 
     override suspend fun cancel(
         context: RequestContext<TaskIdParams>,
-        eventProcessor: SessionEventProcessor,
+        eventProcessor: TurnEventProcessor,
         agentJob: Deferred<Unit>?
     ) {
         val taskId = context.taskId
@@ -103,7 +103,7 @@ class TckAgentExecutor : AgentExecutor {
 
     private suspend fun processNewTask(
         context: RequestContext<SendMessageRequest>,
-        eventProcessor: SessionEventProcessor,
+        eventProcessor: TurnEventProcessor,
         userMessage: Message,
         userInput: String,
     ) {
@@ -179,7 +179,7 @@ class TckAgentExecutor : AgentExecutor {
 
     private suspend fun processExistingTask(
         context: RequestContext<SendMessageRequest>,
-        eventProcessor: SessionEventProcessor,
+        eventProcessor: TurnEventProcessor,
         userMessage: Message,
         userInput: String,
     ) {

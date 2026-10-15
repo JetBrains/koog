@@ -75,7 +75,7 @@ On assistant message, the agent sends a task complete event to the A2A client wi
 @OptIn(ExperimentalUuidApi::class)
 private fun createAgent(
     context: RequestContext<MessageSendParams>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) = AIAgent(
     promptExecutor = MultiLLMPromptExecutor(
         LLMProvider.Google to GoogleLLMClient("api-key")
@@ -191,10 +191,10 @@ private suspend fun A2AAgentServer.sendTaskUpdate(
 ## A2AAgentServer Feature Mechanism
 
 The `A2AAgentServer` is a Koog agent feature that enables seamless integration between Koog agents and the A2A protocol.
-The `A2AAgentServer` feature provides access to the `RequestContext` and `SessionEventProcessor` entities, which are used to
+The `A2AAgentServer` feature provides access to the `RequestContext` and `TurnEventProcessor` entities, which are used to
 communicate with the A2A client inside the Koog agent.
 
-To install the feature, call the `install` function on the agent and pass the `A2AAgentServer` feature along with the `RequestContext` and `SessionEventProcessor`:
+To install the feature, call the `install` function on the agent and pass the `A2AAgentServer` feature along with the `RequestContext` and `TurnEventProcessor`:
 ```kotlin
 // Install the feature
 install(A2AAgentServer) {
@@ -259,7 +259,7 @@ client.connect()
 
 ### Create Koog Agent and add A2A Client to A2AAgentClient Feature
 To connect to A2A agent from your Koog Agent, you can use the A2AAgentClient feature, which provides a client API for connecting to A2A agents.
-The principle of the client is the same as the server: you install the feature and pass the `A2AAgentClient` feature along with the `RequestContext` and `SessionEventProcessor`.
+The principle of the client is the same as the server: you install the feature and pass the `A2AAgentClient` feature along with the `RequestContext` and `TurnEventProcessor`.
 
 ```kotlin
 val agent = AIAgent(

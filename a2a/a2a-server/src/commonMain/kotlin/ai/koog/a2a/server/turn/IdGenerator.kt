@@ -1,4 +1,4 @@
-package ai.koog.a2a.server.session
+package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.TaskPushNotificationConfig

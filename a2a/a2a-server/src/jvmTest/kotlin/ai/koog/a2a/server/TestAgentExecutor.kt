@@ -12,8 +12,8 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -23,7 +23,7 @@ import kotlin.uuid.Uuid
 
 private suspend fun sayHello(
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) {
     eventProcessor.sendMessage(
         Message(
@@ -38,7 +38,7 @@ private suspend fun sayHello(
 
 private suspend fun doTask(
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) {
     val task = Task(
         id = context.taskId,
@@ -93,7 +93,7 @@ private suspend fun doTask(
 
 private suspend fun doCancelableTask(
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) {
     val task = Task(
         id = context.taskId,
@@ -109,7 +109,7 @@ private suspend fun doCancelableTask(
 
 private suspend fun doLongRunningTask(
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) {
     val task = Task(
         id = context.taskId,
@@ -190,7 +190,7 @@ private fun agentStatus(
  */
 private suspend fun doInputRequiredTask(
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) {
     eventProcessor.sendTaskEvent(
         Task(
@@ -211,13 +211,13 @@ private suspend fun doInputRequiredTask(
  */
 private suspend fun provideInput(
     context: RequestContext<SendMessageRequest>,
-    eventProcessor: SessionEventProcessor,
+    eventProcessor: TurnEventProcessor,
 ) {
     eventProcessor.sendTaskEvent(agentStatus(context, TaskState.TASK_STATE_COMPLETED, "Input received"))
 }
 
 class TestAgentExecutor : AgentExecutor {
-    override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor) {
+    override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor) {
         val userMessage = context.params.message
         val userInput = userMessage.parts.filterIsInstance<TextPart>()
             .joinToString(" ") { it.text }
@@ -269,7 +269,7 @@ class TestAgentExecutor : AgentExecutor {
 
     override suspend fun cancel(
         context: RequestContext<CancelTaskRequest>,
-        eventProcessor: SessionEventProcessor,
+        eventProcessor: TurnEventProcessor,
         agentJob: Deferred<Unit>?
     ) {
         agentJob?.cancelAndJoin()

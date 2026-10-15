@@ -1,4 +1,4 @@
-package ai.koog.a2a.server.session
+package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
@@ -11,7 +11,7 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
-import ai.koog.a2a.server.exceptions.SessionNotActiveException
+import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-class SessionEventProcessorTest {
+class TurnEventProcessorTest {
     private companion object {
         private val TEST_TIMEOUT = 30.seconds
     }
@@ -73,7 +73,7 @@ class SessionEventProcessorTest {
         contextId: String,
         taskId: String,
         taskExists: Boolean = false,
-    ): SessionEventProcessor = SessionEventProcessor(
+    ): TurnEventProcessor = TurnEventProcessor(
         contextId = contextId,
         taskId = taskId,
         stream = stream,
@@ -115,7 +115,7 @@ class SessionEventProcessorTest {
 
         processor.sendMessage(message1)
 
-        assertFailsWith<SessionNotActiveException> {
+        assertFailsWith<TurnNotActiveException> {
             processor.sendMessage(message2)
         }
         assertFalse(processor.isOpen)
@@ -129,13 +129,13 @@ class SessionEventProcessorTest {
 
         processor.sendMessage(message)
 
-        assertFailsWith<SessionNotActiveException> {
+        assertFailsWith<TurnNotActiveException> {
             processor.sendTaskEvent(task)
         }
         assertFalse(processor.isOpen)
     }
 
-    // Task session tests
+    // Task turn tests
 
     @Test
     fun task_testSendTaskEventNewTask() = runTest(timeout = TEST_TIMEOUT) {
@@ -226,7 +226,7 @@ class SessionEventProcessorTest {
     @Test
     fun task_testNewTaskGetsUserMessageInHistory() = runTest(timeout = TEST_TIMEOUT) {
         val userMessage = createMessage("user-1", contextId, "Hello")
-        val processor = SessionEventProcessor(
+        val processor = TurnEventProcessor(
             contextId = contextId,
             taskId = taskId,
             stream = stream,
@@ -276,7 +276,7 @@ class SessionEventProcessorTest {
         processor.sendTaskEvent(task)
         processor.sendTaskEvent(finalStatusUpdate)
 
-        assertFailsWith<SessionNotActiveException> {
+        assertFailsWith<TurnNotActiveException> {
             processor.sendTaskEvent(anotherEvent)
         }
         assertFalse(processor.isOpen)
@@ -402,7 +402,7 @@ class SessionEventProcessorTest {
             // Close processor and then attempt to send more events
             processor.close()
 
-            assertFailsWith<SessionNotActiveException>("Should not be possible to send events to closed session") {
+            assertFailsWith<TurnNotActiveException>("Should not be possible to send events to closed turn") {
                 processor.sendMessage(message2)
             }
 
@@ -428,7 +428,7 @@ class SessionEventProcessorTest {
             status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
         )
 
-        assertFailsWith<SessionNotActiveException>("Should not be possible to send events to closed session") {
+        assertFailsWith<TurnNotActiveException>("Should not be possible to send events to closed turn") {
             processor.sendTaskEvent(workingUpdate)
         }
 

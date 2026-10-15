@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * @param name Optional node name for debugging and tracing
  * @param saveToStorage If true, also saves the message to storage before sending
  * @return A node that sends the message and passes it through unchanged
- * @see ai.koog.a2a.server.session.SessionEventProcessor.sendMessage
+ * @see ai.koog.a2a.server.turn.TurnEventProcessor.sendMessage
  * @see ai.koog.a2a.server.messages.MessageStorage.save
  */
 @AIAgentBuilderDslMarker
@@ -38,7 +38,7 @@ public fun nodeA2ARespondMessage(
  *
  * @param name Optional node name for debugging and tracing
  * @return A node that sends the task event and passes it through unchanged
- * @see ai.koog.a2a.server.session.SessionEventProcessor.sendTaskEvent
+ * @see ai.koog.a2a.server.turn.TurnEventProcessor.sendTaskEvent
  */
 @AIAgentBuilderDslMarker
 public fun nodeA2ARespondTaskEvent(

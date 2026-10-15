@@ -73,7 +73,7 @@ public interface TaskStorage {
     public suspend fun list(request: ListTasksRequest, context: ServerCallContext): ListTasksResponse
 
     /**
-     * Retrieves a task by ID. Intended for internal use (cancellation, sessions, push notifications, agents), as
+     * Retrieves a task by ID. Intended for internal use (cancellation, turns, push notifications, agents), as
      * opposed to the `GetTask` RPC served by [get] with a [GetTaskRequest].
      *
      * @param taskId the unique task identifier

@@ -27,7 +27,7 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
    - Depends on: a2a-core, Ktor HTTP client
 
 3. **a2a-server**: Server-side implementation for hosting A2A agents
-   - A2AServer, AgentExecutor interface, session management
+   - A2AServer, AgentExecutor interface, turn management
    - Storage abstractions with in-memory implementations
    - Depends on: a2a-core, coroutines, logging
 
@@ -67,7 +67,7 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
 - Changing storage interfaces
 - Modifying core protocol message formats
 - Adding new authentication schemes
-- Changing session management behavior
+- Changing turn management behavior
 - Doing other sorts of major architectural changes
 
 ### Code Style Conventions
@@ -78,10 +78,10 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
 - Use `@InternalA2AApi` annotation for APIs that are public but internal to the module
 
 #### Naming Conventions
-- Classes: PascalCase (`A2AServer`, `SessionManager`, `AgentExecutor`)
+- Classes: PascalCase (`A2AServer`, `TurnManager`, `AgentExecutor`)
 - Interfaces: Same as classes, often ending in -or/-er for behaviors (`AgentExecutor`)
 - Functions: camelCase with descriptive names (`onSendMessage`, `getByContext`)
-- Properties: camelCase (`agentCard`, `sessionMutex`)
+- Properties: camelCase (`agentCard`, `turnMutex`)
 
 #### Async Patterns
 - Use `suspend` functions for all async operations
@@ -217,18 +217,18 @@ public class InMemorySomeStorage : SomeStorage {
 }
 ```
 
-### Session Management Pattern
-- Use `SessionEventProcessor` for event-driven session handling
+### Turn Management Pattern
+- Use `TurnEventProcessor` for event-driven turn handling
 - Implement proper cleanup with `Closeable` interface
 - Use structured concurrency with `CoroutineScope`
-- Handle session lifecycle properly (start → active → closed)
+- Handle turn lifecycle properly (start → active → closed)
 
 ### Agent Executor Implementation
 ```kotlin
 public class MyAgentExecutor : AgentExecutor {
     override suspend fun execute(
         context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
+        eventProcessor: TurnEventProcessor
     ) {
         // Process request and send events through eventProcessor
         eventProcessor.sendTaskEvent(/* task event */)

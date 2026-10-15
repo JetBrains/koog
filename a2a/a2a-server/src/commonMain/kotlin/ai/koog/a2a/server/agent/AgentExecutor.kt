@@ -9,8 +9,8 @@ import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskState
-import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.TurnEventProcessor
 import kotlinx.coroutines.Deferred
 
 /**
@@ -96,7 +96,7 @@ public interface AgentExecutor {
      * e.g., [A2AContentTypeNotSupportedException], [A2AUnsupportedOperationException], etc. See full list of available
      * A2A exceptions in [ai.koog.a2a.exceptions].
      */
-    public suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor)
+    public suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor)
 
     /**
      * Request to cancel a task.
@@ -151,7 +151,7 @@ public interface AgentExecutor {
      */
     public suspend fun cancel(
         context: RequestContext<CancelTaskRequest>,
-        eventProcessor: SessionEventProcessor,
+        eventProcessor: TurnEventProcessor,
         agentJob: Deferred<Unit>?,
     ) {
         throw A2ATaskNotCancelableException("Cancellation is not supported")
