@@ -580,4 +580,126 @@ class SessionManagerTest {
         assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskId)?.status?.state)
         assertEquals(0, sessionManager.activeStreams())
     }
+
+    /**
+     * Makes the stream of [taskId] stuck: the stream lock is held by a fan-out waiting for a subscriber that doesn't
+     * consume. Returns the job of the stuck subscriber; cancelling it unblocks the fan-out.
+     */
+    private fun TestScope.stickStream(sessionManager: SessionManager, taskId: String, contextId: String): Job {
+        val stuck = launch {
+            sessionManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
+                CompletableDeferred<Unit>().await() // never consumes anything more
+            }
+        }
+        runCurrent()
+
+        launch {
+            sessionManager.withTaskProcessor(taskId, contextId) { processor, _ ->
+                processor.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
+            }
+        }
+        runCurrent()
+
+        return stuck
+    }
+
+    @Test
+    fun testStuckFanOutOfOneTaskDoesNotBlockOtherTasks() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val taskA = "task-a"
+        val contextA = "context-a"
+        val taskB = "task-b"
+        val contextB = "context-b"
+        taskStorage.update(createTask(taskA, contextA, TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(createTask(taskB, contextB, TaskState.TASK_STATE_INPUT_REQUIRED))
+
+        val stuck = stickStream(sessionManager, taskA, contextA)
+
+        // A follow-up turn for A has to wait for the stuck stream lock of A.
+        val completedA = statusUpdate(taskA, contextA, TaskState.TASK_STATE_COMPLETED)
+        val startA = async {
+            sessionManager.startTurn(createContext(taskA, contextA)) { processor ->
+                processor.sendTaskEvent(completedA)
+            }
+        }
+        runCurrent()
+        assertEquals(false, startA.isCompleted)
+
+        // The turn of A is already visible, and a concurrent join works.
+        val joinedA = async { sessionManager.getSession(taskA)?.join() }
+        runCurrent()
+        assertNotNull(sessionManager.getSession(taskA))
+        assertEquals(false, joinedA.isCompleted)
+
+        // Everything for the other task, and the registry queries, go through while A is stuck.
+        val messageB = createMessage("msg-b", contextB, "Hello B")
+        val operationsB = async {
+            val subscriptionB = sessionManager.subscribe(SubscribeToTaskRequest(taskB), callContext).first()
+            val sessionB = sessionManager.startTurn(createContext(taskB, contextB)) { processor ->
+                processor.sendMessage(messageB)
+            }
+            val sessionLookup = sessionManager.getSession(taskB)
+            val eventsB = sessionB.events.toList()
+            sessionB.join()
+
+            listOf(subscriptionB, sessionLookup === sessionB, eventsB, sessionManager.activeSessions())
+        }
+        runCurrent()
+
+        assertEquals(true, operationsB.isCompleted)
+        assertEquals(
+            listOf(
+                createTask(taskB, contextB, TaskState.TASK_STATE_INPUT_REQUIRED),
+                true,
+                listOf<Event>(messageB),
+                1, // only A, which is still starting
+            ),
+            operationsB.await()
+        )
+        assertEquals(false, startA.isCompleted)
+
+        // Unblocking A lets everything finish.
+        stuck.cancelAndJoin()
+        val sessionA = startA.await()
+        val eventsA = drain(sessionA)
+        sessionA.join()
+        joinedA.await()
+
+        assertEquals(listOf<Event>(completedA), eventsA.await())
+        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskA)?.status?.state)
+        assertEquals(0, sessionManager.activeSessions())
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testCancelledStartTurnReleasesReservation() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
+        val stuck = stickStream(sessionManager, taskId, contextId)
+
+        var agentStarted = false
+        val start = async {
+            sessionManager.startTurn(createContext(taskId, contextId)) { agentStarted = true }
+        }
+        runCurrent()
+        assertNotNull(sessionManager.getSession(taskId))
+
+        // The caller goes away between reserving the turn and registering its view.
+        start.cancelAndJoin()
+
+        assertNull(sessionManager.getSession(taskId))
+        assertEquals(0, sessionManager.activeSessions())
+
+        // The task can start a new turn, and the cancelled one never ran.
+        stuck.cancelAndJoin()
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
+        }
+        drain(session)
+        session.join()
+
+        assertEquals(false, agentStarted)
+        assertEquals(0, sessionManager.activeSessions())
+        assertEquals(0, sessionManager.activeStreams())
+    }
 }

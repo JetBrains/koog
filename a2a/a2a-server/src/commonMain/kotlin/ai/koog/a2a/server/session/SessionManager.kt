@@ -12,6 +12,7 @@ import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
@@ -20,6 +21,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -49,8 +51,10 @@ import kotlinx.coroutines.withContext
  *   updates its subscriber set under one per-task lock. This is what makes all streams of a task observe the same
  *   events in the same order, and makes [subscribe]'s snapshot and registration atomic.
  *
- * Lock order: [TaskEventStream.processorGate] (turn-end gate), then the registry lock, then the stream lock; a lock
- * is never acquired while holding one that comes later in this list.
+ * Lock order: [TaskEventStream.processorGate] (turn-end gate), then the registry lock; and the gate, then the stream
+ * lock. The registry lock and the stream lock are never nested: the registry lock is held only for short, non-suspending
+ * bookkeeping and is **never** held while acquiring a stream lock (or anything else that can wait for a fan-out), so a
+ * stalled task can't block the other tasks.
  *
  * ## Back-pressure
  *
@@ -58,8 +62,8 @@ import kotlinx.coroutines.withContext
  * the requester's [Session.events], the collector of a blocking SendMessage, and every [subscribe] flow, has accepted
  * the event. Nothing is buffered or dropped, and no collector is disconnected for being slow. A slow collector
  * therefore slows the agent and the other collectors of the task, and operations that need the task's stream lock
- * ([subscribe], [startTurn], turn end, [withTaskProcessor] publishing) wait behind it. [startTurn] and the registry
- * can wait as well, since the stream lock is acquired while holding the registry lock.
+ * ([subscribe], [startTurn], turn end, [withTaskProcessor] publishing) wait behind it. Only operations on that very
+ * task are affected: other tasks, [getSession], and [activeSessions] never wait for it.
  *
  * A collector that is cancelled (e.g. the client went away) stops being a delivery target immediately: the delivery
  * that is waiting for it fails, the collector is dropped, and the agent and the other collectors go on.
@@ -95,18 +99,29 @@ public class SessionManager(
     }
 
     /**
-     * Guards [streams], [sessions], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate],
-     * and [TaskEventStream]'s stream lock may be acquired while holding it, never the other way around. Since the
-     * stream lock can be held for a long time by a fan-out waiting for a slow collector, nothing but registration of a
-     * turn view ([startTurn]) acquires it under this lock.
+     * A running turn.
+     */
+    private class Turn(val session: Session) {
+        /**
+         * Completes once the turn's view is registered in the task stream, i.e. the turn is ready to run and publish
+         * (`true`), or once the registration failed and the turn has been removed (`false`).
+         */
+        val registered = CompletableDeferred<Boolean>()
+    }
+
+    /**
+     * Guards [streams], [turns], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate]. Since
+     * a stream lock can be held for a long time by a fan-out waiting for a slow collector, this lock is never held
+     * while acquiring a stream lock or anything else that may wait for a fan-out, and only short non-suspending
+     * bookkeeping runs under it.
      */
     private val registryMutex = Mutex()
     private val streams = mutableMapOf<String, StreamEntry>()
 
     /**
-     * Map of task id to the session of the running turn. All sessions have a task id, even if the task won't be created.
+     * Map of task id to the running turn. All sessions have a task id, even if the task won't be created.
      */
-    private val sessions = mutableMapOf<String, Session>()
+    private val turns = mutableMapOf<String, Turn>()
     private var nextTurnId = 0L
 
     /**
@@ -135,14 +150,22 @@ public class SessionManager(
         val taskId = context.taskId
         val contextId = context.contextId
 
-        val (session, stream, turnId) = registryMutex.withLock {
-            check(taskId !in sessions) {
+        val turnView = CompletableDeferred<Flow<Event>>()
+
+        /*
+         Under the registry lock only reserve the task and pin the stream. The turn view is registered under the stream
+         lock afterwards: the stream lock can be held for long by a fan-out waiting for a slow collector, and the
+         registry lock must not wait for it. Meanwhile the turn is already visible to getSession (so a concurrent
+         join() works) and blocks other startTurn calls for the task, but nothing can publish for it: the agent job is
+         lazy and is started only by monitorTurn, which is launched after the registration.
+         */
+        val (turn, stream, turnId) = registryMutex.withLock {
+            check(taskId !in turns) {
                 "Session for taskId '$taskId' already runs."
             }
 
             val stream = acquireLocked(taskId)
             val turnId = nextTurnId++
-            val turnView = stream.openTurnView(turnId)
 
             val processor = SessionEventProcessor(
                 contextId = contextId,
@@ -156,13 +179,35 @@ public class SessionManager(
                 contextId = contextId,
                 agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) },
                 eventProcessor = processor,
-                events = turnView.consumeAsFlow(),
+                events = flow { emitAll(turnView.await()) },
                 completion = Job(),
             )
 
-            sessions[taskId] = session
+            val turn = Turn(session)
+            turns[taskId] = turn
 
-            Triple(session, stream, turnId)
+            Triple(turn, stream, turnId)
+        }
+        val session = turn.session
+
+        try {
+            turnView.complete(stream.openTurnView(turnId).consumeAsFlow())
+            turn.registered.complete(true)
+        } catch (e: Throwable) {
+            // Registration failed or the caller was cancelled: undo the reservation.
+            withContext(NonCancellable) {
+                registryMutex.withLock {
+                    if (turns[taskId] === turn) turns -= taskId
+                }
+
+                // The agent job never started; cancel it so it doesn't linger as a child of the scope.
+                session.agentJob.cancel()
+                turnView.completeExceptionally(e)
+                turn.registered.complete(false)
+                session.completion.complete()
+                release(stream)
+            }
+            throw e
         }
 
         coroutineScope.launch {
@@ -191,7 +236,7 @@ public class SessionManager(
             stream.processorGate.withLock {
                 session.eventProcessor.close()
                 stream.endTurn(turnId, session.contextId, failure)
-                registryMutex.withLock { sessions -= session.taskId }
+                registryMutex.withLock { turns -= session.taskId }
             }
         } catch (e: CancellationException) {
             throw e
@@ -202,7 +247,7 @@ public class SessionManager(
                 // Make sure the requester's view ends even if finishing the turn failed or was cancelled.
                 stream.closeTurnView(turnId)
                 registryMutex.withLock {
-                    if (sessions[session.taskId] === session) sessions -= session.taskId
+                    if (turns[session.taskId]?.session === session) turns -= session.taskId
                 }
                 release(stream)
             }
@@ -297,7 +342,7 @@ public class SessionManager(
 
         try {
             return stream.processorGate.withLock {
-                val session = registryMutex.withLock { sessions[taskId] }
+                val session = findRegisteredSession(taskId)
 
                 val processor = session?.eventProcessor ?: SessionEventProcessor(
                     contextId = contextId,
@@ -317,14 +362,14 @@ public class SessionManager(
      * Returns the session of the running turn of the given task id, if any.
      */
     public suspend fun getSession(taskId: String): Session? = registryMutex.withLock {
-        sessions[taskId]
+        turns[taskId]?.session
     }
 
     /**
      * Returns the number of running turns.
      */
     public suspend fun activeSessions(): Int = registryMutex.withLock {
-        sessions.size
+        turns.size
     }
 
     /**
@@ -332,6 +377,20 @@ public class SessionManager(
      */
     internal suspend fun activeStreams(): Int = registryMutex.withLock {
         streams.size
+    }
+
+    /**
+     * Returns the session of the running turn of [taskId] once its turn view is registered, or `null` if there is no
+     * turn. Waits for a turn that is still being started, so that whatever the caller publishes through the session's
+     * processor reaches the turn's [Session.events]. Must not be called while holding the registry lock.
+     */
+    private suspend fun findRegisteredSession(taskId: String): Session? {
+        while (true) {
+            val turn = registryMutex.withLock { turns[taskId] } ?: return null
+
+            // False if the turn failed to start; it has been removed by then, so look again.
+            if (turn.registered.await()) return turn.session
+        }
     }
 
     private suspend fun acquire(taskId: String): TaskEventStream = registryMutex.withLock {
