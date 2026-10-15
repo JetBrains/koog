@@ -32,11 +32,12 @@ public class Session internal constructor(
      * events published by a concurrent cancellation), plus the agent's [ai.koog.a2a.model.Message] reply, if any.
      *
      * The flow completes after the last event of the turn, i.e. when the turn ends or the task reaches a terminal
-     * state, whichever comes first. If the collector is too slow to keep up, the flow fails with
-     * [ai.koog.a2a.exceptions.A2AInternalErrorException]; see [SessionManager] for the buffer policy.
+     * state, whichever comes first.
      *
-     * The flow is backed by a buffer that was registered before the agent started, so no event of the turn is lost,
-     * but it can be collected **only once**.
+     * Delivery is back-pressured: the agent's event publishing waits until this flow's collector has accepted each
+     * event, so the flow must be collected (and collection cancelled when the consumer goes away), see
+     * [SessionManager]. It was registered before the agent started, so no event of the turn is lost, but it can be
+     * collected **only once**.
      */
     public val events: Flow<Event> = events
 

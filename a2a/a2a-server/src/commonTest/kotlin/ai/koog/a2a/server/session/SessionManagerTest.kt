@@ -20,13 +20,19 @@ import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -94,10 +100,23 @@ class SessionManagerTest {
         taskId: String,
         contextId: String,
         state: TaskState,
+        text: String? = null,
     ) = TaskStatusUpdateEvent(
         taskId = taskId,
         contextId = contextId,
-        status = TaskStatus(state = state, timestamp = Instant.parse("2023-01-01T10:00:01Z"))
+        status = TaskStatus(
+            state = state,
+            message = text?.let {
+                Message(
+                    messageId = "agent-$it",
+                    role = Role.ROLE_AGENT,
+                    parts = listOf(TextPart(it)),
+                    contextId = contextId,
+                    taskId = taskId,
+                )
+            },
+            timestamp = Instant.parse("2023-01-01T10:00:01Z")
+        )
     )
 
     private fun createContext(
@@ -119,11 +138,37 @@ class SessionManagerTest {
     private fun TestScope.agentScope(): CoroutineScope =
         CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
 
+    private object FixedMessageIdGenerator : IdGenerator {
+        const val MESSAGE_ID = "generated-message-id"
+
+        override suspend fun generateContextId(message: Message): String = error("Not expected")
+        override suspend fun generateTaskId(message: Message): String = error("Not expected")
+        override suspend fun generateMessageId(taskId: String, contextId: String): String = MESSAGE_ID
+    }
+
     private fun TestScope.createManager() = SessionManager(
         coroutineScope = agentScope(),
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
+        idGenerator = FixedMessageIdGenerator,
+    )
+
+    /**
+     * The events of a turn are delivered with back-pressure, so the requester's view must be consumed for the agent
+     * to make progress.
+     */
+    private fun TestScope.drain(session: Session): Deferred<List<Event>> = async { session.events.toList() }
+
+    private fun failedStatus() = TaskStatus(
+        state = TaskState.TASK_STATE_FAILED,
+        message = Message(
+            messageId = FixedMessageIdGenerator.MESSAGE_ID,
+            role = Role.ROLE_AGENT,
+            parts = listOf(TextPart("Task failed due to an internal error")),
+            contextId = contextId,
+            taskId = taskId,
+        ),
     )
 
     @Test
@@ -205,6 +250,8 @@ class SessionManagerTest {
 
         val session1 = sessionManager.startTurn(createContext("task-1", "context-1"), turn("task-1", "context-1"))
         val session2 = sessionManager.startTurn(createContext("task-2", "context-2"), turn("task-2", "context-2"))
+        drain(session1)
+        drain(session2)
 
         assertSame(session1, sessionManager.getSession("task-1"))
         assertSame(session2, sessionManager.getSession("task-2"))
@@ -234,12 +281,10 @@ class SessionManagerTest {
         session.join()
 
         val stored = assertNotNull(taskStorage.get(taskId))
-        assertEquals(TaskState.TASK_STATE_FAILED, stored.status.state)
+        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus().copy(timestamp = stored.status.timestamp))
         assertNotNull(stored.status.timestamp)
-        assertEquals(
-            listOf(task, TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = stored.status)),
-            events
-        )
+        assertEquals(failedEvent.status, stored.status)
+        assertEquals(listOf(task, failedEvent), events)
     }
 
     @Test
@@ -283,12 +328,12 @@ class SessionManagerTest {
         sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
             processor.sendTaskEvent(working)
             processor.sendTaskEvent(inputRequiredAgain)
-        }.join()
+        }.also { drain(it) }.join()
 
         val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
         sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
             processor.sendTaskEvent(completed)
-        }.join()
+        }.also { drain(it) }.join()
 
         subscriber.join()
 
@@ -352,6 +397,7 @@ class SessionManagerTest {
             taskSent.complete(Unit)
             CompletableDeferred<Unit>().await() // runs until cancelled
         }
+        val events = drain(session)
         taskSent.await()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
@@ -364,7 +410,7 @@ class SessionManagerTest {
         }
 
         // The requester of the turn receives the events published by the cancellation.
-        assertEquals(listOf(task, canceled), session.events.toList())
+        assertEquals(listOf(task, canceled), events.await())
         session.join()
         assertEquals(0, sessionManager.activeSessions())
     }
@@ -387,12 +433,151 @@ class SessionManagerTest {
         sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
             processor.sendTaskEvent(task)
             processor.sendTaskEvent(completed)
-        }.join()
+        }.also { drain(it) }.join()
 
         // Let the push notifications be sent after the turn.
         advanceUntilIdle()
 
         // Verify push notification was sent with the current task state
         assertEquals(listOf<Pair<TaskPushNotificationConfig, Event>>(config to task.copy(status = completed.status)), pushSender.sentNotifications)
+    }
+
+    /**
+     * Starts the SubscribeToTask flow in a new coroutine. [onEvent] is called for every received event.
+     */
+    private fun TestScope.subscribeWith(
+        sessionManager: SessionManager,
+        onEvent: suspend (Event) -> Unit,
+    ): Job = launch {
+        sessionManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect { onEvent(it) }
+    }
+
+    @Test
+    fun testSendTaskEventSuspendsUntilSubscriberConsumes() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val gate = CompletableDeferred<Unit>()
+        val received = mutableListOf<Event>()
+        val subscriber = subscribeWith(sessionManager) {
+            received += it
+            if (received.size == 1) gate.await() // holds the snapshot until released
+        }
+        runCurrent()
+
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
+        val sent = mutableListOf<Event>()
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(working)
+            sent += working
+            processor.sendTaskEvent(completed)
+            sent += completed
+        }
+        val requesterEvents = drain(session)
+        runCurrent()
+
+        // The first event is persisted, but the agent is stuck until the subscriber consumes it.
+        assertEquals(emptyList(), sent)
+        assertEquals(inputRequired.copy(status = working.status), taskStorage.get(taskId))
+
+        gate.complete(Unit)
+        session.join()
+        subscriber.join()
+
+        assertEquals(listOf<Event>(working, completed), sent)
+        assertEquals(listOf<Event>(inputRequired, working, completed), received)
+        assertEquals(listOf<Event>(working, completed), requesterEvents.await())
+    }
+
+    @Test
+    fun testSlowSubscriberReceivesEveryEventInOrder() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val received = mutableListOf<Event>()
+        val subscriber = subscribeWith(sessionManager) {
+            received += it
+            delay(1_000) // much slower than the agent
+        }
+        runCurrent()
+
+        val updates = (0 until 200).map { statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING, "step-$it") }
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
+        // The agent doesn't suspend between events on its own; only back-pressure paces it.
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            updates.forEach { processor.sendTaskEvent(it) }
+            processor.sendTaskEvent(completed)
+        }
+        val requesterEvents = drain(session)
+        session.join()
+        subscriber.join()
+
+        assertEquals(listOf<Event>(inputRequired) + updates + completed, received)
+        assertEquals(updates + completed, requesterEvents.await())
+    }
+
+    @Test
+    fun testCancellingStuckSubscriberUnblocksAgentAndOtherListeners() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val stuckReceived = mutableListOf<Event>()
+        val stuck = subscribeWith(sessionManager) {
+            stuckReceived += it
+            CompletableDeferred<Unit>().await() // never consumes anything more
+        }
+        val activeReceived = mutableListOf<Event>()
+        val active = subscribeWith(sessionManager) { activeReceived += it }
+        runCurrent()
+
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(working)
+            processor.sendTaskEvent(completed)
+        }
+        val requesterEvents = drain(session)
+        runCurrent()
+
+        // The stuck collector, which holds the snapshot, blocks the agent and everybody else.
+        assertEquals(listOf<Event>(inputRequired), stuckReceived)
+        assertEquals(listOf<Event>(inputRequired), activeReceived)
+        assertEquals(1, sessionManager.activeSessions())
+
+        stuck.cancelAndJoin()
+        session.join()
+        active.join()
+
+        assertEquals(listOf<Event>(inputRequired, working, completed), activeReceived)
+        assertEquals(listOf<Event>(working, completed), requesterEvents.await())
+        assertEquals(0, sessionManager.activeSessions())
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testCancellingRequesterViewUnblocksAgent() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val gate = CompletableDeferred<Unit>()
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val completed = statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED)
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_WORKING))
+            gate.await()
+            processor.sendTaskEvent(working)
+            processor.sendTaskEvent(completed)
+        }
+        // The requester goes away after the first event (e.g. returnImmediately, or the client disconnects).
+        val firstEvent = session.events.first()
+        gate.complete(Unit)
+        session.join()
+
+        assertEquals(createTask(taskId, contextId, TaskState.TASK_STATE_WORKING), firstEvent)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskId)?.status?.state)
+        assertEquals(0, sessionManager.activeStreams())
     }
 }

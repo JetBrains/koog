@@ -1,6 +1,5 @@
 package ai.koog.a2a.server.session
 
-import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Event
@@ -46,17 +45,24 @@ import kotlinx.coroutines.withContext
  * - **Turn serialization** is the caller's responsibility: [startTurn] fails if a turn for the same task is already
  *   running, so callers must serialize turns per task, e.g. by holding a per-task lock while waiting for
  *   [getSession]`(taskId)?.`[join][Session.join] and calling [startTurn], as [ai.koog.a2a.server.A2AServer] does.
- * - The **stream lock** is internal: each task stream persists an event, delivers it to the subscribers' buffers, and
+ * - The **stream lock** is internal: each task stream persists an event, delivers it to every stream of the task, and
  *   updates its subscriber set under one per-task lock. This is what makes all streams of a task observe the same
- *   events in the same order, and makes [subscribe]'s snapshot and registration atomic. It is held only for the
- *   duration of a storage write and a non-suspending fan-out, never while waiting for a subscriber.
+ *   events in the same order, and makes [subscribe]'s snapshot and registration atomic.
  *
- * ## Slow subscribers
+ * Lock order: [TaskEventStream.processorGate] (turn-end gate), then the registry lock, then the stream lock; a lock
+ * is never acquired while holding one that comes later in this list.
  *
- * Every stream of a task (each [subscribe] flow and each [Session.events]) has its own buffer of
- * [subscriberBufferCapacity] events. If a collector falls so far behind that its buffer is full, it is disconnected:
- * its flow fails with [A2AInternalErrorException] after the events already buffered. The agent and the other streams
- * are not affected. Cancelling a collector does not affect the others either.
+ * ## Back-pressure
+ *
+ * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task, i.e.
+ * the requester's [Session.events], the collector of a blocking SendMessage, and every [subscribe] flow, has accepted
+ * the event. Nothing is buffered or dropped, and no collector is disconnected for being slow. A slow collector
+ * therefore slows the agent and the other collectors of the task, and operations that need the task's stream lock
+ * ([subscribe], [startTurn], turn end, [withTaskProcessor] publishing) wait behind it. [startTurn] and the registry
+ * can wait as well, since the stream lock is acquired while holding the registry lock.
+ *
+ * A collector that is cancelled (e.g. the client went away) stops being a delivery target immediately: the delivery
+ * that is waiting for it fails, the collector is dropped, and the agent and the other collectors go on.
  *
  * ## Push notifications
  *
@@ -67,32 +73,18 @@ import kotlinx.coroutines.withContext
  * @param taskStorage The storage for tasks.
  * @param pushConfigStorage The storage for push notification configurations.
  * @param pushSender The push notification sender.
- * @param subscriberBufferCapacity The number of events buffered for each stream of a task before a collector that
- * doesn't keep up is disconnected. Must be positive. Defaults to [DEFAULT_SUBSCRIBER_BUFFER_CAPACITY].
+ * @param idGenerator The generator of ids of messages created by the server, e.g. the status message of a task marked
+ * as failed. Defaults to [UuidIdGenerator].
  */
 public class SessionManager(
     private val coroutineScope: CoroutineScope,
     private val taskStorage: TaskStorage,
     private val pushConfigStorage: PushNotificationConfigStorage? = null,
     private val pushSender: PushNotificationSender? = null,
-    private val subscriberBufferCapacity: Int = DEFAULT_SUBSCRIBER_BUFFER_CAPACITY,
+    private val idGenerator: IdGenerator = UuidIdGenerator,
 ) {
-    /**
-     * Default values of [SessionManager].
-     */
-    public companion object {
+    private companion object {
         private val logger = KotlinLogging.logger {}
-
-        /**
-         * Default value of the `subscriberBufferCapacity` parameter of [SessionManager].
-         */
-        public const val DEFAULT_SUBSCRIBER_BUFFER_CAPACITY: Int = 64
-    }
-
-    init {
-        require(subscriberBufferCapacity > 0) {
-            "subscriberBufferCapacity must be positive, but was $subscriberBufferCapacity"
-        }
     }
 
     private class StreamEntry(val stream: TaskEventStream) {
@@ -104,7 +96,9 @@ public class SessionManager(
 
     /**
      * Guards [streams], [sessions], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate],
-     * and [TaskEventStream]'s stream lock may be acquired while holding it, never the other way around.
+     * and [TaskEventStream]'s stream lock may be acquired while holding it, never the other way around. Since the
+     * stream lock can be held for a long time by a fan-out waiting for a slow collector, nothing but registration of a
+     * turn view ([startTurn]) acquires it under this lock.
      */
     private val registryMutex = Mutex()
     private val streams = mutableMapOf<String, StreamEntry>()
@@ -254,8 +248,6 @@ public class SessionManager(
      * @return A cold flow; each collection is a separate subscription.
      * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller).
      * @throws A2AUnsupportedOperationException if the task is already in a terminal state.
-     * @throws A2AInternalErrorException (during collection) if the collector doesn't keep up with the events, see
-     * [SessionManager].
      */
     public fun subscribe(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> = flow {
         val stream = acquire(request.id)
@@ -272,9 +264,8 @@ public class SessionManager(
                     emit(event)
                 }
             } finally {
-                withContext(NonCancellable) {
-                    stream.unsubscribe(channel)
-                }
+                // Cancels the channel without the stream lock, so a delivery waiting for this collector fails.
+                stream.unsubscribe(channel)
             }
         } finally {
             release(stream)
@@ -349,7 +340,7 @@ public class SessionManager(
 
     private fun acquireLocked(taskId: String): TaskEventStream {
         val entry = streams.getOrPut(taskId) {
-            StreamEntry(TaskEventStream(taskId, taskStorage, subscriberBufferCapacity))
+            StreamEntry(TaskEventStream(taskId, taskStorage, idGenerator))
         }
         entry.holders++
 

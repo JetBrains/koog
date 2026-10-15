@@ -347,15 +347,15 @@ public open class A2AServer(
     protected fun cancelKey(taskId: String): String = "cancel:$taskId"
 
     /**
-     * Manages turns ([ai.koog.a2a.server.session.Session]s) and per-task event streams. Override to customize it,
-     * e.g. to change [SessionManager]'s subscriber buffer capacity. The instance must use the same [taskStorage] and
-     * [coroutineScope] as this server.
+     * Manages turns ([ai.koog.a2a.server.session.Session]s) and per-task event streams. Override to customize it.
+     * The instance must use the same [taskStorage] and [coroutineScope] as this server.
      */
     protected open val sessionManager: SessionManager = SessionManager(
         coroutineScope = coroutineScope,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
+        idGenerator = idGenerator,
     )
 
     override suspend fun onGetExtendedAgentCard(

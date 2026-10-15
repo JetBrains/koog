@@ -6,7 +6,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * Interface for generating unique IDs for new contexts, tasks and push notification configs.
+ * Interface for generating unique IDs for new contexts, tasks, push notification configs and server-created messages.
  *
  * Called by the server to provide unique IDs when messages lack contextId or taskId,
  * preventing race conditions during concurrent agent execution. These generated IDs
@@ -41,6 +41,21 @@ public interface IdGenerator {
      */
     @OptIn(ExperimentalUuidApi::class)
     public suspend fun generatePushNotificationConfigId(config: TaskPushNotificationConfig): String =
+        Uuid.random().toString()
+
+    /**
+     * Generates a unique message ID for a message created by the server itself, e.g. the status message of a task the
+     * server marks as failed because the agent crashed.
+     *
+     * Has a default implementation returning a random UUID, so existing [IdGenerator] implementations
+     * keep working.
+     *
+     * @param taskId The id of the task the message belongs to.
+     * @param contextId The id of the context the message belongs to.
+     * @return A unique string representing the message ID.
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    public suspend fun generateMessageId(taskId: String, contextId: String): String =
         Uuid.random().toString()
 }
 

@@ -1,6 +1,5 @@
 package ai.koog.a2a.server
 
-import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCapabilities
@@ -25,7 +24,6 @@ import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.session.IdGenerator
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
-import ai.koog.a2a.server.session.SessionManager
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
@@ -38,11 +36,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
@@ -61,6 +59,7 @@ class A2AServerSubscribeTest {
     private companion object {
         private const val TASK_ID = "task-1"
         private const val CONTEXT_ID = "context-1"
+        private const val FAILURE_MESSAGE_ID = "failure-message-id"
         private val TIMESTAMP = Instant.parse("2025-01-01T10:00:00Z")
         private val TEST_TIMEOUT = 30.seconds
     }
@@ -91,6 +90,7 @@ class A2AServerSubscribeTest {
     private object FixedIdGenerator : IdGenerator {
         override suspend fun generateContextId(message: Message): String = CONTEXT_ID
         override suspend fun generateTaskId(message: Message): String = TASK_ID
+        override suspend fun generateMessageId(taskId: String, contextId: String): String = FAILURE_MESSAGE_ID
     }
 
     private val agentCard = AgentCard(
@@ -118,21 +118,14 @@ class A2AServerSubscribeTest {
 
     private fun TestScope.createServer(
         scripts: Map<String, Script>,
-        bufferCapacity: Int = SessionManager.DEFAULT_SUBSCRIBER_BUFFER_CAPACITY,
         scope: CoroutineScope = agentScope(),
-    ): A2AServer = object : A2AServer(
+    ): A2AServer = A2AServer(
         agentExecutor = ScriptedAgentExecutor(scripts),
         agentCard = agentCard,
         taskStorage = taskStorage,
         idGenerator = FixedIdGenerator,
         coroutineScope = scope,
-    ) {
-        override val sessionManager: SessionManager = SessionManager(
-            coroutineScope = coroutineScope,
-            taskStorage = taskStorage,
-            subscriberBufferCapacity = bufferCapacity,
-        )
-    }
+    )
 
     private fun userMessage(text: String, taskId: String? = null) = Message(
         messageId = "user-$text",
@@ -332,8 +325,7 @@ class A2AServerSubscribeTest {
             }
 
             try {
-                // Large buffer: this test is about snapshot consistency, not about slow subscribers.
-                val server = createServer(mapOf("rapid" to rapidScript), bufferCapacity = 100_000, scope = serverScope)
+                val server = createServer(mapOf("rapid" to rapidScript), scope = serverScope)
 
                 server.onSendMessage(request("rapid", returnImmediately = true), ctx)
                 taskCreated.await()
@@ -382,67 +374,90 @@ class A2AServerSubscribeTest {
         subscription.job.join()
 
         val failed = assertNotNull(taskStorage.get(TASK_ID))
-        assertEquals(TaskState.TASK_STATE_FAILED, failed.status.state)
         assertNotNull(failed.status.timestamp)
+
+        // The message is generic: it doesn't expose the exception.
+        val failedStatus = TaskStatus(
+            state = TaskState.TASK_STATE_FAILED,
+            message = Message(
+                messageId = FAILURE_MESSAGE_ID,
+                role = Role.ROLE_AGENT,
+                parts = listOf(TextPart("Task failed due to an internal error")),
+                contextId = CONTEXT_ID,
+                taskId = TASK_ID,
+            ),
+            timestamp = failed.status.timestamp,
+        )
+        assertEquals(failedStatus, failed.status)
         assertEquals(
             listOf<Event>(
                 stored,
                 status(TaskState.TASK_STATE_WORKING),
-                TaskStatusUpdateEvent(taskId = TASK_ID, contextId = CONTEXT_ID, status = failed.status),
+                TaskStatusUpdateEvent(taskId = TASK_ID, contextId = CONTEXT_ID, status = failedStatus),
             ),
             subscription.events
         )
     }
 
     @Test
-    fun testSlowSubscriberIsEvictedOthersFinish() = runTest(timeout = TEST_TIMEOUT) {
-        val bufferCapacity = 2
-        val updates = List(bufferCapacity * 3) { status(TaskState.TASK_STATE_WORKING, "step-$it") }
+    fun testSlowSubscriberDelaysAgentButReceivesEveryEventInOrder() = runTest(timeout = TEST_TIMEOUT) {
+        val updates = List(20) { status(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val completed = status(TaskState.TASK_STATE_COMPLETED)
 
-        // Number of events the fast subscriber has received.
-        val fastReceived = MutableStateFlow(0)
-
-        // Emits one event at a time, waiting until the fast subscriber has received it.
+        val agentProgress = MutableStateFlow(0)
         val manyScript = Script { _, processor ->
-            updates.forEachIndexed { i, update ->
-                processor.sendTaskEvent(update)
-                fastReceived.first { it >= i + 2 } // the snapshot + updates so far
+            updates.forEach {
+                processor.sendTaskEvent(it)
+                agentProgress.value++
             }
-            processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
+            processor.sendTaskEvent(completed)
         }
-        val server = createServer(mapOf("start" to startScript, "many" to manyScript), bufferCapacity = bufferCapacity)
+        val server = createServer(mapOf("start" to startScript, "many" to manyScript))
         server.onSendMessage(request("start"), ctx)
         val stored = assertNotNull(taskStorage.get(TASK_ID))
 
         val releaseSlow = CompletableDeferred<Unit>()
-        val slowEvents = mutableListOf<Event>()
-        val slowSubscribed = CompletableDeferred<Unit>()
-        val slowFailure = async {
-            runCatching {
-                server.onSubscribeToTask(SubscribeToTaskRequest(TASK_ID), ctx).collect {
-                    slowEvents += it
-                    slowSubscribed.complete(Unit)
-                    // Stops consuming after the first event until released.
-                    releaseSlow.await()
-                }
-            }.exceptionOrNull()
-        }
-        val fast = subscribe(server) { fastReceived.value++ }
-        slowSubscribed.await()
+        val slow = subscribe(server) { if (it == updates[2]) releaseSlow.await() }
+        val fast = subscribe(server)
+        slow.firstEvent.await()
         fast.firstEvent.await()
 
-        // The agent and the requester are not blocked by the slow subscriber.
-        val response = server.onSendMessage(request("many", TASK_ID), ctx)
-        fast.job.join()
+        val response = async { server.onSendMessage(request("many", TASK_ID), ctx) }
+        runCurrent()
+
+        // The slow subscriber is still processing the third update: the agent has sent it, but is held back from
+        // sending the fourth one. Nothing is dropped.
+        assertEquals(3, agentProgress.value)
+        assertEquals(false, response.isCompleted)
 
         releaseSlow.complete(Unit)
+        slow.job.join()
+        fast.job.join()
 
-        val completed = status(TaskState.TASK_STATE_COMPLETED)
-        assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response)
+        assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response.await())
+        assertEquals(listOf<Event>(stored) + updates + completed, slow.events)
         assertEquals(listOf<Event>(stored) + updates + completed, fast.events)
+    }
 
-        // The slow subscriber gets what was buffered before its buffer overflowed, then an error.
-        assertEquals(A2AInternalErrorException::class, assertNotNull(slowFailure.await())::class)
-        assertEquals(listOf<Event>(stored) + updates.take(bufferCapacity), slowEvents)
+    @Test
+    fun testAgentEmittingManyEventsWithoutSuspendingCompletesBlockingSend() = runTest(timeout = TEST_TIMEOUT) {
+        // More events than any reasonable buffer, sent in a tight loop on the single-threaded test dispatcher.
+        val updates = List(500) { status(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val manyScript = Script { _, processor ->
+            updates.forEach { processor.sendTaskEvent(it) }
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
+        }
+        val server = createServer(mapOf("start" to startScript, "many" to manyScript))
+        server.onSendMessage(request("start"), ctx)
+        val stored = assertNotNull(taskStorage.get(TASK_ID))
+
+        val subscription = subscribe(server)
+        subscription.firstEvent.await()
+
+        val response = server.onSendMessage(request("many", TASK_ID), ctx)
+        subscription.job.join()
+
+        assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response)
+        assertEquals(listOf<Event>(stored) + updates + status(TaskState.TASK_STATE_COMPLETED), subscription.events)
     }
 }

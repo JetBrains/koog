@@ -13,14 +13,18 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.toList
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -38,7 +42,7 @@ class SessionEventProcessorTest {
     @BeforeTest
     fun setUp() {
         taskStorage = InMemoryTaskStorage()
-        stream = TaskEventStream(taskId, taskStorage, bufferCapacity = 64)
+        stream = TaskEventStream(taskId, taskStorage, UuidIdGenerator)
     }
 
     private fun createMessage(
@@ -76,11 +80,17 @@ class SessionEventProcessorTest {
     )
 
     /**
+     * Starts collecting all events of [channel]. Delivery is back-pressured, so every view must be consumed while
+     * events are sent.
+     */
+    private fun TestScope.collect(channel: ReceiveChannel<Event>): Deferred<List<Event>> = async { channel.toList() }
+
+    /**
      * Ends the turn and returns all events its view received.
      */
-    private suspend fun ReceiveChannel<Event>.endTurnAndCollect(): List<Event> {
+    private suspend fun Deferred<List<Event>>.endTurnAndCollect(): List<Event> {
         stream.endTurn(turnId, contextId, failure = null)
-        return toList()
+        return await()
     }
 
     @Test
@@ -131,7 +141,7 @@ class SessionEventProcessorTest {
         val task = createTask(taskId, contextId)
 
         // Register the turn view before sending
-        val turnView = stream.openTurnView(turnId)
+        val turnView = collect(stream.openTurnView(turnId))
 
         processor.sendTaskEvent(task)
 
@@ -294,17 +304,17 @@ class SessionEventProcessorTest {
         val processor = createProcessor(contextId, taskId)
         val message = createMessage("msg-1", contextId, "Hello")
 
-        val turnView = stream.openTurnView(turnId)
-        val otherTurnView = stream.openTurnView(turnId + 1)
+        val turnView = collect(stream.openTurnView(turnId))
+        val otherTurnView = collect(stream.openTurnView(turnId + 1))
         val (_, taskSubscriber) = stream.subscribe { taskStorage.get(taskId) }
 
         processor.sendMessage(message)
         stream.endTurn(turnId + 1, contextId, failure = null)
-        stream.unsubscribe(taskSubscriber)
 
         assertEquals(listOf(message), turnView.endTurnAndCollect(), "Own turn view should receive the message")
-        assertEquals(emptyList(), otherTurnView.toList(), "Other turn view should not receive the message")
-        assertEquals(emptyList(), taskSubscriber.toList(), "Task subscriber should not receive the message")
+        assertEquals(emptyList(), otherTurnView.await(), "Other turn view should not receive the message")
+        // Delivery would have suspended on the rendezvous channel, so there is nothing pending for the subscriber.
+        assertTrue(taskSubscriber.tryReceive().isFailure, "Task subscriber should not receive the message")
     }
 
     @Test
@@ -314,7 +324,7 @@ class SessionEventProcessorTest {
             val message1 = createMessage("msg-1", contextId, "Hello")
             val message2 = createMessage("msg-2", contextId, "World")
 
-            val turnView = stream.openTurnView(turnId)
+            val turnView = collect(stream.openTurnView(turnId))
 
             // Send first message
             processor.sendMessage(message1)
@@ -334,7 +344,7 @@ class SessionEventProcessorTest {
     fun concurrent_task_testClosedProcessorSendTaskEventFailsAndEventStreamIsEmpty() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
         val task = createTask(taskId, contextId)
-        val turnView = stream.openTurnView(turnId)
+        val turnView = collect(stream.openTurnView(turnId))
 
         // Send first task event
         processor.sendTaskEvent(task)
