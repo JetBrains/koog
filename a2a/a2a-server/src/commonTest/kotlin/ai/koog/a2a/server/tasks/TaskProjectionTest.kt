@@ -26,39 +26,20 @@ class TaskProjectionTest {
     )
 
     @Test
-    fun testNullHistoryLengthKeepsWholeHistory() {
-        assertEquals(task, task.project(historyLength = null, includeArtifacts = true))
-    }
-
-    @Test
-    fun testZeroHistoryLengthOmitsHistory() {
-        assertEquals(task.copy(history = null), task.project(historyLength = 0, includeArtifacts = true))
-    }
-
-    @Test
-    fun testPositiveHistoryLengthKeepsMostRecentMessages() {
-        assertEquals(
-            task.copy(history = messages.takeLast(2)),
-            task.project(historyLength = 2, includeArtifacts = true)
-        )
+    fun testHistoryLengthKeepsMostRecentMessages() {
+        // Nothing to cut: the same instance comes back.
+        assertSame(task, task.project(historyLength = null, includeArtifacts = true))
         assertEquals(task, task.project(historyLength = 100, includeArtifacts = true))
-    }
+        assertEquals(task.copy(history = null), task.project(historyLength = 0, includeArtifacts = true))
+        assertEquals(task.copy(history = messages.takeLast(2)), task.project(historyLength = 2, includeArtifacts = true))
 
-    @Test
-    fun testMissingHistoryStaysMissing() {
         val withoutHistory = task.copy(history = null)
-
         assertEquals(withoutHistory, withoutHistory.project(historyLength = 3, includeArtifacts = true))
     }
 
     @Test
     fun testExcludedArtifactsAreOmitted() {
         assertEquals(task.copy(artifacts = null), task.project(historyLength = null, includeArtifacts = false))
-    }
-
-    @Test
-    fun testUnchangedProjectionReturnsSameInstance() {
-        assertSame(task, task.project(historyLength = null, includeArtifacts = true))
     }
 
     @Test

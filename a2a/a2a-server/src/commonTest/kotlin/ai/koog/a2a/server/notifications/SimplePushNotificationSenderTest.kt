@@ -25,7 +25,6 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -100,53 +99,33 @@ class SimplePushNotificationSenderTest {
     }
 
     @Test
-    fun testAuthorizationHeaderIsSchemeAndCredentials() = runTest {
+    fun testAuthorizationAndNotificationTokenHeaders() = runTest {
         val recorder = Recorder()
-
-        senderWith(recorder).send(
-            config.copy(authentication = AuthenticationInfo(scheme = "Bearer", credentials = "secret")),
-            task
+        val withAuthAndToken = config.copy(
+            authentication = AuthenticationInfo(scheme = "Bearer", credentials = "secret"),
+            token = "push-token",
         )
+        val withoutCredentials = config.copy(authentication = AuthenticationInfo(scheme = "Bearer"))
 
-        assertEquals("Bearer secret", recorder.requests.single().headers[HttpHeaders.Authorization])
+        senderWith(recorder).send(withAuthAndToken, task)
+        senderWith(recorder).send(withoutCredentials, task)
+
+        val (withHeaders, withoutHeaders) = recorder.requests.map {
+            it.headers[HttpHeaders.Authorization] to it.headers[A2AHeaders.X_A2A_NOTIFICATION_TOKEN]
+        }
+        assertEquals("Bearer secret" to "push-token", withHeaders)
+        assertEquals(null to null, withoutHeaders)
     }
 
     @Test
-    fun testNoAuthorizationHeaderWithoutCredentials() = runTest {
-        val recorder = Recorder()
-
-        senderWith(recorder).send(config.copy(authentication = AuthenticationInfo(scheme = "Bearer")), task)
-
-        assertNull(recorder.requests.single().headers[HttpHeaders.Authorization])
-    }
-
-    @Test
-    fun testNotificationTokenHeaderIsSentWhenConfigured() = runTest {
-        val recorder = Recorder()
-
-        senderWith(recorder).send(config.copy(token = "push-token"), task)
-        senderWith(recorder).send(config, task)
-
-        assertEquals("push-token", recorder.requests[0].headers[A2AHeaders.X_A2A_NOTIFICATION_TOKEN])
-        assertNull(recorder.requests[1].headers[A2AHeaders.X_A2A_NOTIFICATION_TOKEN])
-    }
-
-    @Test
-    fun testHttpErrorIsSwallowed() = runTest {
+    fun testDeliveryFailuresAreSwallowed() = runTest {
         val recorder = Recorder()
 
         senderWith(recorder, status = HttpStatusCode.InternalServerError).send(config, task)
+        SimplePushNotificationSender(HttpClient(MockEngine { throw IllegalStateException("connection refused") }))
+            .send(config, task)
 
         assertEquals(1, recorder.requests.size)
-    }
-
-    @Test
-    fun testConnectionFailureIsSwallowed() = runTest {
-        val sender = SimplePushNotificationSender(
-            HttpClient(MockEngine { throw IllegalStateException("connection refused") })
-        )
-
-        sender.send(config, task)
     }
 
     @Test

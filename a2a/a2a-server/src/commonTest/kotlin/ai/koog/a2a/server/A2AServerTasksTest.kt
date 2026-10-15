@@ -2,25 +2,17 @@ package ai.koog.a2a.server
 
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
-import ai.koog.a2a.model.AgentCapabilities
-import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.model.TransportProtocol
-import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
-import ai.koog.a2a.server.turn.RequestContext
-import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -54,28 +46,8 @@ class A2AServerTasksTest {
         storage = InMemoryTaskStorage()
         storage.update(task)
         server = A2AServer(
-            agentExecutor = object : AgentExecutor {
-                override suspend fun execute(
-                    context: RequestContext<SendMessageRequest>,
-                    eventProcessor: TurnEventProcessor
-                ) = error("Not expected to be called")
-            },
-            agentCard = AgentCard(
-                name = "Test agent",
-                description = "Test agent",
-                supportedInterfaces = listOf(
-                    AgentInterface(
-                        url = "http://localhost/",
-                        protocolBinding = TransportProtocol.JSONRPC,
-                        protocolVersion = "1.0"
-                    )
-                ),
-                version = "1.0.0",
-                defaultInputModes = listOf("text"),
-                defaultOutputModes = listOf("text"),
-                skills = emptyList(),
-                capabilities = AgentCapabilities(),
-            ),
+            agentExecutor = UnusedAgentExecutor,
+            agentCard = testAgentCard(),
             taskStorage = storage,
         )
     }
@@ -98,14 +70,10 @@ class A2AServerTasksTest {
     }
 
     @Test
-    fun testGetUnknownTaskIsTaskNotFound() = runTest {
+    fun testGetTaskRejectsUnknownTaskAndNegativeHistoryLength() = runTest {
         assertFailsWith<A2ATaskNotFoundException> {
             server.onGetTask(GetTaskRequest(id = "unknown"), ctx)
         }
-    }
-
-    @Test
-    fun testGetTaskNegativeHistoryLengthIsInvalidParams() = runTest {
         assertFailsWith<A2AInvalidParamsException> {
             server.onGetTask(GetTaskRequest(id = "task-1", historyLength = -1), ctx)
         }
@@ -125,22 +93,18 @@ class A2AServerTasksTest {
     }
 
     @Test
-    fun testListTasksPageSizeBoundsAreValidated() = runTest {
+    fun testListTasksValidatesPageSizeBoundsAndHistoryLength() = runTest {
         listOf(0, -1, 101).forEach { pageSize ->
             assertFailsWith<A2AInvalidParamsException>("pageSize=$pageSize") {
                 server.onListTasks(ListTasksRequest(pageSize = pageSize), ctx)
             }
         }
+        assertFailsWith<A2AInvalidParamsException> {
+            server.onListTasks(ListTasksRequest(historyLength = -1), ctx)
+        }
 
         listOf(1, 100).forEach { pageSize ->
             assertEquals(pageSize, server.onListTasks(ListTasksRequest(pageSize = pageSize), ctx).pageSize)
-        }
-    }
-
-    @Test
-    fun testListTasksNegativeHistoryLengthIsInvalidParams() = runTest {
-        assertFailsWith<A2AInvalidParamsException> {
-            server.onListTasks(ListTasksRequest(historyLength = -1), ctx)
         }
     }
 }

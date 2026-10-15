@@ -151,14 +151,6 @@ class TurnManagerTest {
     private fun TestScope.agentScope(): CoroutineScope =
         CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
 
-    private object FixedMessageIdGenerator : IdGenerator {
-        const val MESSAGE_ID = "generated-message-id"
-
-        override suspend fun generateContextId(message: Message): String = error("Not expected")
-        override suspend fun generateTaskId(message: Message): String = error("Not expected")
-        override suspend fun generateMessageId(taskId: String, contextId: String): String = MESSAGE_ID
-    }
-
     private fun TestScope.createManager() = TurnManager(
         coroutineScope = agentScope(),
         taskStorage = taskStorage,
@@ -173,29 +165,18 @@ class TurnManagerTest {
      */
     private fun TestScope.drain(turn: Turn): Deferred<List<Event>> = async { turn.events.toList() }
 
-    private fun failedStatus() = TaskStatus(
-        state = TaskState.TASK_STATE_FAILED,
-        message = Message(
-            messageId = FixedMessageIdGenerator.MESSAGE_ID,
-            role = Role.ROLE_AGENT,
-            parts = listOf(TextPart("Task failed due to an internal error")),
-            contextId = contextId,
-            taskId = taskId,
-        ),
-    )
-
-    @Test
-    fun testTurnManagerCreation() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-
-        assertEquals(0, turnManager.activeTurns())
-        assertNull(turnManager.getTurn("any-task-id"))
-    }
+    private suspend fun storeTask(
+        taskId: String = this.taskId,
+        contextId: String = this.contextId,
+        state: TaskState = TaskState.TASK_STATE_INPUT_REQUIRED,
+    ): Task = createTask(taskId, contextId, state).also { taskStorage.update(it) }
 
     @Test
     fun testMessageTurn() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
         val message = createMessage("msg-1", contextId, "Hello")
+        assertEquals(0, turnManager.activeTurns())
+        assertNull(turnManager.getTurn("any-task-id"))
 
         val turn = turnManager.startTurn(createContext(taskId, contextId)) { processor ->
             processor.sendMessage(message)
@@ -294,9 +275,10 @@ class TurnManagerTest {
         turn.join()
 
         val stored = assertNotNull(taskStorage.get(taskId))
-        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus().copy(timestamp = stored.status.timestamp))
         assertNotNull(stored.status.timestamp)
-        assertEquals(failedEvent.status, stored.status)
+        val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
+        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
+        assertEquals(failedStatus, stored.status)
         assertEquals(listOf(task.withUserMessage(), failedEvent), events)
     }
 
@@ -319,18 +301,11 @@ class TurnManagerTest {
     @Test
     fun testSubscribeFollowsTaskAcrossTurns() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
+        val inputRequired = storeTask()
 
         val received = mutableListOf<Event>()
-        val snapshotReceived = CompletableDeferred<Unit>()
-        val subscriber = launch {
-            turnManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
-                received += it
-                snapshotReceived.complete(Unit)
-            }
-        }
-        snapshotReceived.await()
+        val subscriber = subscribeWith(turnManager) { received += it }
+        runCurrent()
 
         // No turn is running, the subscriber alone keeps the stream.
         assertEquals(0, turnManager.activeTurns())
@@ -357,15 +332,10 @@ class TurnManagerTest {
     @Test
     fun testCancelledSubscriberReleasesStream() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
+        storeTask()
 
-        val snapshotReceived = CompletableDeferred<Unit>()
-        val subscriber = launch {
-            turnManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
-                snapshotReceived.complete(Unit)
-            }
-        }
-        snapshotReceived.await()
+        val subscriber = subscribeWith(turnManager) {}
+        runCurrent()
         assertEquals(1, turnManager.activeStreams())
 
         subscriber.cancelAndJoin()
@@ -376,18 +346,11 @@ class TurnManagerTest {
     @Test
     fun testWithTaskProcessorOnIdleTaskReachesSubscribers() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
+        val inputRequired = storeTask()
 
         val received = mutableListOf<Event>()
-        val snapshotReceived = CompletableDeferred<Unit>()
-        val subscriber = launch {
-            turnManager.subscribe(SubscribeToTaskRequest(taskId), callContext).collect {
-                received += it
-                snapshotReceived.complete(Unit)
-            }
-        }
-        snapshotReceived.await()
+        val subscriber = subscribeWith(turnManager) { received += it }
+        runCurrent()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
         turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob ->
@@ -402,8 +365,7 @@ class TurnManagerTest {
     @Test
     fun testStandaloneProcessorIsClosedAfterWithTaskProcessor() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
+        val inputRequired = storeTask()
 
         val leaked = turnManager.withTaskProcessor(taskId, contextId) { processor, _ -> processor }
 
@@ -572,8 +534,7 @@ class TurnManagerTest {
     @Test
     fun testSendTaskEventSuspendsUntilSubscriberConsumes() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
+        val inputRequired = storeTask()
 
         val gate = CompletableDeferred<Unit>()
         val received = mutableListOf<Event>()
@@ -611,8 +572,7 @@ class TurnManagerTest {
     @Test
     fun testSlowSubscriberReceivesEveryEventInOrder() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
+        val inputRequired = storeTask()
 
         val received = mutableListOf<Event>()
         val subscriber = subscribeWith(turnManager) {
@@ -639,8 +599,7 @@ class TurnManagerTest {
     @Test
     fun testCancellingStuckSubscriberUnblocksAgentAndOtherListeners() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
+        val inputRequired = storeTask()
 
         val stuckReceived = mutableListOf<Event>()
         val stuck = subscribeWith(turnManager) {
@@ -727,8 +686,8 @@ class TurnManagerTest {
         val contextA = "context-a"
         val taskB = "task-b"
         val contextB = "context-b"
-        taskStorage.update(createTask(taskA, contextA, TaskState.TASK_STATE_INPUT_REQUIRED))
-        taskStorage.update(createTask(taskB, contextB, TaskState.TASK_STATE_INPUT_REQUIRED))
+        storeTask(taskA, contextA)
+        storeTask(taskB, contextB)
 
         val stuck = stickStream(turnManager, taskA, contextA)
 
@@ -788,7 +747,7 @@ class TurnManagerTest {
     @Test
     fun testCancelledStartTurnReleasesReservation() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
-        taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
+        storeTask()
         val stuck = stickStream(turnManager, taskId, contextId)
 
         var agentStarted = false

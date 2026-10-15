@@ -6,7 +6,6 @@ import ai.koog.a2a.exceptions.A2AExtensionSupportRequiredException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentExtension
-import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetExtendedAgentCardRequest
@@ -23,7 +22,6 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.turn.RequestContext
@@ -90,21 +88,13 @@ class A2AServerRequiredExtensionsTest {
         )
     }
 
-    private fun agentCard(vararg extensions: AgentExtension) = AgentCard(
-        name = "Test agent",
-        description = "Test agent",
-        supportedInterfaces = listOf(
-            AgentInterface(
-                url = "http://localhost/",
-                protocolBinding = TransportProtocol.JSONRPC,
-                protocolVersion = "1.0"
-            )
-        ),
-        version = "1.0.0",
-        defaultInputModes = listOf("text"),
-        defaultOutputModes = listOf("text"),
-        skills = emptyList(),
-        capabilities = AgentCapabilities(extensions = extensions.toList()),
+    private fun agentCard(vararg extensions: AgentExtension) =
+        testAgentCard(AgentCapabilities(extensions = extensions.toList()))
+
+    private fun serverWithCard(card: AgentCard, extendedCard: AgentCard? = null) = A2AServer(
+        agentExecutor = UnusedAgentExecutor,
+        agentCard = card,
+        agentCardExtended = extendedCard,
     )
 
     private fun operations(): Map<String, suspend (ServerCallContext) -> Unit> = mapOf(
@@ -165,18 +155,11 @@ class A2AServerRequiredExtensionsTest {
 
     @Test
     fun testGetExtendedAgentCardSkipsRequiredExtensionsCheck() = runTest {
-        val extendedCard = agentCard(AgentExtension(uri = REQUIRED, required = true)).copy(name = "Extended agent")
-        val cardServer = A2AServer(
-            agentExecutor = object : AgentExecutor {
-                override suspend fun execute(
-                    context: RequestContext<SendMessageRequest>,
-                    eventProcessor: TurnEventProcessor
-                ) = error("Not expected to be called")
-            },
-            agentCard = agentCard(AgentExtension(uri = REQUIRED, required = true)).let {
-                it.copy(capabilities = it.capabilities.copy(extendedAgentCard = true))
-            },
-            agentCardExtended = extendedCard,
+        val card = agentCard(AgentExtension(uri = REQUIRED, required = true))
+        val extendedCard = card.copy(name = "Extended agent")
+        val cardServer = serverWithCard(
+            card.copy(capabilities = card.capabilities.copy(extendedAgentCard = true)),
+            extendedCard,
         )
 
         assertEquals(extendedCard, cardServer.onGetExtendedAgentCard(GetExtendedAgentCardRequest(), withoutExtensions))
@@ -195,51 +178,28 @@ class A2AServerRequiredExtensionsTest {
             "Required extensions were not requested in ${A2AHeaders.A2A_EXTENSIONS}: $OTHER_REQUIRED",
             e.message
         )
-    }
-
-    @Test
-    fun testAllRequiredExtensionsPresentAllowsRequests() = runTest {
-        val ctx = ctxWith(REQUIRED, OTHER_REQUIRED)
-
-        assertEquals("task-1", server.onGetTask(GetTaskRequest(id = "task-1"), ctx).id)
-        assertEquals(
-            "reply",
-            (server.onSendMessage(SendMessageRequest(message), ctx) as Message).messageId
-        )
-    }
-
-    @Test
-    fun testUnknownRequestedExtensionsAreIgnored() = runTest {
-        val ctx = ctxWith(REQUIRED, OTHER_REQUIRED, "urn:example:unknown")
-
-        assertEquals("task-1", server.onGetTask(GetTaskRequest(id = "task-1"), ctx).id)
-    }
-
-    @Test
-    fun testUnknownExtensionDoesNotSatisfyRequiredOne() = runTest {
+        // An unknown extension doesn't stand in for a required one.
         assertFailsWith<A2AExtensionSupportRequiredException> {
             server.onGetTask(GetTaskRequest(id = "task-1"), ctxWith("urn:example:unknown"))
         }
     }
 
     @Test
-    fun testRequestedExtensionsReachTheExecutor() = runTest {
-        server.onSendMessage(SendMessageRequest(message), ctxWith(REQUIRED, OTHER_REQUIRED, "urn:example:unknown"))
+    fun testAllRequiredExtensionsPresentAllowsRequestsAndUnknownOnesAreIgnored() = runTest {
+        val unknown = "urn:example:unknown"
 
-        assertEquals(listOf(setOf(REQUIRED, OTHER_REQUIRED, "urn:example:unknown")), seenExtensions)
+        listOf(ctxWith(REQUIRED, OTHER_REQUIRED), ctxWith(REQUIRED, OTHER_REQUIRED, unknown)).forEach { ctx ->
+            assertEquals("task-1", server.onGetTask(GetTaskRequest(id = "task-1"), ctx).id)
+            assertEquals("reply", (server.onSendMessage(SendMessageRequest(message), ctx) as Message).messageId)
+        }
+
+        // The executor gets the requested extensions as they are, unknown ones included.
+        assertEquals(listOf(setOf(REQUIRED, OTHER_REQUIRED), setOf(REQUIRED, OTHER_REQUIRED, unknown)), seenExtensions)
     }
 
     @Test
     fun testNoRequiredExtensionsInCardMeansNoCheck() = runTest {
-        val plainServer = A2AServer(
-            agentExecutor = object : AgentExecutor {
-                override suspend fun execute(
-                    context: RequestContext<SendMessageRequest>,
-                    eventProcessor: TurnEventProcessor
-                ) = error("Not expected to be called")
-            },
-            agentCard = agentCard(AgentExtension(uri = OPTIONAL, required = false)),
-        )
+        val plainServer = serverWithCard(agentCard(AgentExtension(uri = OPTIONAL, required = false)))
 
         assertEquals(emptyList(), plainServer.onListTasks(ListTasksRequest(), withoutExtensions).tasks)
     }
@@ -247,12 +207,7 @@ class A2AServerRequiredExtensionsTest {
     @Test
     fun testCheckIsOverridable() = runTest {
         val lenient = object : A2AServer(
-            agentExecutor = object : AgentExecutor {
-                override suspend fun execute(
-                    context: RequestContext<SendMessageRequest>,
-                    eventProcessor: TurnEventProcessor
-                ) = error("Not expected to be called")
-            },
+            agentExecutor = UnusedAgentExecutor,
             agentCard = agentCard(AgentExtension(uri = REQUIRED, required = true)),
         ) {
             override fun checkRequiredExtensions(context: ServerCallContext) = Unit

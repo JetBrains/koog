@@ -107,18 +107,12 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
                 protocolVersion = "1.0",
             )
         ),
-        iconUrl = null,
-        provider = null,
         version = "1.0.0",
-        documentationUrl = null,
         capabilities = AgentCapabilities(
             streaming = true,
             pushNotifications = true,
-            extensions = null,
             extendedAgentCard = true,
         ),
-        securitySchemes = null,
-        securityRequirements = null,
         defaultInputModes = listOf("text"),
         defaultOutputModes = listOf("text"),
         skills = listOf(
@@ -128,60 +122,22 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
                 description = "just returns hello world",
                 tags = listOf("hello world"),
                 examples = listOf("hi", "hello world"),
-                inputModes = null,
-                outputModes = null,
-                securityRequirements = null
             )
         ),
-        signatures = null
     )
 
-    private fun createExtendedAgentCard(): AgentCard = AgentCard(
-        name = "Hello World Agent - Extended Edition",
-        description = "The full-featured hello world agent for authenticated users.",
-        supportedInterfaces = listOf(
-            AgentInterface(
-                url = "http://localhost:9999/",
-                protocolBinding = TransportProtocol.JSONRPC,
-                protocolVersion = "1.0",
-            )
-        ),
-        iconUrl = null,
-        provider = null,
-        version = "1.0.1",
-        documentationUrl = null,
-        capabilities = AgentCapabilities(
-            streaming = true,
-            pushNotifications = true,
-            extensions = null,
-            extendedAgentCard = true,
-        ),
-        securitySchemes = null,
-        securityRequirements = null,
-        defaultInputModes = listOf("text"),
-        defaultOutputModes = listOf("text"),
-        skills = listOf(
-            AgentSkill(
-                id = "hello_world",
-                name = "Returns hello world",
-                description = "just returns hello world",
-                tags = listOf("hello world"),
-                examples = listOf("hi", "hello world"),
-                inputModes = null,
-                outputModes = null,
-                securityRequirements = null
-            ),
-            AgentSkill(
+    private fun createExtendedAgentCard(): AgentCard = createAgentCard().let { card ->
+        card.copy(
+            name = "Hello World Agent - Extended Edition",
+            description = "The full-featured hello world agent for authenticated users.",
+            version = "1.0.1",
+            skills = card.skills + AgentSkill(
                 id = "super_hello_world",
                 name = "Returns a SUPER Hello World",
                 description = "A more enthusiastic greeting, only for authenticated users.",
                 tags = listOf("hello world", "super", "extended"),
                 examples = listOf("super hi", "give me a super hello"),
-                inputModes = null,
-                outputModes = null,
-                securityRequirements = null
-            )
-        ),
-        signatures = null
-    )
+            ),
+        )
+    }
 }

@@ -48,14 +48,6 @@ class TaskEventStreamTest {
         taskStorage = InMemoryTaskStorage()
     }
 
-    private object FixedMessageIdGenerator : IdGenerator {
-        const val MESSAGE_ID = "generated-message-id"
-
-        override suspend fun generateContextId(message: Message): String = error("Not expected")
-        override suspend fun generateTaskId(message: Message): String = error("Not expected")
-        override suspend fun generateMessageId(taskId: String, contextId: String): String = MESSAGE_ID
-    }
-
     private fun createStream() = TaskEventStream(taskId, taskStorage, FixedMessageIdGenerator)
 
     /** Delivery is back-pressured, so a channel must be consumed while events are published. */
@@ -106,14 +98,11 @@ class TaskEventStreamTest {
     }
 
     @Test
-    fun testSubscribeToUnknownTaskFails() = runTest(timeout = TEST_TIMEOUT) {
+    fun testSubscribeToUnknownOrTerminalTaskFails() = runTest(timeout = TEST_TIMEOUT) {
         assertFailsWith<A2ATaskNotFoundException> {
             createStream().subscribeToStored()
         }
-    }
 
-    @Test
-    fun testSubscribeToTerminalTaskFails() = runTest(timeout = TEST_TIMEOUT) {
         taskStorage.update(task(TaskState.TASK_STATE_COMPLETED))
 
         assertFailsWith<A2AUnsupportedOperationException> {
@@ -289,18 +278,7 @@ class TaskEventStreamTest {
         val stored = assertNotNull(taskStorage.get(taskId))
         assertNotNull(stored.status.timestamp)
 
-        // The message is generic: it doesn't expose the exception.
-        val expectedStatus = TaskStatus(
-            state = TaskState.TASK_STATE_FAILED,
-            message = Message(
-                messageId = FixedMessageIdGenerator.MESSAGE_ID,
-                role = Role.ROLE_AGENT,
-                parts = listOf(TextPart("Task failed due to an internal error")),
-                contextId = contextId,
-                taskId = taskId,
-            ),
-            timestamp = stored.status.timestamp,
-        )
+        val expectedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
         assertEquals(expectedStatus, stored.status)
 
         val failed = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = expectedStatus)
@@ -309,29 +287,20 @@ class TaskEventStreamTest {
     }
 
     @Test
-    fun testEndTurnWithFailureKeepsTerminalTask() = runTest(timeout = TEST_TIMEOUT) {
-        val stream = createStream()
-        val completed = task(TaskState.TASK_STATE_COMPLETED)
-        taskStorage.update(completed)
-        val turnView = stream.openTurnView(1)
+    fun testEndTurnWithFailureKeepsTerminalTaskAndCancellationDoesNotMarkTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
+        listOf(
+            task(TaskState.TASK_STATE_COMPLETED) to IllegalStateException("boom"),
+            task(TaskState.TASK_STATE_WORKING) to CancellationException("canceled"),
+        ).forEach { (stored, failure) ->
+            taskStorage = InMemoryTaskStorage().also { it.update(stored) }
+            val stream = createStream()
+            val turnView = stream.openTurnView(1)
 
-        stream.endTurn(1, contextId, failure = IllegalStateException("boom"))
+            stream.endTurn(1, contextId, failure = failure)
 
-        assertEquals(completed, taskStorage.get(taskId))
-        assertEquals(emptyList(), turnView.toList())
-    }
-
-    @Test
-    fun testEndTurnWithCancellationDoesNotMarkTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
-        val stream = createStream()
-        val working = task(TaskState.TASK_STATE_WORKING)
-        taskStorage.update(working)
-        val turnView = stream.openTurnView(1)
-
-        stream.endTurn(1, contextId, failure = CancellationException("canceled"))
-
-        assertEquals(working, taskStorage.get(taskId))
-        assertEquals(emptyList(), turnView.toList())
+            assertEquals(stored, taskStorage.get(taskId), stored.status.state.name)
+            assertEquals(emptyList(), turnView.toList(), stored.status.state.name)
+        }
     }
 
     @Test

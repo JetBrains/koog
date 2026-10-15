@@ -37,16 +37,10 @@ class InMemoryPushNotificationConfigStorageTest {
     private fun deleteRequest(taskId: String, id: String) = DeleteTaskPushNotificationConfigRequest(taskId, id)
 
     @Test
-    fun testSaveReturnsStoredConfigAndGetReturnsIt() = runTest {
+    fun testSaveReturnsStoredConfigAndGetReturnsItOnlyForTaskAndConfigId() = runTest {
         assertEquals(config1, storage.save(config1, ctx))
 
         assertEquals(config1, storage.get(getRequest("task-1", "config-1"), ctx))
-    }
-
-    @Test
-    fun testGetMissingConfigReturnsNull() = runTest {
-        storage.save(config1, ctx)
-
         assertNull(storage.get(getRequest("task-1", "missing"), ctx))
         assertNull(storage.get(getRequest("other-task", "config-1"), ctx))
     }
@@ -99,38 +93,25 @@ class InMemoryPushNotificationConfigStorageTest {
     }
 
     @Test
-    fun testListForTaskWithoutConfigsIsEmpty() = runTest {
-        assertEquals(
-            ListTaskPushNotificationConfigsResponse(),
-            storage.list(ListTaskPushNotificationConfigsRequest(taskId = "non-existent-task"), ctx)
-        )
-    }
-
-    @Test
-    fun testDeleteSpecificConfig() = runTest {
+    fun testDeleteRemovesOnlyTheConfigAndIsIdempotent() = runTest {
         storage.save(config1, ctx)
         storage.save(config2, ctx)
 
         storage.delete(deleteRequest("task-1", "config-1"), ctx)
+        storage.delete(deleteRequest("task-1", "config-1"), ctx)
+        storage.delete(deleteRequest("unknown-task", "unknown-config"), ctx)
 
         assertEquals(listOf(config2), storage.getAll("task-1"))
         assertNull(storage.get(getRequest("task-1", "config-1"), ctx))
     }
 
     @Test
-    fun testDeleteIsIdempotent() = runTest {
-        storage.save(config1, ctx)
-
-        storage.delete(deleteRequest("task-1", "config-1"), ctx)
-        storage.delete(deleteRequest("task-1", "config-1"), ctx)
-        storage.delete(deleteRequest("unknown-task", "unknown-config"), ctx)
-
-        assertEquals(emptyList(), storage.getAll("task-1"))
-    }
-
-    @Test
-    fun testGetAllForNonExistentTask() = runTest {
+    fun testTaskWithoutConfigsHasNone() = runTest {
         assertEquals(emptyList(), storage.getAll("non-existent-task"))
+        assertEquals(
+            ListTaskPushNotificationConfigsResponse(),
+            storage.list(ListTaskPushNotificationConfigsRequest(taskId = "non-existent-task"), ctx)
+        )
     }
 
     @Test

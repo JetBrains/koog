@@ -4,27 +4,20 @@ import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.model.AgentCapabilities
-import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
-import ai.koog.a2a.model.TransportProtocol
-import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.turn.IdGenerator
-import ai.koog.a2a.server.turn.RequestContext
-import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.server.turn.UuidIdGenerator
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.test.runTest
@@ -32,6 +25,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -59,28 +53,8 @@ class A2AServerPushNotificationsTest {
         idGenerator: IdGenerator = UuidIdGenerator,
         storage: TaskStorage = taskStorage,
     ) = A2AServer(
-        agentExecutor = object : AgentExecutor {
-            override suspend fun execute(
-                context: RequestContext<SendMessageRequest>,
-                eventProcessor: TurnEventProcessor
-            ) = error("Not expected to be called")
-        },
-        agentCard = AgentCard(
-            name = "Test agent",
-            description = "Test agent",
-            supportedInterfaces = listOf(
-                AgentInterface(
-                    url = "http://localhost/",
-                    protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "1.0"
-                )
-            ),
-            version = "1.0.0",
-            defaultInputModes = listOf("text"),
-            defaultOutputModes = listOf("text"),
-            skills = emptyList(),
-            capabilities = AgentCapabilities(pushNotifications = pushNotifications),
-        ),
+        agentExecutor = UnusedAgentExecutor,
+        agentCard = testAgentCard(AgentCapabilities(pushNotifications = pushNotifications)),
         taskStorage = storage,
         pushConfigStorage = pushConfigStorage,
         idGenerator = idGenerator,
@@ -96,26 +70,34 @@ class A2AServerPushNotificationsTest {
 
     @Test
     fun testCreateKeepsClientProvidedIdAndConfigIsRetrievable() = runTest {
-        val created = server.onCreateTaskPushNotificationConfig(config, ctx)
+        // The task of the fixture is already completed, which doesn't matter.
+        assertEquals(config, server.onCreateTaskPushNotificationConfig(config, ctx))
 
-        assertEquals(config, created)
         assertEquals(
             config,
             server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", "config-1"), ctx)
         )
+        assertEquals(listOf(config), pushStorage.getAll("task-1"))
     }
 
     @Test
-    fun testCreateWithoutIdAssignsIdAndConfigIsRetrievable() = runTest {
-        val created = server.onCreateTaskPushNotificationConfig(config.copy(id = null), ctx)
+    fun testCreateWithoutIdAssignsDifferentIdsAndConfigsAreRetrievable() = runTest {
+        val first = server.onCreateTaskPushNotificationConfig(config.copy(id = null), ctx)
+        val second = server.onCreateTaskPushNotificationConfig(config.copy(id = " "), ctx)
 
-        val assignedId = created.id
-        assertNotNull(assignedId)
-        assertTrue(assignedId.isNotBlank())
-        assertEquals(config.copy(id = assignedId), created)
+        val firstId = assertNotNull(first.id)
+        val secondId = assertNotNull(second.id)
+        assertTrue(firstId.isNotBlank() && secondId.isNotBlank())
+        assertNotEquals(firstId, secondId)
+        assertEquals(config.copy(id = firstId), first)
+        assertEquals(config.copy(id = secondId), second)
         assertEquals(
-            created,
-            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", assignedId), ctx)
+            first,
+            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", firstId), ctx)
+        )
+        assertEquals(
+            ListTaskPushNotificationConfigsResponse(configs = listOf(first, second)),
+            server.onListTaskPushNotificationConfigs(ListTaskPushNotificationConfigsRequest("task-1"), ctx)
         )
     }
 
@@ -135,19 +117,6 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
-    fun testCreateTwiceWithoutIdAssignsDifferentIds() = runTest {
-        val first = server.onCreateTaskPushNotificationConfig(config.copy(id = null), ctx)
-        val second = server.onCreateTaskPushNotificationConfig(config.copy(id = " "), ctx)
-
-        assertTrue(second.id!!.isNotBlank())
-        assertTrue(first.id != second.id)
-        assertEquals(
-            ListTaskPushNotificationConfigsResponse(configs = listOf(first, second)),
-            server.onListTaskPushNotificationConfigs(ListTaskPushNotificationConfigsRequest("task-1"), ctx)
-        )
-    }
-
-    @Test
     fun testCreateWithoutTaskIdFailsWithInvalidParams() = runTest {
         assertFailsWith<A2AInvalidParamsException> {
             server.onCreateTaskPushNotificationConfig(config.copy(taskId = null), ctx)
@@ -160,13 +129,6 @@ class A2AServerPushNotificationsTest {
             server.onCreateTaskPushNotificationConfig(config.copy(taskId = "unknown"), ctx)
         }
         assertEquals(emptyList(), pushStorage.getAll("unknown"))
-    }
-
-    @Test
-    fun testCreateForCompletedTaskSucceeds() = runTest {
-        // Task of the fixture is already completed.
-        assertEquals(config, server.onCreateTaskPushNotificationConfig(config, ctx))
-        assertEquals(listOf(config), pushStorage.getAll("task-1"))
     }
 
     @Test
@@ -222,13 +184,6 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
-    fun testGetMissingConfigFailsWithTaskNotFound() = runTest {
-        assertFailsWith<A2ATaskNotFoundException> {
-            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", "missing"), ctx)
-        }
-    }
-
-    @Test
     fun testListReturnsConfigsOfTask() = runTest {
         server.onCreateTaskPushNotificationConfig(config, ctx)
 
@@ -246,8 +201,11 @@ class A2AServerPushNotificationsTest {
         server.onDeleteTaskPushNotificationConfig(request, ctx)
         server.onDeleteTaskPushNotificationConfig(request, ctx)
 
-        assertFailsWith<A2ATaskNotFoundException> {
-            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", "config-1"), ctx)
+        // Deleted and never created configs are the same: not found.
+        listOf("config-1", "missing").forEach { id ->
+            assertFailsWith<A2ATaskNotFoundException>(id) {
+                server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", id), ctx)
+            }
         }
     }
 

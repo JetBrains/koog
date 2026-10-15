@@ -50,6 +50,22 @@ import kotlin.uuid.Uuid
 class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     override val testTimeout = 10.seconds
 
+    private fun userRequest(
+        text: String,
+        taskId: String? = null,
+        contextId: String? = null,
+        returnImmediately: Boolean? = null,
+    ) = SendMessageRequest(
+        message = Message(
+            messageId = Uuid.random().toString(),
+            role = Role.ROLE_USER,
+            parts = listOf(TextPart(text)),
+            taskId = taskId,
+            contextId = contextId,
+        ),
+        configuration = returnImmediately?.let { SendMessageConfiguration(returnImmediately = it) },
+    )
+
     @BeforeAll
     override fun setup() {
         super.setup()
@@ -101,19 +117,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     fun `test cancel task cancellation events received`() = runTest(timeout = testTimeout) {
         // Need real time for this test
         withContext(Dispatchers.Default) {
-            val createTaskRequest = SendMessageRequest(
-                message = Message(
-                    messageId = Uuid.Companion.random().toString(),
-                    role = Role.ROLE_USER,
-                    parts = listOf(
-                        TextPart("do long-running task"),
-                    ),
-                    contextId = "test-context",
-                ),
-                configuration = SendMessageConfiguration(
-                    returnImmediately = true,
-                ),
-            )
+            val createTaskRequest = userRequest("do long-running task", contextId = "test-context", returnImmediately = true)
 
             val taskId = (client.sendMessage(createTaskRequest) as Task).id
 
@@ -199,32 +203,14 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
      */
     @Test
     fun `test task send follow-up message to running task`() = runTest(timeout = testTimeout) {
-        fun createRequest(
-            taskId: String?,
-            returnImmediately: Boolean,
-        ) = SendMessageRequest(
-            message = Message(
-                messageId = Uuid.Companion.random().toString(),
-                role = Role.ROLE_USER,
-                parts = listOf(
-                    TextPart("do long-running task"),
-                ),
-                taskId = taskId,
-                contextId = "test-context"
-            ),
-            configuration = SendMessageConfiguration(
-                returnImmediately = returnImmediately
-            )
-        )
-
         // Create a long-running task and return without waiting
-        val initialRequest = createRequest(taskId = null, returnImmediately = true)
+        val initialRequest = userRequest("do long-running task", contextId = "test-context", returnImmediately = true)
         val initialResponse = client.sendMessage(initialRequest)
 
         val taskId = initialResponse.shouldBeInstanceOf<Task>().id
 
         // Immediately send a follow-up message to the same task: it waits for the running turn, which completes the task
-        val followupRequest = createRequest(taskId = taskId, returnImmediately = false)
+        val followupRequest = userRequest("do long-running task", taskId, "test-context", returnImmediately = false)
 
         shouldThrow<A2AUnsupportedOperationException> {
             client.sendMessage(followupRequest)
@@ -239,14 +225,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
      */
     @Test
     fun `test task send follow-up message to input-required task`() = runTest(timeout = testTimeout) {
-        val initialRequest = SendMessageRequest(
-            message = Message(
-                messageId = Uuid.Companion.random().toString(),
-                role = Role.ROLE_USER,
-                parts = listOf(TextPart("do input-required task")),
-                contextId = "test-context"
-            ),
-        )
+        val initialRequest = userRequest("do input-required task", contextId = "test-context")
 
         // Blocking: returns once the task waits for input
         val task = client.sendMessage(initialRequest).shouldBeInstanceOf<Task> {
@@ -257,14 +236,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         }
 
         // The follow-up only references the task; its context is inferred
-        val followupRequest = SendMessageRequest(
-            message = Message(
-                messageId = Uuid.Companion.random().toString(),
-                role = Role.ROLE_USER,
-                parts = listOf(TextPart("provide input")),
-                taskId = task.id,
-            ),
-        )
+        val followupRequest = userRequest("provide input", taskId = task.id)
 
         val events = client.sendMessageStreaming(followupRequest).toList()
 
@@ -304,13 +276,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
 
     @Test
     fun `test invalid agent event is reported as invalid agent response`() = runTest(timeout = testTimeout) {
-        val request = SendMessageRequest(
-            message = Message(
-                messageId = Uuid.Companion.random().toString(),
-                role = Role.ROLE_USER,
-                parts = listOf(TextPart("do invalid task")),
-            ),
-        )
+        val request = userRequest("do invalid task")
 
         shouldThrow<A2AInvalidAgentResponseException> { client.sendMessage(request) }
         shouldThrow<A2AInvalidAgentResponseException> { client.sendMessageStreaming(request).toList() }
