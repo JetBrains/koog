@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.jsonrpc
 
+import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.GetTaskRequest
@@ -251,7 +252,8 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         val task = client.sendMessage(initialRequest).shouldBeInstanceOf<Task> {
             it.contextId shouldBe "test-context"
             it.status.state shouldBe TaskState.TASK_STATE_INPUT_REQUIRED
-            it.history shouldBe listOf(initialRequest.message)
+            // The server stores the user message with the ids of the task.
+            it.history shouldBe listOf(initialRequest.message.copy(taskId = it.id))
         }
 
         // The follow-up only references the task; its context is inferred
@@ -268,15 +270,21 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
 
         events shouldHaveSize 2
 
-        // The agents of these tests don't persist user messages: the server does, moving the agent's prompt in between.
-        val expectedHistory = listOf(initialRequest.message, task.status.message!!, followupRequest.message)
+        // The agents of these tests don't persist user messages: the server does, on the agent's first event, moving
+        // the agent's prompt in between, and sets the ids of the task on the stored user message.
+        val expectedHistory = listOf(
+            initialRequest.message.copy(taskId = task.id),
+            task.status.message!!,
+            followupRequest.message.copy(contextId = "test-context"),
+        )
 
         events[0].shouldBeInstanceOf<Task> {
             it.id shouldBe task.id
             it.contextId shouldBe "test-context"
             it.status.state shouldBe TaskState.TASK_STATE_INPUT_REQUIRED
-            it.status.message shouldBe null
-            it.history shouldBe expectedHistory
+            // The snapshot is taken before the follow-up message is persisted.
+            it.status.message shouldBe task.status.message
+            it.history shouldBe listOf(initialRequest.message.copy(taskId = task.id))
         }
 
         events[1].shouldBeInstanceOf<TaskStatusUpdateEvent> {
@@ -292,5 +300,19 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         }
 
         client.getTask(GetTaskRequest(id = task.id)).history shouldBe expectedHistory
+    }
+
+    @Test
+    fun `test invalid agent event is reported as invalid agent response`() = runTest(timeout = testTimeout) {
+        val request = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.Companion.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(TextPart("do invalid task")),
+            ),
+        )
+
+        shouldThrow<A2AInvalidAgentResponseException> { client.sendMessage(request) }
+        shouldThrow<A2AInvalidAgentResponseException> { client.sendMessageStreaming(request).toList() }
     }
 }

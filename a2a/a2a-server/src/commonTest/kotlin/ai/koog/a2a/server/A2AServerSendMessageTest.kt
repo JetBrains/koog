@@ -1,5 +1,6 @@
 package ai.koog.a2a.server
 
+import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
@@ -199,19 +200,6 @@ class A2AServerSendMessageTest {
         history = listOf(userMessage("ask")),
     )
 
-    /**
-     * The task stored after [askScript] and a follow-up message with [followUpText]: the input-required status message
-     * has been moved into the history, followed by the user message, and the status message is cleared.
-     */
-    private fun inputRequiredTaskAfterFollowUp(followUpText: String) = inputRequiredTask.copy(
-        status = inputRequiredTask.status.copy(message = null),
-        history = listOf(
-            userMessage("ask"),
-            agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
-            userMessage(followUpText, TASK_ID),
-        ),
-    )
-
     /** Follow-up turn that completes the task. */
     private val finishScript = Script { _, processor ->
         processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING))
@@ -392,8 +380,9 @@ class A2AServerSendMessageTest {
 
         val events = server.onSendMessageStreaming(request("finish", TASK_ID), ctx).toList()
 
-        // The agent's first event is a status update, so the stored task comes first, with the follow-up message.
-        assertEquals(listOf<Event>(inputRequiredTaskAfterFollowUp("finish")) + finishEvents, events)
+        // The snapshot is taken when the turn view is registered: the follow-up message is persisted later, with the
+        // agent's first event.
+        assertEquals(listOf<Event>(inputRequiredTask) + finishEvents, events)
     }
 
     @Test
@@ -412,17 +401,21 @@ class A2AServerSendMessageTest {
         // the snapshot.
         assertEquals(
             listOf<Event>(
-                inputRequiredTaskAfterFollowUp("replace"),
+                inputRequiredTask,
                 status(TaskState.TASK_STATE_WORKING),
                 status(TaskState.TASK_STATE_COMPLETED),
             ),
             events
         )
         assertEquals(
-            inputRequiredTaskAfterFollowUp("replace").copy(
+            inputRequiredTask.copy(
                 status = status(TaskState.TASK_STATE_COMPLETED).status,
-                history = inputRequiredTaskAfterFollowUp("replace").history.orEmpty() +
+                history = listOf(
+                    userMessage("ask"),
+                    agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+                    userMessage("replace", TASK_ID),
                     agentMessage(TaskState.TASK_STATE_WORKING.name),
+                ),
             ),
             taskStorage.get(TASK_ID)
         )
@@ -438,8 +431,20 @@ class A2AServerSendMessageTest {
 
         val events = server.onSendMessageStreaming(request("replace", TASK_ID), ctx).toList()
 
-        assertEquals(listOf<Event>(inputRequiredTaskAfterFollowUp("replace")), events)
-        assertEquals(inputRequiredTaskAfterFollowUp("replace"), taskStorage.get(TASK_ID))
+        // The ignored Task is not a status or artifact update: the user message is not persisted.
+        assertEquals(listOf<Event>(inputRequiredTask), events)
+        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testFollowUpWithoutAgentEventsDoesNotPersistUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(mapOf("ask" to askScript, "silent" to Script { _, _ -> }))
+        server.onSendMessage(request("ask"), ctx)
+
+        val response = server.onSendMessage(request("silent", TASK_ID), ctx)
+
+        assertEquals(inputRequiredTask, response)
+        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
     }
 
     @Test
@@ -449,7 +454,7 @@ class A2AServerSendMessageTest {
 
         val events = server.onSendMessageStreaming(request("finish", TASK_ID, historyLength = 0), ctx).toList()
 
-        assertEquals(listOf<Event>(inputRequiredTaskAfterFollowUp("finish").copy(history = null)) + finishEvents, events)
+        assertEquals(listOf<Event>(inputRequiredTask.copy(history = null)) + finishEvents, events)
     }
 
     @Test
@@ -473,7 +478,7 @@ class A2AServerSendMessageTest {
     }
 
     @Test
-    fun testNewTaskStatusUpdateBeforeTaskIsAgentError() = runTest(timeout = TEST_TIMEOUT) {
+    fun testNewTaskStatusUpdateBeforeTaskIsInvalidAgentResponseWhenStreaming() = runTest(timeout = TEST_TIMEOUT) {
         val agentFailure = CompletableDeferred<Throwable>()
         val statusFirstScript = Script { _, processor ->
             try {
@@ -487,11 +492,65 @@ class A2AServerSendMessageTest {
 
         val (failure, received) = server.onSendMessageStreaming(request("status"), ctx).collectExpectingFailure()
 
-        // The update for a task that doesn't exist fails in the agent; nothing is streamed.
+        // The agent still gets the storage exception; the requester gets an invalid agent response.
         assertEquals(TaskOperationException::class, agentFailure.await()::class)
-        assertEquals(TaskOperationException::class, failure::class)
+        assertEquals(A2AInvalidAgentResponseException::class, failure::class)
         assertEquals(emptyList(), received)
         assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testNewTaskStatusUpdateBeforeTaskIsInvalidAgentResponseWhenBlocking() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(
+            mapOf("status" to Script { _, processor -> processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING)) })
+        )
+
+        assertFailsWith<A2AInvalidAgentResponseException> {
+            server.onSendMessage(request("status"), ctx)
+        }
+        assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testSwallowedRejectedEventIsInvalidAgentResponse() = runTest(timeout = TEST_TIMEOUT) {
+        val swallowing = Script { _, processor ->
+            runCatching { processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING)) }
+        }
+        val server = createServer(mapOf("status" to swallowing))
+
+        assertFailsWith<A2AInvalidAgentResponseException> {
+            server.onSendMessage(request("status"), ctx)
+        }
+        val (failure, _) = server.onSendMessageStreaming(request("status"), ctx).collectExpectingFailure()
+        assertEquals(A2AInvalidAgentResponseException::class, failure::class)
+    }
+
+    @Test
+    fun testMessageReplyForExistingTaskIsInvalidAgentResponse() = runTest(timeout = TEST_TIMEOUT) {
+        val replyScript = Script { context, processor ->
+            processor.sendMessage(agentMessage("reply").copy(taskId = null, contextId = context.contextId))
+        }
+        val server = createServer(mapOf("ask" to askScript, "reply" to replyScript))
+        server.onSendMessage(request("ask"), ctx)
+
+        assertFailsWith<A2AInvalidAgentResponseException> {
+            server.onSendMessage(request("reply", TASK_ID), ctx)
+        }
+        assertEquals(TaskState.TASK_STATE_FAILED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+    }
+
+    @Test
+    fun testMessageReplyForExistingTaskIsInvalidAgentResponseWhenStreaming() = runTest(timeout = TEST_TIMEOUT) {
+        val replyScript = Script { context, processor ->
+            processor.sendMessage(agentMessage("reply").copy(taskId = null, contextId = context.contextId))
+        }
+        val server = createServer(mapOf("ask" to askScript, "reply" to replyScript))
+        server.onSendMessage(request("ask"), ctx)
+
+        val (failure, received) = server.onSendMessageStreaming(request("reply", TASK_ID), ctx).collectExpectingFailure()
+
+        assertEquals(A2AInvalidAgentResponseException::class, failure::class)
+        assertEquals(emptyList(), received)
     }
 
     // Messages referencing a task
@@ -540,8 +599,8 @@ class A2AServerSendMessageTest {
                 history = listOf(
                     userMessage("ask"),
                     agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
-                    // Stored as the client sent it, i.e. without a context id.
-                    userMessage("finish", TASK_ID, contextId = null),
+                    // Stored with the task id and the context id of the task, though the client sent no context id.
+                    userMessage("finish", TASK_ID),
                     agentMessage(TaskState.TASK_STATE_WORKING.name),
                 ),
                 artifacts = listOf(Artifact(artifactId = "artifact-1", parts = listOf(TextPart("result")))),
@@ -652,10 +711,10 @@ class A2AServerSendMessageTest {
 
         assertEquals(
             bareTask(TaskState.TASK_STATE_INPUT_REQUIRED, agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name))
-                .copy(history = listOf(userMessage("bare"))),
+                .copy(history = listOf(userMessage("bare", TASK_ID))),
             response
         )
-        assertEquals(listOf(userMessage("bare")), server.history())
+        assertEquals(listOf(userMessage("bare", TASK_ID)), server.history())
     }
 
     @Test
@@ -670,7 +729,7 @@ class A2AServerSendMessageTest {
 
         assertEquals(
             listOf<Event>(
-                bareTask(TaskState.TASK_STATE_WORKING).copy(history = listOf(userMessage("bare"))),
+                bareTask(TaskState.TASK_STATE_WORKING).copy(history = listOf(userMessage("bare", TASK_ID))),
                 status(TaskState.TASK_STATE_COMPLETED),
             ),
             events
@@ -689,7 +748,7 @@ class A2AServerSendMessageTest {
         val response = server.onSendMessage(request("finish", TASK_ID), ctx)
 
         val expectedHistory = listOf(
-            userMessage("ask"),
+            userMessage("ask", TASK_ID),
             agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
             userMessage("finish", TASK_ID),
             agentMessage(TaskState.TASK_STATE_WORKING.name),
@@ -733,13 +792,10 @@ class A2AServerSendMessageTest {
             Task(
                 id = TASK_ID,
                 contextId = CONTEXT_ID,
-                // The status message is moved into the history and cleared before the agent starts.
-                status = status(TaskState.TASK_STATE_INPUT_REQUIRED).status.copy(message = null),
-                history = listOf(
-                    userMessage("ask"),
-                    agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
-                    userMessage("finish", TASK_ID),
-                ),
+                // As stored when the turn starts: the follow-up message is not in it, and the status message is still
+                // the status message.
+                status = status(TaskState.TASK_STATE_INPUT_REQUIRED).status,
+                history = listOf(userMessage("ask", TASK_ID)),
                 artifacts = listOf(artifact),
             ),
             executed[1].task

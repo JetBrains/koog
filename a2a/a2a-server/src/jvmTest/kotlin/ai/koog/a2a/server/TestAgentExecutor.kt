@@ -245,6 +245,11 @@ class TestAgentExecutor : AgentExecutor {
                 doInputRequiredTask(context, eventProcessor)
             }
 
+            "do invalid task" -> {
+                // A status update without a Task first is rejected by the server.
+                eventProcessor.sendTaskEvent(agentStatus(context, TaskState.TASK_STATE_WORKING, "Working"))
+            }
+
             "provide input" -> {
                 provideInput(context, eventProcessor)
             }

@@ -101,7 +101,7 @@ class SessionManagerTest {
      * message of the request to its history.
      */
     private fun Task.withUserMessage() =
-        copy(history = listOf(createMessage("user-msg", this@SessionManagerTest.contextId, "Hello")))
+        copy(history = listOf(createMessage("user-msg", this@SessionManagerTest.contextId, "Hello").copy(taskId = id)))
 
     private fun statusUpdate(
         taskId: String,
@@ -422,35 +422,55 @@ class SessionManagerTest {
         assertEquals(0, sessionManager.activeSessions())
     }
 
+    private fun followUpPrompt() = Message(
+        messageId = "agent-prompt",
+        role = Role.ROLE_AGENT,
+        parts = listOf(TextPart("Which one?")),
+        contextId = contextId,
+        taskId = taskId,
+    )
+
+    private suspend fun storeInputRequiredTask(): Task =
+        createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED).let {
+            it.copy(status = it.status.copy(message = followUpPrompt()))
+        }.also { taskStorage.update(it) }
+
     @Test
-    fun testFollowUpTurnPersistsUserMessageBeforeAgentStarts() = runTest(timeout = TEST_TIMEOUT) {
+    fun testFollowUpTurnPersistsUserMessageOnFirstTaskEvent() = runTest(timeout = TEST_TIMEOUT) {
         val sessionManager = createManager()
-        val prompt = Message(
-            messageId = "agent-prompt",
-            role = Role.ROLE_AGENT,
-            parts = listOf(TextPart("Which one?")),
-            contextId = contextId,
-            taskId = taskId,
-        )
-        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED).let {
-            it.copy(status = it.status.copy(message = prompt))
-        }
-        taskStorage.update(inputRequired)
-        val userMessage = createMessage("user-msg", contextId, "Hello")
+        val inputRequired = storeInputRequiredTask()
+        val userMessage = createMessage("user-msg", contextId, "Hello").copy(taskId = taskId)
         var storedWhenAgentStarted: Task? = null
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
 
         val session = sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) {
             storedWhenAgentStarted = taskStorage.get(taskId)
+            it.sendTaskEvent(working)
         }
         drain(session)
         session.join()
 
-        val expected = inputRequired.copy(
-            status = inputRequired.status.copy(message = null),
-            history = listOf(prompt, userMessage),
+        assertEquals(inputRequired, storedWhenAgentStarted)
+        assertEquals(inputRequired, session.taskSnapshot.await())
+        assertEquals(
+            inputRequired.copy(
+                status = working.status,
+                history = listOf(followUpPrompt(), userMessage),
+            ),
+            taskStorage.get(taskId)
         )
-        assertEquals(expected, storedWhenAgentStarted)
-        assertEquals(expected, session.taskSnapshot.await())
+    }
+
+    @Test
+    fun testFollowUpTurnWithoutTaskEventsDoesNotPersistUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = storeInputRequiredTask()
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) {}
+        drain(session)
+        session.join()
+
+        assertEquals(inputRequired, taskStorage.get(taskId))
     }
 
     @Test

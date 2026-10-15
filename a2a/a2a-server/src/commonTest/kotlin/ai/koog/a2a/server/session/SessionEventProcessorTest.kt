@@ -237,7 +237,7 @@ class SessionEventProcessorTest {
 
         processor.sendTaskEvent(createTask(taskId, contextId))
 
-        val expected = createTask(taskId, contextId).copy(history = listOf(userMessage))
+        val expected = createTask(taskId, contextId).copy(history = listOf(userMessage.copy(taskId = taskId)))
         assertEquals(expected, taskStorage.get(taskId))
         assertEquals(listOf(expected), turnView.endTurnAndCollect())
     }

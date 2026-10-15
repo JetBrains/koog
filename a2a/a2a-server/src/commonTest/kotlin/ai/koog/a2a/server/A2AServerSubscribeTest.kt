@@ -253,14 +253,9 @@ class A2AServerSubscribeTest {
         first.job.join()
         second.job.join()
 
-        // The follow-up stream begins with the task snapshot, since the agent's first event is a status update. It is
-        // taken after the user message of the follow-up was persisted, which isn't announced to subscribers: they got
-        // their snapshot earlier, and then receive exactly the events of the turn.
-        val persistedSnapshot = stored.copy(
-            status = stored.status.copy(message = null),
-            history = stored.history.orEmpty() + listOfNotNull(stored.status.message) + userMessage("finish", TASK_ID),
-        )
-        assertEquals(listOf<Event>(persistedSnapshot) + finishEvents, streamEvents)
+        // The follow-up stream begins with the task snapshot taken when the turn view was registered, i.e. before the
+        // user message of the follow-up is persisted (on the agent's first event).
+        assertEquals(listOf<Event>(stored) + finishEvents, streamEvents)
         assertEquals(listOf<Event>(stored) + finishEvents, first.events)
         assertEquals(first.events, second.events)
     }

@@ -75,9 +75,12 @@ import kotlinx.coroutines.withContext
  *
  * The user message of a turn is persisted into [ai.koog.a2a.model.Task.history] by the task stream, deduplicated by
  * [ai.koog.a2a.model.Message.messageId]:
- * - for a follow-up, in [startTurn], before the agent starts: the task's current status message is moved into the
- *   history, the user message is appended, and the status message is cleared;
+ * - for a follow-up, lazily, right before the first status or artifact update the agent sends in the turn: the task's
+ *   current status message is moved into the history, the user message is appended, and the status message is cleared.
+ *   If the agent sends no such event, the user message is not persisted;
  * - for a new task, when the agent sends the initial [ai.koog.a2a.model.Task].
+ *
+ * In both cases the stored copy of the user message has its task id and context id set to those of the task.
  *
  * An agent's [ai.koog.a2a.model.Task] event for an existing task is ignored.
  *
@@ -145,8 +148,8 @@ public class SessionManager(
      * turn. If the turn continues an existing task ([RequestContext.task] is not `null`):
      * - the processor starts in task mode, see [SessionEventProcessor];
      * - the user message of the request ([ai.koog.a2a.model.SendMessageRequest.message]) is persisted into the history
-     *   of the stored task before [block] starts, see "History" above, so the task the agent reads already has it;
-     * - the stored task is then read atomically with the registration of [Session.events] (with the history limited to
+     *   of the stored task when the agent sends its first status or artifact update, see "History" above;
+     * - the stored task is read atomically with the registration of [Session.events] (with the history limited to
      *   the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts) and kept as the
      *   session's task snapshot.
      *
@@ -221,11 +224,7 @@ public class SessionManager(
 
         try {
             val (snapshot, channel) = if (taskExists) {
-                stream.openTurnView(
-                    turnId,
-                    userMessage = context.params.message,
-                    historyLength = context.params.configuration?.historyLength,
-                )
+                stream.openTurnView(turnId, historyLength = context.params.configuration?.historyLength)
             } else {
                 null to stream.openTurnView(turnId)
             }

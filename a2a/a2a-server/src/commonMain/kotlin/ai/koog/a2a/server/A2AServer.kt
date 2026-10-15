@@ -1,6 +1,7 @@
 package ai.koog.a2a.server
 
 import ai.koog.a2a.exceptions.A2AExtendedAgentCardNotConfiguredException
+import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
@@ -28,6 +29,8 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.agent.AgentExecutor
+import ai.koog.a2a.server.exceptions.InvalidEventException
+import ai.koog.a2a.server.exceptions.TaskOperationException
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
@@ -49,6 +52,7 @@ import ai.koog.agents.lock.withLock
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
@@ -403,14 +407,18 @@ public open class A2AServer(
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state, or when the turn ends,
      * whichever comes first. Only in the last case is an exception thrown by the agent rethrown (if the task exists,
-     * the task is marked failed instead, and the flow ends with that update). Once the flow has ended (or its collection
+     * the task is marked failed instead, and the flow ends with that update). An event of the agent rejected as invalid
+     * (e.g. a status update before a [Task] for a new task, or a [Message] for an existing task) is reported as
+     * [A2AInvalidAgentResponseException] in the same way (for an existing task the task is marked failed too, but
+     * the requester gets the error instead of the failed update), also when the agent swallowed the failure and produced
+     * nothing else. Once the flow has ended (or its collection
      * was stopped), the agent keeps running in [coroutineScope], and its later failures are not reported to the
      * requester.
      *
      * @param request The SendMessage request.
      * @param ctx The context of the call.
      * @param includeTaskSnapshot For a message to an existing task: whether to emit the task, as stored right before
-     * the turn's first event (after the user message is persisted into its history), before the agent's first event,
+     * the turn's first event (before the agent's first event; the user message is persisted later, see [SessionManager]), before the agent's first event,
      * so that the stream always begins with the task: a [Task] event of the agent for an existing task is ignored, see
      * [SessionEventProcessor]. If the turn produces no events, the flow consists of the snapshot only.
      * @return A cold flow of the turn's events; each collection sends the message again.
@@ -472,8 +480,7 @@ public open class A2AServer(
 
             // The session's event view is registered before the agent starts, so no event of this turn is missed.
             sessionManager.startTurn(requestContext) { eventProcessor ->
-                // The user message is persisted into the task before the agent starts, so the agent gets the full
-                // stored task: history including the user message, and artifacts.
+                // The agent gets the full stored task as of the start of the turn: history and artifacts.
                 val fullTask = task?.let {
                     taskStorage.get(GetTaskRequest(id = it.id, tenant = request.tenant), ctx)
                 }
@@ -485,10 +492,17 @@ public open class A2AServer(
         val snapshot = if (includeTaskSnapshot) session.taskSnapshot.await() else null
         var isFirstEvent = true
         var isResponseComplete = false
+        var isRejected = false
 
         // Stream the events of this turn, until the response is complete or the turn ends.
         emitAll(
             session.events.transformWhile { event ->
+                if (event.isTerminal() && session.failedWithRejectedEvent()) {
+                    // The task was marked failed because the agent's event was rejected: the requester gets the error.
+                    isRejected = true
+                    return@transformWhile false
+                }
+
                 if (isFirstEvent) {
                     isFirstEvent = false
 
@@ -504,9 +518,18 @@ public open class A2AServer(
             }
         )
 
-        if (!isResponseComplete) {
+        if (isRejected) {
+            awaitAgent(session)
+        }
+
+        if (!isResponseComplete && !isRejected) {
             // The turn has ended: propagate the exception thrown by the agent execution, if any.
             awaitAgent(session)
+
+            if (session.eventProcessor.rejection != null && isFirstEvent) {
+                // The agent sent an invalid event, ignored the failure, and produced nothing else.
+                throw A2AInvalidAgentResponseException("Agent sent an invalid event")
+            }
 
             if (isFirstEvent && snapshot != null) {
                 emit(snapshot)
@@ -517,13 +540,24 @@ public open class A2AServer(
     /**
      * Waits for the agent job of an ended turn, rethrowing the exception the agent failed with. A cancelled agent job
      * (e.g. by a cancel request) is not an error of this request: only the cancellation of the caller itself is
-     * propagated.
+     * propagated. An event of the agent that was rejected ([InvalidEventException], [TaskOperationException]) is
+     * reported as [A2AInvalidAgentResponseException].
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun Session.failedWithRejectedEvent(): Boolean {
+        val failure = if (agentJob.isCompleted) agentJob.getCompletionExceptionOrNull() else null
+        return failure is InvalidEventException || failure is TaskOperationException
+    }
+
     private suspend fun awaitAgent(session: Session) {
         try {
             session.agentJob.await()
         } catch (e: CancellationException) {
             currentCoroutineContext().ensureActive()
+        } catch (e: InvalidEventException) {
+            throw A2AInvalidAgentResponseException("Agent sent an invalid event: ${e.message}")
+        } catch (e: TaskOperationException) {
+            throw A2AInvalidAgentResponseException("Agent sent an event that was rejected by the server")
         }
     }
 
@@ -763,7 +797,7 @@ public open class A2AServer(
 
                 val current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
                 if (current != null && !current.status.state.terminal) {
-                    eventProcessor.sendTaskEvent(
+                    eventProcessor.sendServerTaskEvent(
                         TaskStatusUpdateEvent(
                             taskId = taskId,
                             contextId = current.contextId ?: eventProcessor.contextId,

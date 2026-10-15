@@ -145,20 +145,19 @@ class TaskEventStreamTest {
         val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
         taskStorage.update(inputRequired)
 
-        val user = userMessage("user-1")
-        val (snapshot, channel) = stream.openTurnView(1, user, historyLength = null)
+        val (snapshot, channel) = stream.openTurnView(1, historyLength = null)
         val turnView = collect(channel)
 
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)
         stream.publish(working, turnId = 1)
         stream.endTurn(1, contextId, failure = null)
 
-        assertEquals(inputRequired.copy(history = listOf(user)), snapshot)
+        assertEquals(inputRequired, snapshot)
         assertEquals(listOf(working), turnView.await())
     }
 
     @Test
-    fun testOpenTurnViewMovesStatusMessageIntoHistoryBeforeUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+    fun testFollowUpMessageIsPersistedBeforeFirstTaskEventMovingStatusMessageIntoHistory() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
         val firstUser = userMessage("user-1")
         val prompt = agentMessage("prompt")
@@ -175,19 +174,25 @@ class TaskEventStreamTest {
         taskStorage.update(inputRequired)
 
         val secondUser = userMessage("user-2")
-        val (snapshot, channel) = stream.openTurnView(1, secondUser, historyLength = null)
+        val (snapshot, channel) = stream.openTurnView(1, historyLength = null)
         channel.cancel()
 
+        // Nothing is persisted until the agent sends an event.
+        assertEquals(inputRequired, snapshot)
+        assertEquals(inputRequired, taskStorage.get(taskId))
+
+        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
+        stream.publish(working, turnId = 1, followUpMessage = secondUser)
+
         val expected = inputRequired.copy(
-            status = inputRequired.status.copy(message = null),
+            status = working.status,
             history = listOf(firstUser, prompt, secondUser),
         )
-        assertEquals(expected, snapshot)
         assertEquals(expected, taskStorage.get(taskId))
     }
 
     @Test
-    fun testOpenTurnViewDoesNotDuplicateUserMessageAlreadyInHistory() = runTest(timeout = TEST_TIMEOUT) {
+    fun testFollowUpMessageAlreadyInHistoryIsNotDuplicated() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
         val user = userMessage("user-1")
         val prompt = agentMessage("prompt")
@@ -197,11 +202,13 @@ class TaskEventStreamTest {
         )
         taskStorage.update(stored)
 
-        val (snapshot, channel) = stream.openTurnView(1, user, historyLength = null)
-        channel.cancel()
+        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
+        stream.publish(working, turnId = 1, followUpMessage = user)
 
-        assertEquals(stored, snapshot)
-        assertEquals(stored, taskStorage.get(taskId))
+        assertEquals(
+            stored.copy(status = working.status, history = listOf(user, prompt)),
+            taskStorage.get(taskId),
+        )
     }
 
     @Test

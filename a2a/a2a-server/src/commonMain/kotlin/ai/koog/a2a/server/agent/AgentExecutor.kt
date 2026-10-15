@@ -33,11 +33,13 @@ public interface AgentExecutor {
      * [TaskState.TASK_STATE_FAILED] and notifies all streams of the task.
      *
      * The server persists the user message ([RequestContext.params] message) into the task history itself, deduplicated by
-     * message id, so the agent doesn't have to: for a new task it is added to the initial [Task] the agent sends, for a
-     * follow-up it is added to the stored task before this method is called. [RequestContext.task] is therefore the full
-     * stored task of a follow-up, including its history with the user message and its artifacts. The status message that
-     * was current before the follow-up has been moved into the history, and [ai.koog.a2a.model.TaskStatus.message] is
-     * cleared until the agent sends its next status update.
+     * message id, so the agent doesn't have to; the stored copy has the task id and context id of the task. For a new
+     * task it is added to the initial [Task] the agent sends. For a follow-up it is added lazily, right before the
+     * first status or artifact update the agent sends in this turn: the status message that was current before the
+     * follow-up is moved into the history, followed by the user message, and [ai.koog.a2a.model.TaskStatus.message] is
+     * cleared. If the agent sends no such event, the user message is not persisted. [RequestContext.task] is the full
+     * stored task of a follow-up as of the start of the turn (history and artifacts), so it doesn't contain the user
+     * message yet.
      *
      * A [Task] event for a task that already exists is ignored (neither stored nor delivered): for a follow-up, send
      * status and artifact updates only.

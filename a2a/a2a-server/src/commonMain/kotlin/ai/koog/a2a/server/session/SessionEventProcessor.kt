@@ -6,6 +6,7 @@ import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.SessionNotActiveException
+import ai.koog.a2a.server.exceptions.TaskOperationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -43,8 +44,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * identifier that will be validated against all [TaskEvent] in this session.
  * @param taskExists Whether the task [taskId] already exists when the processor is created, i.e. the processor starts
  * in task mode and rejects [Message] events.
- * @param userMessage The message of the request that starts the turn. It is added to the history of the task the agent
- * creates in this turn (see [sendTaskEvent]); `null` when the turn doesn't create a task.
+ * @param userMessage The message of the request that starts the turn. It is added to the history of the task, with the
+ * task id and context id of this session set, see [sendTaskEvent]; `null` when the processor isn't bound to a turn.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public class SessionEventProcessor internal constructor(
@@ -53,7 +54,7 @@ public class SessionEventProcessor internal constructor(
     private val stream: TaskEventStream,
     private val turnId: Long?,
     private val taskExists: Boolean = false,
-    private val userMessage: Message? = null,
+    userMessage: Message? = null,
 ) {
     private companion object {
         private const val SESSION_CLOSED = "Session event processor is closed, can't send events"
@@ -68,6 +69,22 @@ public class SessionEventProcessor internal constructor(
         private const val TASK_EXISTS =
             "Task already exists, only TaskEvent's with the same taskId can be sent in this session"
     }
+
+    /**
+     * The user message as it is stored in the task history, with the ids of this session.
+     */
+    private val storedUserMessage: Message? = userMessage?.copy(taskId = taskId, contextId = contextId)
+
+    /**
+     * The user message of a follow-up turn that is not persisted yet, see [sendTaskEvent].
+     */
+    private var pendingFollowUpMessage: Message? = storedUserMessage.takeIf { taskExists }
+
+    /**
+     * The first event the agent sent that was rejected as invalid (by validation or by the storage), if any.
+     */
+    internal var rejection: Exception? = null
+        private set
 
     init {
         require(stream.taskId == taskId) { "Event stream of task '${stream.taskId}' can't be used for task '$taskId'" }
@@ -101,15 +118,15 @@ public class SessionEventProcessor internal constructor(
     public suspend fun sendMessage(message: Message): Unit = sessionMutex.withLock {
         if (_isOpen.load()) {
             if (taskExists) {
-                throw InvalidEventException(TASK_EXISTS)
+                throw reject(InvalidEventException(TASK_EXISTS))
             }
 
             if (isTaskEventSent) {
-                throw InvalidEventException(TASK_EVENT_SENT)
+                throw reject(InvalidEventException(TASK_EVENT_SENT))
             }
 
             if (message.contextId != this.contextId) {
-                throw InvalidEventException(INVALID_CONTEXT_ID)
+                throw reject(InvalidEventException(INVALID_CONTEXT_ID))
             }
 
             stream.publish(message, turnId)
@@ -124,10 +141,12 @@ public class SessionEventProcessor internal constructor(
      * Validates the event against the session context, persists it to the task storage, and delivers it to all streams
      * of the task. When this method returns, the event is persisted.
      *
-     * The server adds the user message of the request to the history of the task: when the agent creates the task with
-     * a [Task] event, the message is appended to [Task.history] unless the history has a message with the same
-     * [Message.messageId] already, so the agent doesn't have to include it. A [Task] event for an existing task is
-     * ignored, see [SessionEventProcessor].
+     * The server adds the user message of the request to the history of the task, with the task id and context id of
+     * the task set, unless the history has a message with the same [Message.messageId] already, so the agent doesn't
+     * have to include it: when the agent creates the task with a [Task] event, the message is appended to
+     * [Task.history]; when the turn continues an existing task, the message is persisted right before the first
+     * status or artifact update the agent sends (and not at all if it sends none), see
+     * [SessionManager]. A [Task] event for an existing task is ignored, see [SessionEventProcessor].
      *
      * @param event The event to be sent.
      * @throws [InvalidEventException] for invalid events.
@@ -137,26 +156,57 @@ public class SessionEventProcessor internal constructor(
     public suspend fun sendTaskEvent(event: TaskEvent): Unit = sessionMutex.withLock {
         if (_isOpen.load()) {
             isTaskEventSent = true
-
-            if (event.contextId != this.contextId) {
-                throw InvalidEventException(INVALID_CONTEXT_ID)
-            }
-
-            if (event.taskId != this.taskId) {
-                throw InvalidEventException(INVALID_TASK_ID)
-            }
-
-            val isApplied = stream.publish(event, turnId, userMessage.takeUnless { taskExists })
-
-            val isFinalEvent = (event is TaskStatusUpdateEvent && event.status.state.terminal) ||
-                (event is Task && event.status.state.terminal)
-
-            if (isApplied && isFinalEvent) {
-                _isOpen.store(false)
-            }
+            publishTaskEvent(event, persistFollowUpMessage = true)
         } else {
             throw SessionNotActiveException(SESSION_CLOSED)
         }
+    }
+
+    /**
+     * Sends a [TaskEvent] originated by the server itself (e.g. the forced cancellation) rather than by the agent:
+     * it is not counted as the agent's first event, so it doesn't persist the pending user message of a follow-up.
+     */
+    internal suspend fun sendServerTaskEvent(event: TaskEvent): Unit = sessionMutex.withLock {
+        if (_isOpen.load()) {
+            isTaskEventSent = true
+            publishTaskEvent(event, persistFollowUpMessage = false)
+        } else {
+            throw SessionNotActiveException(SESSION_CLOSED)
+        }
+    }
+
+    private suspend fun publishTaskEvent(event: TaskEvent, persistFollowUpMessage: Boolean) {
+        if (event.contextId != this.contextId) {
+            throw reject(InvalidEventException(INVALID_CONTEXT_ID))
+        }
+
+        if (event.taskId != this.taskId) {
+            throw reject(InvalidEventException(INVALID_TASK_ID))
+        }
+
+        val followUpMessage = pendingFollowUpMessage.takeIf { persistFollowUpMessage && event !is Task }
+
+        val isApplied = try {
+            stream.publish(event, turnId, userMessage = storedUserMessage.takeUnless { taskExists }, followUpMessage)
+        } catch (e: TaskOperationException) {
+            throw reject(e)
+        }
+
+        if (isApplied && followUpMessage != null) {
+            pendingFollowUpMessage = null
+        }
+
+        val isFinalEvent = (event is TaskStatusUpdateEvent && event.status.state.terminal) ||
+            (event is Task && event.status.state.terminal)
+
+        if (isApplied && isFinalEvent) {
+            _isOpen.store(false)
+        }
+    }
+
+    private fun <E : Exception> reject(e: E): E {
+        if (rejection == null) rejection = e
+        return e
     }
 
     /**
