@@ -4,6 +4,7 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
+import ai.koog.a2a.transport.withCaseInsensitiveNames
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -78,8 +79,9 @@ public fun Route.a2aJsonRpcTransportRoute(
 
     // Handle incoming JSON-RPC requests, both regular and streaming
     post {
+        // HTTP header names are case-insensitive (HTTP/2 lowercases them), but Ktor's toMap() keeps names as received
         val ctx = ServerCallContext(
-            headers = call.request.headers.toMap()
+            headers = call.request.headers.toMap().withCaseInsensitiveNames()
         )
 
         transport.handleRequest(

@@ -1,6 +1,8 @@
 package ai.koog.a2a.server
 
+import ai.koog.a2a.consts.A2AHeaders
 import ai.koog.a2a.exceptions.A2AExtendedAgentCardNotConfiguredException
+import ai.koog.a2a.exceptions.A2AExtensionSupportRequiredException
 import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
@@ -380,6 +382,8 @@ public open class A2AServer(
         request: GetExtendedAgentCardRequest,
         ctx: ServerCallContext
     ): AgentCard {
+        checkRequiredExtensions(ctx)
+
         if (agentCard.capabilities.extendedAgentCard != true) {
             throw A2AUnsupportedOperationException("Extended agent card is not supported")
         }
@@ -579,6 +583,8 @@ public open class A2AServer(
         request: SendMessageRequest,
         ctx: ServerCallContext
     ): ResponseEvent {
+        checkRequiredExtensions(ctx)
+
         val messageConfiguration = request.configuration
         val returnImmediately = messageConfiguration?.returnImmediately == true
         var lastTaskEvent: TaskEvent? = null
@@ -628,6 +634,7 @@ public open class A2AServer(
         request: SendMessageRequest,
         ctx: ServerCallContext
     ): Flow<Event> = flow {
+        checkRequiredExtensions(ctx)
         checkStreamingSupport()
         emitAll(onSendMessageCommon(request, ctx, includeTaskSnapshot = true))
     }
@@ -648,6 +655,7 @@ public open class A2AServer(
         request: GetTaskRequest,
         ctx: ServerCallContext
     ): Task {
+        checkRequiredExtensions(ctx)
         validateHistoryLength(request.historyLength)
 
         return taskStorage.get(request, ctx)
@@ -658,6 +666,8 @@ public open class A2AServer(
         request: ListTasksRequest,
         ctx: ServerCallContext
     ): ListTasksResponse {
+        checkRequiredExtensions(ctx)
+
         request.pageSize?.let { pageSize ->
             if (pageSize !in MIN_LIST_TASKS_PAGE_SIZE..MAX_LIST_TASKS_PAGE_SIZE) {
                 throw A2AInvalidParamsException(
@@ -698,6 +708,8 @@ public open class A2AServer(
         request: CancelTaskRequest,
         ctx: ServerCallContext
     ): Task {
+        checkRequiredExtensions(ctx)
+
         val taskId = request.id
 
         // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
@@ -832,6 +844,7 @@ public open class A2AServer(
         request: SubscribeToTaskRequest,
         ctx: ServerCallContext
     ): Flow<Event> = flow {
+        checkRequiredExtensions(ctx)
         checkStreamingSupport()
 
         emitAll(sessionManager.subscribe(request, ctx))
@@ -841,6 +854,8 @@ public open class A2AServer(
         request: TaskPushNotificationConfig,
         ctx: ServerCallContext
     ): TaskPushNotificationConfig {
+        checkRequiredExtensions(ctx)
+
         val pushStorage = storageIfPushNotificationSupported()
         val taskId = request.taskId?.takeIf { it.isNotBlank() }
             ?: throw A2AInvalidParamsException("Task id is required to create a push notification config")
@@ -861,6 +876,8 @@ public open class A2AServer(
         request: GetTaskPushNotificationConfigRequest,
         ctx: ServerCallContext
     ): TaskPushNotificationConfig {
+        checkRequiredExtensions(ctx)
+
         val pushStorage = storageIfPushNotificationSupported()
         checkTaskExists(request.taskId)
 
@@ -874,6 +891,8 @@ public open class A2AServer(
         request: ListTaskPushNotificationConfigsRequest,
         ctx: ServerCallContext
     ): ListTaskPushNotificationConfigsResponse {
+        checkRequiredExtensions(ctx)
+
         val pushStorage = storageIfPushNotificationSupported()
         checkTaskExists(request.taskId)
 
@@ -884,6 +903,8 @@ public open class A2AServer(
         request: DeleteTaskPushNotificationConfigRequest,
         ctx: ServerCallContext
     ) {
+        checkRequiredExtensions(ctx)
+
         val pushStorage = storageIfPushNotificationSupported()
         checkTaskExists(request.taskId)
 
@@ -893,6 +914,29 @@ public open class A2AServer(
     private suspend fun checkTaskExists(taskId: String) {
         taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
             ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+    }
+
+    /**
+     * Checks that the client requested all extensions that [agentCard] declares as required, called first in every
+     * [RequestHandler] operation (including [onGetExtendedAgentCard]). The extensions requested by the client are
+     * [ServerCallContext.requestedExtensions]; requested extensions that the card doesn't declare are ignored.
+     *
+     * Only the public [agentCard] is consulted, not [agentCardExtended]. Override to customize the check,
+     * e.g. to skip some operations.
+     *
+     * @throws A2AExtensionSupportRequiredException if some required extensions were not requested.
+     */
+    protected open fun checkRequiredExtensions(context: ServerCallContext) {
+        val missing = agentCard.capabilities.extensions.orEmpty()
+            .filter { it.required == true }
+            .mapNotNull { it.uri }
+            .filter { it !in context.requestedExtensions }
+
+        if (missing.isNotEmpty()) {
+            throw A2AExtensionSupportRequiredException(
+                "Required extensions were not requested in ${A2AHeaders.A2A_EXTENSIONS}: ${missing.joinToString(", ")}"
+            )
+        }
     }
 
     protected open fun checkStreamingSupport() {

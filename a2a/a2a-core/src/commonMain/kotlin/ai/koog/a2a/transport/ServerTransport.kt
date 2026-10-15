@@ -1,5 +1,7 @@
 package ai.koog.a2a.transport
 
+import ai.koog.a2a.consts.A2AHeaders
+import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCard
@@ -18,6 +20,7 @@ import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
+import ai.koog.a2a.validation.normalizeVersion
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -190,13 +193,23 @@ public interface RequestHandler {
  * val user = ctx.getFromState(StateKeys.USER_KEY)
  * ```
  *
- * @property headers Headers associated with the call.
+ * @property headers Headers associated with the call. Transports are expected to provide them with
+ * case-insensitive name lookup, see [withCaseInsensitiveNames]; [requestedVersion] and [requestedExtensions] always
+ * look the headers up case-insensitively.
  * @property state State associated with the call, allows storing arbitrary values. To get typed value from the state,
  * use [getFromState] or [getFromStateOrNull] with appropriate [StateKey].
+ * @property requestedVersion A2A protocol version requested by the client, as `Major.Minor`. Defaults to the value
+ * of the `A2A-Version` header (looked up case-insensitively), and to [A2AVersions.VERSION_0_3] if the header is
+ * missing or empty, as required by the spec.
+ * @property requestedExtensions URIs of the extensions the client requested to activate. Defaults to the URIs from
+ * all `A2A-Extensions` header values (looked up case-insensitively): comma-separated, trimmed, with empty entries
+ * ignored.
  */
 public class ServerCallContext(
     public val headers: Map<String, List<String>> = emptyMap(),
-    public val state: Map<StateKey<*>, Any> = emptyMap()
+    public val state: Map<StateKey<*>, Any> = emptyMap(),
+    public val requestedVersion: String = requestedVersionFrom(headers),
+    public val requestedExtensions: Set<String> = requestedExtensionsFrom(headers),
 ) {
     /**
      * Retrieves a value of type [T] associated with the specified [key] from the [state] map.
@@ -226,9 +239,26 @@ public class ServerCallContext(
 
     /**
      * Creates a copy of this [ServerCallContext].
+     *
+     * If [headers] are replaced and [requestedVersion] or [requestedExtensions] are not given, they are derived from
+     * the new headers; otherwise they are kept.
      */
     public fun copy(
         headers: Map<String, List<String>> = this.headers,
         state: Map<StateKey<*>, Any> = this.state,
-    ): ServerCallContext = ServerCallContext(headers, state)
+        requestedVersion: String = if (headers === this.headers) this.requestedVersion else requestedVersionFrom(headers),
+        requestedExtensions: Set<String> =
+            if (headers === this.headers) this.requestedExtensions else requestedExtensionsFrom(headers),
+    ): ServerCallContext = ServerCallContext(headers, state, requestedVersion, requestedExtensions)
 }
+
+private fun requestedVersionFrom(headers: Map<String, List<String>>): String =
+    normalizeVersion(headers.withCaseInsensitiveNames()[A2AHeaders.A2A_VERSION]?.firstOrNull())
+
+private fun requestedExtensionsFrom(headers: Map<String, List<String>>): Set<String> =
+    headers.withCaseInsensitiveNames()[A2AHeaders.A2A_EXTENSIONS]
+        .orEmpty()
+        .flatMap { it.split(',') }
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .toSet()

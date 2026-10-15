@@ -2,6 +2,7 @@ package ai.koog.a2a.transport.server.jsonrpc.http
 
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.consts.A2APaths
+import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
@@ -36,11 +37,14 @@ import kotlinx.coroutines.sync.withLock
  *
  * @property requestHandler The handler responsible for processing A2A requests received by the transport,
  * usually an instance of [ai.koog.a2a.server.A2AServer] or its custom implementation.
+ * @property supportedVersions A2A protocol versions accepted in the `A2A-Version` header, see [JSONRPCServerTransport].
+ * Defaults to [A2AVersions.SUPPORTED_VERSIONS].
  */
 @OptIn(InternalA2AApi::class)
 public class HttpJSONRPCServerTransport(
     requestHandler: RequestHandler,
-) : JSONRPCServerTransport(requestHandler) {
+    supportedVersions: Set<String> = A2AVersions.SUPPORTED_VERSIONS,
+) : JSONRPCServerTransport(requestHandler, supportedVersions) {
 
     /**
      * Current running server instance if this transport is used as a standalone server.

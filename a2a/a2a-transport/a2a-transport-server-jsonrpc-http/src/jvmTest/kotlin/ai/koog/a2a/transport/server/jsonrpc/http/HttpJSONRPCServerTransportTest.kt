@@ -1,5 +1,7 @@
 package ai.koog.a2a.transport.server.jsonrpc.http
 
+import ai.koog.a2a.consts.A2AHeaders
+import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.exceptions.A2AErrorReasons
 import ai.koog.a2a.exceptions.A2AInternalErrorException
@@ -48,6 +50,7 @@ import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -240,6 +243,7 @@ class HttpJSONRPCServerTransportTest {
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                 setBody(json.encodeToString(jsonRpcRequest))
             }
 
@@ -285,6 +289,7 @@ class HttpJSONRPCServerTransportTest {
                         this.method = HttpMethod.Post
 
                         contentType(ContentType.Application.Json)
+                        header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                         setBody(json.encodeToString(jsonRpcRequest))
                     },
                 ) {
@@ -467,6 +472,7 @@ class HttpJSONRPCServerTransportTest {
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                 setBody(json.encodeToString(jsonRpcRequest))
             }
 
@@ -491,6 +497,7 @@ class HttpJSONRPCServerTransportTest {
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                 setBody("invalid json")
             }
 
@@ -533,6 +540,7 @@ class HttpJSONRPCServerTransportTest {
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                 setBody(json.encodeToString(jsonRpcRequest))
             }
 
@@ -580,6 +588,7 @@ class HttpJSONRPCServerTransportTest {
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                 accept(ContentType.Text.EventStream)
                 setBody(json.encodeToString(jsonRpcRequest))
             }
@@ -632,6 +641,7 @@ class HttpJSONRPCServerTransportTest {
                         method = HttpMethod.Post
 
                         contentType(ContentType.Application.Json)
+                        header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                         setBody(json.encodeToString(jsonRpcRequest))
                     },
                 ) {
@@ -666,6 +676,7 @@ class HttpJSONRPCServerTransportTest {
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                 //language=JSON
                 setBody("""{"jsonrpc":"2.0","id":"test-no-params","method":"${A2AMethod.GetExtendedAgentCard.value}"}""")
             }
@@ -677,5 +688,228 @@ class HttpJSONRPCServerTransportTest {
             assertEquals(RequestId.StringId("test-no-params"), jsonRpcResponse.id)
             assertEquals(MockRequestHandler.agentCard, json.decodeFromJsonElement<AgentCard>(jsonRpcResponse.result))
         }
+    }
+
+    private class RawResponse(val status: HttpStatusCode, val contentType: ContentType?, val body: String)
+
+    /**
+     * Posts [method] to a transport with [handler], sending the given [headers] as they are (no `A2A-Version` is
+     * added), asking for SSE if [streaming].
+     */
+    private suspend fun postRaw(
+        method: A2AMethod,
+        params: kotlinx.serialization.json.JsonElement,
+        headers: Map<String, String>,
+        streaming: Boolean = false,
+        handler: RequestHandler = MockRequestHandler,
+        transportFactory: (RequestHandler) -> JSONRPCServerTransport = { JSONRPCServerTransport(it) },
+    ): RawResponse {
+        var result: RawResponse? = null
+
+        testApplication {
+            install(SSE)
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", transportFactory(handler))
+            }
+
+            val response = client.post("/a2a") {
+                contentType(ContentType.Application.Json)
+                headers.forEach { (name, value) -> header(name, value) }
+                if (streaming) accept(ContentType.Text.EventStream)
+                setBody(
+                    json.encodeToString(
+                        JSONRPCRequest(
+                            id = RequestId.StringId("version-test"),
+                            method = method.value,
+                            params = params,
+                            jsonrpc = JSONRPC_VERSION,
+                        )
+                    )
+                )
+            }
+
+            result = RawResponse(response.status, response.contentType()?.withoutParameters(), response.bodyAsText())
+        }
+
+        return result!!
+    }
+
+    private fun versionNotSupportedError(requested: String, supported: String = "1.0") = JSONRPCErrorResponse(
+        id = RequestId.StringId("version-test"),
+        error = JSONRPCError(
+            code = A2AErrorCodes.VERSION_NOT_SUPPORTED,
+            message = "A2A version '$requested' is not supported; supported: $supported",
+            data = json.encodeToJsonElement<List<ErrorData>>(
+                listOf(ErrorInfo(reason = A2AErrorReasons.VERSION_NOT_SUPPORTED))
+            ),
+        ),
+        jsonrpc = JSONRPC_VERSION,
+    )
+
+    private val getTaskParams = json.encodeToJsonElement(GetTaskRequest(id = "task-1"))
+    private val subscribeParams = json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1"))
+
+    @Test
+    fun testMissingVersionHeaderIsVersionNotSupported() = runTest {
+        val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = emptyMap())
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(
+            versionNotSupportedError("0.3"),
+            json.decodeFromString<JSONRPCErrorResponse>(response.body)
+        )
+    }
+
+    @Test
+    fun testEmptyVersionHeaderIsVersionNotSupported() = runTest {
+        val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(A2AHeaders.A2A_VERSION to ""))
+
+        assertEquals(
+            versionNotSupportedError("0.3"),
+            json.decodeFromString<JSONRPCErrorResponse>(response.body)
+        )
+    }
+
+    @Test
+    fun testMissingVersionHeaderOnStreamingMethodsIsPlainJsonError() = runTest {
+        listOf(
+            A2AMethod.SendMessageStreaming to json.encodeToJsonElement(
+                SendMessageRequest(Message(messageId = "m", role = Role.ROLE_USER, parts = listOf(TextPart("hi"))))
+            ),
+            A2AMethod.SubscribeToTask to subscribeParams,
+        ).forEach { (method, params) ->
+            val response = postRaw(method, params, headers = emptyMap(), streaming = true)
+
+            assertEquals(HttpStatusCode.OK, response.status, method.value)
+            assertEquals(ContentType.Application.Json, response.contentType, method.value)
+            assertEquals(
+                versionNotSupportedError("0.3"),
+                json.decodeFromString<JSONRPCErrorResponse>(response.body),
+                method.value
+            )
+        }
+    }
+
+    @Test
+    fun testVersionIsCheckedForEveryMethod() = runTest {
+        A2AMethod.entries.forEach { method ->
+            val response = postRaw(method, JsonNull, headers = mapOf(A2AHeaders.A2A_VERSION to "0.3"), streaming = method.streaming)
+
+            assertEquals(
+                A2AErrorCodes.VERSION_NOT_SUPPORTED,
+                json.decodeFromString<JSONRPCErrorResponse>(response.body).error.code,
+                method.value
+            )
+        }
+    }
+
+    @Test
+    fun testUnsupportedVersionIsRejected() = runTest {
+        listOf("0.3", "2.0", "99.0", "1.1").forEach { version ->
+            val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(A2AHeaders.A2A_VERSION to version))
+
+            assertEquals(
+                versionNotSupportedError(version),
+                json.decodeFromString<JSONRPCErrorResponse>(response.body),
+                version
+            )
+        }
+    }
+
+    @Test
+    fun testPatchVersionIsIgnored() = runTest {
+        val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(A2AHeaders.A2A_VERSION to "1.0.5"))
+
+        val result = json.decodeFromString<JSONRPCSuccessResponse>(response.body)
+        assertEquals(MockRequestHandler.taskGet, json.decodeFromJsonElement<Task>(result.result))
+    }
+
+    @Test
+    fun testVersionHeaderNameIsCaseInsensitive() = runTest {
+        listOf("a2a-version", "A2A-VERSION").forEach { name ->
+            val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(name to "1.0"))
+
+            val result = json.decodeFromString<JSONRPCSuccessResponse>(response.body)
+            assertEquals(MockRequestHandler.taskGet, json.decodeFromJsonElement<Task>(result.result), name)
+        }
+    }
+
+    @Test
+    fun testCustomSupportedVersions() = runTest {
+        val factory = { handler: RequestHandler ->
+            HttpJSONRPCServerTransport(handler, supportedVersions = setOf("1.1", "0.3"))
+        }
+
+        // Missing header stands for 0.3, which is supported here
+        val missing = postRaw(A2AMethod.GetTask, getTaskParams, headers = emptyMap(), transportFactory = factory)
+        assertEquals(
+            MockRequestHandler.taskGet,
+            json.decodeFromJsonElement<Task>(json.decodeFromString<JSONRPCSuccessResponse>(missing.body).result)
+        )
+
+        val v11 = postRaw(
+            A2AMethod.GetTask,
+            getTaskParams,
+            headers = mapOf(A2AHeaders.A2A_VERSION to "1.1.2"),
+            transportFactory = factory
+        )
+        assertEquals(
+            MockRequestHandler.taskGet,
+            json.decodeFromJsonElement<Task>(json.decodeFromString<JSONRPCSuccessResponse>(v11.body).result)
+        )
+
+        // 1.0 is not in the custom set
+        val v10 = postRaw(
+            A2AMethod.GetTask,
+            getTaskParams,
+            headers = mapOf(A2AHeaders.A2A_VERSION to "1.0"),
+            transportFactory = factory
+        )
+        assertEquals(
+            versionNotSupportedError("1.0", supported = "1.1, 0.3"),
+            json.decodeFromString<JSONRPCErrorResponse>(v10.body)
+        )
+    }
+
+    @Test
+    fun testUnsupportedVersionDoesNotReachRequestHandler() = runTest {
+        var called = false
+        val handler = object : RequestHandler by MockRequestHandler {
+            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
+                called = true
+                return MockRequestHandler.taskGet
+            }
+        }
+
+        postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(A2AHeaders.A2A_VERSION to "0.3"), handler = handler)
+
+        assertEquals(false, called)
+    }
+
+    @Test
+    fun testRequestedVersionAndExtensionsReachRequestHandler() = runTest {
+        var seen: ServerCallContext? = null
+        val handler = object : RequestHandler by MockRequestHandler {
+            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
+                seen = ctx
+                return MockRequestHandler.taskGet
+            }
+        }
+
+        postRaw(
+            A2AMethod.GetTask,
+            getTaskParams,
+            headers = mapOf(
+                "a2a-version" to "1.0.2",
+                "a2a-extensions" to "urn:a, urn:b,,urn:c",
+            ),
+            handler = handler
+        )
+
+        assertEquals("1.0", seen?.requestedVersion)
+        assertEquals(setOf("urn:a", "urn:b", "urn:c"), seen?.requestedExtensions)
+        // The headers themselves are looked up case-insensitively, too
+        assertEquals(listOf("1.0.2"), seen?.headers?.get(A2AHeaders.A2A_VERSION))
     }
 }

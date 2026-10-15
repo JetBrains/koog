@@ -1,12 +1,14 @@
 package ai.koog.a2a.transport.jsonrpc
 
 import ai.koog.a2a.annotations.InternalA2AApi
+import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2AInvalidRequestException
 import ai.koog.a2a.exceptions.A2AMethodNotFoundException
 import ai.koog.a2a.exceptions.A2AParseException
+import ai.koog.a2a.exceptions.A2AVersionNotSupportedException
 import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.transport.RequestHandler
@@ -20,6 +22,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
+import ai.koog.a2a.validation.requireSupportedVersion
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -48,9 +51,17 @@ import kotlinx.serialization.serializer
  * Handles receiving JSON-RPC requests, processing them, and sending responses.
  *
  * [handleRequest] is an entry point for processing a raw request and replying with a final response.
+ *
+ * Every request is checked against [supportedVersions] before it is dispatched, see [checkVersion].
+ *
+ * @property requestHandler The handler responsible for processing A2A requests received by the transport.
+ * @property supportedVersions A2A protocol versions this transport accepts in the `A2A-Version` header, compared by
+ * `Major.Minor`. A missing or empty header is treated as version `0.3`, so it is rejected unless `0.3` is added here,
+ * which does not make the SDK understand the 0.3 protocol. Defaults to [A2AVersions.SUPPORTED_VERSIONS].
  */
 public open class JSONRPCServerTransport(
     override val requestHandler: RequestHandler,
+    protected val supportedVersions: Set<String> = A2AVersions.SUPPORTED_VERSIONS,
 ) : ServerTransport {
     private companion object {
         private val logger = KotlinLogging.logger {}
@@ -59,7 +70,8 @@ public open class JSONRPCServerTransport(
     /**
      * Entry point for handling a raw JSON-RPC request payload.
      *
-     * Parses the incoming JSON and resolves the A2A method, according to A2A spec, then dispatches either to
+     * Parses the incoming JSON and resolves the A2A method, according to A2A spec, checks the requested protocol
+     * version with [checkVersion], then dispatches either to
      * [onRequest] for non-streaming methods or [onRequestStreaming] for streaming methods.
      *
      * @param requestRaw Raw request body
@@ -97,6 +109,9 @@ public open class JSONRPCServerTransport(
         }
 
         try {
+            // Applies to all methods; for streaming ones the error is still a plain response, as no stream is open yet
+            checkVersion(ctx)
+
             if (jsonRpcRequest.a2aMethod.streaming) {
                 respondStreamingOrError(onRequestStreaming(jsonRpcRequest.request, ctx), respond, respondStreaming)
             } else {
@@ -107,6 +122,16 @@ public open class JSONRPCServerTransport(
         } catch (e: Exception) {
             respond(toJSONRPCErrorResponse(e, jsonRequest.requestId))
         }
+    }
+
+    /**
+     * Checks that the protocol version requested by the client, [ServerCallContext.requestedVersion], is one of
+     * the [supportedVersions]. Called for every request after its method is resolved.
+     *
+     * @throws A2AVersionNotSupportedException if the requested version is not supported.
+     */
+    protected open fun checkVersion(ctx: ServerCallContext) {
+        requireSupportedVersion(ctx.requestedVersion, supportedVersions)
     }
 
     /**

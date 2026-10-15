@@ -9,7 +9,15 @@ public object A2AVersions {
      */
     public const val VERSION_0_3: String = "0.3"
 
+    /**
+     * Protocol version 1.0.
+     */
     public const val VERSION_1_0: String = "1.0"
+
+    /**
+     * Protocol versions supported by the SDK servers by default.
+     */
+    public val SUPPORTED_VERSIONS: Set<String> = setOf(VERSION_1_0)
 
     /**
      * Latest supported protocol version, returns one of the versions listed in the [A2AVersions]
