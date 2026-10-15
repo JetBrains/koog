@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.session
 
+import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Event
@@ -13,16 +14,15 @@ import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -52,12 +52,19 @@ import kotlinx.coroutines.withContext
  *   updates its subscriber set under one per-task lock. This is what makes all streams of a task observe the same
  *   events in the same order, and makes [subscribe]'s snapshot and registration atomic.
  *
- * Lock order: the caller's per-task locks (task lock, then cancel lock, see [ai.koog.a2a.server.A2AServer.onCancelTask];
- * the task lock is never awaited while holding the gate), then [TaskEventStream.processorGate] (turn-end gate), then the
- * registry lock; and the gate, then the stream lock. A [withTaskProcessor] block (cancellation) holds the gate, so the
- * turn it works with can't end meanwhile, while [startTurn] doesn't need the gate. The registry lock and the stream lock are never nested: the registry lock is held only for short, non-suspending
- * bookkeeping and is **never** held while acquiring a stream lock (or anything else that can wait for a fan-out), so a
- * stalled task can't block the other tasks.
+ * The per-task [TaskEventStream.processorGate] (turn gate) linearizes the start of a turn, the end of a turn, and
+ * [withTaskProcessor] blocks (cancellation) of a task: [startTurn] registers the turn's view and makes the turn visible
+ * under the gate, so a [withTaskProcessor] block either sees the running turn (which can't end while the block runs),
+ * or sees no turn, and then no turn starts until the block is done. A turn of an existing task that would start after a
+ * block left the task in a terminal state is rejected.
+ *
+ * Lock order: the caller's per-task task lock (see [ai.koog.a2a.server.A2AServer.tasksMutex]), then the turn gate, then
+ * either the registry lock or the stream lock. The task lock is never acquired while holding the gate: a
+ * [withTaskProcessor] block (e.g. [ai.koog.a2a.server.A2AServer.onCancelTask]) doesn't take it at all, since the task
+ * lock can be held by a caller waiting for a running turn to end ([Session.join]), and a turn can't end without the
+ * gate. The registry lock and the stream lock are never nested: the registry lock is held only for short,
+ * non-suspending bookkeeping and is **never** held while acquiring a stream lock (or anything else that can wait for a
+ * fan-out), so a stalled task can't block the other tasks.
  *
  * ## Back-pressure
  *
@@ -115,17 +122,6 @@ public class SessionManager(
     }
 
     /**
-     * A running turn.
-     */
-    private class Turn(val session: Session) {
-        /**
-         * Completes once the turn's view is registered in the task stream, i.e. the turn is ready to run and publish
-         * (`true`), or once the registration failed and the turn has been removed (`false`).
-         */
-        val registered = CompletableDeferred<Boolean>()
-    }
-
-    /**
      * Guards [streams], [turns], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate]. Since
      * a stream lock can be held for a long time by a fan-out waiting for a slow collector, this lock is never held
      * while acquiring a stream lock or anything else that may wait for a fan-out, and only short non-suspending
@@ -135,9 +131,11 @@ public class SessionManager(
     private val streams = mutableMapOf<String, StreamEntry>()
 
     /**
-     * Map of task id to the running turn. All sessions have a task id, even if the task won't be created.
+     * Map of task id to the session of the running turn. All sessions have a task id, even if the task won't be
+     * created. A turn is added once its view is registered, and removed once it has ended, both under the task's
+     * [TaskEventStream.processorGate].
      */
-    private val turns = mutableMapOf<String, Turn>()
+    private val turns = mutableMapOf<String, Session>()
     private var nextTurnId = 0L
 
     /**
@@ -151,7 +149,9 @@ public class SessionManager(
      *   of the stored task when the agent sends its first status or artifact update, see "History" above;
      * - the stored task is read atomically with the registration of [Session.events] (with the history limited to
      *   the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts) and kept as the
-     *   session's task snapshot.
+     *   session's task snapshot;
+     * - if the stored task is in a terminal state by then (e.g. it was cancelled after the caller validated it), the
+     *   turn isn't started.
      *
      * If the turn creates a new task, the user message is added to the history of the agent's initial
      * [ai.koog.a2a.model.Task] instead.
@@ -169,92 +169,91 @@ public class SessionManager(
      * @param block The agent logic of the turn.
      * @return The session of the started turn.
      * @throws IllegalStateException if a turn for the same task is already running.
+     * @throws A2AUnsupportedOperationException if the turn continues an existing task that is in a terminal state.
      */
+    @InternalA2AApi
     public suspend fun startTurn(
         context: RequestContext<SendMessageRequest>,
         block: suspend (SessionEventProcessor) -> Unit,
     ): Session {
         val taskId = context.taskId
         val contextId = context.contextId
-
-        val turnView = CompletableDeferred<Flow<Event>>()
-        val taskSnapshot = CompletableDeferred<Task?>()
         val taskExists = context.task != null
 
-        /*
-         Under the registry lock only reserve the task and pin the stream. The turn view is registered under the stream
-         lock afterwards: the stream lock can be held for long by a fan-out waiting for a slow collector, and the
-         registry lock must not wait for it. Meanwhile the turn is already visible to getSession (so a concurrent
-         join() works) and blocks other startTurn calls for the task, but nothing can publish for it: the agent job is
-         lazy and is started only by monitorTurn, which is launched after the registration.
-         */
-        val (turn, stream, turnId) = registryMutex.withLock {
-            check(taskId !in turns) {
-                "Session for taskId '$taskId' already runs."
-            }
-
-            val stream = acquireLocked(taskId)
-            val turnId = nextTurnId++
-
-            val processor = SessionEventProcessor(
-                contextId = contextId,
-                taskId = taskId,
-                stream = stream,
-                turnId = turnId,
-                taskExists = taskExists,
-                userMessage = context.params.message,
-            )
-
-            val session = Session(
-                taskId = taskId,
-                contextId = contextId,
-                agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) },
-                eventProcessor = processor,
-                events = flow { emitAll(turnView.await()) },
-                completion = Job(),
-                taskSnapshot = taskSnapshot,
-            )
-
-            val turn = Turn(session)
-            turns[taskId] = turn
-
-            Triple(turn, stream, turnId)
-        }
-        val session = turn.session
+        // Pinned until the turn has ended (released by monitorTurn), or right away if the turn doesn't start.
+        val stream = acquire(taskId)
+        var view: ReceiveChannel<Event>? = null
+        var started = false
 
         try {
-            val (snapshot, channel) = if (taskExists) {
-                stream.openTurnView(turnId, historyLength = context.params.configuration?.historyLength)
-            } else {
-                null to stream.openTurnView(turnId)
-            }
+            /*
+             Under the gate, no withTaskProcessor block (e.g. a cancellation) runs for the task, and the turn becomes
+             visible only after its view is registered, so a block either finds the turn with its view in place or
+             runs entirely before the turn starts. In the latter case a terminal state it forced is in the snapshot.
+             The registry lock isn't held while waiting for the stream lock in openTurnView: the stream lock can be held
+             for long by a fan-out waiting for a slow collector, and the registry lock must not wait for it.
+             */
+            return stream.processorGate.withLock {
+                val turnId = registryMutex.withLock {
+                    check(taskId !in turns) {
+                        "Session for taskId '$taskId' already runs."
+                    }
 
-            taskSnapshot.complete(snapshot)
-            turnView.complete(channel.consumeAsFlow())
-            turn.registered.complete(true)
-        } catch (e: Throwable) {
-            // Registration failed or the caller was cancelled: undo the reservation.
-            withContext(NonCancellable) {
-                registryMutex.withLock {
-                    if (turns[taskId] === turn) turns -= taskId
+                    nextTurnId++
                 }
 
-                // The agent job never started; cancel it so it doesn't linger as a child of the scope.
-                session.agentJob.cancel()
-                turnView.completeExceptionally(e)
-                taskSnapshot.completeExceptionally(e)
-                turn.registered.complete(false)
-                session.completion.complete()
-                release(stream)
+                val (snapshot, channel) = if (taskExists) {
+                    stream.openTurnView(turnId, historyLength = context.params.configuration?.historyLength)
+                } else {
+                    null to stream.openTurnView(turnId)
+                }
+                view = channel
+
+                if (snapshot != null && snapshot.status.state.terminal) {
+                    throw A2AUnsupportedOperationException(
+                        "Task '$taskId' is in terminal state ${snapshot.status.state} and can't accept messages"
+                    )
+                }
+
+                // The view is registered: from here on, the turn starts even if the caller is cancelled.
+                withContext(NonCancellable) {
+                    val processor = SessionEventProcessor(
+                        contextId = contextId,
+                        taskId = taskId,
+                        stream = stream,
+                        turnId = turnId,
+                        taskExists = taskExists,
+                        userMessage = context.params.message,
+                    )
+
+                    val session = Session(
+                        taskId = taskId,
+                        contextId = contextId,
+                        agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) },
+                        eventProcessor = processor,
+                        events = channel.consumeAsFlow(),
+                        completion = Job(),
+                        taskSnapshot = snapshot,
+                    )
+
+                    registryMutex.withLock { turns[taskId] = session }
+                    started = true
+
+                    // Starts the agent job; ends the turn under the gate, i.e. after this registration is done.
+                    coroutineScope.launch {
+                        monitorTurn(session, stream, turnId)
+                    }
+
+                    session
+                }
             }
+        } catch (e: Throwable) {
+            // The turn didn't start, or it did but the caller is gone: either way, nobody collects the view.
+            view?.let(stream::unsubscribe)
             throw e
+        } finally {
+            if (!started) release(stream)
         }
-
-        coroutineScope.launch {
-            monitorTurn(session, stream, turnId)
-        }
-
-        return session
     }
 
     /**
@@ -292,7 +291,7 @@ public class SessionManager(
                 // Make sure the requester's view ends even if finishing the turn failed or was cancelled.
                 stream.closeTurnView(turnId)
                 registryMutex.withLock {
-                    if (turns[session.taskId]?.session === session) turns -= session.taskId
+                    if (turns[session.taskId] === session) turns -= session.taskId
                 }
                 release(stream)
             }
@@ -339,6 +338,7 @@ public class SessionManager(
      * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller).
      * @throws A2AUnsupportedOperationException if the task is already in a terminal state.
      */
+    @InternalA2AApi
     public fun subscribe(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> = flow {
         val stream = acquire(request.id)
 
@@ -370,14 +370,18 @@ public class SessionManager(
      * publishes reaches the turn's requester as well. Otherwise, [block] receives a new processor and `null`.
      * Either way, the events [block] publishes reach every [subscribe] stream of the task.
      *
-     * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. with [Session.join]),
-     * since the turn can't end while [block] runs.
+     * No turn of the task starts while [block] runs: a turn that is being started waits, and is rejected if [block]
+     * left the task in a terminal state, see [startTurn].
+     *
+     * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. with [Session.join]) or
+     * for a turn to start, since neither can happen while [block] runs.
      *
      * @param taskId The task id.
      * @param contextId The context id of the task, used for the new processor when no turn is running.
      * @param block The action to run.
      * @return The result of [block].
      */
+    @InternalA2AApi
     public suspend fun <T> withTaskProcessor(
         taskId: String,
         contextId: String,
@@ -387,7 +391,7 @@ public class SessionManager(
 
         try {
             return stream.processorGate.withLock {
-                val session = findRegisteredSession(taskId)
+                val session = registryMutex.withLock { turns[taskId] }
 
                 val processor = session?.eventProcessor ?: SessionEventProcessor(
                     contextId = contextId,
@@ -404,10 +408,11 @@ public class SessionManager(
     }
 
     /**
-     * Returns the session of the running turn of the given task id, if any.
+     * Returns the session of the running turn of the given task id, if any. A turn that is still being started by
+     * [startTurn] isn't reported until its [Session.events] is registered.
      */
     public suspend fun getSession(taskId: String): Session? = registryMutex.withLock {
-        turns[taskId]?.session
+        turns[taskId]
     }
 
     /**
@@ -424,31 +429,13 @@ public class SessionManager(
         streams.size
     }
 
-    /**
-     * Returns the session of the running turn of [taskId] once its turn view is registered, or `null` if there is no
-     * turn. Waits for a turn that is still being started, so that whatever the caller publishes through the session's
-     * processor reaches the turn's [Session.events]. Must not be called while holding the registry lock.
-     */
-    private suspend fun findRegisteredSession(taskId: String): Session? {
-        while (true) {
-            val turn = registryMutex.withLock { turns[taskId] } ?: return null
-
-            // False if the turn failed to start; it has been removed by then, so look again.
-            if (turn.registered.await()) return turn.session
-        }
-    }
-
     private suspend fun acquire(taskId: String): TaskEventStream = registryMutex.withLock {
-        acquireLocked(taskId)
-    }
-
-    private fun acquireLocked(taskId: String): TaskEventStream {
         val entry = streams.getOrPut(taskId) {
             StreamEntry(TaskEventStream(taskId, taskStorage, idGenerator))
         }
         entry.holders++
 
-        return entry.stream
+        entry.stream
     }
 
     private suspend fun release(stream: TaskEventStream): Unit = withContext(NonCancellable) {

@@ -30,9 +30,8 @@ public class Session internal constructor(
     /**
      * For a turn that continues an existing task: the stored task, read atomically with the registration of
      * [events], i.e. the state of the task right before the first event of [events]. `null` for a turn of a new task.
-     * Completed by the time [SessionManager.startTurn] returns.
      */
-    internal val taskSnapshot: Deferred<Task?>,
+    internal val taskSnapshot: Task?,
 ) {
     /**
      * This turn's view of the task's event stream: every event the task receives while the turn runs (including

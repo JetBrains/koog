@@ -2,6 +2,7 @@ package ai.koog.a2a.server
 
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
+import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
@@ -34,6 +35,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
@@ -300,6 +302,37 @@ class A2AServerCancelTest {
         assertFailsWith<A2ATaskNotFoundException> {
             server.onCancelTask(CancelTaskRequest("unknown"), ctx)
         }
+    }
+
+    @Test
+    fun testFollowUpStartedDuringIdleCancelIsRejectedAndNeverRuns() = runTest(timeout = TEST_TIMEOUT) {
+        val cancelEntered = CompletableDeferred<Unit>()
+        val releaseCancel = CompletableDeferred<Unit>()
+        val gatedCancel = CancelHandler { _, _ ->
+            cancelEntered.complete(Unit)
+            releaseCancel.await()
+        }
+        var followUpRan = false
+        val server = createServer(mapOf("finish" to Script { followUpRan = true }), gatedCancel)
+        // An idle task: no turn is running.
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+
+        // The cancellation of the idle task is in progress when the follow-up arrives: it has passed validation and
+        // waits for the cancellation to finish to start its turn.
+        val cancel = async { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
+        cancelEntered.await()
+        val followUpRequest = request("finish").let { it.copy(message = it.message.copy(taskId = TASK_ID)) }
+        val followUp = async { runCatching { server.onSendMessage(followUpRequest, ctx) } }
+        runCurrent()
+        assertEquals(false, followUp.isCompleted)
+
+        releaseCancel.complete(Unit)
+        val canceled = cancel.await()
+
+        assertIs<A2AUnsupportedOperationException>(followUp.await().exceptionOrNull())
+        assertEquals(false, followUpRan)
+        assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
+        assertEquals(canceled, taskStorage.get(TASK_ID, historyLength = 0, includeArtifacts = true))
     }
 
     @Test

@@ -1,5 +1,6 @@
 package ai.koog.a2a.server
 
+import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.consts.A2AHeaders
 import ai.koog.a2a.exceptions.A2AExtendedAgentCardNotConfiguredException
 import ai.koog.a2a.exceptions.A2AExtensionSupportRequiredException
@@ -59,7 +60,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -342,8 +342,6 @@ public open class A2AServer(
     private companion object {
         private val logger = KotlinLogging.logger {}
 
-        private const val CANCEL_LOCK_POLL_MILLIS = 5L
-
         private const val MIN_LIST_TASKS_PAGE_SIZE = 1
         private const val MAX_LIST_TASKS_PAGE_SIZE = 100
 
@@ -360,11 +358,6 @@ public open class A2AServer(
      * the persisting and delivery of events.
      */
     protected val tasksMutex: KeyedMutex<String> = KeyedMutex()
-
-    /**
-     * Special cancellation key for additional set of task cancellation locks.
-     */
-    protected fun cancelKey(taskId: String): String = "cancel:$taskId"
 
     /**
      * Manages turns ([ai.koog.a2a.server.session.Session]s) and per-task event streams. Override to customize it.
@@ -434,6 +427,7 @@ public open class A2AServer(
      * [SessionEventProcessor]. If the turn produces no events, the flow consists of the snapshot only.
      * @return A cold flow of the turn's events; each collection sends the message again.
      */
+    @OptIn(InternalA2AApi::class)
     protected open fun onSendMessageCommon(
         request: SendMessageRequest,
         ctx: ServerCallContext,
@@ -500,7 +494,7 @@ public open class A2AServer(
             }
         }
 
-        val snapshot = if (includeTaskSnapshot) session.taskSnapshot.await() else null
+        val snapshot = if (includeTaskSnapshot) session.taskSnapshot else null
         var isFirstEvent = true
         var isResponseComplete = false
         var isRejected = false
@@ -711,6 +705,7 @@ public open class A2AServer(
      * @throws A2ATaskNotCancelableException if the task is terminal, or the executor left it in a terminal state
      * other than [TaskState.TASK_STATE_CANCELED].
      */
+    @OptIn(InternalA2AApi::class)
     override suspend fun onCancelTask(
         request: CancelTaskRequest,
         ctx: ServerCallContext
@@ -724,66 +719,12 @@ public open class A2AServer(
             ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
 
         /*
-         Cancellation uses two lock levels. The first is the standard task lock.
-         If it's already held by another request, ignore it because cancellation takes priority.
-         If it's not held, acquire it to block new requests while the cancellation is in progress.
-         */
-        var lockAcquired = tasksMutex.tryLock(taskId)
-
-        return try {
-            /*
-             The second lock is a per-task cancellation lock.
-             It's always taken during cancellation to serialize cancel operations and allow them to proceed even if the
-             regular task lock is held. It prevents overlapping cancels. Turn teardown is delayed separately by
-             SessionManager.withTaskProcessor, so the cancel handler can still emit cancellation events through the running
-             turn's processor after cancelling the agent job, and every stream of the task receives them.
-             */
-            tasksMutex.withLock(cancelKey(taskId)) {
-                var canceled: Task? = null
-
-                while (canceled == null) {
-                    canceled = cancelWithProcessor(request, ctx, initialTask.contextId.orEmpty(), lockAcquired)
-                    if (canceled != null) break
-
-                    /*
-                     The task lock is held by a request that has no running turn yet (or has just seen one end): it may
-                     start a turn right after we force the state, and that turn would overwrite the cancellation. Wait
-                     for the task lock, or for the turn to appear (then it's cancelled as a running turn). It isn't
-                     awaited inside withTaskProcessor, since the lock holder can be waiting for a turn that needs the
-                     turn-end gate we hold there.
-                     */
-                    lockAcquired = tasksMutex.tryLock(taskId)
-                    if (!lockAcquired) delay(CANCEL_LOCK_POLL_MILLIS)
-                }
-
-                checkNotNull(canceled)
-            }
-        } finally {
-            if (lockAcquired) {
-                tasksMutex.unlock(taskId)
-            }
-        }
-    }
-
-    /**
-     * One attempt of [onCancelTask] under the task's turn-end gate. Returns the canceled task, or `null` if the task
-     * has no running turn and the task lock isn't held by the caller ([hasTaskLock]), so the attempt has to be repeated.
-     */
-    private suspend fun cancelWithProcessor(
-        request: CancelTaskRequest,
-        ctx: ServerCallContext,
-        contextId: String,
-        hasTaskLock: Boolean,
-    ): Task? {
-        val taskId = request.id
-
-        /*
          Get a processor bound to the task's event stream, so that cancellation events reach every stream of the task. If
-         a turn is running, it's the turn's processor, and the turn can't end until we're done.
+         a turn is running, it's the turn's processor, and the turn can't end until we're done. Otherwise, no turn can
+         start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. The task
+         lock isn't taken: a follow-up holding it may be waiting for the very turn being cancelled to end.
          */
-        return sessionManager.withTaskProcessor(taskId, contextId) { eventProcessor, agentJob ->
-            if (agentJob == null && !hasTaskLock) return@withTaskProcessor null
-
+        return sessionManager.withTaskProcessor(taskId, initialTask.contextId.orEmpty()) { eventProcessor, agentJob ->
             // Re-read the task: a turn may have ended in the meantime.
             val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
                 ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
@@ -847,6 +788,7 @@ public open class A2AServer(
      * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
      * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
      */
+    @OptIn(InternalA2AApi::class)
     override fun onSubscribeToTask(
         request: SubscribeToTaskRequest,
         ctx: ServerCallContext

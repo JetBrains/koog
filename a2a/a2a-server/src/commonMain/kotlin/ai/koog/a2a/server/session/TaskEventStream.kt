@@ -102,8 +102,9 @@ internal class TaskEventStream(
 
     /**
      * Held by [SessionManager] while a [SessionEventProcessor] obtained through [SessionManager.withTaskProcessor]
-     * is in use, and while a turn is being finished. It keeps a turn from being finished (and its processor closed)
-     * while another party still publishes through that turn's processor, e.g. a cancellation handler.
+     * is in use, while a turn is being started, and while a turn is being finished. It keeps a turn from being
+     * finished (and its processor closed) while another party still publishes through that turn's processor, e.g. a
+     * cancellation handler, and keeps a turn from starting while such a party decides on the state of the task.
      */
     val processorGate: Mutex = Mutex()
 

@@ -1,5 +1,9 @@
+@file:OptIn(InternalA2AApi::class)
+
 package ai.koog.a2a.server.session
 
+import ai.koog.a2a.annotations.InternalA2AApi
+import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
@@ -451,7 +455,7 @@ class SessionManagerTest {
         session.join()
 
         assertEquals(inputRequired, storedWhenAgentStarted)
-        assertEquals(inputRequired, session.taskSnapshot.await())
+        assertEquals(inputRequired, session.taskSnapshot)
         assertEquals(
             inputRequired.copy(
                 status = working.status,
@@ -471,6 +475,26 @@ class SessionManagerTest {
         session.join()
 
         assertEquals(inputRequired, taskStorage.get(taskId))
+    }
+
+    @Test
+    fun testFollowUpTurnOfTaskThatBecameTerminalFails() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val inputRequired = storeInputRequiredTask()
+        // The task is cancelled after the caller validated it.
+        val canceled = createTask(taskId, contextId, TaskState.TASK_STATE_CANCELED)
+        taskStorage.update(canceled)
+        var agentStarted = false
+
+        assertFailsWith<A2AUnsupportedOperationException> {
+            sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) { agentStarted = true }
+        }
+        advanceUntilIdle()
+
+        assertEquals(false, agentStarted)
+        assertNull(sessionManager.getSession(taskId))
+        assertEquals(0, sessionManager.activeStreams())
+        assertEquals(canceled, taskStorage.get(taskId))
     }
 
     @Test
@@ -673,7 +697,7 @@ class SessionManagerTest {
 
         val stuck = stickStream(sessionManager, taskA, contextA)
 
-        // A follow-up turn for A has to wait for the stuck stream lock of A.
+        // A follow-up turn for A has to wait for A's stuck stream (whose publisher holds A's turn gate).
         val completedA = statusUpdate(taskA, contextA, TaskState.TASK_STATE_COMPLETED)
         val startA = async {
             sessionManager.startTurn(createContext(taskA, contextA)) { processor ->
@@ -683,11 +707,8 @@ class SessionManagerTest {
         runCurrent()
         assertEquals(false, startA.isCompleted)
 
-        // The turn of A is already visible, and a concurrent join works.
-        val joinedA = async { sessionManager.getSession(taskA)?.join() }
-        runCurrent()
-        assertNotNull(sessionManager.getSession(taskA))
-        assertEquals(false, joinedA.isCompleted)
+        // The turn of A isn't visible until its view is registered.
+        assertNull(sessionManager.getSession(taskA))
 
         // Everything for the other task, and the registry queries, go through while A is stuck.
         val messageB = createMessage("msg-b", contextB, "Hello B")
@@ -710,7 +731,7 @@ class SessionManagerTest {
                 createTask(taskB, contextB, TaskState.TASK_STATE_INPUT_REQUIRED),
                 true,
                 listOf<Event>(messageB),
-                1, // only A, which is still starting
+                0, // B has ended, and A is still starting
             ),
             operationsB.await()
         )
@@ -719,9 +740,9 @@ class SessionManagerTest {
         // Unblocking A lets everything finish.
         stuck.cancelAndJoin()
         val sessionA = startA.await()
+        assertSame(sessionA, sessionManager.getSession(taskA))
         val eventsA = drain(sessionA)
         sessionA.join()
-        joinedA.await()
 
         assertEquals(listOf<Event>(completedA), eventsA.await())
         assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskA)?.status?.state)
@@ -740,9 +761,10 @@ class SessionManagerTest {
             sessionManager.startTurn(createContext(taskId, contextId)) { agentStarted = true }
         }
         runCurrent()
-        assertNotNull(sessionManager.getSession(taskId))
+        assertEquals(false, start.isCompleted)
+        assertNull(sessionManager.getSession(taskId))
 
-        // The caller goes away between reserving the turn and registering its view.
+        // The caller goes away while the turn is waiting to register its view.
         start.cancelAndJoin()
 
         assertNull(sessionManager.getSession(taskId))
