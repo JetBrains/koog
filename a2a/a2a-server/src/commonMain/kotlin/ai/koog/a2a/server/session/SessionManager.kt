@@ -52,8 +52,10 @@ import kotlinx.coroutines.withContext
  *   updates its subscriber set under one per-task lock. This is what makes all streams of a task observe the same
  *   events in the same order, and makes [subscribe]'s snapshot and registration atomic.
  *
- * Lock order: [TaskEventStream.processorGate] (turn-end gate), then the registry lock; and the gate, then the stream
- * lock. The registry lock and the stream lock are never nested: the registry lock is held only for short, non-suspending
+ * Lock order: the caller's per-task locks (task lock, then cancel lock, see [ai.koog.a2a.server.A2AServer.onCancelTask];
+ * the task lock is never awaited while holding the gate), then [TaskEventStream.processorGate] (turn-end gate), then the
+ * registry lock; and the gate, then the stream lock. A [withTaskProcessor] block (cancellation) holds the gate, so the
+ * turn it works with can't end meanwhile, while [startTurn] doesn't need the gate. The registry lock and the stream lock are never nested: the registry lock is held only for short, non-suspending
  * bookkeeping and is **never** held while acquiring a stream lock (or anything else that can wait for a fan-out), so a
  * stalled task can't block the other tasks.
  *

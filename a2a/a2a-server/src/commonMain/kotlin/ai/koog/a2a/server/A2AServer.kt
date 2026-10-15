@@ -1,7 +1,6 @@
 package ai.koog.a2a.server
 
 import ai.koog.a2a.exceptions.A2AExtendedAgentCardNotConfiguredException
-import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
@@ -26,6 +25,7 @@ import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
+import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.messages.ContextMessageStorage
@@ -51,13 +51,16 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.transformWhile
+import kotlin.time.Clock
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -332,6 +335,8 @@ public open class A2AServer(
 ) : RequestHandler {
     private companion object {
         private val logger = KotlinLogging.logger {}
+
+        private const val CANCEL_LOCK_POLL_MILLIS = 5L
 
         private const val MIN_LIST_TASKS_PAGE_SIZE = 1
         private const val MAX_LIST_TASKS_PAGE_SIZE = 100
@@ -637,75 +642,148 @@ public open class A2AServer(
         }
     }
 
+    /**
+     * Cancels a task (CancelTask).
+     *
+     * - Throws [A2ATaskNotFoundException] if the task doesn't exist (or isn't visible to the caller, see
+     *   [TaskStorage.get]), and [A2ATaskNotCancelableException] if it is in a terminal state already.
+     * - Otherwise calls [AgentExecutor.cancel] with a processor bound to the task's event stream: the running turn's
+     *   processor if a turn is running (the turn can't end until the cancellation is done, so its requester and all
+     *   subscribers receive the cancellation events), or a standalone one for a task without a running turn, e.g. one
+     *   waiting for input.
+     * - If the task is still not in a terminal state after [AgentExecutor.cancel] returns, the server cancels the
+     *   running agent job (if any) and forces the state [TaskState.TASK_STATE_CANCELED] with a status update event
+     *   (with no status message), which is delivered to every stream of the task and closes them.
+     *
+     * The task is returned as stored (with artifacts, without history). [CancelTaskRequest] has no history limit.
+     *
+     * @throws A2ATaskNotCancelableException if the task is terminal, or the executor left it in a terminal state
+     * other than [TaskState.TASK_STATE_CANCELED].
+     */
     override suspend fun onCancelTask(
         request: CancelTaskRequest,
         ctx: ServerCallContext
     ): Task {
         val taskId = request.id
 
+        // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
+        val initialTask = taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant), ctx)
+            ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+
         /*
          Cancellation uses two lock levels. The first is the standard task lock.
-         If it’s already held by another request, ignore it because cancellation takes priority.
-         If it’s not held, acquire it to block new requests while the cancellation is in progress.
+         If it's already held by another request, ignore it because cancellation takes priority.
+         If it's not held, acquire it to block new requests while the cancellation is in progress.
          */
-        val lockAcquired = tasksMutex.tryLock(taskId)
+        var lockAcquired = tasksMutex.tryLock(taskId)
 
         return try {
             /*
              The second lock is a per-task cancellation lock.
-             It’s always taken during cancellation to serialize cancel operations and allow them to proceed even if the
+             It's always taken during cancellation to serialize cancel operations and allow them to proceed even if the
              regular task lock is held. It prevents overlapping cancels. Turn teardown is delayed separately by
              SessionManager.withTaskProcessor, so the cancel handler can still emit cancellation events through the running
              turn's processor after cancelling the agent job, and every stream of the task receives them.
              */
             tasksMutex.withLock(cancelKey(taskId)) {
-                val contextId = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
-                    .let { it ?: throw A2ATaskNotFoundException("Task '$taskId' not found") }
-                    .contextId
-                    ?: throw A2AInternalErrorException("Task '$taskId' has no context id")
+                var canceled: Task? = null
 
-                /*
-                 Get a processor bound to the task's event stream, so that cancellation events reach every stream of
-                 the task. If a turn is running, it's the turn's processor, and the turn can't end until we're done.
-                 */
-                sessionManager.withTaskProcessor(taskId, contextId) { eventProcessor, agentJob ->
-                    // Re-read the task: a turn may have ended in the meantime.
-                    val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
-                        ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+                while (canceled == null) {
+                    canceled = cancelWithProcessor(request, ctx, initialTask.contextId.orEmpty(), lockAcquired)
+                    if (canceled != null) break
 
-                    // Task is not running, check if it's already in a terminal state.
-                    if (agentJob == null && task.status.state.terminal) {
-                        throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
-                    }
-
-                    // Create request context based on the request information.
-                    val requestContext = RequestContext(
-                        callContext = ctx,
-                        params = request,
-                        taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
-                        messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
-                        contextId = eventProcessor.contextId,
-                        taskId = eventProcessor.taskId,
-                        task = task,
-                    )
-
-                    // Attempt to cancel the agent execution and wait until it's finished.
-                    agentExecutor.cancel(requestContext, eventProcessor, agentJob)
+                    /*
+                     The task lock is held by a request that has no running turn yet (or has just seen one end): it may
+                     start a turn right after we force the state, and that turn would overwrite the cancellation. Wait
+                     for the task lock, or for the turn to appear (then it's cancelled as a running turn). It isn't
+                     awaited inside withTaskProcessor, since the lock holder can be waiting for a turn that needs the
+                     turn-end gate we hold there.
+                     */
+                    lockAcquired = tasksMutex.tryLock(taskId)
+                    if (!lockAcquired) delay(CANCEL_LOCK_POLL_MILLIS)
                 }
 
-                // Return the final task state.
-                taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
-                    ?.also {
-                        if (it.status.state != TaskState.TASK_STATE_CANCELED) {
-                            throw A2ATaskNotCancelableException("Task '$taskId' was not canceled successfully, current state is ${it.status.state}")
-                        }
-                    }
-                    ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+                checkNotNull(canceled)
             }
         } finally {
             if (lockAcquired) {
                 tasksMutex.unlock(taskId)
             }
+        }
+    }
+
+    /**
+     * One attempt of [onCancelTask] under the task's turn-end gate. Returns the canceled task, or `null` if the task
+     * has no running turn and the task lock isn't held by the caller ([hasTaskLock]), so the attempt has to be repeated.
+     */
+    private suspend fun cancelWithProcessor(
+        request: CancelTaskRequest,
+        ctx: ServerCallContext,
+        contextId: String,
+        hasTaskLock: Boolean,
+    ): Task? {
+        val taskId = request.id
+
+        /*
+         Get a processor bound to the task's event stream, so that cancellation events reach every stream of the task. If
+         a turn is running, it's the turn's processor, and the turn can't end until we're done.
+         */
+        return sessionManager.withTaskProcessor(taskId, contextId) { eventProcessor, agentJob ->
+            if (agentJob == null && !hasTaskLock) return@withTaskProcessor null
+
+            // Re-read the task: a turn may have ended in the meantime.
+            val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+
+            if (task.status.state.terminal) {
+                throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
+            }
+
+            // Create request context based on the request information.
+            val requestContext = RequestContext(
+                callContext = ctx,
+                params = request,
+                taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
+                messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
+                contextId = eventProcessor.contextId,
+                taskId = eventProcessor.taskId,
+                task = task,
+            )
+
+            // Attempt to cancel the agent execution and wait until it's finished.
+            agentExecutor.cancel(requestContext, eventProcessor, agentJob)
+
+            // The executor may have left the task running: the server makes sure it ends up canceled.
+            val afterCancel = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+
+            if (!afterCancel.status.state.terminal) {
+                // Nothing may publish for the task after the forced cancellation.
+                agentJob?.cancelAndJoin()
+
+                val current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+                if (current != null && !current.status.state.terminal) {
+                    eventProcessor.sendTaskEvent(
+                        TaskStatusUpdateEvent(
+                            taskId = taskId,
+                            contextId = current.contextId ?: eventProcessor.contextId,
+                            status = TaskStatus(
+                                state = TaskState.TASK_STATE_CANCELED,
+                                timestamp = Clock.System.now(),
+                            ),
+                        )
+                    )
+                }
+            }
+
+            // Return the final task state.
+            taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                ?.also {
+                    if (it.status.state != TaskState.TASK_STATE_CANCELED) {
+                        throw A2ATaskNotCancelableException("Task '$taskId' was not canceled successfully, current state is ${it.status.state}")
+                    }
+                }
+                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
         }
     }
 

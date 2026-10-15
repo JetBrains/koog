@@ -106,9 +106,10 @@ public interface AgentExecutor {
      * Can also publish [TaskEvent]s to the [eventProcessor] to update the task state. The processor is bound to the
      * task's event stream: if a turn is running, it's the processor of that turn (which stays open until this method
      * returns, even after [agentJob] is cancelled), otherwise a new one; either way the events reach every stream of
-     * the task. Must ensure that the final
-     * task state will be [TaskState.TASK_STATE_CANCELED], otherwise the task will not be considered canceled, and the requester will
-     * get [A2ATaskNotCancelableException].
+     * the task. Should move the task to [TaskState.TASK_STATE_CANCELED]; if it returns normally while the task is
+     * still not in a terminal state, the server cancels [agentJob] (if any) and sets [TaskState.TASK_STATE_CANCELED]
+     * itself, so the task never stays non-terminal after a successful cancellation. If the task ends up in another
+     * terminal state, the requester gets [A2ATaskNotCancelableException].
      *
      * **IMPORTANT**: This should execute quickly as it runs synchronously with the request.
      *
