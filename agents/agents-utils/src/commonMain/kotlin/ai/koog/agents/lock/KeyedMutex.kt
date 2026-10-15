@@ -1,7 +1,9 @@
 package ai.koog.agents.lock
 
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -20,6 +22,8 @@ import kotlin.contracts.contract
  * - A per-key entry holds a Mutex and a reference count (holders/waiters).
  * - We increment refs before suspending for lock(key) so entries aren’t removed while waiting.
  * - Cleanup removes the entry only when refs == 0 and the mutex is not locked.
+ * - Rollback in [lock] and the whole of [unlock] run in a [NonCancellable] context, so a cancelled
+ *   coroutine cannot leave a key locked or an entry leaked when the internal map mutex is contended.
  */
 public class KeyedMutex<K> {
     private class Entry(
@@ -48,11 +52,8 @@ public class KeyedMutex<K> {
             entry.mutex.lock(owner)
         } catch (t: Throwable) {
             // If lock failed/canceled before acquiring, roll back the ref and maybe cleanup.
-            mapMutex.withLock {
-                entry.refs -= 1
-                if (entry.refs == 0 && !entry.mutex.isLocked && entries[key] == entry) {
-                    entries.remove(key)
-                }
+            withContext(NonCancellable) {
+                releaseRef(key, entry)
             }
             throw t
         }
@@ -94,14 +95,23 @@ public class KeyedMutex<K> {
      * @throws IllegalStateException on misuse (mirrors Mutex behavior).
      */
     public suspend fun unlock(key: K, owner: Any? = null) {
-        val entry = mapMutex.withLock {
-            entries[key] ?: throw IllegalStateException("Unlock requested for key without active entry")
+        // Must not be skipped by cancellation, otherwise the key stays locked forever.
+        withContext(NonCancellable) {
+            val entry = mapMutex.withLock {
+                entries[key] ?: throw IllegalStateException("Unlock requested for key without active entry")
+            }
+
+            // Perform the actual unlocking; may throw if not locked or wrong owner.
+            entry.mutex.unlock(owner)
+
+            releaseRef(key, entry)
         }
+    }
 
-        // Perform the actual unlocking; may throw if not locked or wrong owner.
-        entry.mutex.unlock(owner)
-
-        // Decrement refs and cleanup if safe.
+    /**
+     * Decrements [Entry.refs] and removes the entry if it is no longer used.
+     */
+    private suspend fun releaseRef(key: K, entry: Entry) {
         mapMutex.withLock {
             entry.refs -= 1
             if (entry.refs == 0 && !entry.mutex.isLocked && entries[key] == entry) {

@@ -1,14 +1,27 @@
 package ai.koog.agents.lock
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.decrementAndFetch
+import kotlin.concurrent.atomics.incrementAndFetch
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class RWLockTest {
 
@@ -158,5 +171,81 @@ class RWLockTest {
         }
 
         assertTrue(lockReleased, "Lock should be released even if an exception occurs")
+    }
+
+    @Test
+    fun testReaderCancelledWhileWaitingForWriterKeepsExclusion() = runTest {
+        val rwLock = RWLock()
+        val releaseWriter = CompletableDeferred<Unit>()
+        val writer = launch { rwLock.withWriteLock { releaseWriter.await() } }
+        runCurrent()
+
+        // A reader suspended on the active writer is cancelled before it gets the lock.
+        val cancelledReader = launch { rwLock.withReadLock { } }
+        runCurrent()
+        cancelledReader.cancelAndJoin()
+        releaseWriter.complete(Unit)
+        writer.join()
+
+        val releaseReader = CompletableDeferred<Unit>()
+        val reader = launch { rwLock.withReadLock { releaseReader.await() } }
+        runCurrent()
+        var writerRan = false
+        val secondWriter = launch { rwLock.withWriteLock { writerRan = true } }
+        runCurrent()
+
+        assertFalse(writerRan, "Writer must not run while a reader holds the lock")
+        releaseReader.complete(Unit)
+        joinAll(reader, secondWriter)
+        assertTrue(writerRan, "Writer should run once the reader releases the lock")
+    }
+
+    @OptIn(ExperimentalAtomicApi::class)
+    @Test
+    fun testRandomlyCancelledReadersAndWritersKeepLockConsistent() = runTest {
+        val rwLock = RWLock()
+        val activeReaders = AtomicInt(0)
+        val activeWriters = AtomicInt(0)
+        val violations = AtomicInt(0)
+
+        withContext(Dispatchers.Default) {
+            withTimeout(20.seconds) {
+                repeat(2_000) {
+                    val jobs = List(8) { i ->
+                        launch {
+                            if (i == 0) {
+                                rwLock.withWriteLock {
+                                    if (activeWriters.incrementAndFetch() != 1 || activeReaders.load() != 0) {
+                                        violations.incrementAndFetch()
+                                    }
+                                    try {
+                                        yield()
+                                    } finally {
+                                        activeWriters.decrementAndFetch()
+                                    }
+                                }
+                            } else {
+                                rwLock.withReadLock {
+                                    activeReaders.incrementAndFetch()
+                                    try {
+                                        if (activeWriters.load() != 0) violations.incrementAndFetch()
+                                        yield()
+                                    } finally {
+                                        activeReaders.decrementAndFetch()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    repeat(Random.nextInt(100)) { yield() }
+                    jobs.filter { Random.nextBoolean() }.forEach { it.cancel() }
+                    jobs.joinAll()
+                }
+                // A leaked read lock would keep the writer suspended forever.
+                rwLock.withWriteLock { }
+            }
+        }
+
+        assertEquals(0, violations.load(), "Readers and writers must never overlap")
     }
 }

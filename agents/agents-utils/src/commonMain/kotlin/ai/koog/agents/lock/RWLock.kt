@@ -1,7 +1,9 @@
 package ai.koog.agents.lock
 
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * A Kotlin Multiplatform read-write lock that allows concurrent read access while guaranteeing
@@ -24,8 +26,10 @@ import kotlinx.coroutines.sync.withLock
  *    [writeMutex] on the first-reader transition. Steady overlapping reader traffic can therefore
  *    delay a pending writer.
  * 3. **Cancellation safety.** The reader path uses `try { ... } finally { ... }`, so cancellation
- *    or exceptions inside the block still decrement [readersCount] and release [writeMutex].
- *    Cancellation while suspended on either mutex is propagated and the lock is not acquired.
+ *    or exceptions inside the block still decrement [readersCount] and release [writeMutex]; the
+ *    release runs in a [NonCancellable] context so it cannot be skipped when [readersCountMutex] is
+ *    contended. Cancellation while suspended on either mutex at entry is propagated, the lock is not
+ *    acquired, and [readersCount] is left unchanged.
  * 4. **Suspension inside critical sections.** The `block` may suspend; keep critical sections
  *    short and avoid launching child coroutines that re-acquire the same lock.
  * 5. **Suspend-only.** There is no blocking or `tryLock` API; this lock is usable only from
@@ -43,17 +47,23 @@ public class RWLock {
      */
     public suspend fun <T> withReadLock(block: suspend () -> T): T {
         readersCountMutex.withLock {
-            if (++readersCount == 1) {
+            // Count the reader only after writeMutex is acquired, so a reader cancelled while
+            // waiting for a writer leaves no trace.
+            if (readersCount == 0) {
                 writeMutex.lock()
             }
+            readersCount++
         }
 
         return try {
             block()
         } finally {
-            readersCountMutex.withLock {
-                if (--readersCount == 0) {
-                    writeMutex.unlock()
+            // Must not be skipped by cancellation, otherwise the read lock leaks forever.
+            withContext(NonCancellable) {
+                readersCountMutex.withLock {
+                    if (--readersCount == 0) {
+                        writeMutex.unlock()
+                    }
                 }
             }
         }
