@@ -20,6 +20,9 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * These are the main rules:
  *
  * - **Session type exclusivity**: A session can only handle either [Message] event or [TaskEvent] events, never both.
+ * - **Existing task**: When the turn continues an existing task, the session handles [TaskEvent] events only: the
+ *   agent may send status and artifact updates of the task right away, without sending a [Task] first, and can't
+ *   reply with a [Message].
  * - **Context ID validation**: All events must have the same context id as provided [contextId].
  * - **Single message limit**: Only one [Message] can be sent per session, after which the processor closes.
  * - **Task ID consistency**: [TaskEvent] events must have task ids equal to provided [taskId].
@@ -35,6 +38,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * from the incoming request or a newly generated ID that must be used if creating a new task.
  * Note: This taskId might not correspond to an actually existing task initially - it serves as the
  * identifier that will be validated against all [TaskEvent] in this session.
+ * @param taskExists Whether the task [taskId] already exists when the processor is created, i.e. the processor starts
+ * in task mode and rejects [Message] events.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public class SessionEventProcessor internal constructor(
@@ -42,6 +47,7 @@ public class SessionEventProcessor internal constructor(
     public val taskId: String,
     private val stream: TaskEventStream,
     private val turnId: Long?,
+    private val taskExists: Boolean = false,
 ) {
     private companion object {
         private const val SESSION_CLOSED = "Session event processor is closed, can't send events"
@@ -52,6 +58,9 @@ public class SessionEventProcessor internal constructor(
 
         private const val TASK_EVENT_SENT =
             "Task has already been initialized in this session, only TaskEvent's with the same taskId can be sent from now on"
+
+        private const val TASK_EXISTS =
+            "Task already exists, only TaskEvent's with the same taskId can be sent in this session"
     }
 
     init {
@@ -85,6 +94,10 @@ public class SessionEventProcessor internal constructor(
      */
     public suspend fun sendMessage(message: Message): Unit = sessionMutex.withLock {
         if (_isOpen.load()) {
+            if (taskExists) {
+                throw InvalidEventException(TASK_EXISTS)
+            }
+
             if (isTaskEventSent) {
                 throw InvalidEventException(TASK_EVENT_SENT)
             }

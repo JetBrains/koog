@@ -168,6 +168,58 @@ private suspend fun doLongRunningTask(
     )
 }
 
+private fun agentStatus(
+    context: RequestContext<SendMessageRequest>,
+    state: TaskState,
+    text: String,
+) = TaskStatusUpdateEvent(
+    taskId = context.taskId,
+    contextId = context.contextId,
+    status = TaskStatus(
+        state = state,
+        message = Message(
+            messageId = Uuid.random().toString(),
+            role = Role.ROLE_AGENT,
+            parts = listOf(TextPart(text)),
+            contextId = context.contextId,
+            taskId = context.taskId
+        ),
+        timestamp = Clock.System.now()
+    )
+)
+
+/**
+ * Creates a task and leaves it waiting for input; the turn ends.
+ */
+private suspend fun doInputRequiredTask(
+    context: RequestContext<SendMessageRequest>,
+    eventProcessor: SessionEventProcessor,
+) {
+    eventProcessor.sendTaskEvent(
+        Task(
+            id = context.taskId,
+            contextId = context.contextId,
+            status = TaskStatus(
+                state = TaskState.TASK_STATE_SUBMITTED,
+                timestamp = Clock.System.now()
+            ),
+            history = listOf(context.params.message)
+        )
+    )
+
+    eventProcessor.sendTaskEvent(agentStatus(context, TaskState.TASK_STATE_INPUT_REQUIRED, "Please provide input"))
+}
+
+/**
+ * Follow-up to a task waiting for input: completes it.
+ */
+private suspend fun provideInput(
+    context: RequestContext<SendMessageRequest>,
+    eventProcessor: SessionEventProcessor,
+) {
+    eventProcessor.sendTaskEvent(agentStatus(context, TaskState.TASK_STATE_COMPLETED, "Input received"))
+}
+
 class TestAgentExecutor : AgentExecutor {
     override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: SessionEventProcessor) {
         val userMessage = context.params.message
@@ -191,6 +243,14 @@ class TestAgentExecutor : AgentExecutor {
 
             "do long-running task" -> {
                 doLongRunningTask(context, eventProcessor)
+            }
+
+            "do input-required task" -> {
+                doInputRequiredTask(context, eventProcessor)
+            }
+
+            "provide input" -> {
+                provideInput(context, eventProcessor)
             }
 
             else -> {

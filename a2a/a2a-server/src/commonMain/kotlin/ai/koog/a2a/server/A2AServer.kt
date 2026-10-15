@@ -26,6 +26,7 @@ import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
+import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
@@ -34,6 +35,7 @@ import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.session.IdGenerator
 import ai.koog.a2a.server.session.RequestContext
+import ai.koog.a2a.server.session.Session
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.session.SessionManager
 import ai.koog.a2a.server.session.UuidIdGenerator
@@ -49,11 +51,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.lastOrNull
+import kotlinx.coroutines.flow.transformWhile
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -331,6 +335,11 @@ public open class A2AServer(
 
         private const val MIN_LIST_TASKS_PAGE_SIZE = 1
         private const val MAX_LIST_TASKS_PAGE_SIZE = 100
+
+        /**
+         * Non-terminal states in which the task waits for the client, ending a blocking SendMessage.
+         */
+        private val INTERRUPTED_STATES = setOf(TaskState.TASK_STATE_INPUT_REQUIRED, TaskState.TASK_STATE_AUTH_REQUIRED)
     }
 
     /**
@@ -372,14 +381,38 @@ public open class A2AServer(
     }
 
     /**
-     * Common logic for handling incoming messages and starting the agent execution.
-     * Does all the setup and validation, creates event stream.
+     * Common logic for handling incoming messages: validates the request, starts a turn of the agent (one
+     * [AgentExecutor.execute] call), and streams the events of that turn.
      *
-     * @return A stream of events from the agent
+     * Turns of the same task are serialized: the validation below runs, and the turn starts, only after the previous
+     * turn of the task has ended. Errors are thrown before the first event is emitted:
+     * - [A2AInvalidParamsException] if the message has no parts or
+     *   [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] is negative;
+     * - [A2ATaskNotFoundException] if [Message.taskId] is set but the task doesn't exist, as seen by
+     *   [TaskStorage.get] for a [GetTaskRequest] in the caller's [ServerCallContext];
+     * - [A2AInvalidParamsException] if [Message.contextId] is set and differs from the referenced task's context id;
+     * - [A2AUnsupportedOperationException] if the referenced task is in a terminal state.
+     *
+     * The context id of the turn is the referenced task's context id, else [Message.contextId], else a generated one.
+     * For a referenced task, the agent can only send task events, see [SessionEventProcessor].
+     *
+     * The flow ends after the agent's [Message], after an event with a terminal task state, or when the turn ends,
+     * whichever comes first. Only in the last case is an exception thrown by the agent rethrown (if the task exists,
+     * the task is marked failed instead, and the flow ends with that update). Once the flow has ended (or its collection
+     * was stopped), the agent keeps running in [coroutineScope], and its later failures are not reported to the
+     * requester.
+     *
+     * @param request The SendMessage request.
+     * @param ctx The context of the call.
+     * @param includeTaskSnapshot For a message to an existing task: whether to emit the task, as stored right before
+     * the turn's first event, before the agent's first event, unless that event is a [Task] itself, so that the stream
+     * always begins with the task. If the turn produces no events, the flow consists of the snapshot only.
+     * @return A cold flow of the turn's events; each collection sends the message again.
      */
     protected open fun onSendMessageCommon(
         request: SendMessageRequest,
-        ctx: ServerCallContext
+        ctx: ServerCallContext,
+        includeTaskSnapshot: Boolean = false,
     ): Flow<Event> = flow {
         val message = request.message
 
@@ -387,17 +420,31 @@ public open class A2AServer(
             throw A2AInvalidParamsException("Empty message parts are not supported")
         }
 
+        validateHistoryLength(request.configuration?.historyLength)
+
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
 
         val session = tasksMutex.withLock(taskId) {
             // If there's a currently running session for the same task, wait for it to finish.
             sessionManager.getSession(taskId)?.join()
 
-            // Check if message links to a task.
-            val task: Task? = message.taskId?.let { taskId ->
-                // Check if the specified task exists
-                val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
-                    ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+            // Check the task the message refers to, if any.
+            val task: Task? = message.taskId?.let { referencedTaskId ->
+                val lookup = GetTaskRequest(id = referencedTaskId, historyLength = 0, tenant = request.tenant)
+                val task = taskStorage.get(lookup, ctx)
+                    ?: throw A2ATaskNotFoundException("Task '$referencedTaskId' not found")
+
+                if (message.contextId != null && task.contextId != null && message.contextId != task.contextId) {
+                    throw A2AInvalidParamsException(
+                        "Message contextId '${message.contextId}' doesn't match contextId '${task.contextId}' of task '$referencedTaskId'"
+                    )
+                }
+
+                if (task.status.state.terminal) {
+                    throw A2AUnsupportedOperationException(
+                        "Task '$referencedTaskId' is in terminal state ${task.status.state} and can't accept messages"
+                    )
+                }
 
                 task
             }
@@ -423,48 +470,132 @@ public open class A2AServer(
             }
         }
 
-        // Stream the events of this turn; the view ends with the turn or at a terminal state.
-        emitAll(session.events)
+        val snapshot = if (includeTaskSnapshot) session.taskSnapshot.await() else null
+        var isFirstEvent = true
+        var isResponseComplete = false
 
-        // Wait for the agent to finish, propagating any exception thrown by the agent execution.
-        session.agentJob.await()
+        // Stream the events of this turn, until the response is complete or the turn ends.
+        emitAll(
+            session.events.transformWhile { event ->
+                if (isFirstEvent) {
+                    isFirstEvent = false
+
+                    if (snapshot != null && event !is Task) {
+                        emit(snapshot)
+                    }
+                }
+
+                emit(event)
+
+                isResponseComplete = event is Message || event.isTerminal()
+                !isResponseComplete
+            }
+        )
+
+        if (!isResponseComplete) {
+            // The turn has ended: propagate the exception thrown by the agent execution, if any.
+            awaitAgent(session)
+
+            if (isFirstEvent && snapshot != null) {
+                emit(snapshot)
+            }
+        }
     }
 
+    /**
+     * Waits for the agent job of an ended turn, rethrowing the exception the agent failed with. A cancelled agent job
+     * (e.g. by a cancel request) is not an error of this request: only the cancellation of the caller itself is
+     * propagated.
+     */
+    private suspend fun awaitAgent(session: Session) {
+        try {
+            session.agentJob.await()
+        } catch (e: CancellationException) {
+            currentCoroutineContext().ensureActive()
+        }
+    }
+
+    /**
+     * Handles SendMessage, see [onSendMessageCommon] for the validation and the turn.
+     *
+     * - If the agent replies with a [Message], returns it, whatever
+     *   [returnImmediately][ai.koog.a2a.model.SendMessageConfiguration.returnImmediately] is.
+     * - If `returnImmediately` is `true`, returns after the first task event of the turn.
+     * - Otherwise (blocking, the default), returns at the first [Task] or [TaskStatusUpdateEvent] whose state is
+     *   terminal or interrupted ([TaskState.TASK_STATE_INPUT_REQUIRED], [TaskState.TASK_STATE_AUTH_REQUIRED]), or when
+     *   the turn ends, whichever comes first.
+     *
+     * A task result is read from [taskStorage] at that point, with the history limited to
+     * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts. The agent keeps
+     * running in [coroutineScope] after the response is returned.
+     */
     override suspend fun onSendMessage(
         request: SendMessageRequest,
         ctx: ServerCallContext
     ): ResponseEvent {
         val messageConfiguration = request.configuration
-        // Reusing streaming logic here, because it's essentially the same, only we need some particular event from the stream
-        val eventStream = onSendMessageCommon(request, ctx)
+        val returnImmediately = messageConfiguration?.returnImmediately == true
+        var lastTaskEvent: TaskEvent? = null
 
-        val event = if (messageConfiguration?.returnImmediately == true) {
-            // If immediate return is requested, take the first event of the stream.
-            eventStream.firstOrNull()
-        } else {
-            // Otherwise (blocking, the v1 default), wait for the last event, until the current turn of the agent execution is finished.
-            eventStream.lastOrNull()
-        } ?: throw IllegalStateException("Can't get response from the agent: event stream is empty")
+        // Reusing streaming logic here, stopping at the event the response is based on.
+        val responseEvent = onSendMessageCommon(request, ctx).firstOrNull { event ->
+            when (event) {
+                is Message -> true
 
-        return when (event) {
-            is Message -> event
-            is TaskEvent ->
-                taskStorage
-                    .get(
-                        event.taskId,
-                        historyLength = messageConfiguration?.historyLength,
-                        includeArtifacts = true
-                    )
-                    ?: throw A2ATaskNotFoundException("Task '${event.taskId}' not found after the agent execution")
+                is TaskEvent -> {
+                    lastTaskEvent = event
+                    returnImmediately || event.isTerminal() || event.isInterrupted()
+                }
+            }
         }
+
+        if (responseEvent is Message) {
+            return responseEvent
+        }
+
+        // A task event to respond with, or the turn has ended: respond with the task as stored.
+        val taskId = lastTaskEvent?.taskId
+            ?: request.message.taskId
+            ?: throw IllegalStateException("Can't get response from the agent: event stream is empty")
+
+        return taskStorage
+            .get(
+                taskId,
+                historyLength = messageConfiguration?.historyLength,
+                includeArtifacts = true
+            )
+            ?: throw A2ATaskNotFoundException("Task '$taskId' not found after the agent execution")
     }
 
+    /**
+     * Handles SendStreamingMessage, see [onSendMessageCommon] for the validation and the turn.
+     *
+     * The stream ends after the agent's [Message], at a terminal task state, or when the turn ends (e.g. at an
+     * interrupted state), whichever comes first. A stream of a task begins with the [Task]: for a message to an
+     * existing task, the task as stored before the turn's first event is emitted first, unless the agent starts the
+     * turn with a [Task]. The history of that task is limited to
+     * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength].
+     *
+     * @throws A2AUnsupportedOperationException if streaming is not supported, before the first event
+     */
     override fun onSendMessageStreaming(
         request: SendMessageRequest,
         ctx: ServerCallContext
     ): Flow<Event> = flow {
         checkStreamingSupport()
-        onSendMessageCommon(request, ctx).collect(this)
+        emitAll(onSendMessageCommon(request, ctx, includeTaskSnapshot = true))
+    }
+
+    private fun Event.isTerminal(): Boolean = when (this) {
+        is Task -> status.state.terminal
+        is TaskStatusUpdateEvent -> status.state.terminal
+        else -> false
+    }
+
+    private fun Event.isInterrupted(): Boolean = when (this) {
+        is Task -> status.state in INTERRUPTED_STATES
+        is TaskStatusUpdateEvent -> status.state in INTERRUPTED_STATES
+        else -> false
     }
 
     override suspend fun onGetTask(

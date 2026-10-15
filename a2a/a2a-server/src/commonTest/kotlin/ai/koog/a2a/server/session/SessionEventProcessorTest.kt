@@ -72,11 +72,13 @@ class SessionEventProcessorTest {
     private fun createProcessor(
         contextId: String,
         taskId: String,
+        taskExists: Boolean = false,
     ): SessionEventProcessor = SessionEventProcessor(
         contextId = contextId,
         taskId = taskId,
         stream = stream,
         turnId = turnId,
+        taskExists = taskExists,
     )
 
     /**
@@ -169,6 +171,31 @@ class SessionEventProcessorTest {
         processor.close()
 
         // Verify event was processed
+        assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.get(taskId))
+    }
+
+    @Test
+    fun task_testMessageRejectedWhenTaskExists() = runTest(timeout = TEST_TIMEOUT) {
+        val existingTask = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(existingTask)
+
+        val processor = createProcessor(contextId, taskId, taskExists = true)
+        val turnView = collect(stream.openTurnView(turnId))
+
+        assertFailsWith<InvalidEventException> {
+            processor.sendMessage(createMessage("msg-1", contextId, "Hello"))
+        }
+
+        // The processor is still open and accepts updates of the existing task without a Task first.
+        assertTrue(processor.isOpen)
+        val statusUpdate = TaskStatusUpdateEvent(
+            taskId = taskId,
+            contextId = contextId,
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
+        )
+        processor.sendTaskEvent(statusUpdate)
+
+        assertEquals(listOf(statusUpdate), turnView.endTurnAndCollect())
         assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.get(taskId))
     }
 

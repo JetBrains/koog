@@ -1,6 +1,8 @@
 package ai.koog.a2a.server.jsonrpc
 
+import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.CancelTaskRequest
+import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
@@ -10,8 +12,10 @@ import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAtLeastOne
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -189,12 +193,11 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
     }
 
     /**
-     * Another test that doesn't work with Python A2A SDK server because of its implementation problems.
-     * It's taken from TCK. Follow-up messages to the running task should be supported.
-     * In case the task is still running, request should wait for a chance to be processed when the task is done.
+     * Follow-up messages to a running task wait until the running turn ends. Here that turn completes the task, so
+     * the follow-up is rejected: a terminal task can't accept messages.
      */
     @Test
-    fun `test task send follow-up message`() = runTest(timeout = testTimeout) {
+    fun `test task send follow-up message to running task`() = runTest(timeout = testTimeout) {
         fun createRequest(
             taskId: String?,
             returnImmediately: Boolean,
@@ -219,20 +222,65 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
 
         val taskId = initialResponse.shouldBeInstanceOf<Task>().id
 
-        // Immediately send a follow-up message to the same task and wait for the response
+        // Immediately send a follow-up message to the same task: it waits for the running turn, which completes the task
         val followupRequest = createRequest(taskId = taskId, returnImmediately = false)
-        val followupResponse = client.sendMessage(followupRequest)
 
-        followupResponse.shouldBeInstanceOf<Task> {
-            it.id shouldBe taskId
+        shouldThrow<A2AUnsupportedOperationException> {
+            client.sendMessage(followupRequest)
+        }
+
+        client.getTask(GetTaskRequest(id = taskId)).status.state shouldBe TaskState.TASK_STATE_COMPLETED
+    }
+
+    /**
+     * A follow-up message to a task waiting for input continues the task in the task's context. The stream of the
+     * follow-up begins with the task, then carries the agent's updates.
+     */
+    @Test
+    fun `test task send follow-up message to input-required task`() = runTest(timeout = testTimeout) {
+        val initialRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.Companion.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(TextPart("do input-required task")),
+                contextId = "test-context"
+            ),
+        )
+
+        // Blocking: returns once the task waits for input
+        val task = client.sendMessage(initialRequest).shouldBeInstanceOf<Task> {
             it.contextId shouldBe "test-context"
+            it.status.state shouldBe TaskState.TASK_STATE_INPUT_REQUIRED
+        }
 
-            // The blocking follow-up waits until the long-running task is done
+        // The follow-up only references the task; its context is inferred
+        val followupRequest = SendMessageRequest(
+            message = Message(
+                messageId = Uuid.Companion.random().toString(),
+                role = Role.ROLE_USER,
+                parts = listOf(TextPart("provide input")),
+                taskId = task.id,
+            ),
+        )
+
+        val events = client.sendMessageStreaming(followupRequest).toList()
+
+        events shouldHaveSize 2
+
+        events[0].shouldBeInstanceOf<Task> {
+            it.id shouldBe task.id
+            it.contextId shouldBe "test-context"
+            it.status.state shouldBe TaskState.TASK_STATE_INPUT_REQUIRED
+        }
+
+        events[1].shouldBeInstanceOf<TaskStatusUpdateEvent> {
+            it.taskId shouldBe task.id
+            it.contextId shouldBe "test-context"
             it.status should {
                 it.state shouldBe TaskState.TASK_STATE_COMPLETED
                 it.message shouldNotBeNull {
                     role shouldBe Role.ROLE_AGENT
-                    parts shouldBe listOf(TextPart("Task completed"))
+                    parts shouldBe listOf(TextPart("Input received"))
                 }
             }
         }

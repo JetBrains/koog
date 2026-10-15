@@ -1,6 +1,7 @@
 package ai.koog.a2a.server.session
 
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.Task
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,12 @@ public class Session internal constructor(
     internal val eventProcessor: SessionEventProcessor,
     events: Flow<Event>,
     internal val completion: CompletableJob,
+    /**
+     * For a turn that continues an existing task: the stored task, read atomically with the registration of
+     * [events], i.e. the state of the task right before the first event of [events]. `null` for a turn of a new task.
+     * Completed by the time [SessionManager.startTurn] returns.
+     */
+    internal val taskSnapshot: Deferred<Task?>,
 ) {
     /**
      * This turn's view of the task's event stream: every event the task receives while the turn runs (including

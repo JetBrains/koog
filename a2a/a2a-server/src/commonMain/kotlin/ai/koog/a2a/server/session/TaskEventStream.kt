@@ -119,6 +119,19 @@ internal class TaskEventStream(
     }
 
     /**
+     * Atomically reads the current task with [lookup] and registers the view of the turn [turnId], so the snapshot
+     * reflects exactly the events persisted before the view's first event. Must be called before the turn publishes
+     * its first event.
+     *
+     * @param lookup reads the current task from the storage; called under the stream lock
+     * @return the snapshot (as returned by [lookup]) and the turn view
+     */
+    suspend fun openTurnView(turnId: Long, lookup: suspend () -> Task?): Pair<Task?, ReceiveChannel<Event>> =
+        mutex.withLock {
+            lookup() to register(turnId)
+        }
+
+    /**
      * Stops the subscriber reading from [channel]: cancels the channel without taking the stream lock, so it never
      * waits for the fan-out, and a delivery to [channel] that is suspended right now fails immediately. The
      * subscriber is removed from the subscriber set by the next fan-out or registration, or by a terminal event.

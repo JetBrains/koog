@@ -122,6 +122,23 @@ class TaskEventStreamTest {
     }
 
     @Test
+    fun testOpenTurnViewWithSnapshotReturnsTaskBeforeTurnEvents() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val (snapshot, channel) = stream.openTurnView(1) { taskStorage.get(taskId) }
+        val turnView = collect(channel)
+
+        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
+        stream.publish(working, turnId = 1)
+        stream.endTurn(1, contextId, failure = null)
+
+        assertEquals(inputRequired, snapshot)
+        assertEquals(listOf(working), turnView.await())
+    }
+
+    @Test
     fun testEndTurnClosesOnlyItsTurnView() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
         taskStorage.update(task(TaskState.TASK_STATE_WORKING))

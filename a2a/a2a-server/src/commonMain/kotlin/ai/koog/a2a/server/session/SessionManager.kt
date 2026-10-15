@@ -6,6 +6,7 @@ import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
+import ai.koog.a2a.model.Task
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.TaskStorage
@@ -129,7 +130,13 @@ public class SessionManager(
      * bound to the task stream.
      *
      * The returned session's [Session.events] is registered before [block] starts, so it receives every event of the
-     * turn. When [block] completes:
+     * turn. If the turn continues an existing task ([RequestContext.task] is not `null`):
+     * - the processor starts in task mode, see [SessionEventProcessor];
+     * - the stored task is read atomically with the registration of [Session.events] (with the history limited to
+     *   the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts) and kept as the
+     *   session's task snapshot.
+     *
+     * When [block] completes:
      * - if it failed with an exception (other than a cancellation) and the task exists in a non-terminal state, the
      *   task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
      *   update;
@@ -151,6 +158,8 @@ public class SessionManager(
         val contextId = context.contextId
 
         val turnView = CompletableDeferred<Flow<Event>>()
+        val taskSnapshot = CompletableDeferred<Task?>()
+        val taskExists = context.task != null
 
         /*
          Under the registry lock only reserve the task and pin the stream. The turn view is registered under the stream
@@ -172,6 +181,7 @@ public class SessionManager(
                 taskId = taskId,
                 stream = stream,
                 turnId = turnId,
+                taskExists = taskExists,
             )
 
             val session = Session(
@@ -181,6 +191,7 @@ public class SessionManager(
                 eventProcessor = processor,
                 events = flow { emitAll(turnView.await()) },
                 completion = Job(),
+                taskSnapshot = taskSnapshot,
             )
 
             val turn = Turn(session)
@@ -191,7 +202,20 @@ public class SessionManager(
         val session = turn.session
 
         try {
-            turnView.complete(stream.openTurnView(turnId).consumeAsFlow())
+            val (snapshot, channel) = if (taskExists) {
+                stream.openTurnView(turnId) {
+                    taskStorage.get(
+                        taskId,
+                        historyLength = context.params.configuration?.historyLength,
+                        includeArtifacts = true,
+                    )
+                }
+            } else {
+                null to stream.openTurnView(turnId)
+            }
+
+            taskSnapshot.complete(snapshot)
+            turnView.complete(channel.consumeAsFlow())
             turn.registered.complete(true)
         } catch (e: Throwable) {
             // Registration failed or the caller was cancelled: undo the reservation.
@@ -203,6 +227,7 @@ public class SessionManager(
                 // The agent job never started; cancel it so it doesn't linger as a child of the scope.
                 session.agentJob.cancel()
                 turnView.completeExceptionally(e)
+                taskSnapshot.completeExceptionally(e)
                 turn.registered.complete(false)
                 session.completion.complete()
                 release(stream)
@@ -227,6 +252,11 @@ public class SessionManager(
                 null
             } catch (e: Throwable) {
                 e
+            }
+
+            if (failure != null && failure !is CancellationException) {
+                // The requester may have got its response already, so the failure must not go unnoticed.
+                logger.warn(failure) { "Agent execution failed for taskId='${session.taskId}'" }
             }
 
             /*

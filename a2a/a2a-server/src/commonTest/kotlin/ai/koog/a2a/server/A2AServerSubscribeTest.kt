@@ -46,7 +46,6 @@ import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -254,8 +253,9 @@ class A2AServerSubscribeTest {
         first.job.join()
         second.job.join()
 
-        assertEquals(finishEvents, streamEvents)
-        assertEquals(listOf<Event>(stored) + streamEvents, first.events)
+        // The follow-up stream begins with the task snapshot, since the agent's first event is a status update.
+        assertEquals(listOf<Event>(stored) + finishEvents, streamEvents)
+        assertEquals(streamEvents, first.events)
         assertEquals(first.events, second.events)
     }
 
@@ -365,10 +365,8 @@ class A2AServerSubscribeTest {
         val subscription = subscribe(server)
         subscription.firstEvent.await()
 
-        // The requester of the failing turn gets the agent's exception.
-        assertFailsWith<IllegalStateException> {
-            server.onSendMessage(request("fail", TASK_ID), ctx)
-        }
+        // The blocking requester of the failing turn gets the failed task, written by the server.
+        val response = server.onSendMessage(request("fail", TASK_ID), ctx)
 
         // The subscriber sees FAILED, then its stream completes.
         subscription.job.join()
@@ -389,6 +387,7 @@ class A2AServerSubscribeTest {
             timestamp = failed.status.timestamp,
         )
         assertEquals(failedStatus, failed.status)
+        assertEquals(failed, response)
         assertEquals(
             listOf<Event>(
                 stored,
