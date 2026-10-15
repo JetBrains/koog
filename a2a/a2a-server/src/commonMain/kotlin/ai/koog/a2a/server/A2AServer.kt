@@ -59,6 +59,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -611,17 +613,25 @@ public open class A2AServer(
         session.events.collect(this)
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun onCreateTaskPushNotificationConfig(
         request: TaskPushNotificationConfig,
         ctx: ServerCallContext
     ): TaskPushNotificationConfig {
         val pushStorage = storageIfPushNotificationSupported()
-        val taskId = request.taskId
+        val taskId = request.taskId?.takeIf { it.isNotBlank() }
             ?: throw A2AInvalidParamsException("Task id is required to create a push notification config")
 
-        pushStorage.save(taskId, request)
+        checkTaskExists(taskId)
 
-        return request
+        // The id may be set by the client; the server assigns one if it's absent.
+        val config = if (request.id.isNullOrBlank()) {
+            request.copy(id = Uuid.random().toString())
+        } else {
+            request
+        }
+
+        return pushStorage.save(config, ctx)
     }
 
     override suspend fun onGetTaskPushNotificationConfig(
@@ -629,9 +639,12 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): TaskPushNotificationConfig {
         val pushStorage = storageIfPushNotificationSupported()
+        checkTaskExists(request.taskId)
 
-        return pushStorage.get(request.taskId, request.id)
-            ?: throw NoSuchElementException("Can't find push notification config with id '${request.id}' for task '${request.taskId}'")
+        return pushStorage.get(request, ctx)
+            ?: throw A2ATaskNotFoundException(
+                "Push notification config '${request.id}' not found for task '${request.taskId}'"
+            )
     }
 
     override suspend fun onListTaskPushNotificationConfigs(
@@ -639,8 +652,9 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): ListTaskPushNotificationConfigsResponse {
         val pushStorage = storageIfPushNotificationSupported()
+        checkTaskExists(request.taskId)
 
-        return ListTaskPushNotificationConfigsResponse(configs = pushStorage.getAll(request.taskId))
+        return pushStorage.list(request, ctx)
     }
 
     override suspend fun onDeleteTaskPushNotificationConfig(
@@ -648,8 +662,14 @@ public open class A2AServer(
         ctx: ServerCallContext
     ) {
         val pushStorage = storageIfPushNotificationSupported()
+        checkTaskExists(request.taskId)
 
-        pushStorage.delete(request.taskId, request.id)
+        pushStorage.delete(request, ctx)
+    }
+
+    private suspend fun checkTaskExists(taskId: String) {
+        taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+            ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
     }
 
     protected open fun checkStreamingSupport() {

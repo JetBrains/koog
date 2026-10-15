@@ -9,6 +9,7 @@ import ai.koog.agents.lock.KeyedMutex
 import ai.koog.agents.lock.RWLock
 import ai.koog.agents.lock.withLock
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -101,8 +102,10 @@ public class SessionManager(
                         pushConfigStorage.getAll(session.taskId).forEach { config ->
                             try {
                                 pushSender.send(config, task)
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
-                                // TODO log error
+                                logger.warn(e) { "Failed to send push notification for taskId='${session.taskId}' configId='${config.id}'" }
                             }
                         }
                     }

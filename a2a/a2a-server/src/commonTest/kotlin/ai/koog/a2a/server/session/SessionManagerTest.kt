@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.session
 
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
@@ -11,6 +12,7 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.agents.lock.KeyedMutex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -22,6 +24,7 @@ import kotlinx.coroutines.yield
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -39,10 +42,10 @@ class SessionManagerTest {
     private val taskId = "task-1"
 
     private class MockPushNotificationSender : PushNotificationSender {
-        val sentNotifications = mutableListOf<Pair<TaskPushNotificationConfig, Task>>()
+        val sentNotifications = mutableListOf<Pair<TaskPushNotificationConfig, Event>>()
 
-        override suspend fun send(config: TaskPushNotificationConfig, task: Task) {
-            sentNotifications.add(config to task)
+        override suspend fun send(config: TaskPushNotificationConfig, event: Event) {
+            sentNotifications.add(config to event)
         }
     }
 
@@ -246,7 +249,7 @@ class SessionManagerTest {
             id = "config-1",
             url = "https://example.com/webhook"
         )
-        pushConfigStorage.save("task-1", config)
+        pushConfigStorage.save(config, ServerCallContext())
 
         val task = createTask("task-1", contextId)
 
@@ -272,8 +275,9 @@ class SessionManagerTest {
 
         // Verify push notification was sent
         assertEquals(1, pushSender.sentNotifications.size)
-        val (sentConfig, sentTask) = pushSender.sentNotifications[0]
+        val (sentConfig, sentEvent) = pushSender.sentNotifications[0]
         assertEquals(config, sentConfig)
-        assertEquals(TaskState.TASK_STATE_COMPLETED, sentTask.status.state)
+        assertIs<Task>(sentEvent)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, sentEvent.status.state)
     }
 }

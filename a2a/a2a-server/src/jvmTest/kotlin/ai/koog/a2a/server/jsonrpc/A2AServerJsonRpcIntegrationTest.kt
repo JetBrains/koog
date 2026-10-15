@@ -26,7 +26,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -85,7 +84,6 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         super.`test subscribe to task`()
 
     @Test
-    @Disabled("Getting a deleted push config must fail with TaskNotFound, not InternalError, see plan item 3.11")
     override fun `test push notification configs`() =
         super.`test push notification configs`()
 
