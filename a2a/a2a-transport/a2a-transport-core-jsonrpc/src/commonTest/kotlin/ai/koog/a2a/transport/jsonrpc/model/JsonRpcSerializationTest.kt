@@ -1,5 +1,6 @@
 package ai.koog.a2a.transport.jsonrpc.model
 
+import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
@@ -155,5 +156,16 @@ class JsonRpcSerializationTest {
         val errorResponseMissingIdJson = """{"error":{"code":-32700,"message":"Parse error"},"jsonrpc":"2.0"}"""
 
         assertEquals(response, JSONRPCJson.decodeFromString<JSONRPCMessage>(errorResponseMissingIdJson))
+    }
+
+    @Test
+    fun testEmptyNextPageTokenOfListTasksResponseIsEncoded() {
+        // `nextPageToken` is REQUIRED in the ProtoJSON response: it must be present as an empty string on the last page.
+        val response = ListTasksResponse(tasks = emptyList(), nextPageToken = "", pageSize = 50, totalSize = 0)
+        //language=JSON
+        val responseJson = """{"tasks":[],"nextPageToken":"","pageSize":50,"totalSize":0}"""
+
+        assertEquals(responseJson, JSONRPCJson.encodeToString(response))
+        assertEquals(response, JSONRPCJson.decodeFromString<ListTasksResponse>(responseJson))
     }
 }

@@ -333,6 +333,9 @@ public open class A2AServer(
 ) : RequestHandler {
     private companion object {
         private val logger = KotlinLogging.logger {}
+
+        private const val MIN_LIST_TASKS_PAGE_SIZE = 1
+        private const val MAX_LIST_TASKS_PAGE_SIZE = 100
     }
 
     /**
@@ -501,20 +504,32 @@ public open class A2AServer(
         request: GetTaskRequest,
         ctx: ServerCallContext
     ): Task {
-        return taskStorage.get(request.id, historyLength = request.historyLength, includeArtifacts = false)
+        validateHistoryLength(request.historyLength)
+
+        return taskStorage.get(request, ctx)
             ?: throw A2ATaskNotFoundException("Task '${request.id}' not found")
     }
 
-    /**
-     * Placeholder: listing tasks requires a list API on [TaskStorage], which does not exist yet.
-     *
-     * @throws A2AUnsupportedOperationException always.
-     */
     override suspend fun onListTasks(
         request: ListTasksRequest,
         ctx: ServerCallContext
     ): ListTasksResponse {
-        throw A2AUnsupportedOperationException("ListTasks is not supported by the server yet")
+        request.pageSize?.let { pageSize ->
+            if (pageSize !in MIN_LIST_TASKS_PAGE_SIZE..MAX_LIST_TASKS_PAGE_SIZE) {
+                throw A2AInvalidParamsException(
+                    "pageSize must be between $MIN_LIST_TASKS_PAGE_SIZE and $MAX_LIST_TASKS_PAGE_SIZE, but was $pageSize"
+                )
+            }
+        }
+        validateHistoryLength(request.historyLength)
+
+        return taskStorage.list(request, ctx)
+    }
+
+    private fun validateHistoryLength(historyLength: Int?) {
+        if (historyLength != null && historyLength < 0) {
+            throw A2AInvalidParamsException("historyLength must be non-negative, but was $historyLength")
+        }
     }
 
     override suspend fun onCancelTask(

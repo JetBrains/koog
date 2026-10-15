@@ -73,7 +73,6 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         super.`test get task`()
 
     @Test
-    @Disabled("ListTasks is not implemented in the server yet, see plan item 3.9")
     override fun `test list tasks`() =
         super.`test list tasks`()
 
