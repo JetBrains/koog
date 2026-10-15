@@ -2,6 +2,7 @@ package ai.koog.a2a.server.session
 
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
@@ -26,6 +27,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -121,21 +123,131 @@ class TaskEventStreamTest {
         }
     }
 
+    private fun userMessage(id: String) = Message(
+        messageId = id,
+        role = Role.ROLE_USER,
+        parts = listOf(TextPart(id)),
+        contextId = contextId,
+        taskId = taskId,
+    )
+
+    private fun agentMessage(id: String) = Message(
+        messageId = id,
+        role = Role.ROLE_AGENT,
+        parts = listOf(TextPart(id)),
+        contextId = contextId,
+        taskId = taskId,
+    )
+
     @Test
     fun testOpenTurnViewWithSnapshotReturnsTaskBeforeTurnEvents() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
         val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
         taskStorage.update(inputRequired)
 
-        val (snapshot, channel) = stream.openTurnView(1) { taskStorage.get(taskId) }
+        val user = userMessage("user-1")
+        val (snapshot, channel) = stream.openTurnView(1, user, historyLength = null)
         val turnView = collect(channel)
 
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)
         stream.publish(working, turnId = 1)
         stream.endTurn(1, contextId, failure = null)
 
-        assertEquals(inputRequired, snapshot)
+        assertEquals(inputRequired.copy(history = listOf(user)), snapshot)
         assertEquals(listOf(working), turnView.await())
+    }
+
+    @Test
+    fun testOpenTurnViewMovesStatusMessageIntoHistoryBeforeUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val firstUser = userMessage("user-1")
+        val prompt = agentMessage("prompt")
+        val artifact = Artifact(artifactId = "artifact-1", parts = listOf(TextPart("result")))
+        val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED).copy(
+            status = TaskStatus(
+                state = TaskState.TASK_STATE_INPUT_REQUIRED,
+                message = prompt,
+                timestamp = Instant.parse("2025-01-01T10:00:00Z"),
+            ),
+            history = listOf(firstUser),
+            artifacts = listOf(artifact),
+        )
+        taskStorage.update(inputRequired)
+
+        val secondUser = userMessage("user-2")
+        val (snapshot, channel) = stream.openTurnView(1, secondUser, historyLength = null)
+        channel.cancel()
+
+        val expected = inputRequired.copy(
+            status = inputRequired.status.copy(message = null),
+            history = listOf(firstUser, prompt, secondUser),
+        )
+        assertEquals(expected, snapshot)
+        assertEquals(expected, taskStorage.get(taskId))
+    }
+
+    @Test
+    fun testOpenTurnViewDoesNotDuplicateUserMessageAlreadyInHistory() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val user = userMessage("user-1")
+        val prompt = agentMessage("prompt")
+        val stored = task(TaskState.TASK_STATE_INPUT_REQUIRED).copy(
+            status = TaskStatus(state = TaskState.TASK_STATE_INPUT_REQUIRED, message = prompt),
+            history = listOf(user),
+        )
+        taskStorage.update(stored)
+
+        val (snapshot, channel) = stream.openTurnView(1, user, historyLength = null)
+        channel.cancel()
+
+        assertEquals(stored, snapshot)
+        assertEquals(stored, taskStorage.get(taskId))
+    }
+
+    @Test
+    fun testPublishedTaskGetsUserMessageAppendedToHistory() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val user = userMessage("user-1")
+        val turnView = collect(stream.openTurnView(1))
+
+        val applied = stream.publish(task(TaskState.TASK_STATE_WORKING), turnId = 1, userMessage = user)
+        stream.endTurn(1, contextId, failure = null)
+
+        val expected = task(TaskState.TASK_STATE_WORKING).copy(history = listOf(user))
+        assertTrue(applied)
+        assertEquals(expected, taskStorage.get(taskId))
+        assertEquals(listOf<Event>(expected), turnView.await())
+    }
+
+    @Test
+    fun testPublishedTaskDoesNotDuplicateUserMessageAlreadyInHistory() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val user = userMessage("user-1")
+        val created = task(TaskState.TASK_STATE_WORKING).copy(history = listOf(user))
+
+        stream.publish(created, turnId = 1, userMessage = user.copy(parts = listOf(TextPart("changed"))))
+
+        assertEquals(created, taskStorage.get(taskId))
+    }
+
+    @Test
+    fun testTaskEventForExistingTaskIsIgnored() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+        val subscriber = collect(stream.subscribeToStored().second)
+
+        val applied = stream.publish(task(TaskState.TASK_STATE_COMPLETED), turnId = 1, userMessage = userMessage("user-1"))
+        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+        stream.publish(working, turnId = 1)
+        stream.publish(completed, turnId = 1)
+
+        assertFalse(applied)
+        // The ignored terminal Task neither closed the subscriber nor reached it.
+        assertEquals(listOf(working, completed), subscriber.await())
+        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskId)?.status?.state)
+        assertEquals(listOfNotNull(working.status.message), taskStorage.get(taskId)?.history)
     }
 
     @Test

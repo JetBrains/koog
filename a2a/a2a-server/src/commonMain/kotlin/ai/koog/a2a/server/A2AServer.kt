@@ -216,10 +216,10 @@ import kotlinx.coroutines.flow.transformWhile
  *                 contextId = context.contextId,
  *                 status = TaskStatus(
  *                     state = TaskState.TASK_STATE_WORKING,
- *                     // Mark this message as belonging to the created task
- *                     message = userMessage.copy(taskId = context.taskId),
  *                     timestamp = Clock.System.now()
  *                 ),
+ *                 // Optional: the server adds the user message to the task history if it is not there already
+ *                 history = listOf(userMessage.copy(taskId = context.taskId)),
  *             )
  *         )
  *
@@ -405,8 +405,9 @@ public open class A2AServer(
      * @param request The SendMessage request.
      * @param ctx The context of the call.
      * @param includeTaskSnapshot For a message to an existing task: whether to emit the task, as stored right before
-     * the turn's first event, before the agent's first event, unless that event is a [Task] itself, so that the stream
-     * always begins with the task. If the turn produces no events, the flow consists of the snapshot only.
+     * the turn's first event (after the user message is persisted into its history), before the agent's first event,
+     * so that the stream always begins with the task: a [Task] event of the agent for an existing task is ignored, see
+     * [SessionEventProcessor]. If the turn produces no events, the flow consists of the snapshot only.
      * @return A cold flow of the turn's events; each collection sends the message again.
      */
     protected open fun onSendMessageCommon(
@@ -466,7 +467,13 @@ public open class A2AServer(
 
             // The session's event view is registered before the agent starts, so no event of this turn is missed.
             sessionManager.startTurn(requestContext) { eventProcessor ->
-                agentExecutor.execute(requestContext, eventProcessor)
+                // The user message is persisted into the task before the agent starts, so the agent gets the full
+                // stored task: history including the user message, and artifacts.
+                val fullTask = task?.let {
+                    taskStorage.get(GetTaskRequest(id = it.id, tenant = request.tenant), ctx)
+                }
+
+                agentExecutor.execute(requestContext.withTask(fullTask ?: task), eventProcessor)
             }
         }
 
@@ -480,7 +487,7 @@ public open class A2AServer(
                 if (isFirstEvent) {
                     isFirstEvent = false
 
-                    if (snapshot != null && event !is Task) {
+                    if (snapshot != null) {
                         emit(snapshot)
                     }
                 }

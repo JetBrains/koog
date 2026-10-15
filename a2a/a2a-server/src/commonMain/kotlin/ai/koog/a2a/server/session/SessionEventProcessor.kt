@@ -27,6 +27,9 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * - **Single message limit**: Only one [Message] can be sent per session, after which the processor closes.
  * - **Task ID consistency**: [TaskEvent] events must have task ids equal to provided [taskId].
  * - **Terminal state closure**: When the event with the terminal state is sent, processor closes.
+ * - **Task replacement**: A [Task] event for a task that already exists is ignored (logged, not persisted, not
+ *   delivered), and doesn't close the processor even if its state is terminal. To change an existing task, send status
+ *   and artifact updates.
  * - **Turn closure**: When the turn ends, i.e. [ai.koog.a2a.server.agent.AgentExecutor.execute] returns, the processor
  *   of the turn closes.
  *
@@ -40,6 +43,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * identifier that will be validated against all [TaskEvent] in this session.
  * @param taskExists Whether the task [taskId] already exists when the processor is created, i.e. the processor starts
  * in task mode and rejects [Message] events.
+ * @param userMessage The message of the request that starts the turn. It is added to the history of the task the agent
+ * creates in this turn (see [sendTaskEvent]); `null` when the turn doesn't create a task.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public class SessionEventProcessor internal constructor(
@@ -48,6 +53,7 @@ public class SessionEventProcessor internal constructor(
     private val stream: TaskEventStream,
     private val turnId: Long?,
     private val taskExists: Boolean = false,
+    private val userMessage: Message? = null,
 ) {
     private companion object {
         private const val SESSION_CLOSED = "Session event processor is closed, can't send events"
@@ -118,6 +124,11 @@ public class SessionEventProcessor internal constructor(
      * Validates the event against the session context, persists it to the task storage, and delivers it to all streams
      * of the task. When this method returns, the event is persisted.
      *
+     * The server adds the user message of the request to the history of the task: when the agent creates the task with
+     * a [Task] event, the message is appended to [Task.history] unless the history has a message with the same
+     * [Message.messageId] already, so the agent doesn't have to include it. A [Task] event for an existing task is
+     * ignored, see [SessionEventProcessor].
+     *
      * @param event The event to be sent.
      * @throws [InvalidEventException] for invalid events.
      * @throws [SessionNotActiveException] if the processor is closed.
@@ -135,12 +146,12 @@ public class SessionEventProcessor internal constructor(
                 throw InvalidEventException(INVALID_TASK_ID)
             }
 
-            stream.publish(event, turnId)
+            val isApplied = stream.publish(event, turnId, userMessage.takeUnless { taskExists })
 
             val isFinalEvent = (event is TaskStatusUpdateEvent && event.status.state.terminal) ||
                 (event is Task && event.status.state.terminal)
 
-            if (isFinalEvent) {
+            if (isApplied && isFinalEvent) {
                 _isOpen.store(false)
             }
         } else {

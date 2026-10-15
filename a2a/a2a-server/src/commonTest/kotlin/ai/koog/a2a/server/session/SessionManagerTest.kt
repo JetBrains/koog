@@ -96,6 +96,13 @@ class SessionManagerTest {
         )
     )
 
+    /**
+     * The task as stored when the agent created it in a turn started with [createContext]: the server adds the user
+     * message of the request to its history.
+     */
+    private fun Task.withUserMessage() =
+        copy(history = listOf(createMessage("user-msg", this@SessionManagerTest.contextId, "Hello")))
+
     private fun statusUpdate(
         taskId: String,
         contextId: String,
@@ -214,12 +221,12 @@ class SessionManagerTest {
 
         gate.complete(Unit)
 
-        assertEquals(listOf(task, completed), session.events.toList())
+        assertEquals(listOf(task.withUserMessage(), completed), session.events.toList())
         session.join()
 
         assertEquals(0, sessionManager.activeSessions())
         assertEquals(0, sessionManager.activeStreams())
-        assertEquals(task.copy(status = completed.status), taskStorage.get(taskId))
+        assertEquals(task.withUserMessage().copy(status = completed.status), taskStorage.get(taskId))
     }
 
     @Test
@@ -284,7 +291,7 @@ class SessionManagerTest {
         val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus().copy(timestamp = stored.status.timestamp))
         assertNotNull(stored.status.timestamp)
         assertEquals(failedEvent.status, stored.status)
-        assertEquals(listOf(task, failedEvent), events)
+        assertEquals(listOf(task.withUserMessage(), failedEvent), events)
     }
 
     @Test
@@ -410,9 +417,40 @@ class SessionManagerTest {
         }
 
         // The requester of the turn receives the events published by the cancellation.
-        assertEquals(listOf(task, canceled), events.await())
+        assertEquals(listOf(task.withUserMessage(), canceled), events.await())
         session.join()
         assertEquals(0, sessionManager.activeSessions())
+    }
+
+    @Test
+    fun testFollowUpTurnPersistsUserMessageBeforeAgentStarts() = runTest(timeout = TEST_TIMEOUT) {
+        val sessionManager = createManager()
+        val prompt = Message(
+            messageId = "agent-prompt",
+            role = Role.ROLE_AGENT,
+            parts = listOf(TextPart("Which one?")),
+            contextId = contextId,
+            taskId = taskId,
+        )
+        val inputRequired = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED).let {
+            it.copy(status = it.status.copy(message = prompt))
+        }
+        taskStorage.update(inputRequired)
+        val userMessage = createMessage("user-msg", contextId, "Hello")
+        var storedWhenAgentStarted: Task? = null
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId).withTask(inputRequired)) {
+            storedWhenAgentStarted = taskStorage.get(taskId)
+        }
+        drain(session)
+        session.join()
+
+        val expected = inputRequired.copy(
+            status = inputRequired.status.copy(message = null),
+            history = listOf(prompt, userMessage),
+        )
+        assertEquals(expected, storedWhenAgentStarted)
+        assertEquals(expected, session.taskSnapshot.await())
     }
 
     @Test
@@ -576,7 +614,7 @@ class SessionManagerTest {
         gate.complete(Unit)
         session.join()
 
-        assertEquals(createTask(taskId, contextId, TaskState.TASK_STATE_WORKING), firstEvent)
+        assertEquals(createTask(taskId, contextId, TaskState.TASK_STATE_WORKING).withUserMessage(), firstEvent)
         assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskId)?.status?.state)
         assertEquals(0, sessionManager.activeStreams())
     }

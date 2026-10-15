@@ -131,7 +131,7 @@ public class InMemoryTaskStorage : TaskStorage {
                 val updatedTask = existingTask.copy(
                     status = event.status,
                     history = existingTask.status.message
-                        ?.let { existingTask.history.orEmpty() + it }
+                        ?.let { existingTask.history.plusIfAbsent(it) }
                         ?: existingTask.history,
                     metadata = existingTask.metadata
                         ?.let { JsonObject(it + event.metadata.orEmpty()) }

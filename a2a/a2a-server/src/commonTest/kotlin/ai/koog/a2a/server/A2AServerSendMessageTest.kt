@@ -8,6 +8,7 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
@@ -198,6 +199,19 @@ class A2AServerSendMessageTest {
         history = listOf(userMessage("ask")),
     )
 
+    /**
+     * The task stored after [askScript] and a follow-up message with [followUpText]: the input-required status message
+     * has been moved into the history, followed by the user message, and the status message is cleared.
+     */
+    private fun inputRequiredTaskAfterFollowUp(followUpText: String) = inputRequiredTask.copy(
+        status = inputRequiredTask.status.copy(message = null),
+        history = listOf(
+            userMessage("ask"),
+            agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+            userMessage(followUpText, TASK_ID),
+        ),
+    )
+
     /** Follow-up turn that completes the task. */
     private val finishScript = Script { _, processor ->
         processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING))
@@ -378,14 +392,15 @@ class A2AServerSendMessageTest {
 
         val events = server.onSendMessageStreaming(request("finish", TASK_ID), ctx).toList()
 
-        // The agent's first event is a status update, so the stored task comes first.
-        assertEquals(listOf<Event>(inputRequiredTask) + finishEvents, events)
+        // The agent's first event is a status update, so the stored task comes first, with the follow-up message.
+        assertEquals(listOf<Event>(inputRequiredTaskAfterFollowUp("finish")) + finishEvents, events)
     }
 
     @Test
-    fun testFollowUpStreamStartingWithTaskHasNoSnapshot() = runTest(timeout = TEST_TIMEOUT) {
+    fun testTaskEventForExistingTaskIsIgnoredAndFollowUpStreamStartsWithSnapshot() = runTest(timeout = TEST_TIMEOUT) {
         val replaceScript = Script { _, processor ->
-            processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING, "replace"))
+            processor.sendTaskEvent(task(TaskState.TASK_STATE_COMPLETED, "replace"))
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING))
             processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
         }
         val server = createServer(mapOf("ask" to askScript, "replace" to replaceScript))
@@ -393,10 +408,38 @@ class A2AServerSendMessageTest {
 
         val events = server.onSendMessageStreaming(request("replace", TASK_ID), ctx).toList()
 
+        // The Task replacement is neither streamed nor stored (not even its terminal state), so the stream begins with
+        // the snapshot.
         assertEquals(
-            listOf<Event>(task(TaskState.TASK_STATE_WORKING, "replace"), status(TaskState.TASK_STATE_COMPLETED)),
+            listOf<Event>(
+                inputRequiredTaskAfterFollowUp("replace"),
+                status(TaskState.TASK_STATE_WORKING),
+                status(TaskState.TASK_STATE_COMPLETED),
+            ),
             events
         )
+        assertEquals(
+            inputRequiredTaskAfterFollowUp("replace").copy(
+                status = status(TaskState.TASK_STATE_COMPLETED).status,
+                history = inputRequiredTaskAfterFollowUp("replace").history.orEmpty() +
+                    agentMessage(TaskState.TASK_STATE_WORKING.name),
+            ),
+            taskStorage.get(TASK_ID)
+        )
+    }
+
+    @Test
+    fun testFollowUpWhoseOnlyEventIsIgnoredTaskStreamsSnapshotOnly() = runTest(timeout = TEST_TIMEOUT) {
+        val replaceScript = Script { _, processor ->
+            processor.sendTaskEvent(task(TaskState.TASK_STATE_COMPLETED, "replace"))
+        }
+        val server = createServer(mapOf("ask" to askScript, "replace" to replaceScript))
+        server.onSendMessage(request("ask"), ctx)
+
+        val events = server.onSendMessageStreaming(request("replace", TASK_ID), ctx).toList()
+
+        assertEquals(listOf<Event>(inputRequiredTaskAfterFollowUp("replace")), events)
+        assertEquals(inputRequiredTaskAfterFollowUp("replace"), taskStorage.get(TASK_ID))
     }
 
     @Test
@@ -406,7 +449,7 @@ class A2AServerSendMessageTest {
 
         val events = server.onSendMessageStreaming(request("finish", TASK_ID, historyLength = 0), ctx).toList()
 
-        assertEquals(listOf<Event>(inputRequiredTask.copy(history = null)) + finishEvents, events)
+        assertEquals(listOf<Event>(inputRequiredTaskAfterFollowUp("finish").copy(history = null)) + finishEvents, events)
     }
 
     @Test
@@ -497,6 +540,8 @@ class A2AServerSendMessageTest {
                 history = listOf(
                     userMessage("ask"),
                     agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+                    // Stored as the client sent it, i.e. without a context id.
+                    userMessage("finish", TASK_ID, contextId = null),
                     agentMessage(TaskState.TASK_STATE_WORKING.name),
                 ),
                 artifacts = listOf(Artifact(artifactId = "artifact-1", parts = listOf(TextPart("result")))),
@@ -574,9 +619,130 @@ class A2AServerSendMessageTest {
                 id = TASK_ID,
                 contextId = CONTEXT_ID,
                 status = status(TaskState.TASK_STATE_COMPLETED).status,
-                history = listOf(userMessage("ask"), agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name)),
+                history = listOf(
+                    userMessage("ask"),
+                    agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+                    userMessage("reply", TASK_ID),
+                ),
             ),
             response
+        )
+    }
+
+    // History persistence and RequestContext.task
+
+    private fun bareTask(state: TaskState, message: Message? = null) = Task(
+        id = TASK_ID,
+        contextId = CONTEXT_ID,
+        status = TaskStatus(state = state, message = message, timestamp = TIMESTAMP),
+    )
+
+    private suspend fun A2AServer.history(): List<Message>? =
+        onGetTask(GetTaskRequest(id = TASK_ID), ctx).history
+
+    @Test
+    fun testServerPersistsUserMessageOfNewTaskWhenAgentOmitsIt() = runTest(timeout = TEST_TIMEOUT) {
+        val bareScript = Script { _, processor ->
+            processor.sendTaskEvent(bareTask(TaskState.TASK_STATE_SUBMITTED))
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_INPUT_REQUIRED))
+        }
+        val server = createServer(mapOf("bare" to bareScript))
+
+        val response = server.onSendMessage(request("bare"), ctx)
+
+        assertEquals(
+            bareTask(TaskState.TASK_STATE_INPUT_REQUIRED, agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name))
+                .copy(history = listOf(userMessage("bare"))),
+            response
+        )
+        assertEquals(listOf(userMessage("bare")), server.history())
+    }
+
+    @Test
+    fun testInitialTaskStreamedToRequesterCarriesUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+        val bareScript = Script { _, processor ->
+            processor.sendTaskEvent(bareTask(TaskState.TASK_STATE_WORKING))
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
+        }
+        val server = createServer(mapOf("bare" to bareScript))
+
+        val events = server.onSendMessageStreaming(request("bare"), ctx).toList()
+
+        assertEquals(
+            listOf<Event>(
+                bareTask(TaskState.TASK_STATE_WORKING).copy(history = listOf(userMessage("bare"))),
+                status(TaskState.TASK_STATE_COMPLETED),
+            ),
+            events
+        )
+    }
+
+    @Test
+    fun testHistoryAfterInputRequiredTurnAndFollowUpIsInOrderWithoutDuplicates() = runTest(timeout = TEST_TIMEOUT) {
+        val askBare = Script { _, processor ->
+            processor.sendTaskEvent(bareTask(TaskState.TASK_STATE_SUBMITTED))
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_INPUT_REQUIRED))
+        }
+        val server = createServer(mapOf("ask" to askBare, "finish" to finishScript))
+
+        server.onSendMessage(request("ask"), ctx)
+        val response = server.onSendMessage(request("finish", TASK_ID), ctx)
+
+        val expectedHistory = listOf(
+            userMessage("ask"),
+            agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+            userMessage("finish", TASK_ID),
+            agentMessage(TaskState.TASK_STATE_WORKING.name),
+        )
+        assertEquals(expectedHistory, response.let { (it as Task).history })
+        assertEquals(expectedHistory, server.history())
+        assertEquals(expectedHistory.size, expectedHistory.map { it.messageId }.toSet().size)
+    }
+
+    @Test
+    fun testAgentThatAlreadyIncludesUserMessageDoesNotDuplicateIt() = runTest(timeout = TEST_TIMEOUT) {
+        // askScript creates the task with the user message in the history, and the same user message as the status
+        // message of a Task, which the storage moves into the history on the next status update.
+        val selfPersisting = Script { _, processor ->
+            val user = userMessage("self")
+            processor.sendTaskEvent(bareTask(TaskState.TASK_STATE_WORKING, user).copy(history = listOf(user)))
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_INPUT_REQUIRED))
+        }
+        val server = createServer(mapOf("self" to selfPersisting))
+
+        server.onSendMessage(request("self"), ctx)
+
+        assertEquals(listOf(userMessage("self")), server.history())
+    }
+
+    @Test
+    fun testFollowUpRequestContextTaskIsFullStoredTask() = runTest(timeout = TEST_TIMEOUT) {
+        val artifact = Artifact(artifactId = "artifact-1", parts = listOf(TextPart("draft")))
+        val askWithArtifact = Script { _, processor ->
+            processor.sendTaskEvent(bareTask(TaskState.TASK_STATE_WORKING))
+            processor.sendTaskEvent(artifactChunk("draft"))
+            processor.sendTaskEvent(status(TaskState.TASK_STATE_INPUT_REQUIRED))
+        }
+        val server = createServer(mapOf("ask" to askWithArtifact, "finish" to finishScript))
+        server.onSendMessage(request("ask"), ctx)
+
+        server.onSendMessage(request("finish", TASK_ID), ctx)
+
+        assertEquals(null, executed[0].task)
+        assertEquals(
+            Task(
+                id = TASK_ID,
+                contextId = CONTEXT_ID,
+                // The status message is moved into the history and cleared before the agent starts.
+                status = status(TaskState.TASK_STATE_INPUT_REQUIRED).status.copy(message = null),
+                history = listOf(
+                    userMessage("ask"),
+                    agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+                    userMessage("finish", TASK_ID),
+                ),
+                artifacts = listOf(artifact),
+            ),
+            executed[1].task
         )
     }
 }

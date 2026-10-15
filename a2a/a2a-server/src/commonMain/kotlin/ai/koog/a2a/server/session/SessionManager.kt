@@ -69,6 +69,16 @@ import kotlinx.coroutines.withContext
  * A collector that is cancelled (e.g. the client went away) stops being a delivery target immediately: the delivery
  * that is waiting for it fails, the collector is dropped, and the agent and the other collectors go on.
  *
+ * ## History
+ *
+ * The user message of a turn is persisted into [ai.koog.a2a.model.Task.history] by the task stream, deduplicated by
+ * [ai.koog.a2a.model.Message.messageId]:
+ * - for a follow-up, in [startTurn], before the agent starts: the task's current status message is moved into the
+ *   history, the user message is appended, and the status message is cleared;
+ * - for a new task, when the agent sends the initial [ai.koog.a2a.model.Task].
+ *
+ * An agent's [ai.koog.a2a.model.Task] event for an existing task is ignored.
+ *
  * ## Push notifications
  *
  * If [pushConfigStorage] and [pushSender] are configured, after each turn that sent task events, a push notification
@@ -132,9 +142,14 @@ public class SessionManager(
      * The returned session's [Session.events] is registered before [block] starts, so it receives every event of the
      * turn. If the turn continues an existing task ([RequestContext.task] is not `null`):
      * - the processor starts in task mode, see [SessionEventProcessor];
-     * - the stored task is read atomically with the registration of [Session.events] (with the history limited to
+     * - the user message of the request ([ai.koog.a2a.model.SendMessageRequest.message]) is persisted into the history
+     *   of the stored task before [block] starts, see "History" above, so the task the agent reads already has it;
+     * - the stored task is then read atomically with the registration of [Session.events] (with the history limited to
      *   the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts) and kept as the
      *   session's task snapshot.
+     *
+     * If the turn creates a new task, the user message is added to the history of the agent's initial
+     * [ai.koog.a2a.model.Task] instead.
      *
      * When [block] completes:
      * - if it failed with an exception (other than a cancellation) and the task exists in a non-terminal state, the
@@ -182,6 +197,7 @@ public class SessionManager(
                 stream = stream,
                 turnId = turnId,
                 taskExists = taskExists,
+                userMessage = context.params.message,
             )
 
             val session = Session(
@@ -203,13 +219,11 @@ public class SessionManager(
 
         try {
             val (snapshot, channel) = if (taskExists) {
-                stream.openTurnView(turnId) {
-                    taskStorage.get(
-                        taskId,
-                        historyLength = context.params.configuration?.historyLength,
-                        includeArtifacts = true,
-                    )
-                }
+                stream.openTurnView(
+                    turnId,
+                    userMessage = context.params.message,
+                    historyLength = context.params.configuration?.historyLength,
+                )
             } else {
                 null to stream.openTurnView(turnId)
             }

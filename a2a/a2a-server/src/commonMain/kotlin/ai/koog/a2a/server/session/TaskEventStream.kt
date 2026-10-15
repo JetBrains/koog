@@ -12,6 +12,8 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.tasks.TaskStorage
+import ai.koog.a2a.server.tasks.plusIfAbsent
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -48,6 +50,17 @@ import kotlin.time.Clock
  * and the fan-out drops the subscriber and goes on. If the publisher itself is cancelled while the fan-out is
  * suspended, the event is already persisted but the subscribers not reached yet do not receive it.
  *
+ * ## History
+ *
+ * The stream is also where the user messages are added to [Task.history] (deduplicated by
+ * [Message.messageId], see [plusIfAbsent]), so that agents don't have to persist them:
+ * - for a new task, [publish] adds the user message of the turn to the agent's initial [Task];
+ * - for a follow-up, [openTurnView] adds it to the stored task before the turn starts: the current
+ *   [ai.koog.a2a.model.TaskStatus.message] is moved into the history, the user message is appended, and the status
+ *   message is cleared.
+ *
+ * A [Task] event for a task that already exists is ignored by [publish]: it is neither stored nor delivered.
+ *
  * There are two kinds of subscribers:
  * - task subscribers (SubscribeToTask), which receive every [TaskEvent] and end only when the task reaches a terminal
  *   state;
@@ -65,6 +78,8 @@ internal class TaskEventStream(
     private val idGenerator: IdGenerator,
 ) {
     private companion object {
+        private val logger = KotlinLogging.logger {}
+
         private const val FAILURE_MESSAGE = "Task failed due to an internal error"
     }
 
@@ -119,17 +134,28 @@ internal class TaskEventStream(
     }
 
     /**
-     * Atomically reads the current task with [lookup] and registers the view of the turn [turnId], so the snapshot
-     * reflects exactly the events persisted before the view's first event. Must be called before the turn publishes
-     * its first event.
+     * Persists the user message of a follow-up turn into the existing task, then atomically reads the task and
+     * registers the view of the turn [turnId], so the snapshot reflects exactly the events persisted before the view's
+     * first event. Must be called before the turn publishes its first event.
      *
-     * @param lookup reads the current task from the storage; called under the stream lock
-     * @return the snapshot (as returned by [lookup]) and the turn view
+     * The user message is persisted before the agent starts, so that the task the agent gets already contains it. If
+     * the task's history has a message with the same id already, nothing is changed. Otherwise the current status
+     * message, if any, is moved into the history (unless it is there already), the user message is appended, and the
+     * status message is cleared; the status itself is left as is until the agent publishes its next event. Nothing is
+     * delivered to subscribers for this change.
+     *
+     * @param userMessage the message of the request that starts the turn
+     * @param historyLength the maximum number of history messages of the returned snapshot, `null` for no limit
+     * @return the snapshot (with all artifacts), or `null` if the task doesn't exist, and the turn view
      */
-    suspend fun openTurnView(turnId: Long, lookup: suspend () -> Task?): Pair<Task?, ReceiveChannel<Event>> =
-        mutex.withLock {
-            lookup() to register(turnId)
-        }
+    suspend fun openTurnView(
+        turnId: Long,
+        userMessage: Message,
+        historyLength: Int?,
+    ): Pair<Task?, ReceiveChannel<Event>> = mutex.withLock {
+        persistUserMessage(userMessage)
+        taskStorage.get(taskId, historyLength, includeArtifacts = true) to register(turnId)
+    }
 
     /**
      * Stops the subscriber reading from [channel]: cancels the channel without taking the stream lock, so it never
@@ -144,23 +170,67 @@ internal class TaskEventStream(
      * Publishes [event]: a [TaskEvent] is persisted and delivered to all subscribers, a
      * [ai.koog.a2a.model.Message] only to the view of turn [turnId]. A terminal [TaskEvent] closes all subscribers.
      *
+     * A [Task] for a task that already exists is ignored: it is neither persisted nor delivered. A [Task] for a new task
+     * is persisted (and delivered) with [userMessage] added to its history, unless the history has it already.
+     *
      * Returns once the event is persisted and every addressed subscriber has accepted it, which can take as long as a
      * slow subscriber needs.
      *
      * @param event the event to publish
      * @param turnId the turn publishing the event, or `null` when it is published outside a turn
+     * @param userMessage the message of the request that started the turn, if the task is created by this turn
+     * @return `false` if the event was ignored, `true` otherwise
      */
-    suspend fun publish(event: Event, turnId: Long?): Unit = mutex.withLock {
-        if (event is TaskEvent) {
-            taskStorage.update(event)
-            fanOut(event) { true }
+    suspend fun publish(event: Event, turnId: Long?, userMessage: Message? = null): Boolean = mutex.withLock {
+        when (event) {
+            is Task -> {
+                if (taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) != null) {
+                    logger.warn {
+                        "Ignoring Task event for taskId='$taskId': the task already exists, send status and artifact " +
+                            "updates to change it"
+                    }
+                    return@withLock false
+                }
 
-            if (event.isTerminal()) {
-                closeAll()
+                val created = if (userMessage == null) {
+                    event
+                } else {
+                    event.copy(history = event.history.plusIfAbsent(userMessage))
+                }
+
+                persistAndDeliver(created)
             }
-        } else {
-            fanOut(event) { it.turnId != null && it.turnId == turnId }
+
+            is TaskEvent -> persistAndDeliver(event)
+
+            else -> fanOut(event) { it.turnId != null && it.turnId == turnId }
         }
+
+        true
+    }
+
+    private suspend fun persistAndDeliver(event: TaskEvent) {
+        taskStorage.update(event)
+        fanOut(event) { true }
+
+        if (event.isTerminal()) {
+            closeAll()
+        }
+    }
+
+    /**
+     * Adds [userMessage] to the history of the stored task, see [openTurnView]. Must be called under the stream lock.
+     */
+    private suspend fun persistUserMessage(userMessage: Message) {
+        val task = taskStorage.get(taskId, historyLength = null, includeArtifacts = true) ?: return
+
+        if (task.history.orEmpty().any { it.messageId == userMessage.messageId }) return
+
+        val previousStatusMessage = task.status.message
+        val history = (previousStatusMessage?.let { task.history.plusIfAbsent(it) } ?: task.history)
+            .plusIfAbsent(userMessage)
+
+        taskStorage.update(task.copy(history = history, status = task.status.copy(message = null)))
     }
 
     /**

@@ -6,6 +6,7 @@ import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.SendMessageRequest
+import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.server.session.RequestContext
@@ -31,6 +32,16 @@ public interface AgentExecutor {
      * is not in a terminal state when this method throws (other than on cancellation), the server marks the task
      * [TaskState.TASK_STATE_FAILED] and notifies all streams of the task.
      *
+     * The server persists the user message ([RequestContext.params] message) into the task history itself, deduplicated by
+     * message id, so the agent doesn't have to: for a new task it is added to the initial [Task] the agent sends, for a
+     * follow-up it is added to the stored task before this method is called. [RequestContext.task] is therefore the full
+     * stored task of a follow-up, including its history with the user message and its artifacts. The status message that
+     * was current before the follow-up has been moved into the history, and [ai.koog.a2a.model.TaskStatus.message] is
+     * cleared until the agent sends its next status update.
+     *
+     * A [Task] event for a task that already exists is ignored (neither stored nor delivered): for a follow-up, send
+     * status and artifact updates only.
+     *
      * Events sent to the [eventProcessor] are persisted when the send call returns, and are delivered to the requester
      * of this turn as well as to every client subscribed to the task (SubscribeToTask).
      *
@@ -46,10 +57,10 @@ public interface AgentExecutor {
      *         contextId = context.contextId,
      *         status = TaskStatus(
      *             state = TaskState.TASK_STATE_WORKING,
-     *             // Mark this message as belonging to the created task
-     *             message = userMessage.copy(taskId = context.taskId)
      *             timestamp = Clock.System.now()
      *         ),
+     *         // Optional: the server adds the user message to the task history if it is not there already
+     *         history = listOf(userMessage.copy(taskId = context.taskId)),
      *     )
      * )
      *

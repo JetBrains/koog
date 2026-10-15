@@ -46,8 +46,7 @@ private suspend fun doTask(
         status = TaskStatus(
             state = TaskState.TASK_STATE_SUBMITTED,
             timestamp = Clock.System.now()
-        ),
-        history = listOf(context.params.message)
+        )
     )
 
     // Send initial task event
@@ -102,8 +101,7 @@ private suspend fun doCancelableTask(
         status = TaskStatus(
             state = TaskState.TASK_STATE_SUBMITTED,
             timestamp = Clock.System.now()
-        ),
-        history = listOf(context.params.message)
+        )
     )
 
     eventProcessor.sendTaskEvent(task)
@@ -119,8 +117,7 @@ private suspend fun doLongRunningTask(
         status = TaskStatus(
             state = TaskState.TASK_STATE_SUBMITTED,
             timestamp = Clock.System.now()
-        ),
-        history = listOf(context.params.message)
+        )
     )
 
     eventProcessor.sendTaskEvent(task)
@@ -202,8 +199,7 @@ private suspend fun doInputRequiredTask(
             status = TaskStatus(
                 state = TaskState.TASK_STATE_SUBMITTED,
                 timestamp = Clock.System.now()
-            ),
-            history = listOf(context.params.message)
+            )
         )
     )
 

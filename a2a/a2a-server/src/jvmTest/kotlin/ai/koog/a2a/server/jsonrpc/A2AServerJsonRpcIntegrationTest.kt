@@ -251,6 +251,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
         val task = client.sendMessage(initialRequest).shouldBeInstanceOf<Task> {
             it.contextId shouldBe "test-context"
             it.status.state shouldBe TaskState.TASK_STATE_INPUT_REQUIRED
+            it.history shouldBe listOf(initialRequest.message)
         }
 
         // The follow-up only references the task; its context is inferred
@@ -267,10 +268,15 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
 
         events shouldHaveSize 2
 
+        // The agents of these tests don't persist user messages: the server does, moving the agent's prompt in between.
+        val expectedHistory = listOf(initialRequest.message, task.status.message!!, followupRequest.message)
+
         events[0].shouldBeInstanceOf<Task> {
             it.id shouldBe task.id
             it.contextId shouldBe "test-context"
             it.status.state shouldBe TaskState.TASK_STATE_INPUT_REQUIRED
+            it.status.message shouldBe null
+            it.history shouldBe expectedHistory
         }
 
         events[1].shouldBeInstanceOf<TaskStatusUpdateEvent> {
@@ -284,5 +290,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
                 }
             }
         }
+
+        client.getTask(GetTaskRequest(id = task.id)).history shouldBe expectedHistory
     }
 }

@@ -122,8 +122,17 @@ public interface TaskStorage {
     /**
      * Updates task state based on an event, or creates the task if it doesn't exist.
      *
-     * When the event is a [Task], it will be stored as a new task or replace an existing one.
-     * When the event is a status/artifact update, it modifies the existing task state.
+     * - A [Task] is stored as a new task, or replaces the stored task entirely (status, history, artifacts, and
+     *   metadata). [ai.koog.a2a.server.A2AServer] never passes an agent's [Task] for a task that already exists (such
+     *   events are ignored), but it does use the replacement to persist the user message of a follow-up turn: it reads
+     *   the full stored task, moves [ai.koog.a2a.model.TaskStatus.message] into [Task.history], appends the user
+     *   message, and writes the result back. Implementations must therefore store the given task as is.
+     * - A [ai.koog.a2a.model.TaskStatusUpdateEvent] replaces the status of the existing task. If the status
+     *   that is replaced has a message, that message is moved into [Task.history] (appended to the end), unless the
+     *   history already contains a message with the same [ai.koog.a2a.model.Message.messageId], in which case it is
+     *   not added again. Metadata is merged.
+     * - A [ai.koog.a2a.model.TaskArtifactUpdateEvent] adds, replaces, or appends to an artifact of the existing task.
+     *
      * All tasks must be created before they can be updated with the [Task] event first.
      * Attempts to send a non-[Task] [TaskEvent] for a non-existing task will result in error.
      *

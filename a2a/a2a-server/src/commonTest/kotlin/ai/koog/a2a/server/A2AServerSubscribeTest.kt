@@ -239,7 +239,7 @@ class A2AServerSubscribeTest {
     }
 
     @Test
-    fun testSubscribersAndSendStreamReceiveIdenticalEvents() = runTest(timeout = TEST_TIMEOUT) {
+    fun testSubscribersReceiveSameTurnEventsAsSendStream() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(mapOf("start" to startScript, "finish" to finishScript))
         server.onSendMessage(request("start"), ctx)
         val stored = assertNotNull(taskStorage.get(TASK_ID))
@@ -253,9 +253,15 @@ class A2AServerSubscribeTest {
         first.job.join()
         second.job.join()
 
-        // The follow-up stream begins with the task snapshot, since the agent's first event is a status update.
-        assertEquals(listOf<Event>(stored) + finishEvents, streamEvents)
-        assertEquals(streamEvents, first.events)
+        // The follow-up stream begins with the task snapshot, since the agent's first event is a status update. It is
+        // taken after the user message of the follow-up was persisted, which isn't announced to subscribers: they got
+        // their snapshot earlier, and then receive exactly the events of the turn.
+        val persistedSnapshot = stored.copy(
+            status = stored.status.copy(message = null),
+            history = stored.history.orEmpty() + listOfNotNull(stored.status.message) + userMessage("finish", TASK_ID),
+        )
+        assertEquals(listOf<Event>(persistedSnapshot) + finishEvents, streamEvents)
+        assertEquals(listOf<Event>(stored) + finishEvents, first.events)
         assertEquals(first.events, second.events)
     }
 

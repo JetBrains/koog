@@ -200,6 +200,49 @@ class SessionEventProcessorTest {
     }
 
     @Test
+    fun task_testTaskEventForExistingTaskIsIgnored() = runTest(timeout = TEST_TIMEOUT) {
+        val existingTask = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(existingTask)
+
+        val processor = createProcessor(contextId, taskId, taskExists = true)
+        val turnView = collect(stream.openTurnView(turnId))
+
+        // Even a terminal Task is not applied, and doesn't close the processor.
+        processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
+
+        assertTrue(processor.isOpen)
+        assertEquals(existingTask, taskStorage.get(taskId))
+
+        val statusUpdate = TaskStatusUpdateEvent(
+            taskId = taskId,
+            contextId = contextId,
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
+        )
+        processor.sendTaskEvent(statusUpdate)
+
+        assertEquals(listOf(statusUpdate), turnView.endTurnAndCollect())
+    }
+
+    @Test
+    fun task_testNewTaskGetsUserMessageInHistory() = runTest(timeout = TEST_TIMEOUT) {
+        val userMessage = createMessage("user-1", contextId, "Hello")
+        val processor = SessionEventProcessor(
+            contextId = contextId,
+            taskId = taskId,
+            stream = stream,
+            turnId = turnId,
+            userMessage = userMessage,
+        )
+        val turnView = collect(stream.openTurnView(turnId))
+
+        processor.sendTaskEvent(createTask(taskId, contextId))
+
+        val expected = createTask(taskId, contextId).copy(history = listOf(userMessage))
+        assertEquals(expected, taskStorage.get(taskId))
+        assertEquals(listOf(expected), turnView.endTurnAndCollect())
+    }
+
+    @Test
     fun task_testSendTaskEventWithInvalidContextId() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
         val task = createTask(taskId, "different-context")
