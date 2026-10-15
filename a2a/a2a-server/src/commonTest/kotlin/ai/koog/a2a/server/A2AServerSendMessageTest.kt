@@ -87,9 +87,7 @@ class A2AServerSendMessageTest {
         suspend fun run(context: RequestContext<SendMessageRequest>, processor: TurnEventProcessor)
     }
 
-    /**
-     * Runs the script registered for the text of the incoming message.
-     */
+    /** Runs the script registered for the text of the incoming message. */
     private inner class ScriptedAgentExecutor(private val scripts: Map<String, Script>) : AgentExecutor {
         override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor) {
             executed += context
@@ -121,9 +119,7 @@ class A2AServerSendMessageTest {
         capabilities = AgentCapabilities(streaming = true),
     )
 
-    /**
-     * Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test.
-     */
+    /** Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test. */
     private fun TestScope.agentScope(): CoroutineScope =
         CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
 

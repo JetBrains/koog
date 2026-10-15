@@ -40,24 +40,18 @@ public class SimplePushNotificationSender(
     private val json: Json = DEFAULT_JSON,
     timeout: Duration = DEFAULT_TIMEOUT,
 ) : PushNotificationSender, AutoCloseable {
-    /**
-     * Defaults of [SimplePushNotificationSender].
-     */
+    /** Defaults of [SimplePushNotificationSender]. */
     public companion object {
         private val logger = KotlinLogging.logger {}
 
-        /**
-         * The default JSON configuration: omits null and default values, as the other A2A transports do.
-         */
+        /** The default JSON configuration: omits null and default values, as the other A2A transports do. */
         public val DEFAULT_JSON: Json = Json {
             explicitNulls = false
             encodeDefaults = false
             ignoreUnknownKeys = true
         }
 
-        /**
-         * The default timeout of a single notification request.
-         */
+        /** The default timeout of a single notification request. */
         public val DEFAULT_TIMEOUT: Duration = 15.seconds
     }
 

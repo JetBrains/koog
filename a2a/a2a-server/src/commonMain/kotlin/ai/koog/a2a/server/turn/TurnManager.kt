@@ -39,56 +39,49 @@ import kotlinx.coroutines.withContext
  * - A **turn** is one [ai.koog.a2a.server.agent.AgentExecutor.execute] call, started with [startTurn] and represented
  *   by a [Turn]. Its [Turn.events] only cover that turn.
  * - The **task stream** is an internal, per-task broadcast through which every event of the task is persisted and
- *   delivered, in storage order, to the current turn's view and to every [subscribe] stream. It outlives turns: it
- *   exists while the task has a running turn, a [withTaskProcessor] block in progress, or at least one subscriber,
- *   and it is recreated from [TaskStorage] when needed, so idle tasks (e.g. waiting for input) hold no memory.
+ *   delivered, in storage order, to the current turn's view and to every [subscribe] stream. It exists while the task
+ *   has a running turn, a [withTaskProcessor] block, or a subscriber, and is recreated from [TaskStorage] when
+ *   needed, so idle tasks (e.g. waiting for input) hold no memory.
  *
  * ## Locking
  *
- * Two independent layers of locking are involved:
  * - **Turn serialization** is the caller's responsibility: [startTurn] fails if a turn for the same task is already
- *   running, so callers must serialize turns per task, e.g. by holding a per-task lock while waiting for
- *   [getTurn]`(taskId)?.`[join][Turn.join] and calling [startTurn], as [ai.koog.a2a.server.A2AServer] does.
+ *   running, so callers must hold a per-task lock while waiting for [getTurn]`(taskId)?.`[join][Turn.join] and
+ *   calling [startTurn], as [ai.koog.a2a.server.A2AServer] does.
  * - The **stream lock** is internal: each task stream persists an event, delivers it to every stream of the task, and
- *   updates its subscriber set under one per-task lock. This is what makes all streams of a task observe the same
- *   events in the same order, and makes [subscribe]'s snapshot and registration atomic.
+ *   updates its subscriber set under one per-task lock. This gives all streams of a task the same events in the same
+ *   order, and makes [subscribe]'s snapshot and registration atomic.
+ * - The per-task [TaskEventStream.processorGate] (turn gate) linearizes turn start, turn end, and [withTaskProcessor]
+ *   blocks (cancellation): a block either sees the running turn (which can't end while the block runs), or sees no
+ *   turn, and then no turn starts until the block is done. A turn of an existing task that would start after a block
+ *   left the task in a terminal state is rejected.
  *
- * The per-task [TaskEventStream.processorGate] (turn gate) linearizes the start of a turn, the end of a turn, and
- * [withTaskProcessor] blocks (cancellation) of a task: [startTurn] registers the turn's view and makes the turn visible
- * under the gate, so a [withTaskProcessor] block either sees the running turn (which can't end while the block runs),
- * or sees no turn, and then no turn starts until the block is done. A turn of an existing task that would start after a
- * block left the task in a terminal state is rejected.
- *
- * Lock order: the caller's per-task task lock (see [ai.koog.a2a.server.A2AServer.tasksMutex]), then the turn gate, then
- * either the registry lock or the stream lock. The task lock is never acquired while holding the gate: a
- * [withTaskProcessor] block (e.g. [ai.koog.a2a.server.A2AServer.onCancelTask]) doesn't take it at all, since the task
- * lock can be held by a caller waiting for a running turn to end ([Turn.join]), and a turn can't end without the
- * gate. The registry lock and the stream lock are never nested: the registry lock is held only for short,
- * non-suspending bookkeeping and is **never** held while acquiring a stream lock (or anything else that can wait for a
- * fan-out), so a stalled task can't block the other tasks.
+ * Lock order: the caller's per-task task lock (see [ai.koog.a2a.server.A2AServer.tasksMutex]), then the turn gate,
+ * then either the registry lock or the stream lock. The task lock is never acquired while holding the gate:
+ * [withTaskProcessor] blocks (e.g. [ai.koog.a2a.server.A2AServer.onCancelTask]) don't take it, since a caller holding
+ * it may be waiting for a running turn to end ([Turn.join]), and a turn can't end without the gate. The registry lock
+ * and the stream lock are never nested: the registry lock is held only for short non-suspending bookkeeping and never
+ * while acquiring a stream lock, so a stalled task can't block other tasks.
  *
  * ## Back-pressure
  *
- * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task, i.e.
- * the requester's [Turn.events], the collector of a blocking SendMessage, and every [subscribe] flow, has accepted
- * the event. Nothing is buffered or dropped, and no collector is disconnected for being slow. A slow collector
- * therefore slows the agent and the other collectors of the task, and operations that need the task's stream lock
- * ([subscribe], [startTurn], turn end, [withTaskProcessor] publishing) wait behind it. Only operations on that very
- * task are affected: other tasks, [getTurn], and [activeTurns] never wait for it.
+ * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task
+ * (the requester's [Turn.events], a blocking SendMessage collector, every [subscribe] flow) has accepted the event.
+ * Nothing is buffered or dropped, and no collector is disconnected for being slow. A slow collector therefore slows
+ * the agent and the other collectors of that task, and operations needing its stream lock ([subscribe], [startTurn],
+ * turn end, [withTaskProcessor] publishing) wait behind it. Other tasks, [getTurn], and [activeTurns] never wait.
  *
- * A collector that is cancelled (e.g. the client went away) stops being a delivery target immediately: the delivery
- * that is waiting for it fails, the collector is dropped, and the agent and the other collectors go on.
+ * A cancelled collector (e.g. the client went away) stops being a delivery target immediately: the delivery waiting
+ * for it fails, the collector is dropped, and the agent and the other collectors go on.
  *
  * ## History
  *
  * The user message of a turn is persisted into [ai.koog.a2a.model.Task.history] by the task stream, deduplicated by
- * [ai.koog.a2a.model.Message.messageId]:
+ * [ai.koog.a2a.model.Message.messageId], with its task id and context id set to those of the task:
  * - for a follow-up, lazily, right before the first status or artifact update the agent sends in the turn: the task's
  *   current status message is moved into the history, the user message is appended, and the status message is cleared.
  *   If the agent sends no such event, the user message is not persisted;
  * - for a new task, when the agent sends the initial [ai.koog.a2a.model.Task].
- *
- * In both cases the stored copy of the user message has its task id and context id set to those of the task.
  *
  * An agent's [ai.koog.a2a.model.Task] event for an existing task is ignored.
  *
@@ -116,25 +109,20 @@ public class TurnManager(
     }
 
     private class StreamEntry(val stream: TaskEventStream) {
-        /**
-         * Number of turns, [withTaskProcessor] blocks, and subscribers using the stream.
-         */
+        /** Number of turns, [withTaskProcessor] blocks, and subscribers using the stream. */
         var holders: Int = 0
     }
 
     /**
-     * Guards [streams], [turns], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate]. Since
-     * a stream lock can be held for a long time by a fan-out waiting for a slow collector, this lock is never held
-     * while acquiring a stream lock or anything else that may wait for a fan-out, and only short non-suspending
-     * bookkeeping runs under it.
+     * Guards [streams], [turns], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate], but
+     * is never held while acquiring a stream lock, which a fan-out may hold for long.
      */
     private val registryMutex = Mutex()
     private val streams = mutableMapOf<String, StreamEntry>()
 
     /**
-     * Map of task id to the turn of the running turn. All turns have a task id, even if the task won't be
-     * created. A turn is added once its view is registered, and removed once it has ended, both under the task's
-     * [TaskEventStream.processorGate].
+     * Running turns by task id. Added once the turn's view is registered and removed once it has ended, both under the
+     * task's [TaskEventStream.processorGate].
      */
     private val turns = mutableMapOf<String, Turn>()
     private var nextTurnId = 0L
@@ -143,32 +131,25 @@ public class TurnManager(
      * Starts a new turn for [RequestContext.taskId]: runs [block] in [coroutineScope] with a [TurnEventProcessor]
      * bound to the task stream.
      *
-     * The returned turn's [Turn.events] is registered before [block] starts, so it receives every event of the
-     * turn. If the turn continues an existing task ([RequestContext.task] is not `null`):
+     * The returned [Turn.events] is registered before [block] starts, so it receives every event of the turn.
+     * If the turn continues an existing task ([RequestContext.task] is not `null`):
      * - the processor starts in task mode, see [TurnEventProcessor];
-     * - the user message of the request ([ai.koog.a2a.model.SendMessageRequest.message]) is persisted into the history
-     *   of the stored task when the agent sends its first status or artifact update, see "History" above;
-     * - the stored task is read atomically with the registration of [Turn.events] (with the history limited to
-     *   the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts) and kept as the
-     *   turn's task snapshot;
-     * - if the stored task is in a terminal state by then (e.g. it was cancelled after the caller validated it), the
-     *   turn isn't started.
+     * - the request's user message is persisted when the agent sends its first status or artifact update, see
+     *   "History" above;
+     * - the stored task is read atomically with the registration of [Turn.events] (history limited to the request's
+     *   [ai.koog.a2a.model.SendMessageConfiguration.historyLength], all artifacts) and kept as the turn's task snapshot;
+     * - if the stored task is terminal by then (e.g. cancelled after the caller validated it), the turn isn't started.
      *
-     * If the turn creates a new task, the user message is added to the history of the agent's initial
-     * [ai.koog.a2a.model.Task] instead.
-     *
-     * When [block] completes:
-     * - if it failed with an exception (other than a cancellation) and the task exists in a non-terminal state, the
-     *   task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
-     *   update;
-     * - the processor is closed, [Turn.events] completes, and the turn is removed.
+     * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
+     * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
+     * update. Then the processor is closed, [Turn.events] completes, and the turn is removed.
      *
      * Turns of the same task must be serialized by the caller, see [TurnManager].
      *
      * @param context The request context of the turn; its [RequestContext.contextId] and [RequestContext.taskId] are
      * enforced by the processor.
      * @param block The agent logic of the turn.
-     * @return The turn of the started turn.
+     * @return The started turn.
      * @throws IllegalStateException if a turn for the same task is already running.
      * @throws A2AUnsupportedOperationException if the turn continues an existing task that is in a terminal state.
      */
@@ -188,11 +169,10 @@ public class TurnManager(
 
         try {
             /*
-             Under the gate, no withTaskProcessor block (e.g. a cancellation) runs for the task, and the turn becomes
-             visible only after its view is registered, so a block either finds the turn with its view in place or
-             runs entirely before the turn starts. In the latter case a terminal state it forced is in the snapshot.
-             The registry lock isn't held while waiting for the stream lock in openTurnView: the stream lock can be held
-             for long by a fan-out waiting for a slow collector, and the registry lock must not wait for it.
+             Under the gate no withTaskProcessor block runs, and the turn becomes visible only after its view is
+             registered, so a block either finds the turn with its view in place or runs entirely before the turn
+             starts (then a terminal state it forced is in the snapshot). The registry lock isn't held in openTurnView,
+             which waits for the stream lock.
              */
             return stream.processorGate.withLock {
                 val turnId = registryMutex.withLock {
@@ -241,9 +221,9 @@ public class TurnManager(
                     started = true
 
                     /*
-                     Starts the agent job; ends the turn under the gate, i.e. after this registration is done. Started
-                     atomically: if coroutineScope is already cancelled (server shutdown), the monitor still runs and
-                     ends the turn, so the view completes and join() doesn't hang.
+                     Starts the agent job and ends the turn under the gate, after this registration. ATOMIC: if
+                     coroutineScope is already cancelled (server shutdown), the monitor still runs and ends the turn,
+                     so the view completes and join() doesn't hang.
                      */
                     @OptIn(DelicateCoroutinesApi::class)
                     coroutineScope.launch(start = CoroutineStart.ATOMIC) {
@@ -262,11 +242,9 @@ public class TurnManager(
         }
     }
 
-    /**
-     * Waits for the turn's agent job to complete (starting it, if needed), ends the turn, and cleans up.
-     */
+    /** Waits for the turn's agent job to complete (starting it, if needed), ends the turn, and cleans up. */
     private suspend fun monitorTurn(turn: Turn, stream: TaskEventStream, turnId: Long) {
-        // Also fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
+        // Fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
         val failure = try {
             turn.agentJob.await()
             null
@@ -284,10 +262,9 @@ public class TurnManager(
             withContext(NonCancellable) {
                 try {
                     /*
-                     Wait for any withTaskProcessor block (e.g. cancellation) that may still publish through this
-                     turn's processor, then close the processor and the turn view (endTurn closes it even if it fails),
-                     and remove the turn. The turn is removed under the gate, so a withTaskProcessor block never
-                     gets the closed processor of an ended turn.
+                     Waits for any withTaskProcessor block still publishing through this turn's processor, then closes
+                     the processor and the view (endTurn closes it even if it fails) and removes the turn. Removal under
+                     the gate means a block never gets the closed processor of an ended turn.
                      */
                     stream.processorGate.withLock {
                         turn.eventProcessor.close()
@@ -315,9 +292,7 @@ public class TurnManager(
         }
     }
 
-    /**
-     * Sends push notifications with the current state of the task, if configured.
-     */
+    /** Sends push notifications with the current state of the task, if configured. */
     private suspend fun sendPushNotifications(taskId: String) {
         if (pushSender == null || pushConfigStorage == null) return
 
@@ -337,12 +312,11 @@ public class TurnManager(
     /**
      * Subscribes to the events of a task (SubscribeToTask).
      *
-     * The first event is the task as returned by [TaskStorage.get] for a [GetTaskRequest] built from [request]
-     * (full history and artifacts), followed by every later event of the task, across turns, including turns started
-     * later by other requests. The snapshot is read and the subscription is registered atomically, so no event is
-     * missed or repeated. The flow completes when the task reaches a terminal state.
+     * The first event is the task as returned by [TaskStorage.get] (full history and artifacts), followed by every
+     * later event of the task across turns. The snapshot is read and the subscription is registered atomically, so no
+     * event is missed or repeated. The flow completes when the task reaches a terminal state.
      *
-     * Errors are thrown on collection, before the first event is emitted.
+     * Errors are thrown on collection, before the first event.
      *
      * @param request The SubscribeToTask request.
      * @param ctx The context of the call, passed to [TaskStorage.get] to scope the lookup.
@@ -377,17 +351,17 @@ public class TurnManager(
     /**
      * Runs [block] with a [TurnEventProcessor] bound to the task stream of [taskId], e.g. to cancel a task.
      *
-     * If a turn of the task is running, [block] receives that turn's processor and agent job, and the turn is kept
-     * from finishing (its processor and [Turn.events] stay open) until [block] returns, so everything [block]
-     * publishes reaches the turn's requester as well. Otherwise, [block] receives a new processor, which is closed when
-     * [block] returns (later events are rejected with [ai.koog.a2a.server.exceptions.TurnNotActiveException]), and
-     * `null`. Either way, the events [block] publishes reach every [subscribe] stream of the task.
+     * If a turn of the task is running, [block] receives that turn's processor and agent job, and the turn can't finish
+     * until [block] returns, so everything [block] publishes reaches the turn's requester as well. Otherwise, [block]
+     * receives a new processor and `null`; the processor is closed when [block] returns (later events are rejected with
+     * [ai.koog.a2a.server.exceptions.TurnNotActiveException]). Either way, published events reach every [subscribe]
+     * stream of the task.
      *
-     * No turn of the task starts while [block] runs: a turn that is being started waits, and is rejected if [block]
-     * left the task in a terminal state, see [startTurn].
+     * No turn of the task starts while [block] runs: a starting turn waits, and is rejected if [block] left the task
+     * terminal, see [startTurn].
      *
-     * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. with [Turn.join]) or
-     * for a turn to start, since neither can happen while [block] runs.
+     * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. [Turn.join]) or for a turn
+     * to start, since neither can happen while [block] runs.
      *
      * @param taskId The task id.
      * @param contextId The context id of the task, used for the new processor when no turn is running.
@@ -416,10 +390,8 @@ public class TurnManager(
                 try {
                     block(processor, turn?.agentJob)
                 } finally {
-                    /*
-                     Nothing may publish through a standalone processor once the block is done and the stream may be
-                     dropped. Closed without waiting for a send in progress, which could hold the gate for long.
-                     */
+                    // Nothing may publish through a standalone processor once the stream may be dropped. Closed without
+                    // waiting for a send in progress, which could hold the gate for long.
                     if (turn == null) processor.closeImmediately()
                 }
             }
@@ -429,23 +401,19 @@ public class TurnManager(
     }
 
     /**
-     * Returns the turn of the running turn of the given task id, if any. A turn that is still being started by
-     * [startTurn] isn't reported until its [Turn.events] is registered.
+     * Returns the running turn of the task, if any. A turn still being started by [startTurn] isn't reported until its
+     * [Turn.events] is registered.
      */
     public suspend fun getTurn(taskId: String): Turn? = registryMutex.withLock {
         turns[taskId]
     }
 
-    /**
-     * Returns the number of running turns.
-     */
+    /** Returns the number of running turns. */
     public suspend fun activeTurns(): Int = registryMutex.withLock {
         turns.size
     }
 
-    /**
-     * Returns the number of task streams currently held in memory.
-     */
+    /** Returns the number of task streams currently held in memory. */
     internal suspend fun activeStreams(): Int = registryMutex.withLock {
         streams.size
     }

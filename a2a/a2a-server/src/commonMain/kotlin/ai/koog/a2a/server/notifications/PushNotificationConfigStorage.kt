@@ -11,13 +11,12 @@ import ai.koog.a2a.transport.ServerCallContext
 /**
  * Interface for managing the storage of push notification configurations associated with task updates.
  *
- * The first four methods serve the corresponding push notification config RPCs and take the request DTOs together
- * with the [ServerCallContext] of the call, so that multi-tenant or authorization-aware storages can scope the data.
- * [getAll] and [deleteAll] are internal methods used by the server itself (dispatching notifications, cleanup)
- * and have no caller context.
+ * The first four methods serve the push notification config RPCs and receive the [ServerCallContext] of the call, so
+ * multi-tenant or authorization-aware storages can scope the data. [getAll] and [deleteAll] are internal (dispatching
+ * notifications, cleanup) and have no caller context.
  *
- * Existence of the task and presence of a config are validated by [ai.koog.a2a.server.A2AServer], which maps
- * a missing task or config to a `TaskNotFound` error. Storages only report absence (`null`, empty list, no-op).
+ * [ai.koog.a2a.server.A2AServer] validates task existence and config presence, mapping them to `TaskNotFound`.
+ * Storages only report absence (`null`, empty list, no-op).
  *
  * Implementations must ensure concurrency safety.
  */
@@ -55,11 +54,10 @@ public interface PushNotificationConfigStorage {
     /**
      * Serves the `ListTaskPushNotificationConfigs` RPC: returns the configs of [ListTaskPushNotificationConfigsRequest.taskId].
      *
-     * Pagination is optional (`MAY`) in the specification. A storage that does not support it may ignore
-     * [ListTaskPushNotificationConfigsRequest.pageSize] and [ListTaskPushNotificationConfigsRequest.pageToken],
-     * return all configs and leave [ListTaskPushNotificationConfigsResponse.nextPageToken] as the empty string
-     * (the default of the DTO), which means that there are no more results. A storage that does support pagination
-     * must return a non-empty [ListTaskPushNotificationConfigsResponse.nextPageToken] if and only if more results exist.
+     * Pagination is optional (`MAY`) in the specification. A storage without it may ignore
+     * [ListTaskPushNotificationConfigsRequest.pageSize] and [ListTaskPushNotificationConfigsRequest.pageToken], return
+     * all configs and leave [ListTaskPushNotificationConfigsResponse.nextPageToken] empty (no more results). A storage
+     * with pagination must return a non-empty `nextPageToken` if and only if more results exist.
      *
      * @param request the `ListTaskPushNotificationConfigs` request
      * @param context the context of the call
@@ -82,8 +80,8 @@ public interface PushNotificationConfigStorage {
     public suspend fun delete(request: DeleteTaskPushNotificationConfigRequest, context: ServerCallContext)
 
     /**
-     * Retrieves all push notification configurations associated with the given task ID.
-     * Intended for internal use, when notifications are dispatched (there is no caller request at that point).
+     * Retrieves all push notification configurations of the given task ID, for internal use when notifications are
+     * dispatched (there is no caller request then).
      *
      * @param taskId Task ID for which to retrieve the configurations.
      * @return all configs of the task (an empty list if there are none)
@@ -91,8 +89,7 @@ public interface PushNotificationConfigStorage {
     public suspend fun getAll(taskId: String): List<TaskPushNotificationConfig>
 
     /**
-     * Deletes all push notification configurations of the given task ID. Intended for internal cleanup.
-     * A no-op if the task has no configs.
+     * Deletes all push notification configurations of the given task ID, for internal cleanup. A no-op if there are none.
      *
      * @param taskId Task ID for which to delete the configurations.
      * @throws PushNotificationException if the configurations cannot be deleted.

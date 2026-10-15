@@ -27,7 +27,7 @@ public interface TaskStorage {
      *   lookup (a task that is not visible to the caller must be reported as not found). The in-memory implementation
      *   ignores both.
      *
-     * For internal reads that do not originate from the `GetTask` RPC, use the overload that takes a task ID.
+     * For internal reads, use the overload that takes a task ID.
      *
      * @param request the `GetTask` request
      * @param context the context of the call
@@ -47,8 +47,8 @@ public interface TaskStorage {
      * - All filters are combined with logical AND.
      * - Ordering: by status timestamp, newest first. The ordering must be deterministic and stable across pages, so
      *   implementations must define a tie-breaker (see [InMemoryTaskStorage] for the reference ordering).
-     * - [ListTasksRequest.pageToken]: an opaque token previously returned in [ListTasksResponse.nextPageToken].
-     *   Its format is defined by the storage. An invalid token must be reported with [A2AInvalidParamsException].
+     * - [ListTasksRequest.pageToken]: an opaque token from [ListTasksResponse.nextPageToken], in a storage-defined
+     *   format. An invalid token must be reported with [A2AInvalidParamsException].
      * - [ListTasksRequest.pageSize]: `null` means the default of 50. The effective page size must be echoed in
      *   [ListTasksResponse.pageSize].
      * - [ListTasksRequest.historyLength] and [ListTasksRequest.includeArtifacts]: apply them to every returned task
@@ -61,9 +61,8 @@ public interface TaskStorage {
      * pagination, and [ListTasksResponse.nextPageToken] must be the empty string on the last page (the field is
      * always present on the wire).
      *
-     * What [ai.koog.a2a.server.A2AServer] validates before calling this method: [ListTasksRequest.pageSize] is in
-     * `1..100` when present and [ListTasksRequest.historyLength] is not negative. Storages are not required to
-     * repeat these checks.
+     * [ai.koog.a2a.server.A2AServer] validates [ListTasksRequest.pageSize] (`1..100`) and
+     * [ListTasksRequest.historyLength] (not negative) beforehand; storages needn't repeat these checks.
      *
      * @param request the `ListTasks` request
      * @param context the context of the call
@@ -73,8 +72,8 @@ public interface TaskStorage {
     public suspend fun list(request: ListTasksRequest, context: ServerCallContext): ListTasksResponse
 
     /**
-     * Retrieves a task by ID. Intended for internal use (cancellation, turns, push notifications, agents), as
-     * opposed to the `GetTask` RPC served by [get] with a [GetTaskRequest].
+     * Retrieves a task by ID, for internal use (cancellation, turns, push notifications, agents); unlike [get] with a
+     * [GetTaskRequest], it does not serve the `GetTask` RPC.
      *
      * @param taskId the unique task identifier
      * @param historyLength the maximum number of messages in conversation history to include in the response
@@ -123,21 +122,19 @@ public interface TaskStorage {
      * Updates task state based on an event, or creates the task if it doesn't exist.
      *
      * - A [Task] is stored as a new task, or replaces the stored task entirely (status, history, artifacts, and
-     *   metadata). [ai.koog.a2a.server.A2AServer] never passes an agent's [Task] for a task that already exists (such
-     *   events are ignored), but it does use the replacement to persist the user message of a follow-up turn: it reads
-     *   the full stored task, moves [ai.koog.a2a.model.TaskStatus.message] into [Task.history], appends the user
-     *   message, and writes the result back. Implementations must therefore store the given task as is.
+     *   metadata). The server relies on the replacement to persist a follow-up turn's user message (it moves
+     *   [ai.koog.a2a.model.TaskStatus.message] into [Task.history], appends the message, and writes the task back), so
+     *   implementations must store the given task as is.
      * - A [ai.koog.a2a.model.TaskStatusUpdateEvent] replaces the status of the existing task. If the status
      *   that is replaced has a message, that message is moved into [Task.history] (appended to the end), unless the
      *   history already contains a message with the same [ai.koog.a2a.model.Message.messageId], in which case it is
      *   not added again. Metadata is merged.
      * - A [ai.koog.a2a.model.TaskArtifactUpdateEvent] adds, replaces, or appends to an artifact of the existing task.
      *
-     * All tasks must be created before they can be updated with the [Task] event first.
-     * Attempts to send a non-[Task] [TaskEvent] for a non-existing task will result in error.
+     * A task must be created with a [Task] event before other events can update it.
      *
      * @param event the update event to apply (creation or modification)
-     * @throws TaskOperationException if the task cannot be created or updated, e.g. [TaskEvent] that is not [Task] is sent for non-existing task id
+     * @throws TaskOperationException if the task cannot be created or updated, e.g. a non-[Task] event for a non-existing task
      */
     public suspend fun update(event: TaskEvent)
 

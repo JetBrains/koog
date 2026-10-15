@@ -58,9 +58,7 @@ class TaskEventStreamTest {
 
     private fun createStream() = TaskEventStream(taskId, taskStorage, FixedMessageIdGenerator)
 
-    /**
-     * Delivery is back-pressured, so a channel must be consumed while events are published.
-     */
+    /** Delivery is back-pressured, so a channel must be consumed while events are published. */
     private fun TestScope.collect(channel: ReceiveChannel<Event>): Deferred<List<Event>> = async { channel.toList() }
 
     private fun task(state: TaskState) = Task(

@@ -147,9 +147,7 @@ class TurnManagerTest {
         task = task,
     )
 
-    /**
-     * Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test.
-     */
+    /** Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test. */
     private fun TestScope.agentScope(): CoroutineScope =
         CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
 
@@ -563,9 +561,7 @@ class TurnManagerTest {
         assertEquals(listOf<Pair<TaskPushNotificationConfig, Event>>(config to task.copy(status = completed.status)), pushSender.sentNotifications)
     }
 
-    /**
-     * Starts the SubscribeToTask flow in a new coroutine. [onEvent] is called for every received event.
-     */
+    /** Starts the SubscribeToTask flow in a new coroutine. [onEvent] is called for every received event. */
     private fun TestScope.subscribeWith(
         turnManager: TurnManager,
         onEvent: suspend (Event) -> Unit,

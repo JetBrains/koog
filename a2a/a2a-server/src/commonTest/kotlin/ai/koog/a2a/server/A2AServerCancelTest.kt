@@ -189,9 +189,7 @@ class A2AServerCancelTest {
         private fun status(state: TaskState) = TaskStatus(state = state, timestamp = TIMESTAMP)
     }
 
-    /**
-     * Subscribes to the task in a new coroutine, recording the events; completes when the subscription ends.
-     */
+    /** Subscribes to the task in a new coroutine, recording the events; completes when the subscription ends. */
     private class Subscription(val events: MutableList<Event>, val firstEvent: CompletableDeferred<Unit>, val job: kotlinx.coroutines.Job)
 
     private fun CoroutineScope.subscribe(server: A2AServer): Subscription {

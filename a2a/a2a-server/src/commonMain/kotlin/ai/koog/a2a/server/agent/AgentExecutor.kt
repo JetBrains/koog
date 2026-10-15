@@ -32,20 +32,19 @@ public interface AgentExecutor {
      * is not in a terminal state when this method throws (other than on cancellation), the server marks the task
      * [TaskState.TASK_STATE_FAILED] and notifies all streams of the task.
      *
-     * The server persists the user message ([RequestContext.params] message) into the task history itself, deduplicated by
-     * message id, so the agent doesn't have to; the stored copy has the task id and context id of the task. For a new
-     * task it is added to the initial [Task] the agent sends. For a follow-up it is added lazily, right before the
-     * first status or artifact update the agent sends in this turn: the status message that was current before the
-     * follow-up is moved into the history, followed by the user message, and [ai.koog.a2a.model.TaskStatus.message] is
-     * cleared. If the agent sends no such event, the user message is not persisted. [RequestContext.task] is the full
-     * stored task of a follow-up as of the start of the turn (history and artifacts), so it doesn't contain the user
+     * The server persists the user message ([RequestContext.params] message) into the task history itself, deduplicated
+     * by message id, with the task's task id and context id. For a new task it is added to the initial [Task] the agent
+     * sends. For a follow-up it is added right before the first status or artifact update the agent sends in this turn:
+     * the previously current status message is moved into the history, followed by the user message, and
+     * [ai.koog.a2a.model.TaskStatus.message] is cleared. If the agent sends no such event, the user message is not
+     * persisted. [RequestContext.task] is the stored task as of the start of the turn, so it doesn't contain the user
      * message yet.
      *
-     * A [Task] event for a task that already exists is ignored (neither stored nor delivered): for a follow-up, send
-     * status and artifact updates only.
+     * A [Task] event for an existing task is ignored (neither stored nor delivered): for a follow-up, send status and
+     * artifact updates only.
      *
-     * Events sent to the [eventProcessor] are persisted when the send call returns, and are delivered to the requester
-     * of this turn as well as to every client subscribed to the task (SubscribeToTask).
+     * Events are persisted when the send call returns, and are delivered to the requester of this turn as well as to
+     * every client subscribed to the task (SubscribeToTask).
      *
      * Example implementation:
      * ```kotlin
@@ -105,17 +104,16 @@ public interface AgentExecutor {
      * identified by the task id in the [context] or throw an exception if cancellation is not supported or not possible,
      * e.g., [A2ATaskNotCancelableException].
      *
-     * Can also publish [TaskEvent]s to the [eventProcessor] to update the task state. The processor is bound to the
-     * task's event stream: if a turn is running, it's the processor of that turn (which stays open until this method
-     * returns, even after [agentJob] is cancelled), otherwise a new one; either way the events reach every stream of
-     * the task. Should move the task to [TaskState.TASK_STATE_CANCELED]; if it returns normally while the task is
-     * still not in a terminal state, the server cancels [agentJob] (if any) and sets [TaskState.TASK_STATE_CANCELED]
-     * itself, so the task never stays non-terminal after a successful cancellation. If the task ends up in another
-     * terminal state, the requester gets [A2ATaskNotCancelableException].
+     * Can also publish [TaskEvent]s to the [eventProcessor]. It is bound to the task's event stream: the running turn's
+     * processor if a turn is running (it stays open until this method returns, even after [agentJob] is cancelled),
+     * otherwise a new one; either way the events reach every stream of the task. Should move the task to
+     * [TaskState.TASK_STATE_CANCELED]; if it returns normally while the task is not terminal, the server cancels
+     * [agentJob] (if any) and sets [TaskState.TASK_STATE_CANCELED] itself. If the task ends up in another terminal
+     * state, the requester gets [A2ATaskNotCancelableException].
      *
      * **IMPORTANT**: This should execute quickly as it runs synchronously with the request.
      *
-     * Default implementation throws [A2ATaskNotCancelableException], meaning cancellation is not supported by default.
+     * The default implementation throws [A2ATaskNotCancelableException] (cancellation is not supported).
      *
      * Example implementation:
      * ```kotlin

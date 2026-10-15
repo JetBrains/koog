@@ -12,11 +12,9 @@ import ai.koog.agents.lock.RWLock
 /**
  * In-memory implementation of [PushNotificationConfigStorage] using a thread-safe map.
  *
- * Configs are keyed by the pair (task ID, config ID) and persisted exactly as given, including their tenant.
- * Pagination is not supported: [list] ignores `pageSize` and `pageToken`, returns all configs of the task in insertion
- * order and always leaves `nextPageToken` empty. The [ServerCallContext] and the tenant are ignored.
- *
- * Concurrency safety is provided by a read-write lock.
+ * Configs are keyed by (task ID, config ID) and persisted as given, including their tenant. [list] doesn't paginate:
+ * it ignores `pageSize` and `pageToken`, returns all configs of the task in insertion order, and leaves `nextPageToken`
+ * empty. The [ServerCallContext] and the tenant are ignored. Concurrency safety is provided by a read-write lock.
  */
 @OptIn(InternalA2AApi::class)
 public class InMemoryPushNotificationConfigStorage : PushNotificationConfigStorage {

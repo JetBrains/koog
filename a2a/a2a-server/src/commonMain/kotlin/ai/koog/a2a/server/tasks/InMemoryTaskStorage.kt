@@ -22,15 +22,12 @@ import kotlin.time.Instant
 /**
  * In-memory implementation of [TaskStorage] using a thread-safe map.
  *
- * This implementation stores tasks in memory and provides concurrency safety through mutex locks.
- * Tasks are indexed by both ID and context ID for efficient retrieval.
+ * Stores tasks in memory, indexed by ID and context ID, with concurrency safety through a read-write lock.
+ * [get] with a [GetTaskRequest] and [list] ignore the request's tenant and the [ServerCallContext].
  *
- * [get] with a [GetTaskRequest] and [list] ignore the tenant of the request and the [ServerCallContext].
- *
- * [list] ordering: by status timestamp, newest first; tasks without a status timestamp go after all tasks that have
- * one; ties are broken by task id in descending order (compared as strings), so the order is total and deterministic.
- * The page token is opaque to clients; internally it holds the sort key of the last task of the previous page, so
- * pages are stable even if tasks are added or removed between the calls.
+ * [list] ordering: by status timestamp, newest first; tasks without one go last; ties are broken by task id in
+ * descending order (compared as strings), so the order is total. The page token holds the sort key of the last task
+ * of the previous page, so pages stay stable when tasks are added or removed between calls.
  */
 @OptIn(InternalA2AApi::class)
 public class InMemoryTaskStorage : TaskStorage {
@@ -115,10 +112,8 @@ public class InMemoryTaskStorage : TaskStorage {
                     throw TaskOperationException("Cannot change context for existing task: ${event.id}")
                 }
 
-                // Store or replace the task
                 tasks[event.id] = event
 
-                // Update context index
                 event.contextId?.let { contextId ->
                     tasksByContext.getOrPut(contextId) { mutableSetOf() }.add(event.id)
                 }
@@ -188,8 +183,7 @@ public class InMemoryTaskStorage : TaskStorage {
 
     /**
      * The token is the base64url encoding of `<status timestamp in ISO-8601 or empty>|<task id>` of the last task of
-     * the page. The next page contains the tasks that sort strictly after it, so the token stays valid when tasks are
-     * added or removed between the calls.
+     * the page; the next page holds the tasks that sort strictly after it.
      */
     @OptIn(ExperimentalEncodingApi::class)
     private fun encodePageToken(lastTask: Task): String =
@@ -203,7 +197,7 @@ public class InMemoryTaskStorage : TaskStorage {
             require(separator >= 0) { "missing separator" }
             val timestamp = decoded.substring(0, separator).takeIf { it.isNotEmpty() }?.let { Instant.parse(it) }
             val id = decoded.substring(separator + 1)
-            // Only the sort key matters for comparisons
+            // Only the sort key matters for comparison.
             return Task(id = id, status = TaskStatus(state = TaskState.TASK_STATE_UNSPECIFIED, timestamp = timestamp))
         } catch (e: Exception) {
             throw A2AInvalidParamsException("Invalid page token: '$token'")
@@ -221,10 +215,7 @@ public class InMemoryTaskStorage : TaskStorage {
     private companion object {
         const val DEFAULT_PAGE_SIZE = 50
 
-        /**
-         * Newest status timestamp first; tasks without a status timestamp go last; ties (including all tasks without
-         * a timestamp) are broken by the task id in descending order.
-         */
+        /** Newest status timestamp first; tasks without one go last; ties are broken by descending task id. */
         val TASK_ORDER: Comparator<Task> = Comparator { a, b ->
             val timestampA = a.status.timestamp
             val timestampB = b.status.timestamp

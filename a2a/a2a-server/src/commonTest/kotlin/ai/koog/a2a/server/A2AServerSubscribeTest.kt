@@ -75,9 +75,7 @@ class A2AServerSubscribeTest {
         suspend fun run(context: RequestContext<SendMessageRequest>, processor: TurnEventProcessor)
     }
 
-    /**
-     * Runs the script registered for the text of the incoming message.
-     */
+    /** Runs the script registered for the text of the incoming message. */
     private class ScriptedAgentExecutor(private val scripts: Map<String, Script>) : AgentExecutor {
         override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor) {
             val text = context.params.message.parts.filterIsInstance<TextPart>().joinToString(" ") { it.text }
@@ -109,9 +107,7 @@ class A2AServerSubscribeTest {
         capabilities = AgentCapabilities(streaming = true),
     )
 
-    /**
-     * Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test.
-     */
+    /** Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test. */
     private fun TestScope.agentScope(): CoroutineScope =
         CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
 
@@ -190,9 +186,7 @@ class A2AServerSubscribeTest {
 
     private class Subscription(val events: MutableList<Event>, val firstEvent: CompletableDeferred<Unit>, val job: Job)
 
-    /**
-     * Subscribes to [TASK_ID] in a new coroutine, recording the received events.
-     */
+    /** Subscribes to [TASK_ID] in a new coroutine, recording the received events. */
     private fun CoroutineScope.subscribe(
         server: A2AServer,
         onEvent: suspend (Event) -> Unit = {},

@@ -22,11 +22,9 @@ public fun isVersionCompatible(actualVersion: String?, requiredVersion: String?)
 }
 
 /**
- * Checks that the [requestedVersion] requested by a client is one of the [supportedVersions], comparing only
- * `Major.Minor`, see [isVersionCompatible]. A null or blank [requestedVersion] is treated as
- * [A2AVersions.VERSION_0_3], as required by the spec for an empty `A2A-Version` value.
- *
- * This check does not depend on the transport binding, so it can be reused by any server transport.
+ * Checks that the [requestedVersion] is one of the [supportedVersions], comparing only `Major.Minor`, see
+ * [isVersionCompatible]. A null or blank [requestedVersion] is treated as [A2AVersions.VERSION_0_3], as the spec
+ * requires for an empty `A2A-Version` value. Transport-independent, so any server transport can reuse it.
  *
  * @param requestedVersion The version requested by the client, e.g. the value of the `A2A-Version` header.
  * @param supportedVersions The versions supported by the server.

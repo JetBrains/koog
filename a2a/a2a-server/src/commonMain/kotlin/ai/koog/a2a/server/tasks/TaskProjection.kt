@@ -5,9 +5,8 @@ import ai.koog.a2a.model.Task
 /**
  * Returns a copy of this task trimmed to the representation requested by a client.
  *
- * This is the reference implementation of the `historyLength` / `includeArtifacts` rules of the A2A `GetTask` and
- * `ListTasks` operations. Custom [TaskStorage] implementations should use it (or reproduce it exactly) when they
- * serve [TaskStorage.get] and [TaskStorage.list], so the wire representation stays protocol-compliant.
+ * Reference implementation of the `historyLength` / `includeArtifacts` rules of `GetTask` and `ListTasks`. Custom
+ * [TaskStorage] implementations should use it (or reproduce it exactly) in [TaskStorage.get] and [TaskStorage.list].
  *
  * - [historyLength]
  *   - `null`: no limit, [Task.history] is returned unchanged.
@@ -18,12 +17,11 @@ import ai.koog.a2a.model.Task
  *   - `true`: [Task.artifacts] is returned unchanged.
  *   - `false`: [Task.artifacts] is set to `null` (the field is omitted on the wire).
  *
- * All other properties of the task are returned unchanged. The original task is never modified.
+ * All other properties are unchanged; the original task is never modified.
  *
  * @param historyLength the maximum number of most recent history messages to keep, `null` for no limit
  * @param includeArtifacts whether to keep the task artifacts
- * @throws IllegalArgumentException if [historyLength] is negative. [ai.koog.a2a.server.A2AServer] validates this
- * beforehand and reports it as an invalid params error.
+ * @throws IllegalArgumentException if [historyLength] is negative ([ai.koog.a2a.server.A2AServer] validates it first).
  */
 public fun Task.project(historyLength: Int?, includeArtifacts: Boolean): Task {
     require(historyLength == null || historyLength >= 0) { "historyLength must be non-negative, but was $historyLength" }

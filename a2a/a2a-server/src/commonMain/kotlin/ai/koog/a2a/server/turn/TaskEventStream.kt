@@ -29,10 +29,9 @@ import kotlin.time.Clock
 /**
  * Per-task event stream: the single place where events of one task are persisted and broadcast.
  *
- * One instance exists per task while the task has a running turn, an active [TurnEventProcessor] (e.g. during
- * cancellation), or at least one subscriber; [TurnManager] creates it lazily and drops it when none of these
- * hold. The stream keeps no task state of its own: every read goes to [taskStorage], so a dropped stream can be
- * recreated at any time, e.g. for an idle input-required task.
+ * One instance exists per task while it has a running turn, an active [TurnEventProcessor] (e.g. during
+ * cancellation), or a subscriber; [TurnManager] creates it lazily and drops it when none remain. The stream keeps no
+ * task state: every read goes to [taskStorage], so a dropped stream can be recreated at any time.
  *
  * Every operation runs under [mutex] (the "stream lock"), which guards the storage write, the fan-out, and the
  * subscriber set together. As a result:
@@ -41,34 +40,31 @@ import kotlin.time.Clock
  *   duplicates an event that is persisted concurrently.
  *
  * Delivery is back-pressured: every subscriber has its own rendezvous channel, and the fan-out suspends, still under
- * the stream lock, until each subscriber has accepted the event. A slow subscriber therefore slows the publisher
- * (the agent), the other subscribers, and any operation waiting for the stream lock ([subscribe], [openTurnView],
- * [endTurn], other publishers); no event is ever dropped and no subscriber is evicted. Subscribers receive an event
- * in the order they were registered.
+ * the stream lock, until each subscriber has accepted the event. A slow subscriber therefore slows the publisher, the
+ * other subscribers, and any operation waiting for the stream lock ([subscribe], [openTurnView], [endTurn], other
+ * publishers); no event is dropped and no subscriber is evicted.
  *
- * A subscriber whose consumer has gone away must cancel its channel (see [unsubscribe]). Cancelling does not need
- * the stream lock, so it works even while the fan-out is suspended on that very subscriber: the pending delivery fails
- * and the fan-out drops the subscriber and goes on. If the publisher itself is cancelled while the fan-out is
- * suspended, the event is already persisted but the subscribers not reached yet do not receive it.
+ * A subscriber whose consumer has gone away must cancel its channel (see [unsubscribe]). Cancelling doesn't need the
+ * stream lock, so it works even while the fan-out is suspended on that subscriber: the pending delivery fails and the
+ * fan-out drops the subscriber and goes on. If the publisher itself is cancelled mid-fan-out, the event is already
+ * persisted but the subscribers not reached yet don't receive it.
  *
  * ## History
  *
- * The stream is also where the user messages are added to [Task.history] (deduplicated by
- * [Message.messageId], see [plusIfAbsent]), so that agents don't have to persist them:
- * - for a new task, [publish] adds the user message of the turn to the agent's initial [Task];
- * - for a follow-up, [publish] adds it to the stored task lazily, right before applying the turn's first
- *   non-[Task] [TaskEvent] sent by the agent: the current [ai.koog.a2a.model.TaskStatus.message] is moved into the
- *   history, the user message is appended, and the status message is cleared. A turn in which the agent sends no such
- *   event doesn't persist the user message.
+ * The stream adds user messages to [Task.history] (deduplicated by [Message.messageId], see [plusIfAbsent]), so
+ * agents don't have to:
+ * - for a new task, [publish] adds the turn's user message to the agent's initial [Task];
+ * - for a follow-up, [publish] adds it lazily, right before applying the turn's first non-[Task] [TaskEvent]: the
+ *   current [ai.koog.a2a.model.TaskStatus.message] is moved into the history, the user message is appended, and the
+ *   status message is cleared. A turn with no such event doesn't persist the user message.
  *
- * A [Task] event for a task that already exists is ignored by [publish]: it is neither stored nor delivered.
+ * A [Task] event for an existing task is ignored by [publish]: neither stored nor delivered.
  *
  * There are two kinds of subscribers:
- * - task subscribers (SubscribeToTask), which receive every [TaskEvent] and end only when the task reaches a terminal
- *   state;
- * - turn views, which receive every [TaskEvent] plus the [ai.koog.a2a.model.Message] of their own turn, and end
- *   either at a terminal state or when [endTurn] is called for their turn. Closing the turn view channel under the
- *   stream lock after the turn's last event is the in-band end-of-turn marker.
+ * - task subscribers (SubscribeToTask) receive every [TaskEvent] and end only at a terminal state;
+ * - turn views receive every [TaskEvent] plus the [ai.koog.a2a.model.Message] of their own turn, and end at a terminal
+ *   state or when [endTurn] is called for their turn. Closing the view under the stream lock after the turn's last
+ *   event is the in-band end-of-turn marker.
  *
  * @param taskId the id of the task this stream belongs to
  * @param taskStorage the storage where task events are persisted
@@ -87,25 +83,19 @@ internal class TaskEventStream(
 
     private class Subscriber(
         val channel: Channel<Event>,
-        /**
-         * Turn id for turn views, `null` for task subscribers.
-         */
+        /** Turn id for turn views, `null` for task subscribers. */
         val turnId: Long?,
     )
 
-    /**
-     * The stream lock: guards [taskStorage] writes for this task, fan-out, and [subscribers]. Held while the fan-out
-     * is suspended on a slow subscriber.
-     */
+    /** The stream lock: guards [taskStorage] writes for this task, fan-out, and [subscribers]. */
     private val mutex = Mutex()
 
     private val subscribers = mutableListOf<Subscriber>()
 
     /**
-     * Held by [TurnManager] while a [TurnEventProcessor] obtained through [TurnManager.withTaskProcessor]
-     * is in use, while a turn is being started, and while a turn is being finished. It keeps a turn from being
-     * finished (and its processor closed) while another party still publishes through that turn's processor, e.g. a
-     * cancellation handler, and keeps a turn from starting while such a party decides on the state of the task.
+     * Held by [TurnManager] while a processor from [TurnManager.withTaskProcessor] is in use, a turn is starting, or a
+     * turn is finishing. Keeps a turn from finishing while another party (e.g. a cancellation handler) still publishes
+     * through its processor, and from starting while such a party decides on the task's state.
      */
     val processorGate: Mutex = Mutex()
 
@@ -129,16 +119,14 @@ internal class TaskEventStream(
         task to register(turnId = null)
     }
 
-    /**
-     * Registers the view of the turn [turnId]. Must be called before the turn publishes its first event.
-     */
+    /** Registers the view of the turn [turnId]. Must be called before the turn publishes its first event. */
     suspend fun openTurnView(turnId: Long): ReceiveChannel<Event> = mutex.withLock {
         register(turnId)
     }
 
     /**
      * Atomically reads the current task and registers the view of the turn [turnId], so the snapshot reflects exactly
-     * the events persisted before the view's first event. Must be called before the turn publishes its first event.
+     * the events persisted before the view's first event. Must be called before the turn's first event.
      *
      * @param historyLength the maximum number of history messages of the returned snapshot, `null` for no limit
      * @return the snapshot (with all artifacts), or `null` if the task doesn't exist, and the turn view
@@ -151,9 +139,9 @@ internal class TaskEventStream(
     }
 
     /**
-     * Stops the subscriber reading from [channel]: cancels the channel without taking the stream lock, so it never
-     * waits for the fan-out, and a delivery to [channel] that is suspended right now fails immediately. The
-     * subscriber is removed from the subscriber set by the next fan-out or registration, or by a terminal event.
+     * Stops the subscriber reading from [channel] by cancelling it without the stream lock, so it never waits for the
+     * fan-out and a suspended delivery to [channel] fails immediately. The subscriber is removed by the next fan-out,
+     * registration, or terminal event.
      */
     fun unsubscribe(channel: ReceiveChannel<Event>) {
         channel.cancel()
@@ -163,14 +151,12 @@ internal class TaskEventStream(
      * Publishes [event]: a [TaskEvent] is persisted and delivered to all subscribers, a
      * [ai.koog.a2a.model.Message] only to the view of turn [turnId]. A terminal [TaskEvent] closes all subscribers.
      *
-     * A [Task] for a task that already exists is ignored: it is neither persisted nor delivered. A [Task] for a new task
-     * is persisted (and delivered) with [userMessage] added to its history, unless the history has it already.
+     * A [Task] for an existing task is ignored. A [Task] for a new task is persisted with [userMessage] added to its
+     * history, unless it has it already. A [TaskEvent] other than a [Task] is preceded, if [followUpMessage] is set, by
+     * persisting [followUpMessage] into the stored task, see "History" above.
      *
-     * A [TaskEvent] other than a [Task] is preceded, if [followUpMessage] is set, by persisting [followUpMessage] into
-     * the stored task, see "History" above.
-     *
-     * Returns once the event is persisted and every addressed subscriber has accepted it, which can take as long as a
-     * slow subscriber needs.
+     * Returns once the event is persisted and every addressed subscriber has accepted it, however long a slow
+     * subscriber takes.
      *
      * @param event the event to publish
      * @param turnId the turn publishing the event, or `null` when it is published outside a turn
@@ -227,9 +213,7 @@ internal class TaskEventStream(
         }
     }
 
-    /**
-     * Adds [userMessage] to the history of the stored task, see [publish]. Must be called under the stream lock.
-     */
+    /** Adds [userMessage] to the history of the stored task, see [publish]. Must be called under the stream lock. */
     private suspend fun persistUserMessage(userMessage: Message) {
         val task = taskStorage.get(taskId, historyLength = null, includeArtifacts = true) ?: return
 
@@ -245,9 +229,8 @@ internal class TaskEventStream(
     /**
      * Ends the turn [turnId]: closes its view after the last event of the turn.
      *
-     * If the turn failed with [failure] (other than a cancellation) and the task exists but is not in a terminal
-     * state, first marks the task [TaskState.TASK_STATE_FAILED] and delivers this update to all subscribers, which
-     * then are closed.
+     * If the turn failed with [failure] (other than a cancellation) and the task exists in a non-terminal state, first
+     * marks the task [TaskState.TASK_STATE_FAILED] and delivers that update to all subscribers, which are then closed.
      *
      * @param turnId the turn to end
      * @param contextId the context id of the task, used for the failure status update
@@ -299,7 +282,7 @@ internal class TaskEventStream(
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun register(turnId: Long?): ReceiveChannel<Event> {
-        // Drop subscribers whose consumers have gone away since the last fan-out.
+        // Drop subscribers whose consumers have gone away.
         subscribers.removeAll { it.channel.isClosedForSend }
 
         val channel = Channel<Event>(Channel.RENDEZVOUS)
@@ -331,8 +314,8 @@ internal class TaskEventStream(
         send(event)
         true
     } catch (e: CancellationException) {
-        // A channel cancelled by its consumer fails the send with a CancellationException too: tell it apart from
-        // the cancellation of the publisher.
+        // A channel cancelled by its consumer also fails send() with a CancellationException: tell it apart from
+        // the publisher's own cancellation.
         currentCoroutineContext().ensureActive()
         false
     } catch (e: ClosedSendChannelException) {

@@ -33,8 +33,7 @@ public interface IdGenerator {
     /**
      * Generates a unique push notification config ID for a config being created without one.
      *
-     * Has a default implementation returning a random UUID, so existing [IdGenerator] implementations
-     * keep working.
+     * Defaults to a random UUID.
      *
      * @param config The push notification config (with a null or blank `id`) for which the ID is being generated.
      * @return A unique string representing the push notification config ID.
@@ -47,8 +46,7 @@ public interface IdGenerator {
      * Generates a unique message ID for a message created by the server itself, e.g. the status message of a task the
      * server marks as failed because the agent crashed.
      *
-     * Has a default implementation returning a random UUID, so existing [IdGenerator] implementations
-     * keep working.
+     * Defaults to a random UUID.
      *
      * @param taskId The id of the task the message belongs to.
      * @param contextId The id of the context the message belongs to.
