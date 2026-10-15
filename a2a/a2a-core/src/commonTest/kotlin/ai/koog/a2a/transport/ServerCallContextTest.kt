@@ -7,15 +7,11 @@ import kotlin.test.assertNull
 
 class ServerCallContextTest {
     @Test
-    fun testNoHeadersMeansVersion03AndNoExtensions() {
-        val ctx = ServerCallContext()
+    fun testMissingOrEmptyVersionHeaderMeansVersion03AndNoExtensions() {
+        val noHeaders = ServerCallContext()
 
-        assertEquals("0.3", ctx.requestedVersion)
-        assertEquals(emptySet(), ctx.requestedExtensions)
-    }
-
-    @Test
-    fun testEmptyVersionHeaderMeansVersion03() {
+        assertEquals("0.3", noHeaders.requestedVersion)
+        assertEquals(emptySet(), noHeaders.requestedExtensions)
         assertEquals("0.3", ServerCallContext(mapOf(A2AHeaders.A2A_VERSION to listOf(""))).requestedVersion)
         assertEquals("0.3", ServerCallContext(mapOf(A2AHeaders.A2A_VERSION to emptyList())).requestedVersion)
     }
@@ -49,25 +45,18 @@ class ServerCallContextTest {
     }
 
     @Test
-    fun testCopyKeepsRequestedValuesWhenHeadersAreKept() {
+    fun testCopyKeepsRequestedValuesUnlessHeadersChange() {
         val ctx = ServerCallContext(
             mapOf(A2AHeaders.A2A_VERSION to listOf("1.0"), A2AHeaders.A2A_EXTENSIONS to listOf("urn:a"))
         )
 
-        val copy = ctx.copy(state = emptyMap())
+        val sameHeaders = ctx.copy(state = emptyMap())
+        assertEquals("1.0", sameHeaders.requestedVersion)
+        assertEquals(setOf("urn:a"), sameHeaders.requestedExtensions)
 
-        assertEquals("1.0", copy.requestedVersion)
-        assertEquals(setOf("urn:a"), copy.requestedExtensions)
-    }
-
-    @Test
-    fun testCopyRederivesRequestedValuesFromNewHeaders() {
-        val ctx = ServerCallContext(mapOf(A2AHeaders.A2A_VERSION to listOf("1.0")))
-
-        val copy = ctx.copy(headers = mapOf("a2a-version" to listOf("2.0"), "a2a-extensions" to listOf("urn:b")))
-
-        assertEquals("2.0", copy.requestedVersion)
-        assertEquals(setOf("urn:b"), copy.requestedExtensions)
+        val newHeaders = ctx.copy(headers = mapOf("a2a-version" to listOf("2.0"), "a2a-extensions" to listOf("urn:b")))
+        assertEquals("2.0", newHeaders.requestedVersion)
+        assertEquals(setOf("urn:b"), newHeaders.requestedExtensions)
     }
 
     @Test

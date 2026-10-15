@@ -22,17 +22,12 @@ class VersionValidationTest {
     }
 
     @Test
-    fun testRequireSupportedVersionAcceptsSameMajorMinor() {
+    fun testRequireSupportedVersionAcceptsSameMajorMinorAndRejectsOtherVersions() {
         val supported = setOf("1.0")
 
         requireSupportedVersion("1.0", supported)
         requireSupportedVersion("1.0.5", supported)
         requireSupportedVersion(" 1.0 ", supported)
-    }
-
-    @Test
-    fun testRequireSupportedVersionRejectsOtherVersions() {
-        val supported = setOf("1.0")
 
         listOf("1.1", "2.0", "99.0", "0.3", "1", "abc").forEach { version ->
             val e = assertFailsWith<A2AVersionNotSupportedException>(version) {

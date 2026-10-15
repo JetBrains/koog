@@ -134,27 +134,21 @@ class A2AClientTest {
     }
 
     @Test
-    fun testVersionHeaderAddedWhenMissing() = runTest {
+    fun testVersionHeaderAddedOnlyWhenMissingCaseInsensitively() = runTest {
         val transport = RecordingTransport()
         val client = client(card(listOf(jsonRpcInterface(null))), transport)
+        val ownVersion = mapOf("a2a-version" to listOf("0.3"))
 
         client.getTask(GetTaskRequest("task-1"), ClientCallContext(headers = mapOf("X-Custom" to listOf("v"))))
+        client.getTask(GetTaskRequest("task-1"), ClientCallContext(headers = ownVersion))
 
         assertEquals(
-            mapOf("X-Custom" to listOf("v"), A2AHeaders.A2A_VERSION to listOf(A2AVersions.CURRENT_VERSION)),
-            transport.contexts.single().headers
+            listOf(
+                mapOf("X-Custom" to listOf("v"), A2AHeaders.A2A_VERSION to listOf(A2AVersions.CURRENT_VERSION)),
+                ownVersion,
+            ),
+            transport.contexts.map { it.headers }
         )
-    }
-
-    @Test
-    fun testVersionHeaderPresenceCheckIsCaseInsensitive() = runTest {
-        val transport = RecordingTransport()
-        val client = client(card(listOf(jsonRpcInterface(null))), transport)
-        val headers = mapOf("a2a-version" to listOf("0.3"))
-
-        client.getTask(GetTaskRequest("task-1"), ClientCallContext(headers = headers))
-
-        assertEquals(headers, transport.contexts.single().headers)
     }
 
     private inner class RecordingTransport(
