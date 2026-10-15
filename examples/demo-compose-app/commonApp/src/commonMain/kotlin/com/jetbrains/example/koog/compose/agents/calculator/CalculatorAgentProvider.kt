@@ -4,18 +4,18 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
+import ai.koog.agents.core.dsl.extension.nodeExecuteTools
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
-import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
-import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResults
+import ai.koog.agents.core.dsl.extension.onTextMessage
+import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLModel
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
 import com.jetbrains.example.koog.compose.agents.common.ExitTool
@@ -33,9 +33,8 @@ internal class CalculatorAgentProvider(private val provideLLMClient: suspend () 
         onAssistantMessage: suspend (String) -> String,
     ): AIAgent<String, String> {
         val (llmClient, model) = provideLLMClient.invoke()
-        val executor = SingleLLMPromptExecutor(llmClient = llmClient)
+        val executor = MultiLLMPromptExecutor(llmClient)
 
-        // Create tool registry with calculator tools
         val toolRegistry = ToolRegistry {
             tool(CalculatorTool.PlusTool)
             tool(CalculatorTool.MinusTool)
@@ -46,24 +45,23 @@ internal class CalculatorAgentProvider(private val provideLLMClient: suspend () 
         }
 
         @Suppress("DuplicatedCode")
-        val strategy = strategy(title) {
-            val nodeRequestLLM by nodeLLMRequestMultiple()
+        val strategy = strategy<String, String>(title) {
+            val nodeRequestLLM by nodeLLMRequest()
             val nodeAssistantMessage by node<String, String> { message -> onAssistantMessage(message) }
-            val nodeExecuteToolMultiple by nodeExecuteMultipleTools(parallelTools = true)
-            val nodeSendToolResultMultiple by nodeLLMSendMultipleToolResults()
-            val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>()
+            val nodeExecuteToolMultiple by nodeExecuteTools(parallel = true)
+            val nodeSendToolResultMultiple by nodeLLMSendToolResults()
+            val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResults>()
 
             edge(nodeStart forwardTo nodeRequestLLM)
 
             edge(
                 nodeRequestLLM forwardTo nodeExecuteToolMultiple
-                    onMultipleToolCalls { true }
+                    onToolCalls { true }
             )
 
             edge(
                 nodeRequestLLM forwardTo nodeAssistantMessage
-                    transformed { it.first() }
-                    onAssistantMessage { true }
+                    onTextMessage { true }
             )
 
             edge(nodeAssistantMessage forwardTo nodeRequestLLM)
@@ -71,8 +69,8 @@ internal class CalculatorAgentProvider(private val provideLLMClient: suspend () 
             // Finish condition - if exit tool is called, go to nodeFinish with tool call result.
             edge(
                 nodeExecuteToolMultiple forwardTo nodeFinish
-                    onCondition { it.singleOrNull()?.tool == ExitTool.name }
-                    transformed { it.single().result!!.toString() }
+                    onCondition { it.toolResults.singleOrNull()?.tool == ExitTool.name }
+                    transformed { it.toolResults.single().output }
             )
 
             edge(
@@ -89,13 +87,12 @@ internal class CalculatorAgentProvider(private val provideLLMClient: suspend () 
 
             edge(
                 (nodeSendToolResultMultiple forwardTo nodeExecuteToolMultiple)
-                    onMultipleToolCalls { true }
+                    onToolCalls { true }
             )
 
             edge(
                 nodeSendToolResultMultiple forwardTo nodeAssistantMessage
-                    transformed { it.first() }
-                    onAssistantMessage { true }
+                    onTextMessage { true }
             )
         }
 
@@ -128,7 +125,7 @@ internal class CalculatorAgentProvider(private val provideLLMClient: suspend () 
                 }
 
                 onAgentExecutionFailed { ctx ->
-                    onErrorEvent("${ctx.throwable.message}")
+                    onErrorEvent("${ctx.error.message}")
                 }
 
                 onAgentCompleted { _ ->
