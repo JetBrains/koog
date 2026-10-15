@@ -20,7 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -223,29 +222,32 @@ public class TurnManager(
                         taskExists = taskExists,
                         userMessage = context.params.message,
                     )
+                    val agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) }
+
+                    /*
+                     Starts the agent job and ends the turn. It ends the turn under the gate, which is held until the turn
+                     is registered below, so it can be launched first. ATOMIC (not LAZY): if coroutineScope is already
+                     cancelled (server shutdown), the monitor still runs and ends the turn, so the view completes and join()
+                     doesn't hang.
+                     */
+                    @OptIn(DelicateCoroutinesApi::class)
+                    val monitor = coroutineScope.launch(start = CoroutineStart.ATOMIC) {
+                        monitorTurn(agentJob, processor, taskId, contextId, stream, turnId)
+                    }
+                    // The monitor releases the stream from here on.
+                    started = true
 
                     val turn = Turn(
                         taskId = taskId,
                         contextId = contextId,
-                        agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) },
+                        agentJob = agentJob,
                         eventProcessor = processor,
                         events = channel.consumeAsFlow(),
-                        completion = Job(),
+                        monitor = monitor,
                         taskSnapshot = snapshot,
                     )
 
                     registryMutex.withLock { turns[taskId] = turn }
-                    started = true
-
-                    /*
-                     Starts the agent job and ends the turn under the gate, after this registration. ATOMIC: if
-                     coroutineScope is already cancelled (server shutdown), the monitor still runs and ends the turn,
-                     so the view completes and join() doesn't hang.
-                     */
-                    @OptIn(DelicateCoroutinesApi::class)
-                    coroutineScope.launch(start = CoroutineStart.ATOMIC) {
-                        monitorTurn(turn, stream, turnId)
-                    }
 
                     turn
                 }
@@ -260,10 +262,17 @@ public class TurnManager(
     }
 
     /** Waits for the turn's agent job to complete (starting it, if needed), ends the turn, and cleans up. */
-    private suspend fun monitorTurn(turn: Turn, stream: TaskEventStream, turnId: Long) {
+    private suspend fun monitorTurn(
+        agentJob: Deferred<Unit>,
+        processor: TurnEventProcessor,
+        taskId: String,
+        contextId: String,
+        stream: TaskEventStream,
+        turnId: Long,
+    ) {
         // Fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
         val failure = try {
-            turn.agentJob.await()
+            agentJob.await()
             null
         } catch (e: Throwable) {
             e
@@ -271,7 +280,7 @@ public class TurnManager(
 
         if (failure != null && failure !is CancellationException) {
             // The requester may have got its response already, so the failure must not go unnoticed.
-            logger.warn(failure) { "Agent execution failed for taskId='${turn.taskId}'" }
+            logger.warn(failure) { "Agent execution failed for taskId='$taskId'" }
         }
 
         try {
@@ -284,12 +293,12 @@ public class TurnManager(
                      the gate means a block never gets the closed processor of an ended turn.
                      */
                     stream.processorGate.withLock {
-                        turn.eventProcessor.close()
+                        processor.close()
 
                         try {
-                            stream.endTurn(turnId, turn.contextId, failure)
+                            stream.endTurn(turnId, contextId, failure)
                         } finally {
-                            registryMutex.withLock { turns -= turn.taskId }
+                            registryMutex.withLock { turns -= taskId }
                         }
                     }
                 } finally {
@@ -299,9 +308,7 @@ public class TurnManager(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logger.error(e) { "Failed to finish the turn of taskId='${turn.taskId}'" }
-        } finally {
-            turn.completion.complete()
+            logger.error(e) { "Failed to finish the turn of taskId='$taskId'" }
         }
     }
 
@@ -353,6 +360,11 @@ public class TurnManager(
      * [ai.koog.a2a.server.exceptions.TurnNotActiveException]). Either way, published events reach every [subscribe]
      * stream of the task.
      *
+     * [block] also receives `publish`, which persists and delivers a [TaskEvent] originated by the server (e.g. the
+     * forced cancellation) straight to the task stream, bypassing the processor: it isn't validated against the turn,
+     * doesn't close the processor, and doesn't persist the running turn's pending user message (see "History" above).
+     * It must not be called after [block] returns.
+     *
      * No turn of the task starts while [block] runs: a starting turn waits, and is rejected if [block] left the task
      * terminal, see [startTurn].
      *
@@ -368,7 +380,11 @@ public class TurnManager(
     public suspend fun <T> withTaskProcessor(
         taskId: String,
         contextId: String,
-        block: suspend (processor: TurnEventProcessor, agentJob: Deferred<Unit>?) -> T,
+        block: suspend (
+            processor: TurnEventProcessor,
+            agentJob: Deferred<Unit>?,
+            publish: suspend (TaskEvent) -> Unit,
+        ) -> T,
     ): T {
         val stream = acquire(taskId)
 
@@ -383,9 +399,17 @@ public class TurnManager(
                     turnId = null,
                 )
 
+                var isBlockRunning = true
+                val publish: suspend (TaskEvent) -> Unit = { event ->
+                    check(isBlockRunning) { "Can't publish after the withTaskProcessor block has returned" }
+                    require(event.taskId == taskId) { "Event of task '${event.taskId}' can't be published to task '$taskId'" }
+                    stream.publish(event, turnId = null)
+                }
+
                 try {
-                    block(processor, turn?.agentJob)
+                    block(processor, turn?.agentJob, publish)
                 } finally {
+                    isBlockRunning = false
                     // Nothing may publish through a standalone processor once the stream may be dropped. Closed without
                     // waiting for a send in progress, which could hold the gate for long.
                     if (turn == null) processor.closeImmediately()

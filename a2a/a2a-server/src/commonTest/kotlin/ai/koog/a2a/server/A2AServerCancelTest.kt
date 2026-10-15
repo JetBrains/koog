@@ -15,6 +15,9 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
+import ai.koog.a2a.server.notifications.GatedPushNotificationSender
+import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.pushConfig
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
@@ -45,10 +48,14 @@ import kotlin.time.Instant
 class A2AServerCancelTest {
     private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
+    private lateinit var pushConfigStorage: InMemoryPushNotificationConfigStorage
+    private lateinit var pushSender: GatedPushNotificationSender
 
     @BeforeTest
     fun setUp() {
         taskStorage = InMemoryTaskStorage()
+        pushConfigStorage = InMemoryPushNotificationConfigStorage()
+        pushSender = GatedPushNotificationSender()
     }
 
     private fun newServer(
@@ -58,8 +65,10 @@ class A2AServerCancelTest {
         storage: InMemoryTaskStorage = taskStorage,
     ) = A2AServer(
         agentExecutor = ScriptedAgentExecutor(scripts, cancelHandler),
-        agentCard = testAgentCard(AgentCapabilities(streaming = true)),
+        agentCard = testAgentCard(AgentCapabilities(streaming = true, pushNotifications = true)),
         taskStorage = storage,
+        pushConfigStorage = pushConfigStorage,
+        pushSender = pushSender,
         idGenerator = FixedIdGenerator(messageId = "generated-message-id"),
         coroutineScope = scope,
     )
@@ -206,6 +215,58 @@ class A2AServerCancelTest {
         assertEquals(null, canceled.status.message)
         assertEquals<Event?>(taskStorage.get(TASK_ID), response.await())
         assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+    }
+
+    @Test
+    fun testForcedCancelOfRunningFollowUpDoesNotPersistItsUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+        val followUpStarted = CompletableDeferred<Unit>()
+        // A follow-up turn whose agent sends nothing until it is cancelled.
+        val waitScript = AgentScript { _, _ ->
+            followUpStarted.complete(Unit)
+            awaitCancellation()
+        }
+        val server = createServer(mapOf("start" to idleScript, "wait" to waitScript), doNothingOnCancel)
+        server.onSendMessage(request("start"), ctx)
+        val idle = assertNotNull(taskStorage.get(TASK_ID))
+
+        val followUpRequest = request("wait").let { it.copy(message = it.message.copy(taskId = TASK_ID)) }
+        val response = async { server.onSendMessage(followUpRequest, ctx) }
+        followUpStarted.await()
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+
+        // The requester of the follow-up still gets the canceled task.
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertIs<Task>(response.await()).status.state)
+        assertEquals(idle.copy(status = canceled.status), taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testForcedCanceledOfIdleTaskIsPushed() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(mapOf("start" to idleScript), doNothingOnCancel)
+        server.onSendMessage(request("start"), ctx)
+        runCurrent()
+        pushConfigStorage.save(pushConfig(TASK_ID, "c1"), ctx)
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+        runCurrent()
+
+        assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED).copy(status = canceled.status)), pushSender.sent)
+    }
+
+    @Test
+    fun testForcedCanceledOfRunningTaskIsPushed() = runTest(timeout = TEST_TIMEOUT) {
+        val running = RunningTask()
+        val server = createServer(mapOf("run" to running.script), doNothingOnCancel)
+        val response = async { server.onSendMessage(request("run"), ctx) }
+        running.started.await()
+        runCurrent()
+        pushConfigStorage.save(pushConfig(TASK_ID, "c1"), ctx)
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+        response.await()
+        runCurrent()
+
+        assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED).copy(status = canceled.status)), pushSender.sent)
     }
 
     @Test

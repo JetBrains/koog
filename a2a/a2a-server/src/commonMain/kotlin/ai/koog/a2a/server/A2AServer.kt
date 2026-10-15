@@ -683,7 +683,8 @@ public open class A2AServer(
      *   waiting for input.
      * - If the task is still not in a terminal state after [AgentExecutor.cancel] returns, the server cancels the
      *   running agent job (if any) and forces the state [TaskState.TASK_STATE_CANCELED] with a status update event
-     *   (with no status message), which is delivered to every stream of the task and closes them.
+     *   (with no status message). It is pushed (if push notifications are configured) and delivered to every stream
+     *   of the task, closing them. It doesn't add the user message of a cancelled follow-up turn to the history.
      *
      * The task is returned as stored (with artifacts, without history). [CancelTaskRequest] has no history limit.
      *
@@ -709,7 +710,7 @@ public open class A2AServer(
          start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. The task
          lock isn't taken: a follow-up holding it may be waiting for the very turn being cancelled to end.
          */
-        return turnManager.withTaskProcessor(taskId, initialTask.contextId.orEmpty()) { eventProcessor, agentJob ->
+        return turnManager.withTaskProcessor(taskId, initialTask.contextId.orEmpty()) { eventProcessor, agentJob, publish ->
             // Re-read the task: a turn may have ended in the meantime.
             val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
                 ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
@@ -732,7 +733,8 @@ public open class A2AServer(
 
                 val current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
                 if (current != null && !current.status.state.terminal) {
-                    eventProcessor.sendServerTaskEvent(
+                    // Straight to the task stream: a running follow-up's user message isn't persisted by the server.
+                    publish(
                         TaskStatusUpdateEvent(
                             taskId = taskId,
                             contextId = current.contextId ?: eventProcessor.contextId,

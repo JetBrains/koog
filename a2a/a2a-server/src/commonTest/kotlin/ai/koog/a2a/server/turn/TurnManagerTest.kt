@@ -348,7 +348,7 @@ class TurnManagerTest {
         runCurrent()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
-        turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob ->
+        turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob, _ ->
             assertNull(agentJob)
             processor.sendTaskEvent(canceled)
         }
@@ -362,7 +362,7 @@ class TurnManagerTest {
         val turnManager = createManager()
         val inputRequired = storeTask()
 
-        val leaked = turnManager.withTaskProcessor(taskId, contextId) { processor, _ -> processor }
+        val leaked = turnManager.withTaskProcessor(taskId, contextId) { processor, _, _ -> processor }
 
         assertFailsWith<TurnNotActiveException> {
             leaked.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
@@ -406,7 +406,7 @@ class TurnManagerTest {
         taskSent.await()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
-        turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob ->
+        turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob, _ ->
             assertSame(turn.agentJob, agentJob)
             agentJob?.cancelAndJoin()
             // Give the turn a chance to finish, if it (wrongly) could.
@@ -418,6 +418,83 @@ class TurnManagerTest {
         assertEquals(listOf(task.withUserMessage(), canceled), events.await())
         turn.join()
         assertEquals(0, turnManager.activeTurns())
+    }
+
+    @Test
+    fun testJoinReturnsOnlyAfterTurnTeardown() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        storeTask()
+        val blockEntered = CompletableDeferred<Unit>()
+        val releaseBlock = CompletableDeferred<Unit>()
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) {}
+        val events = drain(turn)
+        // Holds the turn gate, so the turn can't end after its agent job has completed.
+        val block = launch {
+            turnManager.withTaskProcessor(taskId, contextId) { _, _, _ ->
+                blockEntered.complete(Unit)
+                releaseBlock.await()
+            }
+        }
+        blockEntered.await()
+        val join = launch { turn.join() }
+        runCurrent()
+
+        assertEquals(true, turn.agentJob.isCompleted)
+        assertEquals(false, join.isCompleted)
+        assertSame(turn, turnManager.getTurn(taskId))
+
+        releaseBlock.complete(Unit)
+        join.join()
+
+        assertNull(turnManager.getTurn(taskId))
+        assertEquals(emptyList(), events.await())
+        block.join()
+        assertEquals(0, turnManager.activeStreams())
+    }
+
+    @Test
+    fun testServerPublishDuringFollowUpTurnSkipsPendingUserMessage() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeInputRequiredTask()
+        savePushConfig()
+        val agentStarted = CompletableDeferred<Unit>()
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId, inputRequired)) {
+            agentStarted.complete(Unit)
+            CompletableDeferred<Unit>().await() // sends nothing, runs until cancelled
+        }
+        val events = drain(turn)
+        agentStarted.await()
+
+        val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
+        turnManager.withTaskProcessor(taskId, contextId) { _, agentJob, publish ->
+            agentJob?.cancelAndJoin()
+            publish(canceled)
+        }
+        turn.join()
+        runCurrent()
+
+        // The requester gets the event, it's pushed, and the follow-up's user message isn't added to the history.
+        assertEquals(listOf<Event>(canceled), events.await())
+        assertEquals(listOf<Pair<String, Event>>("c1" to canceled), pushSender.sent)
+        assertEquals(
+            inputRequired.copy(status = canceled.status, history = listOf(followUpPrompt())),
+            taskStorage.get(taskId)
+        )
+    }
+
+    @Test
+    fun testServerPublishAfterWithTaskProcessorReturnsFails() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeTask()
+
+        val leaked = turnManager.withTaskProcessor(taskId, contextId) { _, _, publish -> publish }
+
+        assertFailsWith<IllegalStateException> {
+            leaked(statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED))
+        }
+        assertEquals(inputRequired, taskStorage.get(taskId))
     }
 
     private fun followUpPrompt() = Message(
@@ -575,8 +652,8 @@ class TurnManagerTest {
         savePushConfig()
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
 
-        turnManager.withTaskProcessor(taskId, contextId) { processor, _ ->
-            processor.sendServerTaskEvent(canceled)
+        turnManager.withTaskProcessor(taskId, contextId) { _, _, publish ->
+            publish(canceled)
         }
         runCurrent()
 
@@ -765,7 +842,7 @@ class TurnManagerTest {
         runCurrent()
 
         launch {
-            turnManager.withTaskProcessor(taskId, contextId) { processor, _ ->
+            turnManager.withTaskProcessor(taskId, contextId) { processor, _, _ ->
                 processor.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
             }
         }

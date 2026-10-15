@@ -2,8 +2,8 @@ package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
-import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -24,7 +24,8 @@ public class Turn internal constructor(
     public val agentJob: Deferred<Unit>,
     internal val eventProcessor: TurnEventProcessor,
     events: Flow<Event>,
-    internal val completion: CompletableJob,
+    /** The job that runs the agent job and then ends the turn, see [TurnManager.startTurn]. */
+    private val monitor: Job,
     /**
      * For a turn that continues an existing task: the stored task, read atomically with the registration of [events],
      * i.e. as of right before its first event. `null` for a turn of a new task.
@@ -41,8 +42,11 @@ public class Turn internal constructor(
      */
     public val events: Flow<Event> = events
 
-    /** Suspends until the turn has fully ended: the agent job completed, its events were published, and the turn was removed. */
+    /**
+     * Suspends until the turn has fully ended: the agent job completed, its events were published, the turn was
+     * removed, and its resources were released.
+     */
     public suspend fun join() {
-        completion.join()
+        monitor.join()
     }
 }

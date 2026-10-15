@@ -129,15 +129,7 @@ public class TurnEventProcessor internal constructor(
      * @throws [TurnNotActiveException] if the processor is closed.
      * @see TurnEventProcessor
      */
-    public suspend fun sendTaskEvent(event: TaskEvent): Unit = send(event, persistFollowUpMessage = true)
-
-    /**
-     * Sends a [TaskEvent] originated by the server (e.g. the forced cancellation) rather than the agent: it doesn't
-     * persist the pending user message of a follow-up.
-     */
-    internal suspend fun sendServerTaskEvent(event: TaskEvent): Unit = send(event, persistFollowUpMessage = false)
-
-    private suspend fun send(event: TaskEvent, persistFollowUpMessage: Boolean): Unit = turnMutex.withLock {
+    public suspend fun sendTaskEvent(event: TaskEvent): Unit = turnMutex.withLock {
         if (!_isOpen.load()) {
             throw TurnNotActiveException(TURN_CLOSED)
         }
@@ -152,7 +144,7 @@ public class TurnEventProcessor internal constructor(
             throw reject(InvalidEventException(INVALID_TASK_ID))
         }
 
-        val followUpMessage = pendingFollowUpMessage.takeIf { persistFollowUpMessage && event !is Task }
+        val followUpMessage = pendingFollowUpMessage.takeIf { event !is Task }
 
         val isApplied = try {
             stream.publish(event, turnId, userMessage = storedUserMessage.takeUnless { taskExists }, followUpMessage)
