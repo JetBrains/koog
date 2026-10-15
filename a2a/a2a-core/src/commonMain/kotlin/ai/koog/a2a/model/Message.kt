@@ -17,6 +17,7 @@ public enum class Role {
      * The message is sent by the client (user).
      */
     ROLE_USER,
+
     /**
      * The message is sent by the agent (service).
      */

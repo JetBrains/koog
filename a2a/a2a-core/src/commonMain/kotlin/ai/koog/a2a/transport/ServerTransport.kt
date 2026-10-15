@@ -232,4 +232,3 @@ public class ServerCallContext(
         state: Map<StateKey<*>, Any> = this.state,
     ): ServerCallContext = ServerCallContext(headers, state)
 }
-

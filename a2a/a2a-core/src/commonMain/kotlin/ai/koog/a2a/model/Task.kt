@@ -165,4 +165,3 @@ public data class Artifact(
     public val extensions: List<String>? = null,
     public val metadata: JsonObject? = null,
 )
-

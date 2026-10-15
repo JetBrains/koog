@@ -61,7 +61,6 @@ public data class GetTaskRequest(
     override val tenant: String? = null,
 ) : Request
 
-
 /**
  * Represents a request for the `ListTasks` method.
  *
