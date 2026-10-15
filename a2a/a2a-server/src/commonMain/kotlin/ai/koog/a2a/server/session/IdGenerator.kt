@@ -1,11 +1,12 @@
 package ai.koog.a2a.server.session
 
 import ai.koog.a2a.model.Message
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * Interface for generating unique IDs for new contexts and tasks.
+ * Interface for generating unique IDs for new contexts, tasks and push notification configs.
  *
  * Called by the server to provide unique IDs when messages lack contextId or taskId,
  * preventing race conditions during concurrent agent execution. These generated IDs
@@ -28,6 +29,19 @@ public interface IdGenerator {
      * @return A unique string representing the task ID.
      */
     public suspend fun generateTaskId(message: Message): String
+
+    /**
+     * Generates a unique push notification config ID for a config being created without one.
+     *
+     * Has a default implementation returning a random UUID, so existing [IdGenerator] implementations
+     * keep working.
+     *
+     * @param config The push notification config (with a null or blank `id`) for which the ID is being generated.
+     * @return A unique string representing the push notification config ID.
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    public suspend fun generatePushNotificationConfigId(config: TaskPushNotificationConfig): String =
+        Uuid.random().toString()
 }
 
 /**

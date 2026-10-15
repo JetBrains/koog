@@ -10,6 +10,7 @@ import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
+import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
@@ -18,8 +19,10 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
+import ai.koog.a2a.server.session.IdGenerator
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
+import ai.koog.a2a.server.session.UuidIdGenerator
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.test.runTest
@@ -51,6 +54,7 @@ class A2AServerPushNotificationsTest {
     private fun createServer(
         pushNotifications: Boolean = true,
         pushConfigStorage: InMemoryPushNotificationConfigStorage? = pushStorage,
+        idGenerator: IdGenerator = UuidIdGenerator,
     ) = A2AServer(
         agentExecutor = object : AgentExecutor {
             override suspend fun execute(
@@ -76,6 +80,7 @@ class A2AServerPushNotificationsTest {
         ),
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
+        idGenerator = idGenerator,
     )
 
     @BeforeTest
@@ -109,6 +114,21 @@ class A2AServerPushNotificationsTest {
             created,
             server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", assignedId), ctx)
         )
+    }
+
+    @Test
+    fun testCreateWithoutIdUsesIdGenerator() = runTest {
+        val generator = object : IdGenerator {
+            override suspend fun generateContextId(message: Message): String = error("Not expected")
+            override suspend fun generateTaskId(message: Message): String = error("Not expected")
+            override suspend fun generatePushNotificationConfigId(config: TaskPushNotificationConfig): String =
+                "generated-${config.taskId}"
+        }
+        val customServer = createServer(idGenerator = generator)
+
+        val created = customServer.onCreateTaskPushNotificationConfig(config.copy(id = null), ctx)
+
+        assertEquals(config.copy(id = "generated-task-1"), created)
     }
 
     @Test

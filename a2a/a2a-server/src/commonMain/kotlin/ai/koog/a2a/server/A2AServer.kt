@@ -54,8 +54,6 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.lastOrNull
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -307,7 +305,7 @@ import kotlin.uuid.Uuid
  * @param messageStorage Storage implementation for persisting messages (defaults to [InMemoryMessageStorage])
  * @param pushConfigStorage Optional storage for push notification configurations (defaults to `null`)
  * @param pushSender Optional push notification sender implementation (defaults to `null`)
- * @param idGenerator Generator for new task and context IDs (defaults to [UuidIdGenerator])
+ * @param idGenerator Generator for new task, context and push notification config IDs (defaults to [UuidIdGenerator])
  * @param coroutineScope Scope for managing all sessions, agent jobs, event processing, etc.
  *
  * @see AgentExecutor for implementing agent business logic
@@ -589,7 +587,6 @@ public open class A2AServer(
         emitAll(sessionManager.subscribe(request, ctx))
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun onCreateTaskPushNotificationConfig(
         request: TaskPushNotificationConfig,
         ctx: ServerCallContext
@@ -602,7 +599,7 @@ public open class A2AServer(
 
         // The id may be set by the client; the server assigns one if it's absent.
         val config = if (request.id.isNullOrBlank()) {
-            request.copy(id = Uuid.random().toString())
+            request.copy(id = idGenerator.generatePushNotificationConfigId(request))
         } else {
             request
         }
