@@ -8,6 +8,7 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.Message
@@ -24,6 +25,7 @@ import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.session.UuidIdGenerator
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -55,6 +57,7 @@ class A2AServerPushNotificationsTest {
         pushNotifications: Boolean = true,
         pushConfigStorage: InMemoryPushNotificationConfigStorage? = pushStorage,
         idGenerator: IdGenerator = UuidIdGenerator,
+        storage: TaskStorage = taskStorage,
     ) = A2AServer(
         agentExecutor = object : AgentExecutor {
             override suspend fun execute(
@@ -78,7 +81,7 @@ class A2AServerPushNotificationsTest {
             skills = emptyList(),
             capabilities = AgentCapabilities(pushNotifications = pushNotifications),
         ),
-        taskStorage = taskStorage,
+        taskStorage = storage,
         pushConfigStorage = pushConfigStorage,
         idGenerator = idGenerator,
     )
@@ -180,6 +183,42 @@ class A2AServerPushNotificationsTest {
                 ctx
             )
         }
+    }
+
+    @Test
+    fun testOperationsForTaskInvisibleToCallerFailWithTaskNotFound() = runTest {
+        val owner = ctx
+        val otherCaller = ServerCallContext()
+        // An authorization-aware storage: the owner-scoped lookup hides the task from everyone but its owner.
+        val ownerScopedStorage = object : TaskStorage by taskStorage {
+            override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? =
+                if (context === owner) taskStorage.get(request, context) else null
+        }
+        val server = createServer(storage = ownerScopedStorage)
+        server.onCreateTaskPushNotificationConfig(config, owner)
+
+        assertFailsWith<A2ATaskNotFoundException> {
+            server.onCreateTaskPushNotificationConfig(config.copy(id = "config-2"), otherCaller)
+        }
+        assertFailsWith<A2ATaskNotFoundException> {
+            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", "config-1"), otherCaller)
+        }
+        assertFailsWith<A2ATaskNotFoundException> {
+            server.onListTaskPushNotificationConfigs(ListTaskPushNotificationConfigsRequest("task-1"), otherCaller)
+        }
+        assertFailsWith<A2ATaskNotFoundException> {
+            server.onDeleteTaskPushNotificationConfig(
+                DeleteTaskPushNotificationConfigRequest("task-1", "config-1"),
+                otherCaller
+            )
+        }
+
+        // Nothing was created or deleted, and the owner still sees the config.
+        assertEquals(listOf(config), pushStorage.getAll("task-1"))
+        assertEquals(
+            config,
+            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", "config-1"), owner)
+        )
     }
 
     @Test

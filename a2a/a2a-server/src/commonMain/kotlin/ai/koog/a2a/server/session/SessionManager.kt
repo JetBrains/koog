@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
@@ -239,8 +240,13 @@ public class SessionManager(
                     registryMutex.withLock { turns[taskId] = session }
                     started = true
 
-                    // Starts the agent job; ends the turn under the gate, i.e. after this registration is done.
-                    coroutineScope.launch {
+                    /*
+                     Starts the agent job; ends the turn under the gate, i.e. after this registration is done. Started
+                     atomically: if coroutineScope is already cancelled (server shutdown), the monitor still runs and
+                     ends the turn, so the view completes and join() doesn't hang.
+                     */
+                    @OptIn(DelicateCoroutinesApi::class)
+                    coroutineScope.launch(start = CoroutineStart.ATOMIC) {
                         monitorTurn(session, stream, turnId)
                     }
 

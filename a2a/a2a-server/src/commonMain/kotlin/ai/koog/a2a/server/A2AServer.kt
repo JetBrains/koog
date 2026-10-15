@@ -800,7 +800,7 @@ public open class A2AServer(
         val taskId = request.taskId?.takeIf { it.isNotBlank() }
             ?: throw A2AInvalidParamsException("Task id is required to create a push notification config")
 
-        checkTaskExists(taskId)
+        checkTaskExists(taskId, request.tenant, ctx)
 
         // The id may be set by the client; the server assigns one if it's absent.
         val config = if (request.id.isNullOrBlank()) {
@@ -819,7 +819,7 @@ public open class A2AServer(
         checkRequiredExtensions(ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
-        checkTaskExists(request.taskId)
+        checkTaskExists(request.taskId, request.tenant, ctx)
 
         return pushStorage.get(request, ctx)
             ?: throw A2ATaskNotFoundException(
@@ -834,7 +834,7 @@ public open class A2AServer(
         checkRequiredExtensions(ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
-        checkTaskExists(request.taskId)
+        checkTaskExists(request.taskId, request.tenant, ctx)
 
         return pushStorage.list(request, ctx)
     }
@@ -846,13 +846,17 @@ public open class A2AServer(
         checkRequiredExtensions(ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
-        checkTaskExists(request.taskId)
+        checkTaskExists(request.taskId, request.tenant, ctx)
 
         pushStorage.delete(request, ctx)
     }
 
-    private suspend fun checkTaskExists(taskId: String) {
-        taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+    /**
+     * Checks that the task exists and is visible to the caller, with the same owner-scoped lookup as GetTask, see
+     * [TaskStorage.get].
+     */
+    private suspend fun checkTaskExists(taskId: String, tenant: String?, ctx: ServerCallContext) {
+        taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = tenant), ctx)
             ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
     }
 

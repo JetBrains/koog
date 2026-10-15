@@ -23,6 +23,7 @@ import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -39,6 +40,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -411,6 +413,26 @@ class SessionManagerTest {
             leaked.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
         }
         assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(0, sessionManager.activeStreams())
+    }
+
+    @Test
+    fun testTurnStartedInCancelledScopeEndsWithoutRunningAgent() = runTest(timeout = TEST_TIMEOUT) {
+        // The scope of a server that has been shut down.
+        val cancelledScope = CoroutineScope(backgroundScope.coroutineContext + Job().apply { cancel() })
+        val sessionManager = SessionManager(coroutineScope = cancelledScope, taskStorage = taskStorage)
+        var agentStarted = false
+
+        val session = sessionManager.startTurn(createContext(taskId, contextId)) { agentStarted = true }
+
+        withTimeout(5.seconds) {
+            assertEquals(emptyList(), session.events.toList())
+            session.join()
+        }
+        assertFailsWith<CancellationException> { session.agentJob.await() }
+        assertEquals(false, agentStarted)
+        assertNull(sessionManager.getSession(taskId))
+        assertEquals(0, sessionManager.activeSessions())
         assertEquals(0, sessionManager.activeStreams())
     }
 
