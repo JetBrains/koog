@@ -1,8 +1,8 @@
 package ai.koog.a2a.server.notifications
 
 import ai.koog.a2a.consts.A2AHeaders
-import ai.koog.a2a.model.PushNotificationConfig
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 /**
  * Simple implementation of a notification sender.
  * Doesn't perform any configuration validation.
- * Always takes the first authentication scheme provided in [PushNotificationConfig.authentication]
+ * Uses the authentication scheme provided in [TaskPushNotificationConfig.authentication]
  */
 public class SimplePushNotificationSender(
     baseHttpClient: HttpClient,
@@ -33,18 +33,16 @@ public class SimplePushNotificationSender(
         expectSuccess = true
     }
 
-    override suspend fun send(config: PushNotificationConfig, task: Task) {
+    override suspend fun send(config: TaskPushNotificationConfig, task: Task) {
         try {
             logger.debug { "Sending push notification configId='${config.id} for taskId='${task.id}'" }
 
             httpClient.post(config.url) {
                 config.authentication?.let { auth ->
-                    // Simple sender always takes the first scheme from the list
-                    val schema = auth.schemes.firstOrNull()
                     val credentials = auth.credentials
 
-                    if (schema != null && credentials != null) {
-                        headers[HttpHeaders.Authorization] = "$schema $credentials"
+                    if (credentials != null) {
+                        headers[HttpHeaders.Authorization] = "${auth.scheme} $credentials"
                     }
                 }
 

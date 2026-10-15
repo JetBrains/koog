@@ -1,7 +1,7 @@
 package ai.koog.a2a.server.notifications
 
 import ai.koog.a2a.annotations.InternalA2AApi
-import ai.koog.a2a.model.PushNotificationConfig
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.agents.lock.RWLock
 
 /**
@@ -12,22 +12,22 @@ import ai.koog.agents.lock.RWLock
  */
 @OptIn(InternalA2AApi::class)
 public class InMemoryPushNotificationConfigStorage : PushNotificationConfigStorage {
-    private val configsByTaskId = mutableMapOf<String, MutableMap<String?, PushNotificationConfig>>()
+    private val configsByTaskId = mutableMapOf<String, MutableMap<String?, TaskPushNotificationConfig>>()
     private val rwLock = RWLock()
 
-    override suspend fun save(taskId: String, pushNotificationConfig: PushNotificationConfig): Unit =
+    override suspend fun save(taskId: String, pushNotificationConfig: TaskPushNotificationConfig): Unit =
         rwLock.withWriteLock {
             val configId = pushNotificationConfig.id
             val taskConfigs = configsByTaskId.getOrPut(taskId) { mutableMapOf() }
 
-            taskConfigs[configId] = pushNotificationConfig
+            taskConfigs[configId] = pushNotificationConfig.copy(taskId = taskId)
         }
 
-    override suspend fun getAll(taskId: String): List<PushNotificationConfig> = rwLock.withReadLock {
+    override suspend fun getAll(taskId: String): List<TaskPushNotificationConfig> = rwLock.withReadLock {
         configsByTaskId[taskId]?.values?.toList() ?: emptyList()
     }
 
-    override suspend fun get(taskId: String, configId: String?): PushNotificationConfig? = rwLock.withReadLock {
+    override suspend fun get(taskId: String, configId: String?): TaskPushNotificationConfig? = rwLock.withReadLock {
         configsByTaskId[taskId]?.get(configId)
     }
 

@@ -3,10 +3,10 @@ package ai.koog.a2a.server.agent
 import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.TaskEvent
-import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
@@ -22,7 +22,8 @@ public interface AgentExecutor {
      *
      * The agent should read necessary information from the [context] and publish [TaskEvent] or [Message] events to
      * the [eventProcessor]. This method should return once the agent's execution for this request is complete or
-     * yields control (e.g., enters a [TaskState.TASK_STATE_INPUT_REQUIRED] state).
+     * yields control (e.g., enters a [TaskState.TASK_STATE_INPUT_REQUIRED] state). Returning from this method is the
+     * only end-of-turn signal for non-terminal states, because there is no `final` flag on status update events.
      *
      * All events must have context id from [RequestContext.contextId] and for task events task id from [RequestContext.taskId].
      *
@@ -39,7 +40,7 @@ public interface AgentExecutor {
      *         id = context.taskId,
      *         contextId = context.contextId,
      *         status = TaskStatus(
-     *             state = TaskState.Working,
+     *             state = TaskState.TASK_STATE_WORKING,
      *             // Mark this message as belonging to the created task
      *             message = userMessage.copy(taskId = context.taskId)
      *             timestamp = Clock.System.now()
@@ -56,9 +57,9 @@ public interface AgentExecutor {
      *         taskId = context.taskId,
      *         contextId = context.contextId,
      *         status = TaskStatus(
-     *             state = TaskState.Completed,
+     *             state = TaskState.TASK_STATE_COMPLETED,
      *             message = Message(
-     *                role = Role.Agent,
+     *                role = Role.ROLE_AGENT,
      *                contextId = context.contextId,
      *                taskId = context.taskId,
      *                parts = listOf(
@@ -67,7 +68,6 @@ public interface AgentExecutor {
      *            ),
      *            timestamp = Clock.System.now()
      *         ),
-     *         final = true
      *     )
      * )
      * ```
@@ -105,17 +105,17 @@ public interface AgentExecutor {
      *         taskId = context.taskId,
      *         contextId = context.contextId,
      *         status = TaskStatus(
-     *             state = TaskState.Canceled,
+     *             state = TaskState.TASK_STATE_CANCELED,
      *             message = Message(
-     *                 role = Role.Agent,
+     *                 role = Role.ROLE_AGENT,
      *                 taskId = context.taskId,
      *                 contextId = context.contextId,
      *                 parts = listOf(
      *                     TextPart("Task was canceled by the user")
      *                 )
-     *             )
+     *             ),
+     *             timestamp = Clock.System.now()
      *         ),
-     *         final = true,
      *     )
      * )
      * ```
@@ -128,7 +128,7 @@ public interface AgentExecutor {
      * See full list of available A2A exceptions in [ai.koog.a2a.exceptions].
      */
     public suspend fun cancel(
-        context: RequestContext<TaskIdParams>,
+        context: RequestContext<CancelTaskRequest>,
         eventProcessor: SessionEventProcessor,
         agentJob: Deferred<Unit>?,
     ) {

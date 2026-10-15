@@ -31,7 +31,6 @@ import kotlin.jvm.JvmInline
  * - **Context ID validation**: All events must have the same context id as provided [contextId].
  * - **Single message limit**: Only one [Message] can be sent per session, after which the processor closes.
  * - **Task ID consistency**: [TaskEvent] events must have task ids equal to provided [taskId].
- * - **Final event enforcement**: After a [TaskStatusUpdateEvent] with `final=true` is sent, processor closes.
  * - **Terminal state closure**: When the event with the terminal state is sent, processor closes.
  *
  * @param taskStorage The storage where task events will be saved.
@@ -141,7 +140,7 @@ public class SessionEventProcessor(
             taskStorage.update(event)
             _events.emit(FlowEvent.Data(event))
 
-            val isFinalEvent = (event is TaskStatusUpdateEvent && (event.status.state.terminal || event.final)) ||
+            val isFinalEvent = (event is TaskStatusUpdateEvent && event.status.state.terminal) ||
                 (event is Task && event.status.state.terminal)
 
             if (isFinalEvent) {

@@ -86,7 +86,9 @@ public class InMemoryTaskStorage : TaskStorage {
                 tasks[event.id] = event
 
                 // Update context index
-                tasksByContext.getOrPut(event.contextId) { mutableSetOf() }.add(event.id)
+                event.contextId?.let { contextId ->
+                    tasksByContext.getOrPut(contextId) { mutableSetOf() }.add(event.id)
+                }
             }
 
             is TaskStatusUpdateEvent -> {
@@ -139,23 +141,23 @@ public class InMemoryTaskStorage : TaskStorage {
 
     override suspend fun delete(taskId: String): Unit = rwLock.withWriteLock {
         tasks.remove(taskId)?.let { task ->
-            // Remove from context index
-            tasksByContext[task.contextId]?.remove(taskId)
-            if (tasksByContext[task.contextId]?.isEmpty() == true) {
-                tasksByContext.remove(task.contextId)
-            }
+            removeFromContextIndex(task)
         }
     }
 
     override suspend fun deleteAll(taskIds: List<String>): Unit = rwLock.withWriteLock {
         taskIds.forEach { taskId ->
             tasks.remove(taskId)?.let { task ->
-                // Remove from context index
-                tasksByContext[task.contextId]?.remove(taskId)
-                if (tasksByContext[task.contextId]?.isEmpty() == true) {
-                    tasksByContext.remove(task.contextId)
-                }
+                removeFromContextIndex(task)
             }
+        }
+    }
+
+    private fun removeFromContextIndex(task: Task) {
+        val contextId = task.contextId ?: return
+        tasksByContext[contextId]?.remove(task.id)
+        if (tasksByContext[contextId]?.isEmpty() == true) {
+            tasksByContext.remove(contextId)
         }
     }
 }

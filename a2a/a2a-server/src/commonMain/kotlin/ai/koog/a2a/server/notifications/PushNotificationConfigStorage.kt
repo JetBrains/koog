@@ -1,6 +1,6 @@
 package ai.koog.a2a.server.notifications
 
-import ai.koog.a2a.model.PushNotificationConfig
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.server.exceptions.PushNotificationException
 
 /**
@@ -16,21 +16,21 @@ public interface PushNotificationConfigStorage {
      * @param pushNotificationConfig Config instance containing the details of the notification setup.
      * @throws PushNotificationException if the configuration cannot be saved.
      */
-    public suspend fun save(taskId: String, pushNotificationConfig: PushNotificationConfig)
+    public suspend fun save(taskId: String, pushNotificationConfig: TaskPushNotificationConfig)
 
     /**
      * Retrieves a push notification configuration for a specified task ID and configuration ID.
      * @param taskId Task ID for which to retrieve the configuration.
      * @param configId Configuration ID for which to retrieve the configuration.
      */
-    public suspend fun get(taskId: String, configId: String?): PushNotificationConfig?
+    public suspend fun get(taskId: String, configId: String?): TaskPushNotificationConfig?
 
     /**
      * Retrieves all push notification configurations associated with the given task ID.
      *
      * @param taskId Task ID for which to retrieve the configurations.
      */
-    public suspend fun getAll(taskId: String): List<PushNotificationConfig>
+    public suspend fun getAll(taskId: String): List<TaskPushNotificationConfig>
 
     /**
      * Deletes all push notification configurations for a specified task ID, optionally deleting a specific configuration instead.
