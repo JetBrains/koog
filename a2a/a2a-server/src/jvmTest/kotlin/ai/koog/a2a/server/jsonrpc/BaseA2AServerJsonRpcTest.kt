@@ -7,10 +7,13 @@ import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.AgentSkill
+import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.A2AServer
 import ai.koog.a2a.server.TestAgentExecutor
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.test.BaseA2AProtocolTest
 import ai.koog.a2a.transport.client.jsonrpc.http.HttpJSONRPCClientTransport
 import ai.koog.a2a.transport.server.jsonrpc.http.HttpJSONRPCServerTransport
@@ -51,7 +54,11 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
             agentExecutor = testAgentExecutor,
             agentCard = agentCard,
             agentCardExtended = agentCardExtended,
-            pushConfigStorage = InMemoryPushNotificationConfigStorage()
+            pushConfigStorage = InMemoryPushNotificationConfigStorage(),
+            // Push configs are only stored in these tests, never delivered.
+            pushSender = object : PushNotificationSender {
+                override suspend fun send(config: TaskPushNotificationConfig, event: Event) = Unit
+            },
         )
 
         // Create server transport

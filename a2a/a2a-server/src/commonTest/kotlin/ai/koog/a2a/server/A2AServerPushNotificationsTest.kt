@@ -72,6 +72,7 @@ class A2AServerPushNotificationsTest {
     private fun createServer(
         pushNotifications: Boolean = true,
         pushConfigStorage: InMemoryPushNotificationConfigStorage? = pushStorage,
+        sender: GatedPushNotificationSender? = pushSender,
         idGenerator: IdGenerator = UuidIdGenerator,
         storage: TaskStorage = taskStorage,
     ) = A2AServer(
@@ -79,6 +80,7 @@ class A2AServerPushNotificationsTest {
         agentCard = testAgentCard(AgentCapabilities(pushNotifications = pushNotifications)),
         taskStorage = storage,
         pushConfigStorage = pushConfigStorage,
+        pushSender = sender,
         idGenerator = idGenerator,
     )
 
@@ -237,16 +239,25 @@ class A2AServerPushNotificationsTest {
     @Test
     fun testOperationsFailWhenPushNotificationsAreNotSupported() = runTest {
         val unsupported = createServer(pushNotifications = false)
-        val notConfigured = createServer(pushConfigStorage = null)
+        val noStorage = createServer(pushConfigStorage = null)
+        val noSender = createServer(sender = null)
+        pushStorage.save(config, ctx)
 
-        listOf(unsupported, notConfigured).forEach { s ->
+        listOf(unsupported, noStorage, noSender).forEach { s ->
             assertFailsWith<A2APushNotificationNotSupportedException> {
-                s.onCreateTaskPushNotificationConfig(config, ctx)
+                s.onCreateTaskPushNotificationConfig(config.copy(id = "config-2"), ctx)
+            }
+            assertFailsWith<A2APushNotificationNotSupportedException> {
+                s.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest("task-1", "config-1"), ctx)
             }
             assertFailsWith<A2APushNotificationNotSupportedException> {
                 s.onListTaskPushNotificationConfigs(ListTaskPushNotificationConfigsRequest("task-1"), ctx)
             }
+            assertFailsWith<A2APushNotificationNotSupportedException> {
+                s.onDeleteTaskPushNotificationConfig(DeleteTaskPushNotificationConfigRequest("task-1", "config-1"), ctx)
+            }
         }
+        assertEquals(listOf(config), pushStorage.getAll("task-1"))
     }
 
     // Inline push notification config of SendMessage
@@ -335,6 +346,7 @@ class A2AServerPushNotificationsTest {
     private fun TestScope.createTurnServer(
         pushNotifications: Boolean = true,
         pushConfigStorage: InMemoryPushNotificationConfigStorage? = pushStorage,
+        sender: GatedPushNotificationSender? = pushSender,
         rejectConfigs: Boolean = false,
     ): A2AServer {
         executor = ScriptedAgentExecutor(scripts)
@@ -344,7 +356,7 @@ class A2AServerPushNotificationsTest {
             agentCard = testAgentCard(AgentCapabilities(pushNotifications = pushNotifications)),
             taskStorage = taskStorage,
             pushConfigStorage = pushConfigStorage,
-            pushSender = pushSender,
+            pushSender = sender,
             idGenerator = NewTaskIdGenerator,
             coroutineScope = agentScope(),
         ) {
@@ -444,6 +456,19 @@ class A2AServerPushNotificationsTest {
         assertEquals(inputRequiredTask, response)
         assertEquals(emptyList(), validated)
         assertEquals(emptyList(), pushSender.started)
+    }
+
+    @Test
+    fun testInlineConfigIsIgnoredWithoutPushSender() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createTurnServer(sender = null)
+
+        val response = server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
+        runCurrent()
+
+        assertEquals(inputRequiredTask, response)
+        assertEquals(emptyList(), validated)
+        assertEquals(listOf(emptyList()), configsAtAgentStart)
+        assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
     }
 
     @Test

@@ -24,6 +24,7 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.transport.ServerCallContext
@@ -87,6 +88,7 @@ class A2AServerCapabilitiesTest {
             agentCardExtended = agentCardExtended,
             taskStorage = taskStorage,
             pushConfigStorage = pushStorage,
+            pushSender = GatedPushNotificationSender(),
         )
     }
 

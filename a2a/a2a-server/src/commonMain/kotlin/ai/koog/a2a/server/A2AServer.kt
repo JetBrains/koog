@@ -321,8 +321,9 @@ import kotlin.time.Clock
  * @param agentCardExtended Optional extended agent card for authenticated requests
  * @param taskStorage Storage implementation for persisting tasks (defaults to [InMemoryTaskStorage])
  * @param messageStorage Storage implementation for persisting messages (defaults to [InMemoryMessageStorage])
- * @param pushConfigStorage Optional storage for push notification configurations (defaults to `null`)
- * @param pushSender Optional push notification sender implementation (defaults to `null`)
+ * @param pushConfigStorage Optional storage for push notification configurations (defaults to `null`). Push
+ * notifications are enabled only if both it and [pushSender] are set.
+ * @param pushSender Optional push notification sender implementation (defaults to `null`), see [pushConfigStorage].
  * @param idGenerator Generator for new task, context and push notification config IDs (defaults to [UuidIdGenerator])
  * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc.
  *
@@ -416,7 +417,8 @@ public open class A2AServer(
      * - its `url` must not be blank, and it is checked with [validatePushNotificationConfig]; if either fails, nothing
      *   is saved, no turn starts, and the request fails with [A2AInvalidParamsException] (or the validation's exception);
      * - it is silently ignored if the [agentCard] doesn't declare
-     *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications] or [pushConfigStorage] is `null`.
+     *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications], or [pushConfigStorage] or
+     *   [pushSender] is `null`.
      *
      * If a turn that would create a new task ends without a stored task (e.g. the agent replied with a [Message]),
      * the inline config saved for it is deleted.
@@ -579,7 +581,7 @@ public open class A2AServer(
         val inline = request.configuration?.taskPushNotificationConfig ?: return false
         val pushStorage = pushConfigStorage
 
-        if (agentCard.capabilities.pushNotifications != true || pushStorage == null) {
+        if (agentCard.capabilities.pushNotifications != true || pushStorage == null || pushSender == null) {
             return false
         }
 
@@ -1019,18 +1021,19 @@ public open class A2AServer(
 
     /**
      * Checks that the [agentCard] declares [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications]
-     * and that [pushConfigStorage] is configured, called in push notification config operations after
-     * [checkRequiredExtensions].
+     * and that both [pushConfigStorage] and [pushSender] are configured, called in push notification config operations
+     * after [checkRequiredExtensions]. Without a sender, saved configs would never be notified.
      *
      * @return The configured push notification config storage.
-     * @throws A2APushNotificationNotSupportedException if push notifications are not declared, or no storage is configured.
+     * @throws A2APushNotificationNotSupportedException if push notifications are not declared, or the storage or the
+     * sender is not configured.
      */
     protected open fun storageIfPushNotificationSupported(): PushNotificationConfigStorage {
         if (agentCard.capabilities.pushNotifications != true) {
             throw A2APushNotificationNotSupportedException("Push notifications are not supported by the server")
         }
 
-        if (pushConfigStorage == null) {
+        if (pushConfigStorage == null || pushSender == null) {
             throw A2APushNotificationNotSupportedException("Push notifications are supported, but not configured on the server")
         }
 
