@@ -144,6 +144,7 @@ public final class ai/koog/prompt/executor/ollama/client/OllamaModels$DeepSeek {
 public final class ai/koog/prompt/executor/ollama/client/OllamaModels$Embeddings {
 	public static final field ALL_MINI_LM Lai/koog/prompt/llm/LLModel;
 	public static final field BGE_LARGE Lai/koog/prompt/llm/LLModel;
+	public static final field EMBEDDING_GEMMA_2_740M Lai/koog/prompt/llm/LLModel;
 	public static final field INSTANCE Lai/koog/prompt/executor/ollama/client/OllamaModels$Embeddings;
 	public static final field MULTILINGUAL_E5 Lai/koog/prompt/llm/LLModel;
 	public static final field MXBAI_EMBED_LARGE Lai/koog/prompt/llm/LLModel;
