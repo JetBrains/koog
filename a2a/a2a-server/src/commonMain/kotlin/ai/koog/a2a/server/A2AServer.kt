@@ -1069,6 +1069,7 @@ public open class A2AServer(
      *
      * @param cause Optional cause of the cancellation
      */
+    @OptIn(InternalA2AApi::class)
     public open fun cancel(cause: CancellationException? = null) {
         turnManager.shutdown()
         coroutineScope.cancel(cause)

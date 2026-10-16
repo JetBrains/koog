@@ -437,6 +437,7 @@ public class TurnManager(
      * those of idle tasks that no turn would ever close. Doesn't stop turns: their views end when the turns end, e.g.
      * when [coroutineScope] is cancelled. Takes no lock, so it never waits for a stalled task.
      */
+    @InternalA2AApi
     public fun shutdown() {
         shutdownSignal.complete()
     }
