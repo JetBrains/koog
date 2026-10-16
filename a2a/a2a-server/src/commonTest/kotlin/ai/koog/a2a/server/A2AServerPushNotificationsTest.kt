@@ -523,6 +523,33 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
+    fun testInlineConfigWithBlankUrlFailsSendMessageWithoutStartingAgent() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createTurnServer()
+
+        assertFailsWith<A2AInvalidParamsException> {
+            server.onSendMessage(sendRequest("ask", pushConfig = webhook.copy(url = " ")), ctx)
+        }
+        runCurrent()
+
+        assertEquals(emptyList(), validated)
+        assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
+        assertEquals(emptyList(), executor.executed)
+        assertEquals(null, taskStorage.get(NEW_TASK_ID))
+    }
+
+    @Test
+    fun testCreateWithBlankUrlFailsWithInvalidParams() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createTurnServer()
+
+        assertFailsWith<A2AInvalidParamsException> {
+            server.onCreateTaskPushNotificationConfig(config.copy(url = ""), ctx)
+        }
+
+        assertEquals(emptyList(), validated)
+        assertEquals(emptyList(), pushStorage.getAll("task-1"))
+    }
+
+    @Test
     fun testRejectedConfigFailsCreate() = runTest(timeout = TEST_TIMEOUT) {
         val server = createTurnServer(rejectConfigs = true)
 

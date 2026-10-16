@@ -411,7 +411,8 @@ public open class A2AServer(
      * already pushed to it:
      * - its `taskId` and `tenant` are set to the turn's task and the request's tenant;
      * - without an id, the task id is used, so re-sending the same config with every message replaces it;
-     * - it is checked with [validatePushNotificationConfig] first; if that throws, nothing is saved and no turn starts;
+     * - its `url` must not be blank, and it is checked with [validatePushNotificationConfig]; if either fails, nothing
+     *   is saved, no turn starts, and the request fails with [A2AInvalidParamsException] (or the validation's exception);
      * - it is silently ignored if the [agentCard] doesn't declare
      *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications] or [pushConfigStorage] is `null`.
      *
@@ -565,6 +566,8 @@ public open class A2AServer(
         if (agentCard.capabilities.pushNotifications != true || pushStorage == null) {
             return false
         }
+
+        checkPushUrl(inline)
 
         val config = inline.copy(
             taskId = taskId,
@@ -855,12 +858,12 @@ public open class A2AServer(
 
     /**
      * Saves a push notification config for an existing task (CreateTaskPushNotificationConfig). Without an id, the
-     * id is generated with [IdGenerator.generatePushNotificationConfigId]. The config is checked with
-     * [validatePushNotificationConfig] before it is saved.
+     * id is generated with [IdGenerator.generatePushNotificationConfigId]. The config's `url` must not be blank, and
+     * the config is checked with [validatePushNotificationConfig] before it is saved.
      *
      * @throws A2APushNotificationNotSupportedException if push notifications are not supported, see
      * [storageIfPushNotificationSupported].
-     * @throws A2AInvalidParamsException if the task id is missing.
+     * @throws A2AInvalidParamsException if the task id is missing or the url is blank.
      * @throws A2ATaskNotFoundException if the task doesn't exist or isn't visible to the caller.
      */
     override suspend fun onCreateTaskPushNotificationConfig(
@@ -872,6 +875,7 @@ public open class A2AServer(
         val pushStorage = storageIfPushNotificationSupported()
         val taskId = request.taskId?.takeIf { it.isNotBlank() }
             ?: throw A2AInvalidParamsException("Task id is required to create a push notification config")
+        checkPushUrl(request)
 
         checkTaskExists(taskId, request.tenant, ctx)
 
@@ -941,6 +945,13 @@ public open class A2AServer(
         ctx: ServerCallContext,
     ) {
         // No validation by default.
+    }
+
+    /** The `url` is required by the protocol. */
+    private fun checkPushUrl(config: TaskPushNotificationConfig) {
+        if (config.url.isBlank()) {
+            throw A2AInvalidParamsException("Push notification config url is required")
+        }
     }
 
     /** Checks that the task is visible to the caller, with the same owner-scoped lookup as GetTask. */
