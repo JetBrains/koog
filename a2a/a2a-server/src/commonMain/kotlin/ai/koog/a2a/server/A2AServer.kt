@@ -57,6 +57,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
@@ -67,6 +68,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 /**
@@ -404,6 +406,18 @@ public open class A2AServer(
      * The turn's context id is the referenced task's, else [Message.contextId], else a generated one. For a
      * referenced task, the agent can only send task events, see [TurnEventProcessor].
      *
+     * The inline [taskPushNotificationConfig][ai.koog.a2a.model.SendMessageConfiguration.taskPushNotificationConfig]
+     * is saved for the turn's task after validation and before the turn starts, so the turn's first task event is
+     * already pushed to it:
+     * - its `taskId` and `tenant` are set to the turn's task and the request's tenant;
+     * - without an id, the task id is used, so re-sending the same config with every message replaces it;
+     * - it is checked with [validatePushNotificationConfig] first; if that throws, nothing is saved and no turn starts;
+     * - it is silently ignored if the [agentCard] doesn't declare
+     *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications] or [pushConfigStorage] is `null`.
+     *
+     * If a turn that would create a new task ends without a stored task (e.g. the agent replied with a [Message]),
+     * the inline config saved for it is deleted.
+     *
      * The flow ends after the agent's [Message], after an event with a terminal task state, or when the turn ends.
      * Only in the last case is the agent's exception rethrown (if the task exists, it is marked failed instead and the
      * flow ends with that update). An event rejected as invalid (e.g. a status update before a [Task] for a new task,
@@ -466,9 +480,27 @@ public open class A2AServer(
 
             val requestContext = newRequestContext(ctx, request, contextId, taskId, task)
 
-            // The event view is registered before the agent starts, so no event is missed.
-            turnManager.startTurn(requestContext) { eventProcessor ->
-                agentExecutor.execute(requestContext, eventProcessor)
+            // Saved before the turn starts, so that the turn's first task event is pushed to it.
+            val isInlinePushConfigSaved = saveInlinePushConfig(request, taskId, ctx)
+            // Never for a follow-up: the task exists and may have other configs.
+            val cleansUpPushConfigs = isInlinePushConfigSaved && task == null
+
+            try {
+                // The event view is registered before the agent starts, so no event is missed.
+                turnManager.startTurn(requestContext) { eventProcessor ->
+                    try {
+                        agentExecutor.execute(requestContext, eventProcessor)
+                    } finally {
+                        if (cleansUpPushConfigs) {
+                            withContext(NonCancellable) { deletePushConfigsIfTaskAbsent(taskId) }
+                        }
+                    }
+                }
+            } catch (e: Throwable) {
+                if (cleansUpPushConfigs) {
+                    withContext(NonCancellable) { deletePushConfigsIfTaskAbsent(taskId) }
+                }
+                throw e
             }
         }
 
@@ -514,6 +546,48 @@ public open class A2AServer(
             if (isFirstEvent && snapshot != null) {
                 emit(snapshot)
             }
+        }
+    }
+
+    /**
+     * Saves the inline push notification config of [request] for [taskId], see [onSendMessageCommon].
+     *
+     * @return whether a config was saved.
+     */
+    private suspend fun saveInlinePushConfig(
+        request: SendMessageRequest,
+        taskId: String,
+        ctx: ServerCallContext,
+    ): Boolean {
+        val inline = request.configuration?.taskPushNotificationConfig ?: return false
+        val pushStorage = pushConfigStorage
+
+        if (agentCard.capabilities.pushNotifications != true || pushStorage == null) {
+            return false
+        }
+
+        val config = inline.copy(
+            taskId = taskId,
+            id = inline.id?.takeIf { it.isNotBlank() } ?: taskId,
+            tenant = request.tenant,
+        )
+
+        validatePushNotificationConfig(config, ctx)
+        pushStorage.save(config, ctx)
+
+        return true
+    }
+
+    /** Deletes the push notification configs of [taskId] if the task was never stored. Failures are only logged. */
+    private suspend fun deletePushConfigsIfTaskAbsent(taskId: String) {
+        val pushStorage = pushConfigStorage ?: return
+
+        try {
+            if (taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) == null) {
+                pushStorage.deleteAll(taskId)
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to delete push notification configs of task '$taskId', which was not created" }
         }
     }
 
@@ -570,6 +644,8 @@ public open class A2AServer(
      * A task result is read from [taskStorage] at that point, with the history limited to
      * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts. The agent keeps
      * running in [coroutineScope] after the response is returned.
+     *
+     * An inline push notification config is saved for the turn's task, see [onSendMessageCommon].
      */
     override suspend fun onSendMessage(
         request: SendMessageRequest,
@@ -619,6 +695,8 @@ public open class A2AServer(
      * existing task, the task as stored before the turn's first event is emitted first, unless the agent starts the
      * turn with a [Task]. The history of that task is limited to
      * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength].
+     *
+     * An inline push notification config is saved for the turn's task, see [onSendMessageCommon].
      *
      * @throws A2AUnsupportedOperationException if streaming is not supported, before the first event
      */
@@ -775,6 +853,16 @@ public open class A2AServer(
         emitAll(turnManager.subscribe(request, ctx))
     }
 
+    /**
+     * Saves a push notification config for an existing task (CreateTaskPushNotificationConfig). Without an id, the
+     * id is generated with [IdGenerator.generatePushNotificationConfigId]. The config is checked with
+     * [validatePushNotificationConfig] before it is saved.
+     *
+     * @throws A2APushNotificationNotSupportedException if push notifications are not supported, see
+     * [storageIfPushNotificationSupported].
+     * @throws A2AInvalidParamsException if the task id is missing.
+     * @throws A2ATaskNotFoundException if the task doesn't exist or isn't visible to the caller.
+     */
     override suspend fun onCreateTaskPushNotificationConfig(
         request: TaskPushNotificationConfig,
         ctx: ServerCallContext
@@ -793,6 +881,8 @@ public open class A2AServer(
         } else {
             request
         }
+
+        validatePushNotificationConfig(config, ctx)
 
         return pushStorage.save(config, ctx)
     }
@@ -834,6 +924,23 @@ public open class A2AServer(
         checkTaskExists(request.taskId, request.tenant, ctx)
 
         pushStorage.delete(request, ctx)
+    }
+
+    /**
+     * Checks a push notification config before it is saved, both from CreateTaskPushNotificationConfig and inline in
+     * SendMessage. [config] has its task id and id set. Does nothing by default.
+     *
+     * Override to reject configs, e.g. webhook URLs outside an allow-list to prevent SSRF.
+     *
+     * @param config The config to be saved.
+     * @param ctx The context of the call.
+     * @throws A2AInvalidParamsException (or another A2A exception) to reject the config; the request fails.
+     */
+    protected open suspend fun validatePushNotificationConfig(
+        config: TaskPushNotificationConfig,
+        ctx: ServerCallContext,
+    ) {
+        // No validation by default.
     }
 
     /** Checks that the task is visible to the caller, with the same owner-scoped lookup as GetTask. */
