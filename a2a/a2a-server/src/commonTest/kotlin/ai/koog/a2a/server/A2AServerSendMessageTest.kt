@@ -21,10 +21,14 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -63,12 +67,15 @@ class A2AServerSendMessageTest {
         agentFinished = CompletableDeferred()
     }
 
-    private fun TestScope.createServer(scripts: Map<String, AgentScript>): A2AServer {
+    private fun TestScope.createServer(
+        scripts: Map<String, AgentScript>,
+        storage: TaskStorage = taskStorage,
+    ): A2AServer {
         executor = ScriptedAgentExecutor(scripts)
         return A2AServer(
             agentExecutor = executor,
             agentCard = testAgentCard(AgentCapabilities(streaming = true)),
-            taskStorage = taskStorage,
+            taskStorage = storage,
             idGenerator = FixedIdGenerator(contextId = "generated-context"),
             coroutineScope = agentScope(),
         )
@@ -468,6 +475,37 @@ class A2AServerSendMessageTest {
 
         assertEquals(A2AInvalidAgentResponseException::class, failure::class)
         assertEquals(emptyList(), received)
+    }
+
+    // Requester cancellation
+
+    @Test
+    fun testRequesterCancelledRightAfterTurnStartDoesNotBlockAgent() = runTest(timeout = TEST_TIMEOUT) {
+        var cancelOnTurnViewRead = false
+        // Cancels the requester while its turn view is being registered: the cancellation is first observed after
+        // the turn has started, before the requester collects the view.
+        val storage = object : TaskStorage by taskStorage {
+            override suspend fun get(taskId: String, historyLength: Int?, includeArtifacts: Boolean): Task? =
+                taskStorage.get(taskId, historyLength, includeArtifacts).also {
+                    if (cancelOnTurnViewRead && includeArtifacts) {
+                        cancelOnTurnViewRead = false
+                        currentCoroutineContext().cancel()
+                    }
+                }
+        }
+        val server = createServer(mapOf("ask" to askScript, "finish" to gated(finishScript)), storage)
+        server.onSendMessage(request("ask"), ctx)
+        gate.complete(Unit)
+
+        cancelOnTurnViewRead = true
+        val requester = launch { server.onSendMessage(request("finish", TASK_ID), ctx) }
+        requester.join()
+        runCurrent()
+
+        assertTrue(requester.isCancelled)
+        // Nobody collects the requester's view: the agent's events must not wait for it.
+        assertTrue(agentFinished.isCompleted, "The agent must not be blocked by the abandoned turn view")
+        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
     }
 
     // Messages referencing a task

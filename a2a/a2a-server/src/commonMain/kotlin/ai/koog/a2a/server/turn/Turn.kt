@@ -4,7 +4,9 @@ import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
 
 /**
  * One turn of a task: a single [ai.koog.a2a.server.agent.AgentExecutor.execute] call, started with
@@ -23,7 +25,8 @@ public class Turn internal constructor(
     public val contextId: String,
     public val agentJob: Deferred<Unit>,
     internal val eventProcessor: TurnEventProcessor,
-    events: Flow<Event>,
+    /** This turn's view of the task stream, see [events]. */
+    private val view: ReceiveChannel<Event>,
     /** The job that runs the agent job and then ends the turn, see [TurnManager.startTurn]. */
     private val monitor: Job,
     /**
@@ -40,7 +43,12 @@ public class Turn internal constructor(
      * Delivery is back-pressured, so the flow must be collected (and collection cancelled when the consumer goes
      * away), see [TurnManager]. No event of the turn is lost, but it can be collected **only once**.
      */
-    public val events: Flow<Event> = events
+    public val events: Flow<Event> = view.consumeAsFlow()
+
+    /** Stops [events] for a consumer that won't collect it (any more), so deliveries to it don't wait. */
+    internal fun cancelEvents() {
+        view.cancel()
+    }
 
     /**
      * Suspends until the turn has fully ended: the agent job completed, its events were published, the turn was

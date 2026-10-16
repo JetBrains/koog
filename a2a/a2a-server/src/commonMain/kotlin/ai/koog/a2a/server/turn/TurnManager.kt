@@ -24,7 +24,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -242,7 +241,7 @@ public class TurnManager(
                         contextId = contextId,
                         agentJob = agentJob,
                         eventProcessor = processor,
-                        events = channel.consumeAsFlow(),
+                        view = channel,
                         monitor = monitor,
                         taskSnapshot = snapshot,
                     )
@@ -253,7 +252,7 @@ public class TurnManager(
                 }
             }
         } catch (e: Throwable) {
-            // The turn didn't start, or it did but the caller is gone: either way, nobody collects the view.
+            // The turn didn't start (once it has, nothing here throws, not even on cancellation): nobody collects the view.
             view?.let(stream::unsubscribe)
             throw e
         } finally {

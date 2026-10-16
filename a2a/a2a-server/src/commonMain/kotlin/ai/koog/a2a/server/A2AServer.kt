@@ -64,6 +64,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -505,6 +506,16 @@ public open class A2AServer(
             }
         }
 
+        // The view must not outlive this flow: an uncollected view blocks every delivery to the task.
+        try {
+            emitTurnEvents(turn, includeTaskSnapshot)
+        } finally {
+            turn.cancelEvents()
+        }
+    }
+
+    /** Emits the events of [turn] for [onSendMessageCommon]. */
+    private suspend fun FlowCollector<Event>.emitTurnEvents(turn: Turn, includeTaskSnapshot: Boolean) {
         val snapshot = if (includeTaskSnapshot) turn.taskSnapshot else null
         var isFirstEvent = true
         var isResponseComplete = false
