@@ -396,6 +396,8 @@ public class TurnManager(
                     taskId = taskId,
                     stream = stream,
                     turnId = null,
+                    // The task exists: a Message is rejected like in any turn of an existing task.
+                    taskExists = true,
                 )
 
                 var isBlockRunning = true

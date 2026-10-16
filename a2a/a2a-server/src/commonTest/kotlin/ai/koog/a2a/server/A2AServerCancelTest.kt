@@ -14,6 +14,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
@@ -380,6 +381,24 @@ class A2AServerCancelTest {
             processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
         }
         assertEquals(idle, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testStandaloneCancelProcessorRejectsMessage() = runTest(timeout = TEST_TIMEOUT) {
+        var messageFailure: Throwable? = null
+        val messagingCancel = CancelHandler { processor, _ ->
+            val reply = Message(messageId = "agent-reply", role = Role.ROLE_AGENT, parts = listOf(TextPart("bye")), contextId = CONTEXT_ID)
+            messageFailure = runCatching { processor.sendMessage(reply) }.exceptionOrNull()
+        }
+        val server = createServer(emptyMap(), messagingCancel)
+        // An idle task: the executor gets a standalone processor.
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+
+        // The task exists, so a Message is invalid; the server still forces the cancellation.
+        assertIs<InvalidEventException>(messageFailure)
+        assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
     }
 
     @Test

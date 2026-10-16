@@ -196,9 +196,6 @@ public open class JSONRPCServerTransport(
                 A2AMethod.CancelTask.value ->
                     onRequest(request, ctx, requestHandler::onCancelTask)
 
-                A2AMethod.SubscribeToTask.value ->
-                    onRequest(request, ctx, requestHandler::onSubscribeToTask)
-
                 A2AMethod.CreateTaskPushNotificationConfig.value ->
                     onRequest(request, ctx, requestHandler::onCreateTaskPushNotificationConfig)
 
