@@ -269,6 +269,52 @@ class A2AServerCancelTest {
         assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED).copy(status = canceled.status)), pushSender.sent)
     }
 
+    /**
+     * A running agent that reaches [finalState] on its own once the executor's cancellation has started, i.e. after
+     * CancelTask read the task as running. The executor then tries to send CANCELED through the closed processor.
+     */
+    private suspend fun TestScope.cancelRacingAgentThatReaches(finalState: TaskState): Pair<Result<Task>, Event> {
+        val started = CompletableDeferred<Unit>()
+        val finishNow = CompletableDeferred<Unit>()
+        val finished = CompletableDeferred<Unit>()
+        val script = AgentScript { _, processor ->
+            processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING))
+            started.complete(Unit)
+            finishNow.await()
+            processor.sendTaskEvent(statusUpdate(finalState))
+            finished.complete(Unit)
+        }
+        val lateCancel = CancelHandler { processor, _ ->
+            finishNow.complete(Unit)
+            finished.await()
+            processor.sendTaskEvent(canceledByExecutor)
+        }
+        val server = createServer(mapOf("run" to script), lateCancel)
+        val response = async { server.onSendMessage(request("run"), ctx) }
+        started.await()
+
+        val result = runCatching { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
+
+        return result to response.await()
+    }
+
+    @Test
+    fun testCancelRacingWithTurnReachingCompletedFailsWithNotCancelable() = runTest(timeout = TEST_TIMEOUT) {
+        val (result, response) = cancelRacingAgentThatReaches(TaskState.TASK_STATE_COMPLETED)
+
+        assertIs<A2ATaskNotCancelableException>(result.exceptionOrNull())
+        assertEquals(TaskState.TASK_STATE_COMPLETED, assertIs<Task>(response).status.state)
+        assertEquals(response, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testCancelRacingWithTurnReachingCanceledReturnsCanceledTask() = runTest(timeout = TEST_TIMEOUT) {
+        val (result, response) = cancelRacingAgentThatReaches(TaskState.TASK_STATE_CANCELED)
+
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertIs<Task>(response).status.state)
+        assertEquals(response.copy(history = null), result.getOrThrow())
+    }
+
     @Test
     fun testCancelTerminalOrUnknownTaskFails() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(emptyMap(), cancelingExecutor)

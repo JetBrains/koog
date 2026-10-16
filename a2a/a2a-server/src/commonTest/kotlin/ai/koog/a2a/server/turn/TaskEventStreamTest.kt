@@ -7,22 +7,27 @@ import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.tasks.TaskStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -407,6 +412,29 @@ class TaskEventStreamTest {
         stream.publish(completed, turnId = 1)
 
         assertEquals(listOf(completed), events.await())
+    }
+
+    @Test
+    fun testCommittedEventIsReportedEvenIfPublisherIsCancelledMeanwhile() = runTest(timeout = TEST_TIMEOUT) {
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        lateinit var publisher: Job
+        // Commits the event on another dispatcher while the publisher is cancelled: without protection, returning to
+        // the cancelled publisher throws although the event is stored.
+        val storage = object : TaskStorage by taskStorage {
+            override suspend fun update(event: TaskEvent) = withContext(StandardTestDispatcher(testScheduler)) {
+                taskStorage.update(event)
+                publisher.cancel()
+            }
+        }
+        val persisted = mutableListOf<TaskEvent>()
+        val stream = TaskEventStream(taskId, storage, FixedMessageIdGenerator) { persisted += it }
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+
+        publisher = launch { stream.publish(completed, turnId = 1) }
+        publisher.join()
+
+        assertEquals(task(TaskState.TASK_STATE_WORKING).copy(status = completed.status), taskStorage.get(taskId))
+        assertEquals(listOf<TaskEvent>(completed), persisted)
     }
 
     @Test

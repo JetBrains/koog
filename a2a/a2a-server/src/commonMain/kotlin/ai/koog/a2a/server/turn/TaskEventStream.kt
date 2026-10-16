@@ -17,6 +17,7 @@ import ai.koog.a2a.server.tasks.plusIfAbsent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -24,6 +25,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 /**
@@ -50,8 +52,9 @@ import kotlin.time.Clock
  * persisted but the subscribers not reached yet don't receive it.
  *
  * Every persisted [TaskEvent] is passed to [onPersisted] right after it is stored, before the fan-out and still under
- * the stream lock, so its calls follow the storage order. User messages added to the history are not events and aren't
- * passed.
+ * the stream lock, so its calls follow the storage order. Storing and reporting an event isn't interrupted by the
+ * publisher's cancellation, so every stored event is reported. User messages added to the history are not events and
+ * aren't passed.
  *
  * ## History
  *
@@ -73,8 +76,8 @@ import kotlin.time.Clock
  * @param taskId the id of the task this stream belongs to
  * @param taskStorage the storage where task events are persisted
  * @param idGenerator generates the id of the message attached to the failure status
- * @param onPersisted called with every persisted [TaskEvent] (e.g. to queue push notifications); must return quickly
- * and must not be interrupted by cancellation, since the event is already stored
+ * @param onPersisted called with every persisted [TaskEvent] (e.g. to queue push notifications), non-cancellable and
+ * under the stream lock, so it must return quickly
  */
 internal class TaskEventStream(
     val taskId: String,
@@ -220,8 +223,12 @@ internal class TaskEventStream(
         }
     }
 
-    /** Stores [event] and reports it to [onPersisted]. Must be called under the stream lock. */
-    private suspend fun persist(event: TaskEvent) {
+    /**
+     * Stores [event] and reports it to [onPersisted]. Must be called under the stream lock. Not cancellable: the
+     * storage may commit the write and still throw on return to a cancelled publisher, and the stored event must be
+     * reported anyway.
+     */
+    private suspend fun persist(event: TaskEvent): Unit = withContext(NonCancellable) {
         taskStorage.update(event)
         onPersisted?.invoke(event)
     }

@@ -34,6 +34,7 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
+import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
@@ -780,8 +781,8 @@ public open class A2AServer(
      *
      * The task is returned as stored (with artifacts, without history). [CancelTaskRequest] has no history limit.
      *
-     * @throws A2ATaskNotCancelableException if the task is terminal, or the executor left it in a terminal state
-     * other than [TaskState.TASK_STATE_CANCELED].
+     * @throws A2ATaskNotCancelableException if the task is terminal, or ends up in a terminal state other than
+     * [TaskState.TASK_STATE_CANCELED] (set by the executor, or by the running agent racing the cancellation).
      */
     @OptIn(InternalA2AApi::class)
     override suspend fun onCancelTask(
@@ -813,7 +814,13 @@ public open class A2AServer(
 
             val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
 
-            agentExecutor.cancel(requestContext, eventProcessor, agentJob)
+            try {
+                agentExecutor.cancel(requestContext, eventProcessor, agentJob)
+            } catch (e: TurnNotActiveException) {
+                // The agent ended the task since it was read, closing the turn's processor: report that state below.
+                val current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+                if (current == null || !current.status.state.terminal) throw e
+            }
 
             // The executor may have left the task running: force it to canceled.
             val afterCancel = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
