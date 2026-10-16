@@ -707,8 +707,8 @@ public open class A2AServer(
      *
      * The stream ends after the agent's [Message], at a terminal task state, or when the turn ends (e.g. at an
      * interrupted state), whichever comes first. A stream of a task begins with the [Task]: for a message to an
-     * existing task, the task as stored before the turn's first event is emitted first, unless the agent starts the
-     * turn with a [Task]. The history of that task is limited to
+     * existing task, the task as stored before the turn's first event is emitted first. The history of that task is
+     * limited to
      * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength].
      *
      * An inline push notification config is saved for the turn's task, see [onSendMessageCommon].

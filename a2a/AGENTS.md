@@ -233,7 +233,7 @@ public class InMemorySomeStorage : SomeStorage {
 ```kotlin
 public class MyAgentExecutor : AgentExecutor {
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: TurnEventProcessor
     ) {
         // Process request and send events through eventProcessor

@@ -17,10 +17,11 @@ import ai.koog.a2a.transport.ServerCallContext
  * or a newly generated ID that the agent must use if it decides to reply.
  * @property taskId The task ID representing either an existing task from the incoming request in [params],
  * or a newly generated ID that the agent must use if it decides to create a new task.
- * @property task The task as stored when the turn starts, with its full [Task.history] and all [Task.artifacts].
- * Present only if the incoming request was associated with an existing task. It does not contain the user message of
- * the request (available in [params]): the server adds it to the history lazily, when the agent sends its first status
- * or artifact update. For referenced tasks, query [taskStorage] directly.
+ * @property task The task as stored when the request is handled, with all [Task.artifacts]. Present only if the
+ * incoming request was associated with an existing task. For SendMessage, it has the full [Task.history] as of the turn
+ * start and does not contain the user message of the request (available in [params]): the server adds it to the
+ * history lazily, when the agent sends its first status or artifact update. For CancelTask, it has no history. For
+ * referenced tasks, query [taskStorage] directly.
  */
 public class RequestContext<T>(
     public val callContext: ServerCallContext,
