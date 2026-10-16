@@ -886,8 +886,8 @@ public open class A2AServer(
     }
 
     /**
-     * Streams the task snapshot followed by its live events until the task reaches a terminal state, see
-     * [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
+     * Streams the task snapshot followed by its live events until the task reaches a terminal state or the server is
+     * shut down with [cancel], see [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
      *
      * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
      * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
@@ -1064,11 +1064,13 @@ public open class A2AServer(
     }
 
     /**
-     * Cancels [coroutineScope] associated with this server, essentially cancelling all running jobs and turns.
+     * Shuts the server down: ends every SubscribeToTask stream normally (see [TurnManager.shutdown]) and cancels
+     * [coroutineScope], cancelling all running agent jobs and turns.
      *
      * @param cause Optional cause of the cancellation
      */
     public open fun cancel(cause: CancellationException? = null) {
+        turnManager.shutdown()
         coroutineScope.cancel(cause)
     }
 }

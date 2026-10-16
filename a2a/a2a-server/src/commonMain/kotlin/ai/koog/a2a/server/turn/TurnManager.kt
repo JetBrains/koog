@@ -20,12 +20,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -141,6 +143,9 @@ public class TurnManager(
      */
     private val turns = mutableMapOf<String, Turn>()
     private var nextTurnId = 0L
+
+    /** Completed by [shutdown]; ends every [subscribe] flow without taking any lock. */
+    private val shutdownSignal = Job()
 
     /**
      * Starts a new turn for [RequestContext.taskId]: runs [block] in [coroutineScope] with a [TurnEventProcessor]
@@ -316,7 +321,7 @@ public class TurnManager(
      *
      * The first event is the task as returned by [TaskStorage.get] (full history and artifacts), followed by every
      * later event of the task across turns. The snapshot is read and the subscription is registered atomically, so no
-     * event is missed or repeated. The flow completes when the task reaches a terminal state.
+     * event is missed or repeated. The flow completes when the task reaches a terminal state, or on [shutdown].
      *
      * Errors are thrown on collection, before the first event.
      *
@@ -338,7 +343,13 @@ public class TurnManager(
             try {
                 emit(snapshot)
 
-                for (event in channel) {
+                while (true) {
+                    val event = select<Event?> {
+                        // First, so that shutdown wins over a pending event.
+                        shutdownSignal.onJoin { null }
+                        channel.onReceiveCatching { it.getOrNull() }
+                    } ?: break
+
                     emit(event)
                 }
             } finally {
@@ -419,6 +430,15 @@ public class TurnManager(
         } finally {
             release(stream)
         }
+    }
+
+    /**
+     * Ends every [subscribe] flow, current and future, normally (without an error), e.g. on server shutdown, including
+     * those of idle tasks that no turn would ever close. Doesn't stop turns: their views end when the turns end, e.g.
+     * when [coroutineScope] is cancelled. Takes no lock, so it never waits for a stalled task.
+     */
+    public fun shutdown() {
+        shutdownSignal.complete()
     }
 
     /**

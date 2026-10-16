@@ -36,6 +36,7 @@ import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.seconds
 
@@ -194,6 +195,20 @@ class A2AServerSubscribeTest {
 
         assertEquals(listOf<Event>(stored), cancelled.events)
         assertEquals(listOf<Event>(stored) + finishEvents, active.events)
+    }
+
+    @Test
+    fun testServerCancelEndsSubscriptionOfIdleTask() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(mapOf("start" to startScript))
+        val stored = server.startIdleTask()
+        val subscription = subscribeToSnapshot(server)
+
+        server.cancel()
+        subscription.job.join()
+
+        // Completed normally: a failed collection would fail the test scope, a cancelled one the check below.
+        assertFalse(subscription.job.isCancelled)
+        assertEquals(listOf<Event>(stored), subscription.events)
     }
 
     @Test
