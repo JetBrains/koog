@@ -348,6 +348,7 @@ class A2AServerPushNotificationsTest {
         pushConfigStorage: InMemoryPushNotificationConfigStorage? = pushStorage,
         sender: GatedPushNotificationSender? = pushSender,
         rejectConfigs: Boolean = false,
+        onValidate: suspend A2AServer.() -> Unit = {},
     ): A2AServer {
         executor = ScriptedAgentExecutor(scripts)
 
@@ -365,6 +366,7 @@ class A2AServerPushNotificationsTest {
                 ctx: ServerCallContext,
             ) {
                 validated += config
+                onValidate()
                 if (rejectConfigs) {
                     throw A2AInvalidParamsException("Webhook URL is not allowed")
                 }
@@ -530,6 +532,52 @@ class A2AServerPushNotificationsTest {
             listOf(webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID), inline.copy(taskId = NEW_TASK_ID)),
             pushStorage.getAll(NEW_TASK_ID)
         )
+    }
+
+    /**
+     * Stores the task as canceled while a follow-up's inline config is validated, as a concurrent CancelTask would, so
+     * the follow-up's turn is rejected.
+     */
+    private val cancelTask: suspend A2AServer.() -> Unit = {
+        taskStorage.update(
+            TaskStatusUpdateEvent(
+                taskId = NEW_TASK_ID,
+                contextId = CONTEXT_ID,
+                status = TaskStatus(state = TaskState.TASK_STATE_CANCELED, timestamp = TIMESTAMP),
+            )
+        )
+    }
+
+    @Test
+    fun testFollowUpInlineConfigIsDeletedWhenConcurrentCancelRejectsTurn() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createTurnServer(onValidate = cancelTask)
+        server.onSendMessage(sendRequest("ask"), ctx)
+
+        assertFailsWith<A2AUnsupportedOperationException> {
+            server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = webhook.copy(id = "new")), ctx)
+        }
+
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(NEW_TASK_ID)).status.state)
+        assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
+        assertEquals(1, executor.executed.size)
+    }
+
+    @Test
+    fun testReplacedConfigIsKeptWhenConcurrentCancelRejectsFollowUp() = runTest(timeout = TEST_TIMEOUT) {
+        var cancels = false
+        val server = createTurnServer(onValidate = { if (cancels) cancelTask() })
+        server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
+        cancels = true
+        val resent = webhook.copy(token = "new-token")
+
+        assertFailsWith<A2AUnsupportedOperationException> {
+            server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = resent), ctx)
+        }
+
+        // The config with the task id existed before the follow-up, so it isn't deleted.
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(NEW_TASK_ID)).status.state)
+        assertEquals(listOf(resent.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)), pushStorage.getAll(NEW_TASK_ID))
+        assertEquals(1, executor.executed.size)
     }
 
     @Test

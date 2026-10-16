@@ -421,7 +421,8 @@ public open class A2AServer(
      *   [pushSender] is `null`.
      *
      * If a turn that would create a new task ends without a stored task (e.g. the agent replied with a [Message]),
-     * the inline config saved for it is deleted.
+     * the inline config saved for it is deleted. If a follow-up's turn doesn't start (e.g. the task became terminal
+     * meanwhile), its inline config is deleted unless it replaced an existing config with the same id.
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state, or when the turn ends.
      * Only in the last case is the agent's exception rethrown (if the task exists, it is marked failed instead and the
@@ -487,9 +488,9 @@ public open class A2AServer(
             val requestContext = newRequestContext(ctx, request, contextId, taskId, task)
 
             // Saved before the turn starts, so that the turn's first task event is pushed to it.
-            val isInlinePushConfigSaved = saveInlinePushConfig(request, taskId, ctx)
+            val inlinePushConfig = saveInlinePushConfig(request, taskId, ctx, isFollowUp = task != null)
             // Never for a follow-up: the task exists and may have other configs.
-            val cleansUpPushConfigs = isInlinePushConfigSaved && task == null
+            val cleansUpPushConfigs = inlinePushConfig != null && task == null
 
             try {
                 // The event view is registered before the agent starts, so no event is missed.
@@ -505,6 +506,9 @@ public open class A2AServer(
             } catch (e: Throwable) {
                 if (cleansUpPushConfigs) {
                     withContext(NonCancellable) { deletePushConfigsIfTaskAbsent(taskId) }
+                } else if (inlinePushConfig?.isNew == true) {
+                    // The follow-up's turn didn't start (e.g. a concurrent cancel made the task terminal).
+                    withContext(NonCancellable) { deleteInlinePushConfig(inlinePushConfig, request.tenant, ctx) }
                 }
                 throw e
             }
@@ -569,34 +573,53 @@ public open class A2AServer(
     }
 
     /**
+     * An inline push notification config saved by [saveInlinePushConfig].
+     *
+     * @property isNew whether no config with [id] existed for [taskId] before; only known for a follow-up, `false` otherwise.
+     */
+    private class SavedInlinePushConfig(val taskId: String, val id: String, val isNew: Boolean)
+
+    /**
      * Saves the inline push notification config of [request] for [taskId], see [onSendMessageCommon].
      *
-     * @return whether a config was saved.
+     * @return the saved config, or `null` if none was saved.
      */
     private suspend fun saveInlinePushConfig(
         request: SendMessageRequest,
         taskId: String,
         ctx: ServerCallContext,
-    ): Boolean {
-        val inline = request.configuration?.taskPushNotificationConfig ?: return false
+        isFollowUp: Boolean,
+    ): SavedInlinePushConfig? {
+        val inline = request.configuration?.taskPushNotificationConfig ?: return null
         val pushStorage = pushConfigStorage
 
         if (agentCard.capabilities.pushNotifications != true || pushStorage == null || pushSender == null) {
-            return false
+            return null
         }
 
         checkPushUrl(inline)
 
-        val config = inline.copy(
-            taskId = taskId,
-            id = inline.id?.takeIf { it.isNotBlank() } ?: taskId,
-            tenant = request.tenant,
-        )
+        val id = inline.id?.takeIf { it.isNotBlank() } ?: taskId
+        val config = inline.copy(taskId = taskId, id = id, tenant = request.tenant)
 
         validatePushNotificationConfig(config, ctx)
+
+        // A config this request replaces must not be deleted if the follow-up is rejected.
+        val isNew = isFollowUp && pushStorage.getAll(taskId).none { it.id == id }
         pushStorage.save(config, ctx)
 
-        return true
+        return SavedInlinePushConfig(taskId, id, isNew)
+    }
+
+    /** Deletes [config], saved for a follow-up whose turn didn't start. Failures are only logged. */
+    private suspend fun deleteInlinePushConfig(config: SavedInlinePushConfig, tenant: String?, ctx: ServerCallContext) {
+        val pushStorage = pushConfigStorage ?: return
+
+        try {
+            pushStorage.delete(DeleteTaskPushNotificationConfigRequest(config.taskId, config.id, tenant), ctx)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to delete push notification config '${config.id}' of task '${config.taskId}'" }
+        }
     }
 
     /** Deletes the push notification configs of [taskId] if the task was never stored. Failures are only logged. */
