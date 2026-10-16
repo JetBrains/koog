@@ -456,6 +456,18 @@ class A2AServerSendMessageTest {
     }
 
     @Test
+    fun testNewTaskTurnWithoutEventsIsInvalidAgentResponse() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(mapOf("silent" to AgentScript { _, _ -> }))
+
+        assertFailsWith<A2AInvalidAgentResponseException> { server.onSendMessage(request("silent"), ctx) }
+        val (failure, received) = server.onSendMessageStreaming(request("silent"), ctx).collectExpectingFailure()
+
+        assertEquals(A2AInvalidAgentResponseException::class, failure::class)
+        assertEquals(emptyList(), received)
+        assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    @Test
     fun testMessageReplyForExistingTaskIsInvalidAgentResponse() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(mapOf("ask" to askScript, "reply" to messageReplyScript))
         server.onSendMessage(request("ask"), ctx)

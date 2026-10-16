@@ -426,7 +426,8 @@ public open class A2AServer(
      * flow ends with that update). An event rejected as invalid (e.g. a status update before a [Task] for a new task,
      * or a [Message] for an existing task) is reported the same way as [A2AInvalidAgentResponseException], also when
      * the agent swallowed the failure and produced nothing else; for an existing task the requester gets the error
-     * instead of the failed update. After the flow ends or its collection stops, the agent keeps running in
+     * instead of the failed update. A turn of a new task that ends without any event and without a failure is also
+     * reported as [A2AInvalidAgentResponseException]. After the flow ends or its collection stops, the agent keeps running in
      * [coroutineScope] and its later failures are not reported to the requester.
      *
      * @param request The SendMessage request.
@@ -509,14 +510,14 @@ public open class A2AServer(
 
         // The view must not outlive this flow: an uncollected view blocks every delivery to the task.
         try {
-            emitTurnEvents(turn, includeTaskSnapshot)
+            emitTurnEvents(turn, includeTaskSnapshot, isNewTask = message.taskId == null)
         } finally {
             turn.cancelEvents()
         }
     }
 
     /** Emits the events of [turn] for [onSendMessageCommon]. */
-    private suspend fun FlowCollector<Event>.emitTurnEvents(turn: Turn, includeTaskSnapshot: Boolean) {
+    private suspend fun FlowCollector<Event>.emitTurnEvents(turn: Turn, includeTaskSnapshot: Boolean, isNewTask: Boolean) {
         val snapshot = if (includeTaskSnapshot) turn.taskSnapshot else null
         var isFirstEvent = true
         var isResponseComplete = false
@@ -550,14 +551,17 @@ public open class A2AServer(
             awaitAgent(turn)
         }
 
-        if (!isResponseComplete && !isRejected) {
-            if (turn.eventProcessor.rejection != null && isFirstEvent) {
+        if (!isResponseComplete && !isRejected && isFirstEvent) {
+            // The turn has ended without any event.
+            when {
                 // The agent sent an invalid event, ignored the failure, and produced nothing else.
-                throw A2AInvalidAgentResponseException("Agent sent an invalid event")
-            }
+                turn.eventProcessor.rejection != null ->
+                    throw A2AInvalidAgentResponseException("Agent sent an invalid event")
 
-            if (isFirstEvent && snapshot != null) {
-                emit(snapshot)
+                // Neither a Message nor a Task: there is nothing to respond with.
+                isNewTask -> throw A2AInvalidAgentResponseException("Agent ended the turn without sending any event")
+
+                snapshot != null -> emit(snapshot)
             }
         }
     }
