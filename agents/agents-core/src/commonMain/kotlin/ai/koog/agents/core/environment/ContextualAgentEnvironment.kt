@@ -1,14 +1,21 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.agent.tools.AgentContextAwareTool
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.tools.ToolCallMetadata
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.JSONObject
 import ai.koog.serialization.kotlinx.toKoogJSONObject
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -45,12 +52,65 @@ public class ContextualAgentEnvironment(
         private val logger = KotlinLogging.logger { }
     }
 
+    /**
+     * Executes graph tool calls with independent execution paths and LLM contexts.
+     * Storage and the state manager remain shared with the calling graph.
+     */
+    override suspend fun executeTools(toolCalls: List<MessagePart.Tool.Call>): List<ReceivedToolResult> =
+        executeTools(toolCalls, ToolCallMetadata.EMPTY)
+
+    /**
+     * Executes graph tool calls in isolated contexts, passing [metadata] to each call.
+     * Non-graph contexts retain the default batch execution behavior.
+     */
+    @OptIn(DetachedPromptExecutorAPI::class)
+    override suspend fun executeTools(
+        toolCalls: List<MessagePart.Tool.Call>,
+        metadata: ToolCallMetadata,
+    ): List<ReceivedToolResult> {
+        val graphContext = context as? AIAgentGraphContextBase
+            ?: return super.executeTools(toolCalls, metadata)
+
+        // Prepare every context before starting any tool, so siblings all inherit the caller's path.
+        val environments = toolCalls.map {
+            val toolContext = graphContext.copy()
+            val toolEnvironment = ContextualAgentEnvironment(environment, toolContext)
+            val executor = toolContext.llm.promptExecutor
+            toolContext.replace(
+                toolContext.copy(
+                    environment = toolEnvironment,
+                    llm = toolContext.llm.copy(
+                        environment = toolEnvironment,
+                        promptExecutor = if (executor is ContextualPromptExecutor) {
+                            executor.withContext(toolContext)
+                        } else {
+                            executor
+                        },
+                    ),
+                )
+            )
+            toolEnvironment
+        }
+
+        return supervisorScope {
+            toolCalls.zip(environments).map { (toolCall, toolEnvironment) ->
+                async { toolEnvironment.executeTool(toolCall, metadata, scopeExecutionPath = true) }
+            }.awaitAll()
+        }
+    }
+
     override suspend fun executeTool(toolCall: MessagePart.Tool.Call): ReceivedToolResult =
         executeTool(toolCall, ToolCallMetadata.EMPTY)
 
     override suspend fun executeTool(
         toolCall: MessagePart.Tool.Call,
         metadata: ToolCallMetadata,
+    ): ReceivedToolResult = executeTool(toolCall, metadata, scopeExecutionPath = false)
+
+    private suspend fun executeTool(
+        toolCall: MessagePart.Tool.Call,
+        metadata: ToolCallMetadata,
+        scopeExecutionPath: Boolean,
     ): ReceivedToolResult {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
@@ -126,7 +186,15 @@ public class ContextualAgentEnvironment(
         val mergedMetadata = featureMetadata + metadata +
             ToolCallMetadata.of(AgentContextAwareTool.AgentContextKey to context)
 
-        val toolResult = environment.executeTool(toolCall, mergedMetadata)
+        // The tool span uses this event ID. Its subgraph must live beneath that unique path,
+        // otherwise concurrent invocations of the same subgraph have indistinguishable paths.
+        val toolResult = if (scopeExecutionPath) {
+            context.with(AgentExecutionInfo(context.executionInfo, eventId)) { _, _ ->
+                environment.executeTool(toolCall, mergedMetadata)
+            }
+        } else {
+            environment.executeTool(toolCall, mergedMetadata)
+        }
         processToolResult(eventId, context.executionInfo, toolResult)
 
         logger.trace {
