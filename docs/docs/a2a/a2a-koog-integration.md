@@ -43,7 +43,7 @@ dependencies {
     implementation("ai.koog:a2a-transport-client-jsonrpc-http:$koogVersion")
 
     // Ktor client engine (choose one that fits your needs)
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-engine-defaults:$ktorVersion")
 }
 ```
 

@@ -2,7 +2,7 @@
 kotlin = "2.3.10"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
-ktor3 = "3.2.2"
+ktor3 = "3.6.0"
 logback = "1.5.13"
 mockk = "1.13.8"
 opentelemetry = "1.51.0"
@@ -17,7 +17,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
+ktor-client-engine-defaults = { module = "io.ktor:ktor-client-engine-defaults" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
