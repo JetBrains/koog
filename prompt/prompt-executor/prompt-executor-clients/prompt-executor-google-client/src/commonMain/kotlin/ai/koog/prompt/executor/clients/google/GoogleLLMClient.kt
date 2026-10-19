@@ -27,6 +27,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleTool
 import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleUsageMetadata
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -198,9 +199,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
                         totalTokensCount = it.totalTokenCount,
                         inputTokensCount = it.promptTokenCount,
                         outputTokensCount = it.candidatesTokenCount,
-                        metadata = it.cachedContentTokenCount?.let { cached ->
-                            buildJsonObject { put("cachedContentTokenCount", cached) }
-                        },
+                        metadata = it.tokenDetailsMetadata(),
                     )
                 }
                 response.candidates.firstOrNull()?.let { candidate ->
@@ -775,16 +774,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
         val inputTokensCount = response.usageMetadata?.promptTokenCount
         val outputTokensCount = response.usageMetadata?.candidatesTokenCount
         val totalTokensCount = response.usageMetadata?.totalTokenCount
-        val cachedContentTokenCount = response.usageMetadata?.cachedContentTokenCount
 
         val metaInfo = ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokensCount,
             inputTokensCount = inputTokensCount,
             outputTokensCount = outputTokensCount,
-            metadata = cachedContentTokenCount?.let { cached ->
-                buildJsonObject { put("cachedContentTokenCount", cached) }
-            },
+            metadata = response.usageMetadata?.tokenDetailsMetadata(),
         )
 
         return response.candidates.map { candidate ->
@@ -929,5 +925,13 @@ public open class GoogleLLMClient @JvmOverloads constructor(
 
     override fun close() {
         httpClient.close()
+    }
+}
+
+private fun GoogleUsageMetadata.tokenDetailsMetadata(): JsonObject? {
+    if (cachedContentTokenCount == null && thoughtsTokenCount == null) return null
+    return buildJsonObject {
+        cachedContentTokenCount?.let { put("cachedContentTokenCount", it) }
+        thoughtsTokenCount?.let { put("thoughtsTokenCount", it) }
     }
 }
