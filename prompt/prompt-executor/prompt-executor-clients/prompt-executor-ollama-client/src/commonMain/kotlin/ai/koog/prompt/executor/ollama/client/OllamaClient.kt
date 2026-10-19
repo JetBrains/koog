@@ -193,21 +193,6 @@ public class OllamaClient @JvmOverloads constructor(
     ): Message.Assistant {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val ollamaTools = if (tools.isNotEmpty()) {
-            tools.map {
-                OllamaToolDTO(
-                    type = "function",
-                    function = Definition(
-                        name = it.name,
-                        description = it.description,
-                        parameters = toolDescriptorConverter.generate(it)
-                    )
-                )
-            }
-        } else {
-            null
-        }
-
         val params = prompt.params.toOllamaChatParams()
 
         val request = ollamaJson.encodeToString(
@@ -215,7 +200,7 @@ public class OllamaClient @JvmOverloads constructor(
             OllamaChatRequestDTO(
                 model = model.id,
                 messages = prompt.toOllamaChatMessages(model),
-                tools = ollamaTools,
+                tools = tools.toOllamaTools(),
                 format = prompt.extractOllamaJsonFormat(),
                 options = extractOllamaOptions(prompt, model),
                 stream = false,
@@ -303,6 +288,7 @@ public class OllamaClient @JvmOverloads constructor(
             OllamaChatRequestDTO(
                 model = model.id,
                 messages = prompt.toOllamaChatMessages(model),
+                tools = tools.toOllamaTools(),
                 options = extractOllamaOptions(prompt, model),
                 stream = true,
                 additionalProperties = params.additionalProperties,
@@ -341,6 +327,21 @@ public class OllamaClient @JvmOverloads constructor(
             }
         }
     }
+
+    /**
+     * Converts tool descriptors to the chat API's tool definitions, or null when there are none.
+     */
+    private fun List<ToolDescriptor>.toOllamaTools(): List<OllamaToolDTO>? =
+        takeIf { it.isNotEmpty() }?.map {
+            OllamaToolDTO(
+                type = "function",
+                function = Definition(
+                    name = it.name,
+                    description = it.description,
+                    parameters = toolDescriptorConverter.generate(it)
+                )
+            )
+        }
 
     /**
      * Prepare Ollama chat request options from the given prompt and model.
