@@ -20,7 +20,9 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.put
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
@@ -33,6 +35,22 @@ class LangfuseSpanAdapterTest {
     enum class SignatureOnlyReasoning(val content: List<String>) {
         GOOGLE(emptyList()),
         ANTHROPIC(listOf("")),
+    }
+
+    /**
+     * Token counts a response reports in its metadata, with the usage details Langfuse should receive.
+     * Anthropic reports its cache reads under `cacheReadInputTokens` and already leaves them out of the input count.
+     */
+    enum class TokenDetails(
+        val cached: Int?,
+        val reasoning: Int?,
+        val expectedUsageDetails: String?,
+        val anthropicCacheRead: Int? = null,
+    ) {
+        CACHED_AND_REASONING(800, 200, """{"input": 200, "input_cached_tokens": 800, "output": 50, "output_reasoning": 200}"""),
+        REASONING_ONLY(null, 200, """{"input": 1000, "output": 50, "output_reasoning": 200}"""),
+        CACHED_ONLY(800, null, """{"input": 200, "input_cached_tokens": 800, "output": 50}"""),
+        ANTHROPIC_CACHE_READ_ONLY(null, null, null, anthropicCacheRead = 300),
     }
 
     @Test
@@ -409,6 +427,20 @@ class LangfuseSpanAdapterTest {
         assertEquals(61, Json.parseToJsonElement(prompt).jsonArray.size)
     }
 
+    @ParameterizedTest
+    @EnumSource(TokenDetails::class)
+    fun testInferenceSpanReportsCachedAndReasoningTokensAsUsageDetails(details: TokenDetails) {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+        val answer = assistantWithUsage(1000, 50, details.cached, details.reasoning, details.anthropicCacheRead)
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(answer)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val usageDetails = inferenceSpan.attributes.firstOrNull { it.key == "langfuse.observation.usage_details" }?.value as String?
+        assertEquals(details.expectedUsageDetails?.let(Json::parseToJsonElement), usageDetails?.let(Json::parseToJsonElement))
+    }
+
     @Test
     fun `onBeforeSpanStarted adds langgraph metadata to node execute spans`() {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
@@ -554,6 +586,21 @@ class LangfuseSpanAdapterTest {
 
         return inferenceSpan
     }
+
+    private fun assistantWithUsage(inputTokens: Int, outputTokens: Int, cached: Int?, reasoning: Int?, anthropicCacheRead: Int?) =
+        Message.Assistant(
+            content = "answer",
+            metaInfo = ResponseMetaInfo.Empty.copy(
+                inputTokensCount = inputTokens,
+                outputTokensCount = outputTokens,
+                metadata = buildJsonObject {
+                    cached?.let { put("cachedContentTokenCount", it) }
+                    reasoning?.let { put("thoughtsTokenCount", it) }
+                    anthropicCacheRead?.let { put("cacheReadInputTokens", it) }
+                }.takeIf { it.isNotEmpty() },
+            ),
+            finishReason = "stop",
+        )
 
     private fun createTestModel(provider: MockLLMProvider): LLModel =
         LLModel(provider, "test-model", emptyList(), contextLength = 8192)
