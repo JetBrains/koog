@@ -5,8 +5,11 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -436,6 +439,54 @@ class OllamaThinkingFeatureTest {
             ).toList()
         }
         assertNull(request.think, "Request should not have think parameter set")
+    }
+
+    @Test
+    fun testExecuteSendsAssistantThinkingBack() = runTest {
+        val request = requestFromMockServer {
+            execute(
+                prompt = prompt("test") {
+                    user("What is the weather in London?")
+                    message(
+                        Message.Assistant(
+                            parts = listOf(
+                                MessagePart.Reasoning("I need the weather tool."),
+                                MessagePart.Tool.Call(id = "call-1", tool = "get_weather", args = """{"city":"London"}""")
+                            ),
+                            metaInfo = ResponseMetaInfo(timestamp = KoogClock.System.now())
+                        )
+                    )
+                },
+                model = OllamaModels.Meta.LLAMA_3_2
+            )
+        }
+
+        val assistant = request.messages.single { it.role == "assistant" }
+        assertEquals("I need the weather tool.", assistant.thinking)
+    }
+
+    @Test
+    fun testExecuteJoinsSeveralThinkingPartsWithNewlines() = runTest {
+        val request = requestFromMockServer {
+            execute(
+                prompt = prompt("test") {
+                    message(
+                        Message.Assistant(
+                            parts = listOf(
+                                MessagePart.Reasoning(listOf("First thought.", "Second thought.")),
+                                MessagePart.Reasoning("Third thought."),
+                                MessagePart.Text("Answer")
+                            ),
+                            metaInfo = ResponseMetaInfo(timestamp = KoogClock.System.now())
+                        )
+                    )
+                },
+                model = OllamaModels.Meta.LLAMA_3_2
+            )
+        }
+
+        val assistant = request.messages.single { it.role == "assistant" }
+        assertEquals("First thought.\nSecond thought.\nThird thought.", assistant.thinking)
     }
 
     @Test
