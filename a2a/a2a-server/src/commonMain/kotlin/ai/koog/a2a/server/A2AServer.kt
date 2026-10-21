@@ -52,8 +52,6 @@ import ai.koog.a2a.server.turn.TurnOutcome
 import ai.koog.a2a.server.turn.UuidIdGenerator
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
-import ai.koog.agents.lock.KeyedMutex
-import ai.koog.agents.lock.withLock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -351,12 +349,6 @@ public open class A2AServer(
     }
 
     /**
-     * Per-task lock that serializes turns: a new turn starts only while holding it, after the previous turn of the
-     * task has ended. Independent of the stream lock inside [TurnManager], which only orders event persisting and delivery.
-     */
-    protected val tasksMutex: KeyedMutex<String> = KeyedMutex()
-
-    /**
      * Manages [Turn]s and per-task event streams. Must use the same [taskStorage], [pushConfigStorage] and
      * [coroutineScope] as this server.
      */
@@ -393,8 +385,9 @@ public open class A2AServer(
      * Common logic for handling incoming messages: validates the request, starts a turn of the agent (one
      * [AgentExecutor.execute] call), and streams the events of that turn.
      *
-     * Validation runs, and the turn starts, only after the previous turn of the same task has ended. Errors are
-     * thrown before the first event is emitted:
+     * The turn starts only after the previous turn of the same task has ended, and the referenced task is validated
+     * then; the message and the inline push notification config are validated before waiting. Errors are thrown
+     * before the first event is emitted:
      * - [A2AInvalidParamsException] if the message has no parts, `historyLength` is negative, or [Message.contextId]
      *   differs from the referenced task's context id;
      * - [A2ATaskNotFoundException] if [Message.taskId] is set but the task isn't visible to the caller, see [TaskStorage.get];
@@ -414,7 +407,7 @@ public open class A2AServer(
      *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications], or [pushConfigStorage] or
      *   [pushSender] is `null`.
      *
-     * If the turn doesn't start (e.g. the task became terminal meanwhile), the inline config isn't saved. If a turn
+     * If the turn doesn't start (e.g. the referenced task is terminal), the inline config isn't saved. If a turn
      * that would create a new task ends without a stored task (e.g. the agent replied with a [Message], or never ran
      * because [coroutineScope] was cancelled), the inline config saved for it is deleted.
      *
@@ -456,44 +449,17 @@ public open class A2AServer(
         validateHistoryLength(request.configuration?.historyLength)
 
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
+        // Used only if the turn's task has no context id, e.g. a new task.
+        val defaultContextId = message.contextId ?: idGenerator.generateContextId(message)
+        val inlinePushConfig = resolveInlinePushConfig(request, taskId, ctx)
 
-        val turn = tasksMutex.withLock(taskId) {
-            // Wait for the running turn of the same task, if any.
-            turnManager.getTurn(taskId)?.join()
-
-            // The agent gets the referenced task as stored at turn start, so read it in full.
-            val task: Task? = message.taskId?.let { referencedTaskId ->
-                val lookup = GetTaskRequest(id = referencedTaskId, tenant = request.tenant)
-                val task = taskStorage.get(lookup, ctx)
-                    ?: throw A2ATaskNotFoundException("Task '$referencedTaskId' not found")
-
-                if (message.contextId != null && task.contextId != null && message.contextId != task.contextId) {
-                    throw A2AInvalidParamsException(
-                        "Message contextId '${message.contextId}' doesn't match contextId '${task.contextId}' of task '$referencedTaskId'"
-                    )
-                }
-
-                if (task.status.state.terminal) {
-                    throw A2AUnsupportedOperationException(
-                        "Task '$referencedTaskId' is in terminal state ${task.status.state} and can't accept messages"
-                    )
-                }
-
-                task
-            }
-
-            val contextId = task?.contextId
-                ?: message.contextId
-                ?: idGenerator.generateContextId(message)
-
-            val requestContext = newRequestContext(ctx, request, contextId, taskId, task)
-
-            val inlinePushConfig = resolveInlinePushConfig(request, taskId, ctx)
-
-            // The event view is registered, and the inline config saved, before the agent starts, so no event is missed.
-            turnManager.startTurn(requestContext, inlinePushConfig) { eventProcessor ->
-                agentExecutor.execute(requestContext, eventProcessor)
-            }
+        /*
+         Waits for the previous turn of the task, then validates a referenced task, saves the inline config, registers
+         the event view, and starts the agent, so no event is missed. The agent gets the referenced task as read then.
+         */
+        val turn = turnManager.startTurn(request, ctx, taskId, defaultContextId, inlinePushConfig) { task, eventProcessor ->
+            val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
+            agentExecutor.execute(requestContext, eventProcessor)
         }
 
         // The view must not outlive this flow: an uncollected view blocks every delivery to the task.
@@ -607,9 +573,9 @@ public open class A2AServer(
      *   terminal or interrupted ([TaskState.TASK_STATE_INPUT_REQUIRED], [TaskState.TASK_STATE_AUTH_REQUIRED]), or when
      *   the turn ends, whichever comes first.
      *
-     * A task result is read from [taskStorage] at that point, with the history limited to
-     * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all artifacts. The agent keeps
-     * running in [coroutineScope] after the response is returned.
+     * A task result is read from [taskStorage] at that point like GetTask (with [ctx] and the request's tenant), with
+     * the history limited to [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all
+     * artifacts. The agent keeps running in [coroutineScope] after the response is returned.
      *
      * An inline push notification config is saved for the turn's task, see [onSendMessageCommon].
      */
@@ -644,12 +610,10 @@ public open class A2AServer(
             ?: request.message.taskId
             ?: throw IllegalStateException("Can't get response from the agent: event stream is empty")
 
-        return taskStorage
-            .get(
-                taskId,
-                historyLength = messageConfiguration?.historyLength,
-                includeArtifacts = true
-            )
+        // Read for the caller, like GetTask.
+        val lookup = GetTaskRequest(id = taskId, historyLength = messageConfiguration?.historyLength, tenant = request.tenant)
+
+        return taskStorage.get(lookup, ctx)
             ?: throw A2ATaskNotFoundException("Task '$taskId' not found after the agent execution")
     }
 
@@ -747,8 +711,8 @@ public open class A2AServer(
         /*
          Get a processor bound to the task's event stream, so that cancellation events reach every stream of the task. If
          a turn is running, it's the turn's processor, and the turn can't end until we're done. Otherwise, no turn can
-         start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. The task
-         lock isn't taken: a follow-up holding it may be waiting for the very turn being cancelled to end.
+         start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. Unlike
+         startTurn, this doesn't wait for the previous turn to end: it may be the very turn being cancelled.
          */
         return turnManager.withTaskProcessor(
             taskId,

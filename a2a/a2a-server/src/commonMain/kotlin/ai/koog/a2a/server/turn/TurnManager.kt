@@ -1,6 +1,7 @@
 package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.annotations.InternalA2AApi
+import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Event
@@ -14,7 +15,9 @@ import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationDispatcher
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.TaskStorage
+import ai.koog.a2a.server.tasks.project
 import ai.koog.a2a.transport.ServerCallContext
+import ai.koog.agents.lock.KeyedMutex
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -52,27 +55,29 @@ import kotlinx.coroutines.withContext
  *
  * ## Locking
  *
- * - **Turn serialization** is the caller's responsibility: [startTurn] fails if a turn for the same task is already
- *   running, so callers must hold a per-task lock while waiting for [getTurn]`(taskId)?.`[join][Turn.join] and
- *   calling [startTurn], as [ai.koog.a2a.server.A2AServer] does.
+ * - The per-task **turn slot** serializes turns: [startTurn] waits until the previous turn of the same task has ended
+ *   (including its teardown), so turns of a task never overlap and start in the order their [startTurn] calls began to
+ *   wait. The slot is held from the moment a turn is admitted until the turn has ended. Waiting for it holds no other
+ *   lock, and a caller cancelled while waiting just leaves the queue. Only [startTurn] takes it.
  * - The **stream lock** is internal: each task stream persists an event, delivers it to every stream of the task, and
  *   updates its subscriber set under one per-task lock. This gives all streams of a task the same events in the same
  *   order, and makes [subscribe]'s snapshot and registration atomic.
  * - The per-task [TaskEventStream.processorGate] (turn gate) linearizes turn start, turn end, and [withTaskProcessor]
  *   blocks (cancellation): a block either sees the running turn (which can't end while the block runs), or sees no
- *   turn, and then no turn starts until the block is done. A turn of an existing task that would start after a block
- *   left the task in a terminal state is rejected.
+ *   turn, and then no turn starts until the block is done. [startTurn] reads and checks a continued task under the
+ *   gate, so a block that left the task in a terminal state makes the turn fail.
  *
- * Lock order: the caller's per-task task lock (see [ai.koog.a2a.server.A2AServer.tasksMutex]), then the turn gate,
- * then either the registry lock or the stream lock. The task lock is never acquired while holding the gate:
- * [withTaskProcessor] blocks (e.g. [ai.koog.a2a.server.A2AServer.onCancelTask]) don't take it, since a caller holding
- * it may be waiting for a running turn to end ([Turn.join]), and a turn can't end without the gate. The registry lock
- * and the stream lock are never nested: the registry lock is held only for short non-suspending bookkeeping and never
+ * Lock order: the turn slot, then the turn gate, then either the registry lock or the stream lock. The slot is never
+ * acquired while holding another lock. [withTaskProcessor] and [subscribe] don't take it: a [startTurn] holding or
+ * waiting for it may be waiting for the very turn a [withTaskProcessor] block (e.g.
+ * [ai.koog.a2a.server.A2AServer.onCancelTask]) must end, and a turn can't end without the gate. The registry lock and
+ * the stream lock are never nested: the registry lock is held only for short non-suspending bookkeeping and never
  * while acquiring a stream lock, so a stalled task can't block other tasks. The stream lock may be followed by the push
  * queue lock, a leaf lock held only for queue bookkeeping.
  *
- * Storage I/O happens under the gate: task reads and writes of the task stream, the task read of [withTaskProcessor],
- * and the save of a turn's inline push notification config in [startTurn]. A slow storage delays only turns and [withTaskProcessor] blocks of the same task.
+ * Storage I/O happens under the gate: task reads and writes of the task stream, the task reads of [startTurn] and
+ * [withTaskProcessor], and the save of a turn's inline push notification config in [startTurn]. A slow storage delays
+ * only turns and [withTaskProcessor] blocks of the same task.
  *
  * ## Back-pressure
  *
@@ -139,6 +144,12 @@ public class TurnManager(
             null
         }
 
+    /**
+     * The turn slots by task id: locked by [startTurn] and unlocked when the turn has ended (by [monitorTurn]), or when
+     * it doesn't start. Fair, so waiting turns start in FIFO order.
+     */
+    private val turnSlots = KeyedMutex<String>()
+
     private class StreamEntry(val stream: TaskEventStream) {
         /** Number of turns, [withTaskProcessor] blocks, and subscribers using the stream. */
         var holders: Int = 0
@@ -184,23 +195,29 @@ public class TurnManager(
     private val shutdownSignal = Job()
 
     /**
-     * Starts a new turn for [RequestContext.taskId]: runs [block] in `coroutineScope` with a [TurnEventProcessor]
+     * Starts a new turn of task [taskId] for [request]: runs [block] in `coroutineScope` with a [TurnEventProcessor]
      * bound to the task stream.
      *
+     * First waits until the previous turn of the task, if any, has ended; turns of a task waiting here start in the
+     * order they began to wait, see "Locking" above. Cancelling the caller while it waits starts nothing.
+     *
      * The returned [Turn.events] is registered before [block] starts, so it receives every event of the turn.
-     * If the turn continues an existing task ([RequestContext.task] is not `null`):
+     * If the turn continues an existing task ([request]'s [ai.koog.a2a.model.Message.taskId] is set):
+     * - the task is read with [TaskStorage.get] (with [ctx] and the request's tenant) and checked, under the turn gate,
+     *   so no event of the task is persisted between that read and the turn's first event;
+     * - [block] receives the task as read (full history, all artifacts), and the turn keeps it as its task snapshot,
+     *   with the history limited to the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength];
      * - the processor starts in task mode, see [TurnEventProcessor];
      * - the request's user message is persisted when the agent sends its first status or artifact update, see
-     *   "History" above;
-     * - the stored task is read atomically with the registration of [Turn.events] (history limited to the request's
-     *   [ai.koog.a2a.model.SendMessageConfiguration.historyLength], all artifacts) and kept as the turn's task snapshot;
-     * - if the stored task is terminal by then (e.g. cancelled after the caller validated it), the turn isn't started.
+     *   "History" above.
      *
-     * [inlinePushConfig] is saved to [pushConfigStorage] once the turn is sure to start (after the terminal check), and
-     * before [block] starts, so the turn's first task event is pushed to it. If the turn doesn't start, it isn't saved.
-     * If the turn creates no task ([RequestContext.task] is `null` and no task is stored when the turn ends, e.g. the
-     * agent replied with a [ai.koog.a2a.model.Message] or never ran because `coroutineScope` was cancelled), every push
-     * notification config of the task is deleted when the turn ends.
+     * The turn's context id is the continued task's, else [defaultContextId].
+     *
+     * [inlinePushConfig] is saved to [pushConfigStorage] once the turn is sure to start (after the checks), and before
+     * [block] starts, so the turn's first task event is pushed to it. If the turn doesn't start, it isn't saved. If the
+     * turn creates no task (it is for a new task and no task is stored when the turn ends, e.g. the agent replied with
+     * a [ai.koog.a2a.model.Message] or never ran because `coroutineScope` was cancelled), every push notification
+     * config of the task is deleted when the turn ends.
      *
      * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
      * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
@@ -208,125 +225,156 @@ public class TurnManager(
      * [ai.koog.a2a.exceptions.A2AException] thrown before the turn published any event leaves the task unchanged
      * instead. Then the processor is closed, [Turn.events] completes, and the turn is removed.
      *
-     * Turns of the same task must be serialized by the caller, see [TurnManager].
-     *
-     * @param context The request context of the turn; its [RequestContext.contextId] and [RequestContext.taskId] are
-     * enforced by the processor.
+     * @param request The SendMessage request of the turn.
+     * @param ctx The context of the call, used to read a continued task and to save [inlinePushConfig].
+     * @param taskId The id of the turn's task: [request]'s [ai.koog.a2a.model.Message.taskId] if set, else the id
+     * of the task the turn may create.
+     * @param defaultContextId The context id of the turn if the task has none, e.g. a new task.
      * @param inlinePushConfig The resolved and validated push notification config of the turn's task to save, if any;
-     * ignored without [pushConfigStorage]. Saved with [RequestContext.callContext].
-     * @param block The agent logic of the turn.
+     * ignored without [pushConfigStorage].
+     * @param block The agent logic of the turn. Receives the continued task, or `null` for a new task, and the
+     * processor, whose [TurnEventProcessor.contextId] and [TurnEventProcessor.taskId] are those of the turn.
      * @return The started turn.
-     * @throws IllegalStateException if a turn for the same task is already running.
-     * @throws A2AUnsupportedOperationException if the turn continues an existing task that is in a terminal state.
+     * @throws A2ATaskNotFoundException if the continued task doesn't exist (or isn't visible to the caller).
+     * @throws A2AInvalidParamsException if the message's context id differs from the continued task's.
+     * @throws A2AUnsupportedOperationException if the continued task is in a terminal state.
      */
     @InternalA2AApi
     public suspend fun startTurn(
-        context: RequestContext<SendMessageRequest>,
+        request: SendMessageRequest,
+        ctx: ServerCallContext,
+        taskId: String,
+        defaultContextId: String,
         inlinePushConfig: TaskPushNotificationConfig? = null,
-        block: suspend (TurnEventProcessor) -> Unit,
+        block: suspend (task: Task?, processor: TurnEventProcessor) -> Unit,
     ): Turn {
-        val taskId = context.taskId
-        val contextId = context.contextId
-        val taskExists = context.task != null
+        val message = request.message
+        require(message.taskId == null || message.taskId == taskId) {
+            "taskId '$taskId' differs from the message's taskId '${message.taskId}'"
+        }
+
+        val isFollowUp = message.taskId != null
         val pushStorage = pushConfigStorage
         val savesInlinePushConfig = inlinePushConfig != null && pushStorage != null
 
-        // Pinned until the turn has ended (released by monitorTurn), or right away if the turn doesn't start.
-        val stream = acquire(taskId)
-        var view: ReceiveChannel<Event>? = null
+        // Held until the turn has ended (released by monitorTurn), or released right away if the turn doesn't start.
+        turnSlots.lock(taskId)
         var started = false
 
         try {
-            /*
-             Under the gate no withTaskProcessor block runs, and the turn becomes visible only after its view is
-             registered, so a block either finds the turn with its view in place or runs entirely before the turn
-             starts (then a terminal state it forced is in the snapshot). The registry lock isn't held in openTurnView,
-             which waits for the stream lock.
-             */
-            return stream.processorGate.withLock {
-                val turnId = registryMutex.withLock {
-                    check(taskId !in turns) {
-                        "Turn for taskId '$taskId' already runs."
-                    }
+            // Pinned like the slot.
+            val stream = acquire(taskId)
+            var view: ReceiveChannel<Event>? = null
 
-                    nextTurnId++
-                }
+            try {
+                /*
+                 Under the gate no withTaskProcessor block runs, and holding the slot no other turn of the task runs, so
+                 nothing publishes to the task until this turn's agent does: the task read here is the snapshot as of
+                 right before the turn's first event. The turn becomes visible only after its view is registered, so a
+                 block either finds the turn with its view in place or runs entirely before this read. The registry lock
+                 isn't held in openTurnView, which waits for the stream lock.
+                 */
+                return stream.processorGate.withLock {
+                    val task = if (isFollowUp) getFollowUpTask(request, ctx, taskId) else null
+                    val contextId = task?.contextId ?: defaultContextId
+                    val turnId = registryMutex.withLock { nextTurnId++ }
 
-                val (snapshot, channel) = if (taskExists) {
-                    stream.openTurnView(turnId, historyLength = context.params.configuration?.historyLength)
-                } else {
-                    null to stream.openTurnView(turnId)
-                }
-                view = channel
+                    val channel = stream.openTurnView(turnId)
+                    view = channel
 
-                if (snapshot != null && snapshot.status.state.terminal) {
-                    throw A2AUnsupportedOperationException(
-                        "Task '$taskId' is in terminal state ${snapshot.status.state} and can't accept messages"
-                    )
-                }
+                    // The view is registered: from here on, the turn starts even if the caller is cancelled.
+                    withContext(NonCancellable) {
+                        // If this fails, the turn doesn't start and the config may not be saved; nothing to undo.
+                        if (savesInlinePushConfig) pushStorage.save(inlinePushConfig, ctx)
 
-                // The view is registered: from here on, the turn starts even if the caller is cancelled.
-                withContext(NonCancellable) {
-                    // If this fails, the turn doesn't start and the config may not be saved; nothing to undo.
-                    if (savesInlinePushConfig) pushStorage.save(inlinePushConfig, context.callContext)
-
-                    val outcomeRecorder = TurnOutcomeRecorder()
-                    val processor = TurnEventProcessor(
-                        contextId = contextId,
-                        taskId = taskId,
-                        stream = stream,
-                        turnId = turnId,
-                        taskExists = taskExists,
-                        userMessage = context.params.message,
-                        onRejected = outcomeRecorder::onRejected,
-                        onPublished = outcomeRecorder::onPublished,
-                    )
-                    val agentJob = scope.async { runAgent(processor, block) }
-
-                    /*
-                     Ends the turn under the gate, which is held until the turn is registered below, so it can be launched
-                     before that. ATOMIC: if the scope is already cancelled (server shutdown), the agent job never runs,
-                     but the monitor still does and ends the turn, so the view completes and join() doesn't hang.
-                     */
-                    @OptIn(DelicateCoroutinesApi::class)
-                    val monitor = scope.launch(start = CoroutineStart.ATOMIC) {
-                        monitorTurn(
-                            agentJob,
-                            processor,
-                            outcomeRecorder,
-                            taskId,
-                            contextId,
-                            stream,
-                            turnId,
-                            deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !taskExists,
+                        val outcomeRecorder = TurnOutcomeRecorder()
+                        val processor = TurnEventProcessor(
+                            contextId = contextId,
+                            taskId = taskId,
+                            stream = stream,
+                            turnId = turnId,
+                            taskExists = isFollowUp,
+                            userMessage = message,
+                            onRejected = outcomeRecorder::onRejected,
+                            onPublished = outcomeRecorder::onPublished,
                         )
+                        val agentJob = scope.async { runAgent(processor) { block(task, it) } }
+
+                        /*
+                         Ends the turn under the gate, which is held until the turn is registered below, so it can be
+                         launched before that. ATOMIC: if the scope is already cancelled (server shutdown), the agent job
+                         never runs, but the monitor still does and ends the turn, so the view completes, join() doesn't
+                         hang, and the slot is released.
+                         */
+                        @OptIn(DelicateCoroutinesApi::class)
+                        val monitor = scope.launch(start = CoroutineStart.ATOMIC) {
+                            monitorTurn(
+                                agentJob,
+                                processor,
+                                outcomeRecorder,
+                                taskId,
+                                contextId,
+                                stream,
+                                turnId,
+                                deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !isFollowUp,
+                            )
+                        }
+                        // The monitor releases the stream and the slot from here on.
+                        started = true
+
+                        val turn = Turn(
+                            taskId = taskId,
+                            contextId = contextId,
+                            agentJob = agentJob,
+                            eventProcessor = processor,
+                            view = channel,
+                            monitor = monitor,
+                            taskSnapshot = task?.project(request.configuration?.historyLength, includeArtifacts = true),
+                            outcome = outcomeRecorder.outcome,
+                        )
+
+                        registryMutex.withLock { turns[taskId] = turn }
+
+                        turn
                     }
-                    // The monitor releases the stream from here on.
-                    started = true
-
-                    val turn = Turn(
-                        taskId = taskId,
-                        contextId = contextId,
-                        agentJob = agentJob,
-                        eventProcessor = processor,
-                        view = channel,
-                        monitor = monitor,
-                        taskSnapshot = snapshot,
-                        outcome = outcomeRecorder.outcome,
-                    )
-
-                    registryMutex.withLock { turns[taskId] = turn }
-
-                    turn
                 }
+            } catch (e: Throwable) {
+                // Nobody collects the view: either the turn didn't start, or the caller can't get it any more.
+                view?.let(stream::unsubscribe)
+                throw e
+            } finally {
+                if (!started) release(stream)
             }
-        } catch (e: Throwable) {
-            // The turn didn't start (once it has, nothing here throws, not even on cancellation): nobody collects the view.
-            view?.let(stream::unsubscribe)
-            throw e
         } finally {
-            if (!started) release(stream)
+            if (!started) turnSlots.unlock(taskId)
         }
+    }
+
+    /**
+     * Reads the task continued by [request] for [startTurn] and checks that it can take a new turn.
+     *
+     * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller).
+     * @throws A2AInvalidParamsException if the message's context id differs from the task's.
+     * @throws A2AUnsupportedOperationException if the task is in a terminal state.
+     */
+    private suspend fun getFollowUpTask(request: SendMessageRequest, ctx: ServerCallContext, taskId: String): Task {
+        val messageContextId = request.message.contextId
+        val task = taskStorage.get(GetTaskRequest(id = taskId, tenant = request.tenant), ctx)
+            ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+
+        if (messageContextId != null && task.contextId != null && messageContextId != task.contextId) {
+            throw A2AInvalidParamsException(
+                "Message contextId '$messageContextId' doesn't match contextId '${task.contextId}' of task '$taskId'"
+            )
+        }
+
+        if (task.status.state.terminal) {
+            throw A2AUnsupportedOperationException(
+                "Task '$taskId' is in terminal state ${task.status.state} and can't accept messages"
+            )
+        }
+
+        return task
     }
 
     /**
@@ -392,9 +440,14 @@ public class TurnManager(
                         }
                     }
                 } finally {
-                    // After the turn has ended nothing can create the task anymore; Turn.join() still waits for this.
-                    if (deletesPushConfigsIfTaskAbsent) deletePushConfigsIfTaskAbsent(taskId)
-                    release(stream)
+                    try {
+                        // After the turn has ended nothing can create the task anymore; Turn.join() still waits for this.
+                        if (deletesPushConfigsIfTaskAbsent) deletePushConfigsIfTaskAbsent(taskId)
+                        release(stream)
+                    } finally {
+                        // The next turn of the task may start from here on.
+                        turnSlots.unlock(taskId)
+                    }
                 }
             }
         } catch (e: CancellationException) {

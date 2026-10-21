@@ -36,8 +36,9 @@ public class Turn internal constructor(
     /** The job that waits for the agent job and then ends the turn, see [TurnManager.startTurn]. */
     private val monitor: Job,
     /**
-     * For a turn that continues an existing task: the stored task, read atomically with the registration of [events],
-     * i.e. as of right before its first event. `null` for a turn of a new task.
+     * For a turn that continues an existing task: the stored task as of right before the turn's first event (read when
+     * the turn started, see [TurnManager.startTurn]), with the request's history limit applied. `null` for a turn of a
+     * new task.
      */
     internal val taskSnapshot: Task?,
     /**

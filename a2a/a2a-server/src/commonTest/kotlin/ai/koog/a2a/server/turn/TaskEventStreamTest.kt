@@ -134,23 +134,6 @@ class TaskEventStreamTest {
     )
 
     @Test
-    fun testOpenTurnViewWithSnapshotReturnsTaskBeforeTurnEvents() = runTest(timeout = TEST_TIMEOUT) {
-        val stream = createStream()
-        val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(inputRequired)
-
-        val (snapshot, channel) = stream.openTurnView(1, historyLength = null)
-        val turnView = collect(channel)
-
-        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
-        stream.publish(working, turnId = 1)
-        stream.endTurn(1, contextId, outcome = TurnOutcome.Completed(rejection = null))
-
-        assertEquals(inputRequired, snapshot)
-        assertEquals(listOf(working), turnView.await())
-    }
-
-    @Test
     fun testFollowUpMessageIsPersistedBeforeFirstTaskEventMovingStatusMessageIntoHistory() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
         val firstUser = userMessage("user-1")
@@ -168,11 +151,9 @@ class TaskEventStreamTest {
         taskStorage.update(inputRequired)
 
         val secondUser = userMessage("user-2")
-        val (snapshot, channel) = stream.openTurnView(1, historyLength = null)
-        channel.cancel()
+        stream.openTurnView(1).cancel()
 
         // Nothing is persisted until the agent sends an event.
-        assertEquals(inputRequired, snapshot)
         assertEquals(inputRequired, taskStorage.get(taskId))
 
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)

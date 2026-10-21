@@ -17,12 +17,16 @@ import ai.koog.a2a.model.SendMessageConfiguration
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
+import ai.koog.a2a.server.notifications.GatedPushNotificationSender
+import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.turn.IdGenerator
@@ -30,7 +34,9 @@ import ai.koog.a2a.server.turn.RequestContext
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
@@ -43,6 +49,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -59,6 +66,11 @@ import kotlin.test.assertTrue
  * [CompletableDeferred]s.
  */
 class A2AServerSendMessageTest {
+    private companion object {
+        /** Marks the coroutine of a request whose task reads are recorded, see [RequesterReadRecorder]. */
+        private val REQUEST_CALL = CoroutineName("request-call")
+    }
+
     private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
 
@@ -83,15 +95,42 @@ class A2AServerSendMessageTest {
     private fun TestScope.createServer(
         scripts: Map<String, AgentScript>,
         storage: TaskStorage = taskStorage,
+        pushConfigStorage: PushNotificationConfigStorage? = null,
     ): A2AServer {
         executor = ScriptedAgentExecutor(scripts)
         return A2AServer(
             agentExecutor = executor,
-            agentCard = testAgentCard(AgentCapabilities(streaming = true)),
+            agentCard = testAgentCard(AgentCapabilities(streaming = true, pushNotifications = pushConfigStorage != null)),
             taskStorage = storage,
+            pushConfigStorage = pushConfigStorage,
+            pushSender = pushConfigStorage?.let { GatedPushNotificationSender() },
             idGenerator = FixedIdGenerator(contextId = "generated-context"),
             coroutineScope = agentScope(),
         )
+    }
+
+    /**
+     * Records the reads made in [REQUEST_CALL] coroutines, i.e. on the requester's path, not by the agent, the turn's
+     * end, or push notifications: owner-scoped reads as the request and the call context, other reads by name.
+     */
+    private class RequesterReadRecorder(private val delegate: TaskStorage) : TaskStorage by delegate {
+        val reads = mutableListOf<Any>()
+
+        private suspend fun record(read: Any) {
+            if (currentCoroutineContext()[CoroutineName] == REQUEST_CALL) reads += read
+        }
+
+        override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? =
+            delegate.get(request, context).also { record(request to context) }
+
+        override suspend fun get(taskId: String, historyLength: Int?, includeArtifacts: Boolean): Task? =
+            delegate.get(taskId, historyLength, includeArtifacts).also { record("get $taskId") }
+
+        override suspend fun getAll(taskIds: List<String>, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
+            delegate.getAll(taskIds, historyLength, includeArtifacts).also { record("getAll $taskIds") }
+
+        override suspend fun getByContext(contextId: String, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
+            delegate.getByContext(contextId, historyLength, includeArtifacts).also { record("getByContext $contextId") }
     }
 
     private fun userMessage(text: String, taskId: String? = null, contextId: String? = CONTEXT_ID) = Message(
@@ -739,24 +778,27 @@ class A2AServerSendMessageTest {
 
     @Test
     fun testRequesterCancelledRightAfterTurnStartDoesNotBlockAgent() = runTest(timeout = TEST_TIMEOUT) {
-        var cancelOnTurnViewRead = false
-        // Cancels the requester while its turn view is being registered: the cancellation is first observed after
-        // the turn has started, before the requester collects the view.
-        val storage = object : TaskStorage by taskStorage {
-            override suspend fun get(taskId: String, historyLength: Int?, includeArtifacts: Boolean): Task? =
-                taskStorage.get(taskId, historyLength, includeArtifacts).also {
-                    if (cancelOnTurnViewRead && includeArtifacts) {
-                        cancelOnTurnViewRead = false
-                        currentCoroutineContext().cancel()
-                    }
-                }
+        lateinit var requester: Job
+        // Cancels the requester while the turn saves its inline push config: the turn's view is registered, so the
+        // cancellation is first observed after the turn has started, before the requester collects the view.
+        val pushStorage = InMemoryPushNotificationConfigStorage()
+        val cancellingPushStorage = object : PushNotificationConfigStorage by pushStorage {
+            override suspend fun save(config: TaskPushNotificationConfig, context: ServerCallContext) =
+                pushStorage.save(config, context).also { requester.cancel() }
         }
-        val server = createServer(mapOf("ask" to askScript, "finish" to gated(finishScript)), storage)
+        val server = createServer(
+            mapOf("ask" to askScript, "finish" to gated(finishScript)),
+            pushConfigStorage = cancellingPushStorage,
+        )
         server.onSendMessage(request("ask"), ctx)
         gate.complete(Unit)
 
-        cancelOnTurnViewRead = true
-        val requester = launch { server.onSendMessage(request("finish", TASK_ID), ctx) }
+        val followUp = request("finish", TASK_ID).copy(
+            configuration = SendMessageConfiguration(
+                taskPushNotificationConfig = TaskPushNotificationConfig(url = "https://example.com/hook"),
+            ),
+        )
+        requester = launch(start = CoroutineStart.LAZY) { server.onSendMessage(followUp, ctx) }
         requester.join()
         runCurrent()
 
@@ -833,6 +875,39 @@ class A2AServerSendMessageTest {
 
         assertEquals(1, executed.size)
         assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testStreamingFollowUpReadsTaskOnceForCaller() = runTest(timeout = TEST_TIMEOUT) {
+        val storage = RequesterReadRecorder(taskStorage)
+        val server = createServer(mapOf("ask" to askScript, "finish" to finishScript), storage)
+        server.onSendMessage(request("ask"), ctx)
+        val callerCtx = ServerCallContext()
+        val followUp = request("finish", TASK_ID, historyLength = 0).copy(tenant = "tenant-1")
+
+        val events = withContext(REQUEST_CALL) { server.onSendMessageStreaming(followUp, callerCtx).toList() }
+
+        // The one read validates the task, and is the snapshot and the agent's task.
+        assertEquals(listOf<Any>(GetTaskRequest(id = TASK_ID, tenant = "tenant-1") to callerCtx), storage.reads)
+        assertEquals(listOf<Event>(inputRequiredTask.copy(history = null)) + finishEvents, events)
+        assertEquals(inputRequiredTask, executed[1].task)
+    }
+
+    @Test
+    fun testBlockingResultIsReadForCaller() = runTest(timeout = TEST_TIMEOUT) {
+        val storage = RequesterReadRecorder(taskStorage)
+        val server = createServer(mapOf("ask" to askScript, "finish" to finishScript), storage)
+        val callerCtx = ServerCallContext()
+
+        withContext(REQUEST_CALL) {
+            server.onSendMessage(request("ask", historyLength = 1).copy(tenant = "tenant-1"), callerCtx)
+            server.onSendMessage(request("finish", TASK_ID, historyLength = 1).copy(tenant = "tenant-1"), callerCtx)
+        }
+
+        // Like GetTask: with the caller's context and tenant, and the requested history length.
+        val result = GetTaskRequest(id = TASK_ID, historyLength = 1, tenant = "tenant-1") to callerCtx
+        val followUpValidation = GetTaskRequest(id = TASK_ID, tenant = "tenant-1") to callerCtx
+        assertEquals(listOf<Any>(result, followUpValidation, result), storage.reads)
     }
 
     @Test

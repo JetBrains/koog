@@ -518,7 +518,11 @@ class A2AServerPushNotificationsTest {
 
         assertEquals(emptyList(), pushStorage.getAll("unknown"))
         assertEquals(emptyList(), pushStorage.getAll(completedTask.id))
-        assertEquals(emptyList(), validated)
+        // The config is validated before the turn waits for its task; the task is checked when the turn starts.
+        assertEquals(
+            listOf(webhook.copy(taskId = "unknown", id = "unknown"), webhook.copy(taskId = completedTask.id, id = completedTask.id)),
+            validated
+        )
         assertEquals(emptyList(), executor.executed)
     }
 

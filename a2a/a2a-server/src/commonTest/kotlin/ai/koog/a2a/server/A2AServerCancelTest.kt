@@ -10,8 +10,10 @@ import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
+import ai.koog.a2a.model.SendMessageConfiguration
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
@@ -541,8 +543,8 @@ class A2AServerCancelTest {
         // An idle task: no turn is running.
         taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
 
-        // The cancellation of the idle task is in progress when the follow-up arrives: it has passed validation and
-        // waits for the cancellation to finish to start its turn.
+        // The cancellation of the idle task is in progress when the follow-up arrives: it waits for the cancellation
+        // to finish to validate the task and start its turn.
         val cancel = async { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
         cancelEntered.await()
         val followUpRequest = request("finish").let { it.copy(message = it.message.copy(taskId = TASK_ID)) }
@@ -557,6 +559,44 @@ class A2AServerCancelTest {
         assertEquals(false, followUpRan)
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
         assertEquals(canceled, taskStorage.get(TASK_ID, historyLength = 0, includeArtifacts = true))
+    }
+
+    @Test
+    fun testCancelOfRunningTurnRejectsFollowUpWaitingForIt() = runTest(timeout = TEST_TIMEOUT) {
+        val running = RunningTask()
+        var followUpRan = false
+        val server = createServer(
+            mapOf("run" to running.script, "finish" to AgentScript { _, _ -> followUpRan = true }),
+            doNothingOnCancel,
+        )
+        val response = async { server.onSendMessage(request("run"), ctx) }
+        running.started.await()
+
+        // The follow-up waits for the running turn to end; the cancellation doesn't wait for the follow-up.
+        val followUpRequest = request("finish").let {
+            it.copy(
+                message = it.message.copy(taskId = TASK_ID),
+                configuration = SendMessageConfiguration(
+                    taskPushNotificationConfig = TaskPushNotificationConfig(url = "https://example.com/hook"),
+                ),
+            )
+        }
+        val followUp = async { runCatching { server.onSendMessage(followUpRequest, ctx) } }
+        runCurrent()
+        assertEquals(false, followUp.isCompleted)
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+
+        assertEquals(
+            A2AUnsupportedOperationException::class to "Task '$TASK_ID' is in terminal state TASK_STATE_CANCELED and can't accept messages",
+            followUp.await().exceptionOrNull()?.let { it::class to it.message }
+        )
+        // Neither the follow-up's agent ran, nor its user message or inline config were saved.
+        val stored = canceled.copy(history = listOf(request("run").message.copy(taskId = TASK_ID)))
+        assertEquals(stored, taskStorage.get(TASK_ID))
+        assertEquals<Event?>(stored, response.await())
+        assertEquals(false, followUpRan)
+        assertEquals(emptyList(), pushConfigStorage.getAll(TASK_ID))
     }
 
     @Test

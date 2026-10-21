@@ -136,20 +136,6 @@ internal class TaskEventStream(
     }
 
     /**
-     * Atomically reads the current task and registers the view of the turn [turnId], so the snapshot reflects exactly
-     * the events persisted before the view's first event. Must be called before the turn's first event.
-     *
-     * @param historyLength the maximum number of history messages of the returned snapshot, `null` for no limit
-     * @return the snapshot (with all artifacts), or `null` if the task doesn't exist, and the turn view
-     */
-    suspend fun openTurnView(
-        turnId: Long,
-        historyLength: Int?,
-    ): Pair<Task?, ReceiveChannel<Event>> = mutex.withLock {
-        taskStorage.get(taskId, historyLength, includeArtifacts = true) to register(turnId)
-    }
-
-    /**
      * Stops the subscriber reading from [channel] by cancelling it without the stream lock, so it never waits for the
      * fan-out and a suspended delivery to [channel] fails immediately. The subscriber is removed by the next fan-out,
      * registration, or terminal event.
