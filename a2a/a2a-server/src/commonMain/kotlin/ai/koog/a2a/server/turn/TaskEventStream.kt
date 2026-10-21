@@ -78,7 +78,7 @@ import kotlin.time.Clock
  *
  * @param taskId the id of the task this stream belongs to
  * @param taskStorage the storage where task events are persisted
- * @param idGenerator generates the id of the message attached to the failure status
+ * @param idGenerator generates the id of the generic failure status message
  * @param onPersisted called with every persisted [TaskEvent] (e.g. to queue push notifications), non-cancellable and
  * under the stream lock, so it must return quickly
  */
@@ -90,8 +90,6 @@ internal class TaskEventStream(
 ) {
     private companion object {
         private val logger = KotlinLogging.logger {}
-
-        private const val FAILURE_MESSAGE = "Task failed due to an internal error"
     }
 
     private class Subscriber(
@@ -236,15 +234,17 @@ internal class TaskEventStream(
      *
      * @param contextId the context id of the task, used for the failure status update
      * @param outcome how the turn ended
+     * @param failureMessage the status message of the failure update, with its task id, context id, and role replaced
+     * by the task's and [Role.ROLE_AGENT]; `null` for the generic one, see [genericFailureMessage]
      */
-    suspend fun endTurn(contextId: String, outcome: TurnOutcome): Unit = mutex.withLock {
+    suspend fun endTurn(contextId: String, outcome: TurnOutcome, failureMessage: Message? = null): Unit = mutex.withLock {
         try {
             when (outcome) {
                 is TurnOutcome.Completed, is TurnOutcome.RequestError -> Unit
-                is TurnOutcome.Failed -> markFailed(contextId)
+                is TurnOutcome.Failed -> markFailed(contextId, failureMessage)
                 is TurnOutcome.Rejected -> {
                     closeTurnView()
-                    markFailed(contextId)
+                    markFailed(contextId, failureMessage)
                 }
             }
         } finally {
@@ -252,24 +252,19 @@ internal class TaskEventStream(
         }
     }
 
-    private suspend fun markFailed(contextId: String) {
+    private suspend fun markFailed(contextId: String, failureMessage: Message?) {
         val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
 
         if (task != null && !task.status.state.terminal) {
             val taskContextId = task.contextId ?: contextId
+            val message = failureMessage?.copy(taskId = taskId, contextId = taskContextId, role = Role.ROLE_AGENT)
+                ?: idGenerator.genericFailureMessage(taskId, taskContextId)
             val failed = TaskStatusUpdateEvent(
                 taskId = taskId,
                 contextId = taskContextId,
                 status = TaskStatus(
                     state = TaskState.TASK_STATE_FAILED,
-                    // Deliberately generic: exception details must not leak to clients.
-                    message = Message(
-                        messageId = idGenerator.generateMessageId(taskId, taskContextId),
-                        role = Role.ROLE_AGENT,
-                        parts = listOf(TextPart(FAILURE_MESSAGE)),
-                        contextId = taskContextId,
-                        taskId = taskId,
-                    ),
+                    message = message,
                     timestamp = Clock.System.now(),
                 ),
             )
@@ -334,3 +329,15 @@ internal class TaskEventStream(
         subscribers.clear()
     }
 }
+
+/**
+ * The status message of a task marked failed by the server when no custom one is given. Deliberately generic:
+ * exception details must not leak to clients.
+ */
+internal suspend fun IdGenerator.genericFailureMessage(taskId: String, contextId: String): Message = Message(
+    messageId = generateMessageId(taskId, contextId),
+    role = Role.ROLE_AGENT,
+    parts = listOf(TextPart("Task failed due to an internal error")),
+    contextId = contextId,
+    taskId = taskId,
+)

@@ -6,6 +6,7 @@ import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.GetTaskRequest
+import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
@@ -34,11 +35,13 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.concurrent.Volatile
 
 /**
  * Manages the turns ([Turn]s) of tasks and the per-task event streams that connect the agent to every stream of a
@@ -125,7 +128,11 @@ import kotlinx.coroutines.withContext
  * @param pushConfigStorage The storage for push notification configurations.
  * @param pushSender The push notification sender.
  * @param idGenerator The generator of the context id of a turn that has none, and of ids of messages created by the
- * server, e.g. the status message of a task marked as failed. Defaults to [UuidIdGenerator].
+ * server, e.g. the generic status message of a task marked as failed. Defaults to [UuidIdGenerator].
+ * @param failureMessage Builds the status message of a task marked as failed when its turn fails, see
+ * [ai.koog.a2a.server.A2AServer.failureMessage]. Called by the turn's monitor with no lock held and cancellably, before
+ * the turn ends, with the task id, the turn's context id, and the agent's exception. If it throws or is cancelled, the
+ * generic message is used. Defaults to the generic message.
  */
 @InternalA2AApi
 public class TurnManager(
@@ -134,12 +141,15 @@ public class TurnManager(
     private val pushConfigStorage: PushNotificationConfigStorage? = null,
     pushSender: PushNotificationSender? = null,
     private val idGenerator: IdGenerator = UuidIdGenerator,
+    private val failureMessage: suspend (taskId: String, contextId: String, error: Throwable) -> Message =
+        { taskId, contextId, _ -> idGenerator.genericFailureMessage(taskId, contextId) },
 ) {
     /*
      Design rule: methods take data, not caller callbacks that run under this class's locks (the slot, the gate, the
      stream lock). Such callbacks carry hidden locking rules (e.g. calling back into the turn layer deadlocks) and make
-     the error and cleanup order part of the contract. The only lambdas are the agent block, which runs in the agent job
-     under no lock, and the withTaskProcessor block, the cancel logic, which by design runs under the gate.
+     the error and cleanup order part of the contract; callbacks run outside our locks are fine. The only lambdas are the
+     agent block, which runs in the agent job under no lock, the withTaskProcessor block, the cancel logic, which by
+     design runs under the gate, and failureMessage, which runs under no lock and whose result is passed on as data.
      */
 
     private companion object {
@@ -189,6 +199,9 @@ public class TurnManager(
         val outcome = CompletableDeferred<TurnOutcome>()
 
         private var rejection: Exception? = null
+
+        /** Read by [endsFailed] without the processor's lock. */
+        @Volatile
         private var isEventPublished = false
 
         fun onRejected(e: Exception) {
@@ -201,6 +214,17 @@ public class TurnManager(
 
         fun complete(failure: Throwable?): TurnOutcome =
             TurnOutcome.of(failure, rejection, isEventPublished).also { outcome.complete(it) }
+
+        /**
+         * Whether [complete] will return [TurnOutcome.Failed] or [TurnOutcome.Rejected] for [failure], checked before
+         * the gate. A `false` may be outdated: a withTaskProcessor block still publishing through the processor turns a
+         * [TurnOutcome.RequestError] into [TurnOutcome.Failed]. A `true` is final.
+         */
+        fun endsFailed(failure: Throwable): Boolean =
+            when (TurnOutcome.of(failure, rejection = null, isEventPublished)) {
+                is TurnOutcome.Failed, is TurnOutcome.Rejected -> true
+                is TurnOutcome.Completed, is TurnOutcome.RequestError -> false
+            }
     }
 
     /** Completed by [shutdown]; ends every [subscribe] flow without taking any lock. */
@@ -233,8 +257,9 @@ public class TurnManager(
      * config of the task is deleted when the turn ends.
      *
      * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
-     * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
-     * update, except [Turn.events] if the failure is the rejection of one of the agent's events. An
+     * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED], with the status message from
+     * `failureMessage`, and every stream of the task receives that update, except [Turn.events] if the failure is the
+     * rejection of one of the agent's events. An
      * [ai.koog.a2a.exceptions.A2AException] thrown before the turn published any event leaves the task unchanged
      * instead. Then the processor is closed, [Turn.events] completes, and the turn is removed.
      *
@@ -426,6 +451,11 @@ public class TurnManager(
             logger.warn(failure) { "Agent execution failed for taskId='$taskId'" }
         }
 
+        // Before the gate, so the caller's code runs under no lock. Null: the generic message.
+        val failureMessage = failure
+            ?.takeIf(outcomeRecorder::endsFailed)
+            ?.let { buildFailureMessage(taskId, contextId, it) }
+
         try {
             // The turn is ended even if this monitor is cancelled, so its view completes and the turn is removed.
             withContext(NonCancellable) {
@@ -442,7 +472,7 @@ public class TurnManager(
                         try {
                             // TODO: with a stalled requester view, the fan-out of a FAILED here can't be interrupted,
                             //  not even by shutdown; revisit with the graceful shutdown design or non-blocking streams.
-                            stream.endTurn(contextId, outcomeRecorder.complete(failure))
+                            stream.endTurn(contextId, outcomeRecorder.complete(failure), failureMessage)
                         } finally {
                             registryMutex.withLock { turns -= taskId }
                         }
@@ -463,6 +493,19 @@ public class TurnManager(
         } catch (e: Exception) {
             logger.error(e) { "Failed to finish the turn of taskId='$taskId'" }
         }
+    }
+
+    /**
+     * Calls [failureMessage] with the agent's own exception, cancellably. Returns `null` if it fails or is cancelled
+     * (e.g. on shutdown): the turn must end regardless.
+     */
+    private suspend fun buildFailureMessage(taskId: String, contextId: String, failure: Throwable): Message? = try {
+        failureMessage(taskId, contextId, (failure as? AgentCancellationFailure)?.cause ?: failure)
+    } catch (e: Exception) {
+        if (e !is CancellationException || currentCoroutineContext().isActive) {
+            logger.error(e) { "Failed to build the failure message of taskId='$taskId', using the generic one" }
+        }
+        null
     }
 
     /** Deletes the push notification configs of [taskId] if the task was never stored. Failures are only logged. */

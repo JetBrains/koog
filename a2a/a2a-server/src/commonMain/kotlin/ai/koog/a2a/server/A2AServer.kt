@@ -50,6 +50,7 @@ import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.server.turn.TurnManager
 import ai.koog.a2a.server.turn.TurnOutcome
 import ai.koog.a2a.server.turn.UuidIdGenerator
+import ai.koog.a2a.server.turn.genericFailureMessage
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CancellationException
@@ -358,6 +359,7 @@ public open class A2AServer(
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
         idGenerator = idGenerator,
+        failureMessage = { taskId, contextId, error -> failureMessage(taskId, contextId, error) },
     )
 
     /**
@@ -867,6 +869,34 @@ public open class A2AServer(
 
         pushStorage.delete(request, ctx)
     }
+
+    /**
+     * Builds the status message of a task the server marks as
+     * [TASK_STATE_FAILED][ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] because its turn failed: the agent threw, or
+     * one of its events was rejected as invalid. Not called when the agent returned or its job was cancelled (e.g. by
+     * CancelTask), or for an [ai.koog.a2a.exceptions.A2AException] thrown before the turn published any event, which
+     * leaves the task unchanged.
+     *
+     * Called after the agent's job has completed and before the turn ends, holding no lock, so it may suspend (e.g.
+     * for I/O). Keep it short: until it returns, the turn hasn't ended, so the task's queued follow-ups and anyone
+     * waiting for the turn wait too. It is cancellable, e.g. by [cancel]. A CancelTask may run meanwhile, and the
+     * message is unused if the task is then terminal or doesn't exist.
+     *
+     * The server sets the returned message's task id, context id, and role to the task's and
+     * [ROLE_AGENT][ai.koog.a2a.model.Role.ROLE_AGENT], keeping its message id, parts, and metadata. If this throws (the
+     * error is logged) or is cancelled, the default message is used.
+     *
+     * By default, returns a generic agent message, "Task failed due to an internal error", with an id from
+     * [IdGenerator.generateMessageId]. Override to customize it, e.g. to map known exceptions to user-facing text;
+     * clients see the message, so don't put exception details in it unless they are meant for them.
+     *
+     * @param taskId The id of the failed task.
+     * @param contextId The context id of the turn.
+     * @param error The exception the agent's job failed with.
+     * @return The status message of the failed task.
+     */
+    protected open suspend fun failureMessage(taskId: String, contextId: String, error: Throwable): Message =
+        idGenerator.genericFailureMessage(taskId, contextId)
 
     /**
      * Checks a push notification config before it is saved, both from CreateTaskPushNotificationConfig and inline in
