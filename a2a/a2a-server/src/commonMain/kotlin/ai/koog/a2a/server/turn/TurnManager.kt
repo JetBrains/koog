@@ -124,8 +124,8 @@ import kotlinx.coroutines.withContext
  * @param taskStorage The storage for tasks.
  * @param pushConfigStorage The storage for push notification configurations.
  * @param pushSender The push notification sender.
- * @param idGenerator The generator of ids of messages created by the server, e.g. the status message of a task marked
- * as failed. Defaults to [UuidIdGenerator].
+ * @param idGenerator The generator of the context id of a turn that has none, and of ids of messages created by the
+ * server, e.g. the status message of a task marked as failed. Defaults to [UuidIdGenerator].
  */
 @InternalA2AApi
 public class TurnManager(
@@ -223,7 +223,8 @@ public class TurnManager(
      * - the request's user message is persisted when the agent sends its first status or artifact update, see
      *   "History" above.
      *
-     * The turn's context id is the continued task's, else [defaultContextId].
+     * The turn's context id is the continued task's, else the message's, else one generated with
+     * [IdGenerator.generateContextId] (called only then).
      *
      * [inlinePushConfig] is saved to [pushConfigStorage] once the turn is sure to start (after the checks), and before
      * [block] starts, so the turn's first task event is pushed to it. If the turn doesn't start, it isn't saved. If the
@@ -241,7 +242,6 @@ public class TurnManager(
      * @param ctx The context of the call, used to read a continued task and to save [inlinePushConfig].
      * @param taskId The id of the turn's task: [request]'s [ai.koog.a2a.model.Message.taskId] if set, else the id
      * of the task the turn may create.
-     * @param defaultContextId The context id of the turn if the task has none, e.g. a new task.
      * @param inlinePushConfig The resolved and validated push notification config of the turn's task to save, if any;
      * ignored without [pushConfigStorage].
      * @param block The agent logic of the turn. Receives the continued task, or `null` for a new task, and the
@@ -255,7 +255,6 @@ public class TurnManager(
         request: SendMessageRequest,
         ctx: ServerCallContext,
         taskId: String,
-        defaultContextId: String,
         inlinePushConfig: TaskPushNotificationConfig? = null,
         block: suspend (task: Task?, processor: TurnEventProcessor) -> Unit,
     ): Turn {
@@ -287,7 +286,7 @@ public class TurnManager(
                  */
                 return stream.processorGate.withLock {
                     val task = if (isFollowUp) getFollowUpTask(request, ctx, taskId) else null
-                    val contextId = task?.contextId ?: defaultContextId
+                    val contextId = task?.contextId ?: message.contextId ?: idGenerator.generateContextId(message)
 
                     val channel = stream.openTurnView()
                     view = channel
@@ -441,6 +440,8 @@ public class TurnManager(
                         processor.close()
 
                         try {
+                            // TODO: with a stalled requester view, the fan-out of a FAILED here can't be interrupted,
+                            //  not even by shutdown; revisit with the graceful shutdown design or non-blocking streams.
                             stream.endTurn(contextId, outcomeRecorder.complete(failure))
                         } finally {
                             registryMutex.withLock { turns -= taskId }

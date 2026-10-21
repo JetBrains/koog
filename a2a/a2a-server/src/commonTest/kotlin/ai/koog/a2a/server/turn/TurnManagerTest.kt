@@ -155,7 +155,6 @@ class TurnManagerTest {
         request = SendMessageRequest(createMessage(messageId, contextId, "Hello").copy(taskId = taskId.takeIf { followUp })),
         ctx = callContext,
         taskId = taskId,
-        defaultContextId = contextId,
     ) { _, processor -> block(processor) }
 
     /** Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test. */
@@ -976,7 +975,7 @@ class TurnManagerTest {
             message = createMessage("user-msg", contextId, "Hello").copy(taskId = taskId),
             configuration = SendMessageConfiguration(historyLength = 1),
         )
-        val turn = turnManager.startTurn(request, callContext, taskId, defaultContextId = "unused") { task, processor ->
+        val turn = turnManager.startTurn(request, callContext, taskId) { task, processor ->
             agentTask = task
             processorContextId = processor.contextId
         }
@@ -986,6 +985,54 @@ class TurnManagerTest {
         assertEquals(stored, agentTask)
         assertEquals(stored.copy(history = listOf(followUpPrompt())), turn.taskSnapshot)
         assertEquals(contextId to contextId, processorContextId to turn.contextId)
+    }
+
+    /** Records the messages [generateContextId] is called with. */
+    private class RecordingContextIdGenerator : IdGenerator {
+        val contextIdRequests = mutableListOf<Message>()
+
+        override suspend fun generateContextId(message: Message): String {
+            contextIdRequests += message
+            return "generated-context"
+        }
+
+        override suspend fun generateTaskId(message: Message): String = error("Not expected")
+        override suspend fun generateMessageId(taskId: String, contextId: String): String = FixedMessageIdGenerator.MESSAGE_ID
+    }
+
+    @Test
+    fun testFollowUpWithoutMessageContextIdDoesNotGenerateContextId() = runTest(timeout = TEST_TIMEOUT) {
+        val idGenerator = RecordingContextIdGenerator()
+        val turnManager = TurnManager(agentScope(), taskStorage, pushConfigStorage, pushSender, idGenerator)
+        storeTask()
+        var processorContextId: String? = null
+
+        val request = SendMessageRequest(createMessage("user-msg", contextId, "Hello").copy(contextId = null, taskId = taskId))
+        val turn = turnManager.startTurn(request, callContext, taskId) { _, processor ->
+            processorContextId = processor.contextId
+        }
+        drain(turn)
+        turn.join()
+
+        assertEquals(emptyList(), idGenerator.contextIdRequests)
+        assertEquals(contextId to contextId, processorContextId to turn.contextId)
+    }
+
+    @Test
+    fun testNewTaskWithoutContextIdGeneratesContextIdOnce() = runTest(timeout = TEST_TIMEOUT) {
+        val idGenerator = RecordingContextIdGenerator()
+        val turnManager = TurnManager(agentScope(), taskStorage, pushConfigStorage, pushSender, idGenerator)
+        var processorContextId: String? = null
+
+        val message = createMessage("user-msg", contextId, "Hello").copy(contextId = null)
+        val turn = turnManager.startTurn(SendMessageRequest(message), callContext, taskId) { _, processor ->
+            processorContextId = processor.contextId
+        }
+        drain(turn)
+        turn.join()
+
+        assertEquals(listOf(message), idGenerator.contextIdRequests)
+        assertEquals("generated-context" to "generated-context", processorContextId to turn.contextId)
     }
 
     /**

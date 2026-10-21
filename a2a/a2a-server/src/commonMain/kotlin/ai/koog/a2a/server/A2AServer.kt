@@ -401,8 +401,9 @@ public open class A2AServer(
      * already pushed to it:
      * - its `taskId` and `tenant` are set to the turn's task and the request's tenant;
      * - without an id, the task id is used, so re-sending the same config with every message replaces it;
-     * - its `url` must not be blank, and it is checked with [validatePushNotificationConfig]; if either fails, nothing
-     *   is saved, no turn starts, and the request fails with [A2AInvalidParamsException] (or the validation's exception);
+     * - its `url` must not be blank, and it is checked with [validatePushNotificationConfig] (before the referenced
+     *   task is); if either fails, nothing is saved, no turn starts, and the request fails with
+     *   [A2AInvalidParamsException] (or the validation's exception);
      * - it is silently ignored if the [agentCard] doesn't declare
      *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications], or [pushConfigStorage] or
      *   [pushSender] is `null`.
@@ -449,15 +450,13 @@ public open class A2AServer(
         validateHistoryLength(request.configuration?.historyLength)
 
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
-        // Used only if the turn's task has no context id, e.g. a new task.
-        val defaultContextId = message.contextId ?: idGenerator.generateContextId(message)
         val inlinePushConfig = resolveInlinePushConfig(request, taskId, ctx)
 
         /*
          Waits for the previous turn of the task, then validates a referenced task, saves the inline config, registers
          the event view, and starts the agent, so no event is missed. The agent gets the referenced task as read then.
          */
-        val turn = turnManager.startTurn(request, ctx, taskId, defaultContextId, inlinePushConfig) { task, eventProcessor ->
+        val turn = turnManager.startTurn(request, ctx, taskId, inlinePushConfig) { task, eventProcessor ->
             val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
             agentExecutor.execute(requestContext, eventProcessor)
         }
@@ -607,9 +606,9 @@ public open class A2AServer(
         }
 
         // A task event to respond with, or the turn has ended: respond with the task as stored.
-        val taskId = lastTaskEvent?.taskId
-            ?: request.message.taskId
-            ?: throw IllegalStateException("Can't get response from the agent: event stream is empty")
+        val taskId = checkNotNull(lastTaskEvent?.taskId ?: request.message.taskId) {
+            "Unreachable: a turn of a new task ended without any event, which onSendMessageCommon reports as an error"
+        }
 
         // Read for the caller, like GetTask.
         val lookup = GetTaskRequest(id = taskId, historyLength = messageConfiguration?.historyLength, tenant = request.tenant)
@@ -872,6 +871,9 @@ public open class A2AServer(
     /**
      * Checks a push notification config before it is saved, both from CreateTaskPushNotificationConfig and inline in
      * SendMessage. [config] has its task id and id set. Does nothing by default.
+     *
+     * An inline config is checked before the referenced task is, so this may be called for a SendMessage that then
+     * fails (e.g. the task is unknown, terminal, or in another context); the config isn't saved then.
      *
      * Override to reject configs, e.g. webhook URLs outside an allow-list to prevent SSRF.
      *

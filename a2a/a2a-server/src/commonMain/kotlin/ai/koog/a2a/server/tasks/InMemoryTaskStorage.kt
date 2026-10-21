@@ -27,7 +27,8 @@ import kotlin.time.Instant
  *
  * [list] ordering: by status timestamp, newest first; tasks without one go last; ties are broken by task id in
  * descending order (compared as strings), so the order is total. The page token holds the sort key of the last task
- * of the previous page, so pages stay stable when tasks are added or removed between calls.
+ * of the previous page, so adding or removing tasks between calls doesn't shift the pages. A status update changes a
+ * task's sort key, though, so a task updated between calls may move across the cursor and be skipped or repeated.
  */
 @OptIn(InternalA2AApi::class)
 public class InMemoryTaskStorage : TaskStorage {
