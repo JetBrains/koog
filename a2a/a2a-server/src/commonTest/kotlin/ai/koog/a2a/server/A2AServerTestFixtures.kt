@@ -19,11 +19,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
 import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -58,10 +55,6 @@ internal object UnusedAgentExecutor : AgentExecutor {
     override suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor) =
         error("Not expected to be called")
 }
-
-/** Scope for agent jobs: a supervisor, so that a failing agent doesn't fail the test. */
-internal fun TestScope.agentScope(): CoroutineScope =
-    CoroutineScope(backgroundScope.coroutineContext + SupervisorJob(backgroundScope.coroutineContext.job))
 
 internal class FixedIdGenerator(
     private val contextId: String = CONTEXT_ID,

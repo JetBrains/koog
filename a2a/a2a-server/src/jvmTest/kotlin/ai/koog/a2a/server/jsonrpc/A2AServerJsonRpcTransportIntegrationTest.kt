@@ -9,22 +9,18 @@ import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.GetTaskRequest
-import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskState
-import ai.koog.a2a.model.TaskStatus
-import ai.koog.a2a.model.TaskStatusUpdateEvent
-import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.A2AServer
 import ai.koog.a2a.server.AgentScript
-import ai.koog.a2a.server.CONTEXT_ID
 import ai.koog.a2a.server.FixedIdGenerator
 import ai.koog.a2a.server.ScriptedAgentExecutor
 import ai.koog.a2a.server.TASK_ID
-import ai.koog.a2a.server.TIMESTAMP
+import ai.koog.a2a.server.TEST_TIMEOUT
+import ai.koog.a2a.server.statusUpdate
+import ai.koog.a2a.server.task
 import ai.koog.a2a.server.testAgentCard
+import ai.koog.a2a.server.userMessage
 import ai.koog.a2a.transport.client.jsonrpc.http.HttpJSONRPCClientTransport
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
@@ -53,14 +49,12 @@ import java.net.ServerSocket
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests of an [A2AServer] served by [HttpJSONRPCServerTransport] on a real HTTP server, checking the JSON-RPC
  * responses on the wire.
  */
 class A2AServerJsonRpcTransportIntegrationTest {
-    private val testTimeout = 30.seconds
     private val testPath = "/a2a"
 
     private val httpClient = HttpClient(CIO)
@@ -85,48 +79,18 @@ class A2AServerJsonRpcTransportIntegrationTest {
         httpClient.close()
     }
 
-    private fun userMessage(text: String, taskId: String? = null) = Message(
-        messageId = "user-$text",
-        role = Role.ROLE_USER,
-        parts = listOf(TextPart(text)),
-        contextId = CONTEXT_ID,
-        taskId = taskId,
-    )
-
-    private fun task(state: TaskState) = Task(
-        id = TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(state = state, timestamp = TIMESTAMP),
-    )
-
-    private fun status(state: TaskState, text: String) = TaskStatusUpdateEvent(
-        taskId = TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(
-            state = state,
-            message = Message(
-                messageId = "agent-$text",
-                role = Role.ROLE_AGENT,
-                parts = listOf(TextPart(text)),
-                contextId = CONTEXT_ID,
-                taskId = TASK_ID,
-            ),
-            timestamp = TIMESTAMP,
-        ),
-    )
-
     /**
      * A follow-up to a task waiting for input, whose agent rejects it with an A2A error before its first event, is
      * answered with that error's JSON-RPC code, for both SendMessage and SendStreamingMessage (as plain JSON, since no
      * stream is opened yet), and leaves the task unchanged.
      */
     @Test
-    fun testA2AErrorBeforeFirstEventOfFollowUpIsJsonRpcErrorAndLeavesTaskUnchanged() = runTest(timeout = testTimeout) {
+    fun testA2AErrorBeforeFirstEventOfFollowUpIsJsonRpcErrorAndLeavesTaskUnchanged() = runTest(timeout = TEST_TIMEOUT) {
         startServer(
             mapOf(
                 "ask" to AgentScript { _, processor ->
                     processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING))
-                    processor.sendTaskEvent(status(TaskState.TASK_STATE_INPUT_REQUIRED, "need input"))
+                    processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED, "need input"))
                 },
                 "reject" to AgentScript { _, _ ->
                     throw A2AContentTypeNotSupportedException("Unsupported content type")

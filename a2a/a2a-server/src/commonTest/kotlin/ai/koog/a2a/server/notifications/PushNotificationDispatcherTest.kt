@@ -5,8 +5,7 @@ import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
-import ai.koog.a2a.server.agentScope
-import ai.koog.a2a.transport.ServerCallContext
+import ai.koog.a2a.server.ctx
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -20,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.time.Instant
 
 class PushNotificationDispatcherTest {
-    private val ctx = ServerCallContext()
     private lateinit var configStorage: InMemoryPushNotificationConfigStorage
     private lateinit var sender: GatedPushNotificationSender
 
@@ -36,7 +34,7 @@ class PushNotificationDispatcherTest {
         status = TaskStatus(state = TaskState.TASK_STATE_WORKING, timestamp = Instant.fromEpochSeconds(n.toLong())),
     )
 
-    private fun TestScope.createDispatcher(scope: CoroutineScope = agentScope()) =
+    private fun TestScope.createDispatcher(scope: CoroutineScope = backgroundScope) =
         PushNotificationDispatcher(scope, configStorage, sender)
 
     private suspend fun saveConfigs(taskId: String, vararg ids: String) {

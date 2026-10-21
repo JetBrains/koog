@@ -8,8 +8,6 @@ import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
-import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
@@ -17,13 +15,14 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.turn.Turn
-import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -43,7 +42,6 @@ class A2AServerFailureMessageTest {
         private const val GENERIC_MESSAGE_ID = "generic-message-id"
     }
 
-    private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
 
     @BeforeTest
@@ -79,8 +77,9 @@ class A2AServerFailureMessageTest {
     private fun TestScope.createServer(
         scripts: Map<String, AgentScript>,
         cancelHandler: CancelHandler? = null,
+        scope: CoroutineScope = backgroundScope,
         onFailure: suspend (taskId: String, contextId: String, error: Throwable) -> Message = { _, _, _ -> custom },
-    ) = CustomFailureServer(ScriptedAgentExecutor(scripts, cancelHandler), taskStorage, agentScope(), onFailure)
+    ) = CustomFailureServer(ScriptedAgentExecutor(scripts, cancelHandler), taskStorage, scope, onFailure)
 
     /** Returned by the override with wrong ids and role, which the server replaces. */
     private val custom = Message(
@@ -102,21 +101,7 @@ class A2AServerFailureMessageTest {
         taskId = TASK_ID,
     )
 
-    private fun request(text: String, taskId: String? = null) = SendMessageRequest(
-        message = Message(
-            messageId = "user-$text",
-            role = Role.ROLE_USER,
-            parts = listOf(TextPart(text)),
-            contextId = CONTEXT_ID,
-            taskId = taskId,
-        ),
-    )
-
-    private val workingTask = Task(
-        id = TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(state = TaskState.TASK_STATE_WORKING, timestamp = TIMESTAMP),
-    )
+    private val workingTask = task(TaskState.TASK_STATE_WORKING)
 
     /** Creates the task, then fails with [failure]. */
     private fun failingScript(failure: suspend () -> Unit) = AgentScript { _, processor ->
@@ -215,7 +200,9 @@ class A2AServerFailureMessageTest {
     fun testServerShutdownInterruptsHangingFailureMessage() = runTest(timeout = TEST_TIMEOUT) {
         val hookEntered = CompletableDeferred<Turn>()
         lateinit var server: CustomFailureServer
-        server = createServer(mapOf("crash" to crashScript)) { taskId, _, _ ->
+        // The server is shut down, which cancels its scope: it must not be the test's.
+        val serverScope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
+        server = createServer(mapOf("crash" to crashScript), scope = serverScope) { taskId, _, _ ->
             hookEntered.complete(assertNotNull(server.turn(taskId)))
             awaitCancellation()
         }

@@ -5,17 +5,22 @@ import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.CONTEXT_ID
+import ai.koog.a2a.server.TASK_ID
+import ai.koog.a2a.server.TEST_TIMEOUT
+import ai.koog.a2a.server.agentMessage
 import ai.koog.a2a.server.exceptions.InvalidEventException
+import ai.koog.a2a.server.statusUpdate
+import ai.koog.a2a.server.task
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
+import ai.koog.a2a.server.userMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -37,16 +42,11 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 class TaskEventStreamTest {
-    private companion object {
-        private val TEST_TIMEOUT = 30.seconds
-    }
-
-    private val taskId = "task-1"
-    private val contextId = "context-1"
+    private val taskId = TASK_ID
+    private val contextId = CONTEXT_ID
 
     private lateinit var taskStorage: InMemoryTaskStorage
 
@@ -59,28 +59,6 @@ class TaskEventStreamTest {
 
     /** Delivery is back-pressured, so a channel must be consumed while events are published. */
     private fun TestScope.collect(channel: ReceiveChannel<Event>): Deferred<List<Event>> = async { channel.toList() }
-
-    private fun task(state: TaskState) = Task(
-        id = taskId,
-        contextId = contextId,
-        status = TaskStatus(state = state, timestamp = Instant.parse("2025-01-01T10:00:00Z")),
-    )
-
-    private fun statusUpdate(state: TaskState, text: String = state.name) = TaskStatusUpdateEvent(
-        taskId = taskId,
-        contextId = contextId,
-        status = TaskStatus(
-            state = state,
-            message = Message(
-                messageId = "msg-$text",
-                role = Role.ROLE_AGENT,
-                parts = listOf(TextPart(text)),
-                contextId = contextId,
-                taskId = taskId,
-            ),
-            timestamp = Instant.parse("2025-01-01T10:00:01Z"),
-        ),
-    )
 
     private suspend fun TaskEventStream.subscribeToStored(): Pair<Task, ReceiveChannel<Event>> =
         subscribe { taskStorage.get(taskId) }
@@ -117,26 +95,10 @@ class TaskEventStreamTest {
         }
     }
 
-    private fun userMessage(id: String) = Message(
-        messageId = id,
-        role = Role.ROLE_USER,
-        parts = listOf(TextPart(id)),
-        contextId = contextId,
-        taskId = taskId,
-    )
-
-    private fun agentMessage(id: String) = Message(
-        messageId = id,
-        role = Role.ROLE_AGENT,
-        parts = listOf(TextPart(id)),
-        contextId = contextId,
-        taskId = taskId,
-    )
-
     @Test
     fun testFollowUpMessageIsPersistedBeforeFirstTaskEventMovingStatusMessageIntoHistory() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
-        val firstUser = userMessage("user-1")
+        val firstUser = userMessage("user-1", taskId)
         val prompt = agentMessage("prompt")
         val artifact = Artifact(artifactId = "artifact-1", parts = listOf(TextPart("result")))
         val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED).copy(
@@ -150,7 +112,7 @@ class TaskEventStreamTest {
         )
         taskStorage.update(inputRequired)
 
-        val secondUser = userMessage("user-2")
+        val secondUser = userMessage("user-2", taskId)
         stream.openTurnView().cancel()
 
         // Nothing is persisted until the agent sends an event.
@@ -169,7 +131,7 @@ class TaskEventStreamTest {
     @Test
     fun testFollowUpMessageAlreadyInHistoryIsNotDuplicated() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
-        val user = userMessage("user-1")
+        val user = userMessage("user-1", taskId)
         val prompt = agentMessage("prompt")
         val stored = task(TaskState.TASK_STATE_INPUT_REQUIRED).copy(
             status = TaskStatus(state = TaskState.TASK_STATE_INPUT_REQUIRED, message = prompt),
@@ -189,7 +151,7 @@ class TaskEventStreamTest {
     @Test
     fun testPublishedTaskGetsUserMessageAppendedToHistory() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
-        val user = userMessage("user-1")
+        val user = userMessage("user-1", taskId)
         val turnView = collect(stream.openTurnView())
 
         val applied = stream.publish(task(TaskState.TASK_STATE_WORKING), userMessage = user)
@@ -204,7 +166,7 @@ class TaskEventStreamTest {
     @Test
     fun testPublishedTaskDoesNotDuplicateUserMessageAlreadyInHistory() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
-        val user = userMessage("user-1")
+        val user = userMessage("user-1", taskId)
         val created = task(TaskState.TASK_STATE_WORKING).copy(history = listOf(user))
 
         stream.publish(created, userMessage = user.copy(parts = listOf(TextPart("changed"))))
@@ -219,7 +181,7 @@ class TaskEventStreamTest {
         taskStorage.update(inputRequired)
         val subscriber = collect(stream.subscribeToStored().second)
 
-        val applied = stream.publish(task(TaskState.TASK_STATE_COMPLETED), userMessage = userMessage("user-1"))
+        val applied = stream.publish(task(TaskState.TASK_STATE_COMPLETED), userMessage = userMessage("user-1", taskId))
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)
         val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
         stream.publish(working)

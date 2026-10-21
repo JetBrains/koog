@@ -45,8 +45,6 @@ class A2AServerCapabilitiesTest {
         private const val REQUIRED_EXTENSION = "urn:example:required"
     }
 
-    private val ctx = ServerCallContext()
-
     private val message = Message(
         messageId = "m1",
         role = Role.ROLE_USER,

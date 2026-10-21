@@ -3,22 +3,17 @@ package ai.koog.a2a.server
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCapabilities
-import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
-import ai.koog.a2a.model.SendMessageConfiguration
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
-import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +44,6 @@ class A2AServerSubscribeTest {
         private const val FAILURE_MESSAGE_ID = "failure-message-id"
     }
 
-    private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
 
     @BeforeTest
@@ -59,7 +53,7 @@ class A2AServerSubscribeTest {
 
     private fun TestScope.createServer(
         scripts: Map<String, AgentScript>,
-        scope: CoroutineScope = agentScope(),
+        scope: CoroutineScope = backgroundScope,
     ): A2AServer = A2AServer(
         agentExecutor = ScriptedAgentExecutor(scripts),
         agentCard = testAgentCard(AgentCapabilities(streaming = true)),
@@ -68,66 +62,23 @@ class A2AServerSubscribeTest {
         coroutineScope = scope,
     )
 
-    private fun userMessage(text: String, taskId: String? = null) = Message(
-        messageId = "user-$text",
-        role = Role.ROLE_USER,
-        parts = listOf(TextPart(text)),
-        contextId = CONTEXT_ID,
-        taskId = taskId,
-    )
-
-    private fun request(text: String, taskId: String? = null, returnImmediately: Boolean? = null) = SendMessageRequest(
-        message = userMessage(text, taskId),
-        configuration = returnImmediately?.let { SendMessageConfiguration(returnImmediately = it) },
-    )
-
-    private fun task(state: TaskState, userText: String) = Task(
-        id = TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(state = state, timestamp = TIMESTAMP),
-        history = listOf(userMessage(userText)),
-    )
-
-    private fun status(state: TaskState, text: String = state.name) = TaskStatusUpdateEvent(
-        taskId = TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(
-            state = state,
-            message = Message(
-                messageId = "agent-$text",
-                role = Role.ROLE_AGENT,
-                parts = listOf(TextPart(text)),
-                contextId = CONTEXT_ID,
-                taskId = TASK_ID,
-            ),
-            timestamp = TIMESTAMP,
-        ),
-    )
-
-    private fun artifactChunk(text: String) = TaskArtifactUpdateEvent(
-        taskId = TASK_ID,
-        contextId = CONTEXT_ID,
-        artifact = Artifact(artifactId = "artifact-1", parts = listOf(TextPart(text))),
-        append = true,
-    )
-
     /** Creates the task and leaves it waiting for input; the turn ends. */
     private val startScript = AgentScript { _, processor ->
         processor.sendTaskEvent(task(TaskState.TASK_STATE_SUBMITTED, "start"))
-        processor.sendTaskEvent(status(TaskState.TASK_STATE_INPUT_REQUIRED))
+        processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED))
     }
 
     /** Follow-up turn that completes the task. */
     private val finishScript = AgentScript { _, processor ->
-        processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING))
+        processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
         processor.sendTaskEvent(artifactChunk("result"))
-        processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
+        processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_COMPLETED))
     }
 
     private val finishEvents = listOf(
-        status(TaskState.TASK_STATE_WORKING),
+        statusUpdate(TaskState.TASK_STATE_WORKING),
         artifactChunk("result"),
-        status(TaskState.TASK_STATE_COMPLETED),
+        statusUpdate(TaskState.TASK_STATE_COMPLETED),
     )
 
     /** Runs the `start` script: the task is created and waits for input. */
@@ -244,12 +195,12 @@ class A2AServerSubscribeTest {
 
                 repeat(eventCount) { i ->
                     processor.sendTaskEvent(
-                        if (i % 2 == 0) artifactChunk("chunk-$i") else status(TaskState.TASK_STATE_WORKING, "step-$i")
+                        if (i % 2 == 0) artifactChunk("chunk-$i") else statusUpdate(TaskState.TASK_STATE_WORKING, "step-$i")
                     )
                 }
 
                 allSubscribed.await()
-                processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
+                processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_COMPLETED))
             }
 
             try {
@@ -283,7 +234,7 @@ class A2AServerSubscribeTest {
     @Test
     fun testExecutorExceptionMarksTaskFailedForSubscribers() = runTest(timeout = TEST_TIMEOUT) {
         val failingScript = AgentScript { _, processor ->
-            processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING))
+            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
             throw IllegalStateException("Agent crashed")
         }
         val server = createServer(mapOf("start" to startScript, "fail" to failingScript))
@@ -317,7 +268,7 @@ class A2AServerSubscribeTest {
         assertEquals(
             listOf<Event>(
                 stored,
-                status(TaskState.TASK_STATE_WORKING),
+                statusUpdate(TaskState.TASK_STATE_WORKING),
                 TaskStatusUpdateEvent(taskId = TASK_ID, contextId = CONTEXT_ID, status = failedStatus),
             ),
             subscription.events
@@ -326,8 +277,8 @@ class A2AServerSubscribeTest {
 
     @Test
     fun testSlowSubscriberDelaysAgentButReceivesEveryEventInOrder() = runTest(timeout = TEST_TIMEOUT) {
-        val updates = List(20) { status(TaskState.TASK_STATE_WORKING, "step-$it") }
-        val completed = status(TaskState.TASK_STATE_COMPLETED)
+        val updates = List(20) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
 
         val agentProgress = MutableStateFlow(0)
         val manyScript = AgentScript { _, processor ->
@@ -364,10 +315,10 @@ class A2AServerSubscribeTest {
     @Test
     fun testAgentEmittingManyEventsWithoutSuspendingCompletesBlockingSend() = runTest(timeout = TEST_TIMEOUT) {
         // More events than any reasonable buffer, sent in a tight loop on the single-threaded test dispatcher.
-        val updates = List(500) { status(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val updates = List(500) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
         val manyScript = AgentScript { _, processor ->
             updates.forEach { processor.sendTaskEvent(it) }
-            processor.sendTaskEvent(status(TaskState.TASK_STATE_COMPLETED))
+            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_COMPLETED))
         }
         val server = createServer(mapOf("start" to startScript, "many" to manyScript))
         val stored = server.startIdleTask()
@@ -378,6 +329,6 @@ class A2AServerSubscribeTest {
         subscription.job.join()
 
         assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response)
-        assertEquals(listOf<Event>(stored) + updates + status(TaskState.TASK_STATE_COMPLETED), subscription.events)
+        assertEquals(listOf<Event>(stored) + updates + statusUpdate(TaskState.TASK_STATE_COMPLETED), subscription.events)
     }
 }

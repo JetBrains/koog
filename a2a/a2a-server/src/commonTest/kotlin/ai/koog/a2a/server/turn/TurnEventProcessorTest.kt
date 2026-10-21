@@ -2,17 +2,18 @@ package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.Role
-import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskState
-import ai.koog.a2a.model.TaskStatus
-import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.CONTEXT_ID
+import ai.koog.a2a.server.TASK_ID
+import ai.koog.a2a.server.TEST_TIMEOUT
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
+import ai.koog.a2a.server.statusUpdate
+import ai.koog.a2a.server.task
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.userMessage
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -24,54 +25,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 
 class TurnEventProcessorTest {
-    private companion object {
-        private val TEST_TIMEOUT = 30.seconds
-    }
-
     private lateinit var taskStorage: InMemoryTaskStorage
     private lateinit var stream: TaskEventStream
-    private val contextId = "test-context-1"
-    private val taskId = "task-1"
+    private val contextId = CONTEXT_ID
+    private val taskId = TASK_ID
 
     @BeforeTest
     fun setUp() {
         taskStorage = InMemoryTaskStorage()
         stream = TaskEventStream(taskId, taskStorage, UuidIdGenerator)
     }
-
-    private fun createMessage(
-        messageId: String,
-        contextId: String,
-        content: String
-    ) = Message(
-        messageId = messageId,
-        role = Role.ROLE_USER,
-        parts = listOf(TextPart(content)),
-        contextId = contextId
-    )
-
-    private fun createTask(
-        id: String,
-        contextId: String,
-        state: TaskState = TaskState.TASK_STATE_SUBMITTED
-    ) = Task(
-        id = id,
-        contextId = contextId,
-        status = TaskStatus(
-            state = state,
-            timestamp = Instant.parse("2023-01-01T10:00:00Z")
-        )
-    )
-
-    private fun statusUpdate(state: TaskState) = TaskStatusUpdateEvent(
-        taskId = taskId,
-        contextId = contextId,
-        status = TaskStatus(state = state),
-    )
 
     private fun createProcessor(
         contextId: String,
@@ -103,10 +68,10 @@ class TurnEventProcessorTest {
         val processor = createProcessor(contextId, taskId)
 
         assertFailsWith<InvalidEventException> {
-            processor.sendMessage(createMessage("msg-1", "different-context", "Hello"))
+            processor.sendMessage(userMessage("Hello", contextId = "different-context", messageId = "msg-1"))
         }
         assertFailsWith<InvalidEventException> {
-            processor.sendTaskEvent(createTask(taskId, "different-context"))
+            processor.sendTaskEvent(task(contextId = "different-context"))
         }
 
         processor.close()
@@ -116,13 +81,13 @@ class TurnEventProcessorTest {
     fun testEventsAfterMessageFail() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
 
-        processor.sendMessage(createMessage("msg-1", contextId, "Hello"))
+        processor.sendMessage(userMessage("Hello", messageId = "msg-1"))
 
         assertFailsWith<TurnNotActiveException> {
-            processor.sendMessage(createMessage("msg-2", contextId, "World"))
+            processor.sendMessage(userMessage("World", messageId = "msg-2"))
         }
         assertFailsWith<TurnNotActiveException> {
-            processor.sendTaskEvent(createTask(taskId, contextId))
+            processor.sendTaskEvent(task())
         }
     }
 
@@ -131,7 +96,7 @@ class TurnEventProcessorTest {
     @Test
     fun testSendTaskEventNewTask() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
-        val task = createTask(taskId, contextId)
+        val task = task()
 
         // Register the turn view before sending
         val turnView = collect(stream.openTurnView())
@@ -146,7 +111,7 @@ class TurnEventProcessorTest {
     @Test
     fun testSendTaskEventWithExistingTask() = runTest(timeout = TEST_TIMEOUT) {
         // Store a task first
-        val existingTask = createTask(taskId, contextId)
+        val existingTask = task()
         taskStorage.update(existingTask)
 
         // Create processor with existing task
@@ -163,14 +128,14 @@ class TurnEventProcessorTest {
 
     @Test
     fun testMessageRejectedWhenTaskExists() = runTest(timeout = TEST_TIMEOUT) {
-        val existingTask = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        val existingTask = task(TaskState.TASK_STATE_INPUT_REQUIRED)
         taskStorage.update(existingTask)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
         val turnView = collect(stream.openTurnView())
 
         assertFailsWith<InvalidEventException> {
-            processor.sendMessage(createMessage("msg-1", contextId, "Hello"))
+            processor.sendMessage(userMessage("Hello", messageId = "msg-1"))
         }
 
         // The processor still accepts updates of the existing task without a Task first.
@@ -183,14 +148,14 @@ class TurnEventProcessorTest {
 
     @Test
     fun testTaskEventForExistingTaskIsIgnored() = runTest(timeout = TEST_TIMEOUT) {
-        val existingTask = createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED)
+        val existingTask = task(TaskState.TASK_STATE_INPUT_REQUIRED)
         taskStorage.update(existingTask)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
         val turnView = collect(stream.openTurnView())
 
         // Even a terminal Task is not applied, and doesn't close the processor.
-        processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
+        processor.sendTaskEvent(task(TaskState.TASK_STATE_COMPLETED))
 
         assertEquals(existingTask, taskStorage.get(taskId))
 
@@ -202,7 +167,7 @@ class TurnEventProcessorTest {
 
     @Test
     fun testNewTaskGetsUserMessageInHistory() = runTest(timeout = TEST_TIMEOUT) {
-        val userMessage = createMessage("user-1", contextId, "Hello")
+        val userMessage = userMessage("Hello", messageId = "user-1")
         val processor = TurnEventProcessor(
             contextId = contextId,
             taskId = taskId,
@@ -211,9 +176,9 @@ class TurnEventProcessorTest {
         )
         val turnView = collect(stream.openTurnView())
 
-        processor.sendTaskEvent(createTask(taskId, contextId))
+        processor.sendTaskEvent(task())
 
-        val expected = createTask(taskId, contextId).copy(history = listOf(userMessage.copy(taskId = taskId)))
+        val expected = task().copy(history = listOf(userMessage.copy(taskId = taskId)))
         assertEquals(expected, taskStorage.get(taskId))
         assertEquals(listOf(expected), turnView.endTurnAndCollect())
     }
@@ -221,7 +186,7 @@ class TurnEventProcessorTest {
     @Test
     fun testSendEventAfterFinalEventFails() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
-        val task = createTask(taskId, contextId)
+        val task = task()
         val finalStatusUpdate = statusUpdate(TaskState.TASK_STATE_COMPLETED)
         val anotherEvent = TaskArtifactUpdateEvent(
             taskId = taskId,
@@ -244,8 +209,8 @@ class TurnEventProcessorTest {
     @Test
     fun testSendMessageAfterTaskEventFails() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
-        val task = createTask(taskId, contextId)
-        val message = createMessage("msg-1", contextId, "Hello")
+        val task = task()
+        val message = userMessage("Hello", messageId = "msg-1")
 
         processor.sendTaskEvent(task)
 
@@ -261,7 +226,7 @@ class TurnEventProcessorTest {
         val processor = createProcessor(contextId, taskId)
 
         // Create task
-        val task = createTask(taskId, contextId)
+        val task = task()
         processor.sendTaskEvent(task)
 
         // Update status to working
@@ -297,9 +262,9 @@ class TurnEventProcessorTest {
 
     @Test
     fun testMessageIsDeliveredOnlyToTurnView() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
         val processor = createProcessor(contextId, taskId)
-        val message = createMessage("msg-1", contextId, "Hello")
+        val message = userMessage("Hello", messageId = "msg-1")
 
         val turnView = collect(stream.openTurnView())
         val (_, taskSubscriber) = stream.subscribe { taskStorage.get(taskId) }
@@ -315,8 +280,8 @@ class TurnEventProcessorTest {
     fun testClosedProcessorSendMessageFailsAndEventStreamIsEmpty() =
         runTest(timeout = TEST_TIMEOUT) {
             val processor = createProcessor(contextId, taskId)
-            val message1 = createMessage("msg-1", contextId, "Hello")
-            val message2 = createMessage("msg-2", contextId, "World")
+            val message1 = userMessage("Hello", messageId = "msg-1")
+            val message2 = userMessage("World", messageId = "msg-2")
 
             val turnView = collect(stream.openTurnView())
 
@@ -336,7 +301,7 @@ class TurnEventProcessorTest {
     @Test
     fun testClosedProcessorSendTaskEventFailsAndEventStreamIsEmpty() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
-        val task = createTask(taskId, contextId)
+        val task = task()
         val turnView = collect(stream.openTurnView())
 
         // Send first task event

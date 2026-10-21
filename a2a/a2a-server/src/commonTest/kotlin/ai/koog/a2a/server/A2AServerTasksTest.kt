@@ -13,7 +13,6 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
-import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -22,7 +21,6 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Instant
 
 class A2AServerTasksTest {
-    private val ctx = ServerCallContext()
     private lateinit var storage: InMemoryTaskStorage
     private lateinit var server: A2AServer
 

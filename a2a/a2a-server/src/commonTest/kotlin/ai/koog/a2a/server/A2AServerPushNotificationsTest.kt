@@ -12,15 +12,11 @@ import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
-import ai.koog.a2a.model.TaskStatusUpdateEvent
-import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
@@ -53,7 +49,6 @@ private object NewTaskIdGenerator : IdGenerator {
 }
 
 class A2AServerPushNotificationsTest {
-    private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
     private lateinit var pushStorage: InMemoryPushNotificationConfigStorage
     private lateinit var pushSender: GatedPushNotificationSender
@@ -274,49 +269,19 @@ class A2AServerPushNotificationsTest {
 
     private val webhook = TaskPushNotificationConfig(url = "https://example.com/inline", token = "inline-token")
 
-    private fun userMessage(text: String, taskId: String? = null) = Message(
-        messageId = "user-$text",
-        role = Role.ROLE_USER,
-        parts = listOf(TextPart(text)),
-        contextId = CONTEXT_ID,
-        taskId = taskId,
-    )
-
     private fun sendRequest(
         text: String,
         taskId: String? = null,
         pushConfig: TaskPushNotificationConfig? = null,
         tenant: String? = null,
-    ) = SendMessageRequest(
-        message = userMessage(text, taskId),
+    ) = request(text, taskId).copy(
         configuration = pushConfig?.let { SendMessageConfiguration(taskPushNotificationConfig = it) },
         tenant = tenant,
     )
 
-    private val submittedTask = Task(
-        id = NEW_TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(state = TaskState.TASK_STATE_SUBMITTED, timestamp = TIMESTAMP),
-        history = listOf(userMessage("ask")),
-    )
+    private val submittedTask = task(TaskState.TASK_STATE_SUBMITTED, "ask", taskId = NEW_TASK_ID)
 
-    private fun inputRequired(text: String) = TaskStatusUpdateEvent(
-        taskId = NEW_TASK_ID,
-        contextId = CONTEXT_ID,
-        status = TaskStatus(
-            state = TaskState.TASK_STATE_INPUT_REQUIRED,
-            message = agentMessage(text),
-            timestamp = TIMESTAMP,
-        ),
-    )
-
-    private fun agentMessage(text: String, taskId: String? = NEW_TASK_ID) = Message(
-        messageId = "agent-$text",
-        role = Role.ROLE_AGENT,
-        parts = listOf(TextPart(text)),
-        contextId = CONTEXT_ID,
-        taskId = taskId,
-    )
+    private fun inputRequired(text: String) = statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED, text, taskId = NEW_TASK_ID)
 
     /** The task stored after the "ask" turn. */
     private val inputRequiredTask = submittedTask.copy(status = inputRequired("ask").status)
@@ -361,7 +326,7 @@ class A2AServerPushNotificationsTest {
             pushConfigStorage = pushConfigStorage,
             pushSender = sender,
             idGenerator = NewTaskIdGenerator,
-            coroutineScope = agentScope(),
+            coroutineScope = backgroundScope,
         ) {
             override suspend fun validatePushNotificationConfig(
                 config: TaskPushNotificationConfig,
@@ -549,13 +514,7 @@ class A2AServerPushNotificationsTest {
      * the follow-up's turn is rejected.
      */
     private val cancelTask: suspend A2AServer.() -> Unit = {
-        taskStorage.update(
-            TaskStatusUpdateEvent(
-                taskId = NEW_TASK_ID,
-                contextId = CONTEXT_ID,
-                status = TaskStatus(state = TaskState.TASK_STATE_CANCELED, timestamp = TIMESTAMP),
-            )
-        )
+        taskStorage.update(statusUpdate(TaskState.TASK_STATE_CANCELED, text = null, taskId = NEW_TASK_ID))
     }
 
     @Test

@@ -8,16 +8,11 @@ import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.GetTaskRequest
-import ai.koog.a2a.model.Message
-import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
-import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
-import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
-import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
@@ -50,7 +45,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.time.Instant
 
 /**
  * CancelTask at the [A2AServer] level: the executor's cancellation, the server-forced CANCELED state, and the effect on
@@ -84,7 +78,6 @@ class A2AServerCancelTest {
             counted(delegate.getByContext(contextId, historyLength, includeArtifacts))
     }
 
-    private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
     private lateinit var cancelReads: CancelReadCounter
     private lateinit var pushConfigStorage: InMemoryPushNotificationConfigStorage
@@ -114,47 +107,16 @@ class A2AServerCancelTest {
     )
 
     private fun TestScope.createServer(scripts: Map<String, AgentScript>, cancelHandler: CancelHandler) =
-        newServer(scripts, cancelHandler, agentScope())
+        newServer(scripts, cancelHandler, backgroundScope)
 
     /** Cancels the task, counting its task reads in [cancelReads]. */
     private suspend fun A2AServer.cancelCountingReads(): Task =
         withContext(CANCEL_CALL) { onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
 
-    private fun request(text: String) = SendMessageRequest(
-        message = Message(
-            messageId = "user-$text",
-            role = Role.ROLE_USER,
-            parts = listOf(TextPart(text)),
-            contextId = CONTEXT_ID,
-        ),
-    )
-
-    private fun status(state: TaskState, timestamp: Instant = TIMESTAMP, message: String? = null) = TaskStatus(
-        state = state,
-        message = message?.let {
-            Message(
-                messageId = "agent-$it",
-                role = Role.ROLE_AGENT,
-                parts = listOf(TextPart(it)),
-                contextId = CONTEXT_ID,
-                taskId = TASK_ID,
-            )
-        },
-        timestamp = timestamp,
-    )
-
-    private fun statusUpdate(state: TaskState, message: String? = null) = TaskStatusUpdateEvent(
-        taskId = TASK_ID,
-        contextId = CONTEXT_ID,
-        status = status(state, message = message),
-    )
-
-    private fun task(state: TaskState) = Task(id = TASK_ID, contextId = CONTEXT_ID, status = status(state))
-
     /** Creates the task and leaves it waiting for input; the turn ends. */
     private val idleScript = AgentScript { _, processor ->
         processor.sendTaskEvent(task(TaskState.TASK_STATE_SUBMITTED))
-        processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED))
+        processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED, text = null))
     }
 
     private val doNothingOnCancel = CancelHandler { _, _ -> }
@@ -171,7 +133,7 @@ class A2AServerCancelTest {
         val interrupted = CompletableDeferred<Unit>()
 
         val script = AgentScript { _, processor ->
-            processor.sendTaskEvent(Task(id = TASK_ID, contextId = CONTEXT_ID, status = status(TaskState.TASK_STATE_WORKING)))
+            processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING))
             started.complete(Unit)
             try {
                 awaitCancellation()
@@ -179,14 +141,12 @@ class A2AServerCancelTest {
                 interrupted.complete(Unit)
             }
         }
-
-        private fun status(state: TaskState) = TaskStatus(state = state, timestamp = TIMESTAMP)
     }
 
     private fun forcedCancellation(event: Event): TaskStatusUpdateEvent {
         assertIs<TaskStatusUpdateEvent>(event)
         // The timestamp is taken by the server's clock.
-        assertEquals(statusUpdate(TaskState.TASK_STATE_CANCELED).copy(status = status(TaskState.TASK_STATE_CANCELED, event.status.timestamp ?: TIMESTAMP)), event)
+        assertEquals(statusUpdate(TaskState.TASK_STATE_CANCELED, text = null, timestamp = event.status.timestamp), event)
         assertNotNull(event.status.timestamp)
         return event
     }
@@ -322,7 +282,7 @@ class A2AServerCancelTest {
         val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
         runCurrent()
 
-        assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED).copy(status = canceled.status)), pushSender.sent)
+        assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED, text = null).copy(status = canceled.status)), pushSender.sent)
     }
 
     @Test
@@ -338,7 +298,7 @@ class A2AServerCancelTest {
         response.await()
         runCurrent()
 
-        assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED).copy(status = canceled.status)), pushSender.sent)
+        assertEquals(listOf<Pair<String, Event>>("c1" to statusUpdate(TaskState.TASK_STATE_CANCELED, text = null).copy(status = canceled.status)), pushSender.sent)
     }
 
     /**
@@ -353,7 +313,7 @@ class A2AServerCancelTest {
             processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING))
             started.complete(Unit)
             finishNow.await()
-            processor.sendTaskEvent(statusUpdate(finalState))
+            processor.sendTaskEvent(statusUpdate(finalState, text = null))
             finished.complete(Unit)
         }
         val lateCancel = CancelHandler { processor, _ ->
@@ -404,7 +364,7 @@ class A2AServerCancelTest {
             started.complete(Unit)
             rejectNow.await()
             // Another task's id: rejected, and the agent lets the exception fail its job.
-            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING).copy(taskId = "other-task"))
+            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING, text = null, taskId = "other-task"))
         }
         val cancelAfterRejection = CancelHandler { processor, agentJob ->
             rejectNow.complete(Unit)
@@ -619,7 +579,7 @@ class A2AServerCancelTest {
 
         val processor = assertNotNull(leaked)
         assertFailsWith<TurnNotActiveException> {
-            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
+            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING, text = null))
         }
         assertEquals(idle, taskStorage.get(TASK_ID))
     }
@@ -628,7 +588,7 @@ class A2AServerCancelTest {
     fun testStandaloneCancelProcessorRejectsMessage() = runTest(timeout = TEST_TIMEOUT) {
         var messageFailure: Throwable? = null
         val messagingCancel = CancelHandler { processor, _ ->
-            val reply = Message(messageId = "agent-reply", role = Role.ROLE_AGENT, parts = listOf(TextPart("bye")), contextId = CONTEXT_ID)
+            val reply = agentMessage("bye", taskId = null, messageId = "agent-reply")
             messageFailure = runCatching { processor.sendMessage(reply) }.exceptionOrNull()
         }
         val server = createServer(emptyMap(), messagingCancel)
@@ -649,8 +609,8 @@ class A2AServerCancelTest {
             repeat(50) { attempt ->
                 val storage = InMemoryTaskStorage()
                 val finishScript = AgentScript { _, processor ->
-                    processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
-                    processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_COMPLETED))
+                    processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING, text = null))
+                    processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_COMPLETED, text = null))
                 }
                 val server = newServer(
                     mapOf("start" to idleScript, "finish" to finishScript),

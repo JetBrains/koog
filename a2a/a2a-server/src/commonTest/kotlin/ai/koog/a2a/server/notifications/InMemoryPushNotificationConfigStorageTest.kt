@@ -5,7 +5,7 @@ import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.TaskPushNotificationConfig
-import ai.koog.a2a.transport.ServerCallContext
+import ai.koog.a2a.server.ctx
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -13,7 +13,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class InMemoryPushNotificationConfigStorageTest {
-    private val ctx = ServerCallContext()
     private lateinit var storage: InMemoryPushNotificationConfigStorage
 
     private val config1 = TaskPushNotificationConfig(

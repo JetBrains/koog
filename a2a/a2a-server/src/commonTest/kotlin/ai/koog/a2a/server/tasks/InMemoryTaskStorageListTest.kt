@@ -11,7 +11,7 @@ import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.transport.ServerCallContext
+import ai.koog.a2a.server.ctx
 import kotlinx.coroutines.test.runTest
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -25,7 +25,6 @@ import kotlin.time.Instant
 
 class InMemoryTaskStorageListTest {
     private lateinit var storage: InMemoryTaskStorage
-    private val ctx = ServerCallContext()
 
     @BeforeTest
     fun setUp() {
