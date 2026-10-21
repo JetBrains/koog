@@ -25,6 +25,8 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
@@ -233,7 +235,7 @@ public class TurnManager(
                         taskExists = taskExists,
                         userMessage = context.params.message,
                     )
-                    val agentJob = scope.async(start = CoroutineStart.LAZY) { block(processor) }
+                    val agentJob = scope.async(start = CoroutineStart.LAZY) { runAgent(processor, block) }
 
                     /*
                      Starts the agent job and ends the turn. It ends the turn under the gate, which is held until the turn
@@ -269,6 +271,20 @@ public class TurnManager(
             throw e
         } finally {
             if (!started) release(stream)
+        }
+    }
+
+    /**
+     * Runs the agent [block]. A [CancellationException] that escapes it while the agent job is still active (e.g. from
+     * the agent's own `withTimeout`) is a failure, not a cancellation: rethrown as is, it would end the turn without
+     * marking the task failed.
+     */
+    private suspend fun runAgent(processor: TurnEventProcessor, block: suspend (TurnEventProcessor) -> Unit) {
+        try {
+            block(processor)
+        } catch (e: CancellationException) {
+            currentCoroutineContext().ensureActive()
+            throw AgentCancellationFailure(e)
         }
     }
 
@@ -493,3 +509,9 @@ public class TurnManager(
         }
     }
 }
+
+/**
+ * The agent's own [CancellationException], rethrown from the agent job as a failure. It keeps the message of the
+ * original exception, so the requester gets the same error as for any other agent crash.
+ */
+internal class AgentCancellationFailure(cause: CancellationException) : IllegalStateException(cause.message, cause)

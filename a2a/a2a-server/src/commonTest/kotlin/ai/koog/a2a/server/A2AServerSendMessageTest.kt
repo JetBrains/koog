@@ -25,10 +25,12 @@ import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.turn.IdGenerator
 import ai.koog.a2a.server.turn.RequestContext
 import ai.koog.a2a.transport.ServerCallContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.toList
@@ -38,11 +40,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -283,6 +287,69 @@ class A2AServerSendMessageTest {
         assertFailsWith<IllegalStateException> {
             server.onSendMessage(request("crash"), ctx)
         }
+        assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testAgentOwnCancellationFailsLikeAnyCrash() = runTest(timeout = TEST_TIMEOUT) {
+        /** Runs a blocking SendMessage whose agent creates the task, then fails with [failure]. */
+        suspend fun sendFailing(failure: suspend () -> Unit): Pair<Any, Task?> {
+            taskStorage = InMemoryTaskStorage()
+            val server = createServer(
+                mapOf(
+                    "work" to AgentScript { _, processor ->
+                        processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING, "work"))
+                        failure()
+                    }
+                )
+            )
+            return server.onSendMessage(request("work"), ctx) to taskStorage.get(TASK_ID)
+        }
+
+        /** The FAILED task the server stores; the message id and timestamp are taken from [stored]. */
+        fun failedTask(stored: Task?): Task {
+            val storedStatus = assertNotNull(stored).status
+            return Task(
+                id = TASK_ID,
+                contextId = CONTEXT_ID,
+                status = TaskStatus(
+                    state = TaskState.TASK_STATE_FAILED,
+                    message = Message(
+                        messageId = assertNotNull(storedStatus.message).messageId,
+                        role = Role.ROLE_AGENT,
+                        parts = listOf(TextPart("Task failed due to an internal error")),
+                        contextId = CONTEXT_ID,
+                        taskId = TASK_ID,
+                    ),
+                    timestamp = storedStatus.timestamp,
+                ),
+                history = listOf(userMessage("work")),
+            )
+        }
+
+        val (crashResponse, crashStored) = sendFailing { throw IllegalStateException("Agent crashed") }
+        assertEquals(failedTask(crashStored), crashStored)
+        assertEquals<Any?>(crashStored, crashResponse)
+
+        val (timeoutResponse, timeoutStored) = sendFailing { withTimeout(1) { awaitCancellation() } }
+        assertEquals(failedTask(timeoutStored), timeoutStored)
+        assertEquals<Any?>(timeoutStored, timeoutResponse)
+    }
+
+    @Test
+    fun testAgentOwnCancellationBeforeTaskCreatedSurfacesToRequester() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(
+            mapOf(
+                "crash" to AgentScript { _, _ -> throw IllegalStateException("Agent gave up") },
+                "cancel" to AgentScript { _, _ -> throw CancellationException("Agent gave up") },
+            )
+        )
+
+        val crash = assertFailsWith<IllegalStateException> { server.onSendMessage(request("crash"), ctx) }
+        val cancel = assertFailsWith<IllegalStateException> { server.onSendMessage(request("cancel"), ctx) }
+
+        assertEquals(crash.message, cancel.message)
+        assertIs<CancellationException>(cancel.cause)
         assertEquals(null, taskStorage.get(TASK_ID))
     }
 

@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
@@ -51,6 +52,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -295,6 +297,75 @@ class TurnManagerTest {
 
         assertNull(taskStorage.get(taskId))
         assertEquals(0, turnManager.activeStreams())
+    }
+
+    @Test
+    fun testAgentOwnTimeoutMarksTaskFailedAndEndsSubscribers() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeTask()
+
+        val received = mutableListOf<Event>()
+        val subscriber = subscribeWith(turnManager) { received += it }
+        runCurrent()
+
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val turn = turnManager.startTurn(createContext(taskId, contextId, task = inputRequired)) { processor ->
+            processor.sendTaskEvent(working)
+            withTimeout(1) { awaitCancellation() }
+        }
+
+        val events = turn.events.toList()
+        val failure = assertFailsWith<AgentCancellationFailure> { turn.agentJob.await() }
+        assertIs<TimeoutCancellationException>(failure.cause)
+        turn.join()
+        subscriber.join()
+
+        val stored = assertNotNull(taskStorage.get(taskId))
+        val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
+        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
+        assertEquals(failedStatus, stored.status)
+        assertEquals(listOf<Event>(working, failedEvent), events)
+        assertEquals(listOf<Event>(inputRequired, working, failedEvent), received)
+        assertEquals(0, turnManager.activeStreams())
+    }
+
+    @Test
+    fun testAgentOwnCancellationWithoutTaskCreatesNothing() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) {
+            throw CancellationException("agent gave up")
+        }
+
+        assertEquals(emptyList(), turn.events.toList())
+        val failure = assertFailsWith<AgentCancellationFailure> { turn.agentJob.await() }
+        assertEquals("agent gave up", failure.message)
+        turn.join()
+
+        assertNull(taskStorage.get(taskId))
+        assertEquals(0, turnManager.activeStreams())
+    }
+
+    @Test
+    fun testCancelledAgentJobDoesNotMarkTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val working = createTask(taskId, contextId, TaskState.TASK_STATE_WORKING)
+        val agentStarted = CompletableDeferred<Unit>()
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(working)
+            agentStarted.complete(Unit)
+            awaitCancellation()
+        }
+        val events = drain(turn)
+        agentStarted.await()
+
+        turn.agentJob.cancelAndJoin()
+        turn.join()
+
+        assertFailsWith<CancellationException> { turn.agentJob.await() }
+        assertEquals(listOf<Event>(working.withUserMessage()), events.await())
+        assertEquals(working.withUserMessage(), taskStorage.get(taskId))
     }
 
     /** A scope with a plain, non-supervisor job, like `CoroutineScope(Dispatchers.IO)`. */
