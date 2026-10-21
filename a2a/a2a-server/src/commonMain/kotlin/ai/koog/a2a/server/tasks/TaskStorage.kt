@@ -4,6 +4,7 @@ import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.ListTasksResponse
+import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.server.exceptions.TaskOperationException
@@ -122,9 +123,7 @@ public interface TaskStorage {
      * Updates task state based on an event, or creates the task if it doesn't exist.
      *
      * - A [Task] is stored as a new task, or replaces the stored task entirely (status, history, artifacts, and
-     *   metadata). The server relies on the replacement to persist a follow-up turn's user message (it moves
-     *   [ai.koog.a2a.model.TaskStatus.message] into [Task.history], appends the message, and writes the task back), so
-     *   implementations must store the given task as is.
+     *   metadata). The default [appendHistory] relies on the replacement.
      * - A [ai.koog.a2a.model.TaskStatusUpdateEvent] replaces the status of the existing task. If the status
      *   that is replaced has a message, that message is moved into [Task.history] (appended to the end), unless the
      *   history already contains a message with the same [ai.koog.a2a.model.Message.messageId], in which case it is
@@ -137,6 +136,27 @@ public interface TaskStorage {
      * @throws TaskOperationException if the task cannot be created or updated, e.g. a non-[Task] event for a non-existing task
      */
     public suspend fun update(event: TaskEvent)
+
+    /**
+     * Adds [message] to the history of the task with [taskId], for internal use: the server persists the user message
+     * of a follow-up turn with it.
+     *
+     * If the history already contains a message with the same [Message.messageId], the task is left unchanged.
+     * Otherwise the current [ai.koog.a2a.model.TaskStatus.message], if any, is moved into [Task.history] (unless a
+     * message with its id is already there), [message] is appended, and the status message is cleared. Nothing else
+     * changes. If the task doesn't exist, nothing happens.
+     *
+     * The server never calls it concurrently with another write to the same task, but storages shared between
+     * processes should apply it atomically. The default implementation reads the whole task and writes it back with
+     * [update]; override it to avoid that cost.
+     *
+     * @param taskId the task identifier
+     * @param message the message to add
+     */
+    public suspend fun appendHistory(taskId: String, message: Message) {
+        val task = get(taskId, historyLength = null, includeArtifacts = true) ?: return
+        task.withAppendedHistory(message)?.let { update(it) }
+    }
 
     /**
      * Deletes a task by ID.

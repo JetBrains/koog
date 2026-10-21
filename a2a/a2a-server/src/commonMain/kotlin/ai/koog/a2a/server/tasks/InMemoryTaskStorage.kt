@@ -5,6 +5,7 @@ import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.ListTasksResponse
+import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskEvent
@@ -166,6 +167,11 @@ public class InMemoryTaskStorage : TaskStorage {
                 tasks[event.taskId] = updatedTask
             }
         }
+    }
+
+    override suspend fun appendHistory(taskId: String, message: Message): Unit = rwLock.withWriteLock {
+        val updatedTask = tasks[taskId]?.withAppendedHistory(message) ?: return@withWriteLock
+        tasks[taskId] = updatedTask
     }
 
     override suspend fun delete(taskId: String): Unit = rwLock.withWriteLock {

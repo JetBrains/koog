@@ -13,3 +13,14 @@ internal fun List<Message>?.plusIfAbsent(message: Message): List<Message> {
     val current = this.orEmpty()
     return if (current.any { it.messageId == message.messageId }) current else current + message
 }
+
+/**
+ * Returns this task with [message] added to its history by the rules of [TaskStorage.appendHistory], or `null` if the
+ * history already contains a message with the same [Message.messageId] and the task stays unchanged.
+ */
+internal fun Task.withAppendedHistory(message: Message): Task? {
+    if (history.orEmpty().any { it.messageId == message.messageId }) return null
+
+    val withStatusMessage = status.message?.let { history.plusIfAbsent(it) } ?: history
+    return copy(history = withStatusMessage.plusIfAbsent(message), status = status.copy(message = null))
+}

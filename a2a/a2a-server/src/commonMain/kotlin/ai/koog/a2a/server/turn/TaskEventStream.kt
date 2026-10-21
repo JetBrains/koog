@@ -62,9 +62,10 @@ import kotlin.time.Clock
  * The stream adds user messages to [Task.history] (deduplicated by [Message.messageId], see [plusIfAbsent]), so
  * agents don't have to:
  * - for a new task, [publish] adds the turn's user message to the agent's initial [Task];
- * - for a follow-up, [publish] adds it lazily, right before applying the turn's first non-[Task] [TaskEvent]: the
- *   current [ai.koog.a2a.model.TaskStatus.message] is moved into the history, the user message is appended, and the
- *   status message is cleared. A turn with no such event doesn't persist the user message.
+ * - for a follow-up, [publish] adds it lazily with [TaskStorage.appendHistory], right before applying the turn's first
+ *   non-[Task] [TaskEvent]: the current [ai.koog.a2a.model.TaskStatus.message] is moved into the history, the user
+ *   message is appended, and the status message is cleared. A turn with no such event doesn't persist the user
+ *   message.
  *
  * A [Task] event for an existing task is ignored by [publish]: neither stored nor delivered.
  *
@@ -190,7 +191,7 @@ internal class TaskEventStream(
 
             is TaskEvent -> {
                 if (followUpMessage != null) {
-                    persistUserMessage(followUpMessage)
+                    taskStorage.appendHistory(taskId, followUpMessage)
                 }
 
                 persistAndDeliver(event)
@@ -223,19 +224,6 @@ internal class TaskEventStream(
     private suspend fun persist(event: TaskEvent): Unit = withContext(NonCancellable) {
         taskStorage.update(event)
         onPersisted?.invoke(event)
-    }
-
-    /** Adds [userMessage] to the history of the stored task, see [publish]. Must be called under the stream lock. */
-    private suspend fun persistUserMessage(userMessage: Message) {
-        val task = taskStorage.get(taskId, historyLength = null, includeArtifacts = true) ?: return
-
-        if (task.history.orEmpty().any { it.messageId == userMessage.messageId }) return
-
-        val previousStatusMessage = task.status.message
-        val history = (previousStatusMessage?.let { task.history.plusIfAbsent(it) } ?: task.history)
-            .plusIfAbsent(userMessage)
-
-        taskStorage.update(task.copy(history = history, status = task.status.copy(message = null)))
     }
 
     /**

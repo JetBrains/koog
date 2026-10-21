@@ -317,6 +317,91 @@ class InMemoryTaskStorageTest {
         assertEquals(listOf(firstUpdateMessage, secondUpdateMessage), finalTask.history)
     }
 
+    /** Delegates everything but [appendHistory], so it runs the default implementation of [TaskStorage]. */
+    private class DefaultAppendHistoryStorage(delegate: TaskStorage) : TaskStorage by delegate {
+        override suspend fun appendHistory(taskId: String, message: Message) =
+            super<TaskStorage>.appendHistory(taskId, message)
+    }
+
+    /** The in-memory override and the default implementation must behave the same. */
+    private fun appendHistoryStorages(): List<TaskStorage> =
+        listOf(InMemoryTaskStorage(), DefaultAppendHistoryStorage(InMemoryTaskStorage()))
+
+    private val agentPrompt = Message(
+        messageId = "prompt",
+        role = Role.ROLE_AGENT,
+        parts = listOf(TextPart("Which file?")),
+        contextId = "context-1",
+    )
+
+    private fun inputRequiredTask() = createTask(
+        id = "task-1",
+        contextId = "context-1",
+        status = TaskStatus(
+            state = TaskState.TASK_STATE_INPUT_REQUIRED,
+            message = agentPrompt,
+            timestamp = Instant.parse("2023-01-01T10:00:00Z"),
+        ),
+        history = listOf(createUserMessage("user-1", "context-1", "Summarize a file")),
+        artifacts = listOf(Artifact(artifactId = "artifact-1", parts = listOf(TextPart("draft")))),
+        metadata = buildJsonObject { put("key", JsonPrimitive("value")) },
+    )
+
+    @Test
+    fun testAppendHistoryMovesStatusMessageIntoHistoryAndAppendsMessage() = runTest {
+        appendHistoryStorages().forEach { storage ->
+            val task = inputRequiredTask()
+            storage.update(task)
+            val followUp = createUserMessage("user-2", "context-1", "README.md")
+
+            storage.appendHistory("task-1", followUp)
+
+            val expected = task.copy(
+                status = task.status.copy(message = null),
+                history = task.history.orEmpty() + agentPrompt + followUp,
+            )
+            assertEquals(expected, storage.get("task-1"))
+        }
+    }
+
+    @Test
+    fun testAppendHistoryDoesNotDuplicateStatusMessageAlreadyInHistory() = runTest {
+        appendHistoryStorages().forEach { storage ->
+            val task = inputRequiredTask().let { it.copy(history = it.history.orEmpty() + agentPrompt) }
+            storage.update(task)
+            val followUp = createUserMessage("user-2", "context-1", "README.md")
+
+            storage.appendHistory("task-1", followUp)
+
+            val expected = task.copy(
+                status = task.status.copy(message = null),
+                history = task.history.orEmpty() + followUp,
+            )
+            assertEquals(expected, storage.get("task-1"))
+        }
+    }
+
+    @Test
+    fun testAppendHistoryLeavesTaskUnchangedWhenMessageIsAlreadyInHistory() = runTest {
+        appendHistoryStorages().forEach { storage ->
+            val task = inputRequiredTask()
+            storage.update(task)
+
+            storage.appendHistory("task-1", task.history.orEmpty().single())
+
+            assertEquals(task, storage.get("task-1"))
+        }
+    }
+
+    @Test
+    fun testAppendHistoryForNonExistentTaskDoesNothing() = runTest {
+        appendHistoryStorages().forEach { storage ->
+            storage.appendHistory("non-existent-id", createUserMessage("user-1", "context-1", "Hello"))
+
+            assertNull(storage.get("non-existent-id"))
+        }
+    }
+
     private fun createUserMessage(
         messageId: String,
         contextId: String,
