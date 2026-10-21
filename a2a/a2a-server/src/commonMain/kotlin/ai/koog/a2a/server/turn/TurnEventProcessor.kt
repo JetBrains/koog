@@ -50,7 +50,6 @@ public class TurnEventProcessor internal constructor(
     public val contextId: String,
     public val taskId: String,
     private val stream: TaskEventStream,
-    private val turnId: Long?,
     private val taskExists: Boolean = false,
     userMessage: Message? = null,
     private val onRejected: (Exception) -> Unit = {},
@@ -111,7 +110,7 @@ public class TurnEventProcessor internal constructor(
                 throw reject(InvalidEventException(INVALID_CONTEXT_ID))
             }
 
-            stream.publish(message, turnId)
+            stream.publish(message)
             onPublished()
             isOpen.store(false)
         } else {
@@ -151,7 +150,7 @@ public class TurnEventProcessor internal constructor(
         val followUpMessage = pendingFollowUpMessage.takeIf { event !is Task }
 
         val isApplied = try {
-            stream.publish(event, turnId, userMessage = storedUserMessage.takeUnless { taskExists }, followUpMessage)
+            stream.publish(event, userMessage = storedUserMessage.takeUnless { taskExists }, followUpMessage)
         } catch (e: Exception) {
             onPublished()
             throw if (e is TaskOperationException) reject(e) else e

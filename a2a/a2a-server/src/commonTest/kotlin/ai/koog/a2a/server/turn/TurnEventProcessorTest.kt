@@ -36,7 +36,6 @@ class TurnEventProcessorTest {
     private lateinit var stream: TaskEventStream
     private val contextId = "test-context-1"
     private val taskId = "task-1"
-    private val turnId = 1L
 
     @BeforeTest
     fun setUp() {
@@ -82,7 +81,6 @@ class TurnEventProcessorTest {
         contextId = contextId,
         taskId = taskId,
         stream = stream,
-        turnId = turnId,
         taskExists = taskExists,
     )
 
@@ -96,7 +94,7 @@ class TurnEventProcessorTest {
      * Ends the turn and returns all events its view received.
      */
     private suspend fun Deferred<List<Event>>.endTurnAndCollect(): List<Event> {
-        stream.endTurn(turnId, contextId, outcome = TurnOutcome.Completed(rejection = null))
+        stream.endTurn(contextId, outcome = TurnOutcome.Completed(rejection = null))
         return await()
     }
 
@@ -136,7 +134,7 @@ class TurnEventProcessorTest {
         val task = createTask(taskId, contextId)
 
         // Register the turn view before sending
-        val turnView = collect(stream.openTurnView(turnId))
+        val turnView = collect(stream.openTurnView())
 
         processor.sendTaskEvent(task)
 
@@ -169,7 +167,7 @@ class TurnEventProcessorTest {
         taskStorage.update(existingTask)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
-        val turnView = collect(stream.openTurnView(turnId))
+        val turnView = collect(stream.openTurnView())
 
         assertFailsWith<InvalidEventException> {
             processor.sendMessage(createMessage("msg-1", contextId, "Hello"))
@@ -189,7 +187,7 @@ class TurnEventProcessorTest {
         taskStorage.update(existingTask)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
-        val turnView = collect(stream.openTurnView(turnId))
+        val turnView = collect(stream.openTurnView())
 
         // Even a terminal Task is not applied, and doesn't close the processor.
         processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
@@ -209,10 +207,9 @@ class TurnEventProcessorTest {
             contextId = contextId,
             taskId = taskId,
             stream = stream,
-            turnId = turnId,
             userMessage = userMessage,
         )
-        val turnView = collect(stream.openTurnView(turnId))
+        val turnView = collect(stream.openTurnView())
 
         processor.sendTaskEvent(createTask(taskId, contextId))
 
@@ -299,20 +296,17 @@ class TurnEventProcessorTest {
     // Concurrent scenarios
 
     @Test
-    fun testMessageIsDeliveredOnlyToOwnTurnView() = runTest(timeout = TEST_TIMEOUT) {
+    fun testMessageIsDeliveredOnlyToTurnView() = runTest(timeout = TEST_TIMEOUT) {
         taskStorage.update(createTask(taskId, contextId, TaskState.TASK_STATE_INPUT_REQUIRED))
         val processor = createProcessor(contextId, taskId)
         val message = createMessage("msg-1", contextId, "Hello")
 
-        val turnView = collect(stream.openTurnView(turnId))
-        val otherTurnView = collect(stream.openTurnView(turnId + 1))
+        val turnView = collect(stream.openTurnView())
         val (_, taskSubscriber) = stream.subscribe { taskStorage.get(taskId) }
 
         processor.sendMessage(message)
-        stream.endTurn(turnId + 1, contextId, outcome = TurnOutcome.Completed(rejection = null))
 
-        assertEquals(listOf(message), turnView.endTurnAndCollect(), "Own turn view should receive the message")
-        assertEquals(emptyList(), otherTurnView.await(), "Other turn view should not receive the message")
+        assertEquals(listOf(message), turnView.endTurnAndCollect(), "Turn view should receive the message")
         // Delivery would have suspended on the rendezvous channel, so there is nothing pending for the subscriber.
         assertTrue(taskSubscriber.tryReceive().isFailure, "Task subscriber should not receive the message")
     }
@@ -324,7 +318,7 @@ class TurnEventProcessorTest {
             val message1 = createMessage("msg-1", contextId, "Hello")
             val message2 = createMessage("msg-2", contextId, "World")
 
-            val turnView = collect(stream.openTurnView(turnId))
+            val turnView = collect(stream.openTurnView())
 
             // Send first message
             processor.sendMessage(message1)
@@ -343,7 +337,7 @@ class TurnEventProcessorTest {
     fun testClosedProcessorSendTaskEventFailsAndEventStreamIsEmpty() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
         val task = createTask(taskId, contextId)
-        val turnView = collect(stream.openTurnView(turnId))
+        val turnView = collect(stream.openTurnView())
 
         // Send first task event
         processor.sendTaskEvent(task)

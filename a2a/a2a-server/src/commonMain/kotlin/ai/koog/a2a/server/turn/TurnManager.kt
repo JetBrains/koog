@@ -75,6 +75,11 @@ import kotlinx.coroutines.withContext
  * while acquiring a stream lock, so a stalled task can't block other tasks. The stream lock may be followed by the push
  * queue lock, a leaf lock held only for queue bookkeeping.
  *
+ * The processor's lock, which serializes its sends, sits between the gate and the stream lock: a [withTaskProcessor]
+ * block sending through a processor takes the gate, then the processor's lock, then the stream lock, and the agent
+ * takes the processor's lock, then the stream lock, without the gate. Nothing takes the gate while holding the
+ * processor's lock. The internal lock of the slots' [KeyedMutex] is a leaf lock shared by all tasks.
+ *
  * Storage I/O happens under the gate: task reads and writes of the task stream, the task reads of [startTurn] and
  * [withTaskProcessor], and the save of a turn's inline push notification config in [startTurn]. A slow storage delays
  * only turns and [withTaskProcessor] blocks of the same task.
@@ -129,6 +134,13 @@ public class TurnManager(
     pushSender: PushNotificationSender? = null,
     private val idGenerator: IdGenerator = UuidIdGenerator,
 ) {
+    /*
+     Design rule: methods take data, not caller callbacks that run under this class's locks (the slot, the gate, the
+     stream lock). Such callbacks carry hidden locking rules (e.g. calling back into the turn layer deadlocks) and make
+     the error and cleanup order part of the contract. The only lambdas are the agent block, which runs in the agent job
+     under no lock, and the withTaskProcessor block, the cancel logic, which by design runs under the gate.
+     */
+
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
@@ -156,8 +168,8 @@ public class TurnManager(
     }
 
     /**
-     * Guards [streams], [turns], and [nextTurnId]. May be acquired while holding [TaskEventStream.processorGate], but
-     * is never held while acquiring a stream lock, which a fan-out may hold for long.
+     * Guards [streams] and [turns]. May be acquired while holding [TaskEventStream.processorGate], but is never held
+     * while acquiring a stream lock, which a fan-out may hold for long.
      */
     private val registryMutex = Mutex()
     private val streams = mutableMapOf<String, StreamEntry>()
@@ -167,7 +179,6 @@ public class TurnManager(
      * task's [TaskEventStream.processorGate].
      */
     private val turns = mutableMapOf<String, Turn>()
-    private var nextTurnId = 0L
 
     /**
      * Decides the [Turn.outcome] of one turn. Rejected and published events are recorded under the processor's lock, by
@@ -277,9 +288,8 @@ public class TurnManager(
                 return stream.processorGate.withLock {
                     val task = if (isFollowUp) getFollowUpTask(request, ctx, taskId) else null
                     val contextId = task?.contextId ?: defaultContextId
-                    val turnId = registryMutex.withLock { nextTurnId++ }
 
-                    val channel = stream.openTurnView(turnId)
+                    val channel = stream.openTurnView()
                     view = channel
 
                     // The view is registered: from here on, the turn starts even if the caller is cancelled.
@@ -292,7 +302,6 @@ public class TurnManager(
                             contextId = contextId,
                             taskId = taskId,
                             stream = stream,
-                            turnId = turnId,
                             taskExists = isFollowUp,
                             userMessage = message,
                             onRejected = outcomeRecorder::onRejected,
@@ -315,7 +324,6 @@ public class TurnManager(
                                 taskId,
                                 contextId,
                                 stream,
-                                turnId,
                                 deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !isFollowUp,
                             )
                         }
@@ -404,7 +412,6 @@ public class TurnManager(
         taskId: String,
         contextId: String,
         stream: TaskEventStream,
-        turnId: Long,
         deletesPushConfigsIfTaskAbsent: Boolean,
     ) {
         // Fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
@@ -434,7 +441,7 @@ public class TurnManager(
                         processor.close()
 
                         try {
-                            stream.endTurn(turnId, contextId, outcomeRecorder.complete(failure))
+                            stream.endTurn(contextId, outcomeRecorder.complete(failure))
                         } finally {
                             registryMutex.withLock { turns -= taskId }
                         }
@@ -516,11 +523,11 @@ public class TurnManager(
     }
 
     /**
-     * Runs [block] with a [TurnEventProcessor] bound to the task stream of [taskId], e.g. to cancel a task.
+     * Runs [block] with a [TurnEventProcessor] bound to the task stream of the task [lookup] identifies, e.g. to cancel
+     * a task.
      *
-     * [getTask] is called first, under the turn gate, and its result is passed to [block]. No turn starts or ends
-     * between that read and the end of [block] (a running agent may still change the task). An exception thrown by
-     * [getTask], e.g. for an unknown task, propagates before [block] or the processor exist.
+     * The task is first read with [TaskStorage.get] ([lookup], [ctx]) under the turn gate and passed to [block]. No turn
+     * starts or ends between that read and the end of [block] (a running agent may still change the task).
      *
      * If a turn of the task is running, [block] receives that turn's processor and agent job, and the turn can't finish
      * until [block] returns, so everything [block] publishes reaches the turn's requester as well. Otherwise, [block]
@@ -539,15 +546,18 @@ public class TurnManager(
      * [block] may cancel and join the agent job, but must not wait for the turn to end (e.g. [Turn.join]) or for a turn
      * to start, since neither can happen while [block] runs.
      *
-     * @param taskId The task id.
-     * @param getTask Reads the task. Its context id is used for the new processor when no turn is running.
+     * @param lookup The task to read, with the history and artifacts [block] needs. The task's context id is used for
+     * the new processor when no turn is running.
+     * @param ctx The context of the call, passed to [TaskStorage.get] to scope the lookup.
      * @param block The action to run.
      * @return The result of [block].
+     * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller), before [block] or
+     * the processor exist.
      */
     @InternalA2AApi
     public suspend fun <T> withTaskProcessor(
-        taskId: String,
-        getTask: suspend () -> Task,
+        lookup: GetTaskRequest,
+        ctx: ServerCallContext,
         block: suspend (
             task: Task,
             processor: TurnEventProcessor,
@@ -555,18 +565,18 @@ public class TurnManager(
             publish: suspend (TaskEvent) -> Unit,
         ) -> T,
     ): T {
+        val taskId = lookup.id
         val stream = acquire(taskId)
 
         try {
             return stream.processorGate.withLock {
-                val task = getTask()
+                val task = taskStorage.get(lookup, ctx) ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
                 val turn = registryMutex.withLock { turns[taskId] }
 
                 val processor = turn?.eventProcessor ?: TurnEventProcessor(
                     contextId = task.contextId.orEmpty(),
                     taskId = taskId,
                     stream = stream,
-                    turnId = null,
                     // The task exists: a Message is rejected like in any turn of an existing task.
                     taskExists = true,
                 )
@@ -575,7 +585,7 @@ public class TurnManager(
                 val publish: suspend (TaskEvent) -> Unit = { event ->
                     check(isBlockRunning) { "Can't publish after the withTaskProcessor block has returned" }
                     require(event.taskId == taskId) { "Event of task '${event.taskId}' can't be published to task '$taskId'" }
-                    stream.publish(event, turnId = null)
+                    stream.publish(event)
                 }
 
                 try {

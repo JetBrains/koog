@@ -70,9 +70,10 @@ import kotlin.time.Clock
  *
  * There are two kinds of subscribers:
  * - task subscribers (SubscribeToTask) receive every [TaskEvent] and end only at a terminal state;
- * - turn views receive every [TaskEvent] plus the [ai.koog.a2a.model.Message] of their own turn, and end at a terminal
- *   state or when [endTurn] is called for their turn. Closing the view under the stream lock after the turn's last
- *   event is the in-band end-of-turn marker.
+ * - the turn view receives every [TaskEvent] plus the turn's [ai.koog.a2a.model.Message], and ends at a terminal state
+ *   or when [endTurn] is called. Closing the view under the stream lock after the turn's last event is the in-band
+ *   end-of-turn marker. Turns of a task don't overlap and each ends before the next one opens its view, so there is
+ *   at most one turn view at a time.
  *
  * @param taskId the id of the task this stream belongs to
  * @param taskStorage the storage where task events are persisted
@@ -94,8 +95,7 @@ internal class TaskEventStream(
 
     private class Subscriber(
         val channel: Channel<Event>,
-        /** Turn id for turn views, `null` for task subscribers. */
-        val turnId: Long?,
+        val isTurnView: Boolean,
     )
 
     /** The stream lock: guards [taskStorage] writes for this task, fan-out, and [subscribers]. */
@@ -127,12 +127,15 @@ internal class TaskEventStream(
             )
         }
 
-        task to register(turnId = null)
+        task to register(isTurnView = false)
     }
 
-    /** Registers the view of the turn [turnId]. Must be called before the turn publishes its first event. */
-    suspend fun openTurnView(turnId: Long): ReceiveChannel<Event> = mutex.withLock {
-        register(turnId)
+    /**
+     * Registers the turn view. Must be called before the turn publishes its first event, and after the previous turn
+     * of the task has ended.
+     */
+    suspend fun openTurnView(): ReceiveChannel<Event> = mutex.withLock {
+        register(isTurnView = true)
     }
 
     /**
@@ -146,7 +149,7 @@ internal class TaskEventStream(
 
     /**
      * Publishes [event]: a [TaskEvent] is persisted and delivered to all subscribers, a
-     * [ai.koog.a2a.model.Message] only to the view of turn [turnId]. A terminal [TaskEvent] closes all subscribers.
+     * [ai.koog.a2a.model.Message] only to the turn view. A terminal [TaskEvent] closes all subscribers.
      *
      * A [Task] for an existing task is ignored. A [Task] for a new task is persisted with [userMessage] added to its
      * history, unless it has it already. A [TaskEvent] other than a [Task] is preceded, if [followUpMessage] is set, by
@@ -156,7 +159,6 @@ internal class TaskEventStream(
      * subscriber takes.
      *
      * @param event the event to publish
-     * @param turnId the turn publishing the event, or `null` when it is published outside a turn
      * @param userMessage the message of the request that started the turn, if the task is created by this turn
      * @param followUpMessage the message of the request that started the turn, if it continues the task and hasn't
      * been persisted yet
@@ -164,7 +166,6 @@ internal class TaskEventStream(
      */
     suspend fun publish(
         event: Event,
-        turnId: Long?,
         userMessage: Message? = null,
         followUpMessage: Message? = null,
     ): Boolean = mutex.withLock {
@@ -195,7 +196,7 @@ internal class TaskEventStream(
                 persistAndDeliver(event)
             }
 
-            else -> fanOut(event) { it.turnId != null && it.turnId == turnId }
+            else -> fanOut(event) { it.isTurnView }
         }
 
         true
@@ -238,29 +239,28 @@ internal class TaskEventStream(
     }
 
     /**
-     * Ends the turn [turnId] with [outcome]: closes its view after the last event of the turn.
+     * Ends the turn with [outcome]: closes the turn view after the last event of the turn.
      *
      * If the agent failed ([TurnOutcome.Failed], [TurnOutcome.Rejected]) and the task exists in a non-terminal state,
      * marks the task [TaskState.TASK_STATE_FAILED] and delivers that update to all subscribers, which are then closed.
      * For [TurnOutcome.Rejected], the view is closed first, so the turn's requester doesn't receive that update. For
      * [TurnOutcome.RequestError], the task is left unchanged.
      *
-     * @param turnId the turn to end
      * @param contextId the context id of the task, used for the failure status update
      * @param outcome how the turn ended
      */
-    suspend fun endTurn(turnId: Long, contextId: String, outcome: TurnOutcome): Unit = mutex.withLock {
+    suspend fun endTurn(contextId: String, outcome: TurnOutcome): Unit = mutex.withLock {
         try {
             when (outcome) {
                 is TurnOutcome.Completed, is TurnOutcome.RequestError -> Unit
                 is TurnOutcome.Failed -> markFailed(contextId)
                 is TurnOutcome.Rejected -> {
-                    closeTurnView(turnId)
+                    closeTurnView()
                     markFailed(contextId)
                 }
             }
         } finally {
-            closeTurnView(turnId)
+            closeTurnView()
         }
     }
 
@@ -290,19 +290,21 @@ internal class TaskEventStream(
         }
     }
 
-    private fun closeTurnView(turnId: Long) {
+    private fun closeTurnView() {
         subscribers.removeAll { subscriber ->
-            (subscriber.turnId == turnId).also { if (it) subscriber.channel.close() }
+            subscriber.isTurnView.also { if (it) subscriber.channel.close() }
         }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun register(turnId: Long?): ReceiveChannel<Event> {
+    private fun register(isTurnView: Boolean): ReceiveChannel<Event> {
         // Drop subscribers whose consumers have gone away.
         subscribers.removeAll { it.channel.isClosedForSend }
 
+        check(!isTurnView || subscribers.none { it.isTurnView }) { "Task '$taskId' already has a turn view" }
+
         val channel = Channel<Event>(Channel.RENDEZVOUS)
-        subscribers += Subscriber(channel, turnId)
+        subscribers += Subscriber(channel, isTurnView)
         return channel
     }
 

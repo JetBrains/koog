@@ -715,12 +715,9 @@ public open class A2AServer(
          startTurn, this doesn't wait for the previous turn to end: it may be the very turn being cancelled.
          */
         return turnManager.withTaskProcessor(
-            taskId,
-            getTask = {
-                // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
-                taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant), ctx)
-                    ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
-            },
+            // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
+            GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant),
+            ctx,
         ) { task, eventProcessor, agentJob, publish ->
             if (task.status.state.terminal) {
                 throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
