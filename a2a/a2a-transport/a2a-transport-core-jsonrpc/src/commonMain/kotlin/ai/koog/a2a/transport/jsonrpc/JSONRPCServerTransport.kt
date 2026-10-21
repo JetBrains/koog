@@ -70,8 +70,8 @@ public open class JSONRPCServerTransport(
     /**
      * Entry point for handling a raw JSON-RPC request payload.
      *
-     * Parses the incoming JSON and resolves the A2A method, according to A2A spec, checks the requested protocol
-     * version with [checkVersion], then dispatches either to
+     * Parses the incoming JSON and resolves the A2A method, according to A2A spec, applies [customizeCallContext],
+     * checks the requested protocol version with [checkVersion], then dispatches either to
      * [onRequest] for non-streaming methods or [onRequestStreaming] for streaming methods.
      *
      * @param requestRaw Raw request body
@@ -81,32 +81,17 @@ public open class JSONRPCServerTransport(
      * @param respondStreaming Lambda to respond with a streaming response. The flow must be collected, either within
      * the lambda or after it returns: this function returns only once the stream is consumed or its collection is
      * cancelled.
+     * @param customizeCallContext Customizes [ctx] once the request is parsed, before the version is checked; not
+     * called if the request cannot be parsed. An exception thrown here is answered like an error raised by the
+     * [requestHandler]: an [A2AException] keeps its error code, any other exception becomes an internal error, and
+     * the response carries the request id. Defaults to returning [ctx] unchanged.
      */
     public suspend fun handleRequest(
         requestRaw: String,
         ctx: ServerCallContext,
         respond: suspend (JSONRPCResponse) -> Unit,
         respondStreaming: suspend (Flow<JSONRPCResponse>) -> Unit,
-    ): Unit = handleRequest(requestRaw, ctxProvider = { ctx }, respond, respondStreaming)
-
-    /**
-     * Same as the [handleRequest] overload taking a [ServerCallContext], but obtains the context from [ctxProvider]
-     * once the request is parsed and before its version is checked. An exception thrown by [ctxProvider] is answered
-     * like an error raised by the [requestHandler]: an [A2AException] keeps its error code, any other exception
-     * becomes an internal error, and the response carries the request id.
-     *
-     * @param requestRaw Raw request body
-     * @param ctxProvider Provides the server call context associated with this request. Not called if the request
-     * cannot be parsed.
-     * @param respond Lambda to respond with a single non-streaming response. Also used for streaming methods
-     * when they fail before the first event.
-     * @param respondStreaming Lambda to respond with a streaming response, see the other [handleRequest] overload.
-     */
-    public suspend fun handleRequest(
-        requestRaw: String,
-        ctxProvider: suspend () -> ServerCallContext,
-        respond: suspend (JSONRPCResponse) -> Unit,
-        respondStreaming: suspend (Flow<JSONRPCResponse>) -> Unit,
+        customizeCallContext: suspend (ServerCallContext) -> ServerCallContext = { it },
     ) {
         // First step - parse the JSON request
         val jsonRequest = try {
@@ -129,15 +114,15 @@ public open class JSONRPCServerTransport(
         }
 
         try {
-            val ctx = ctxProvider()
+            val callCtx = customizeCallContext(ctx)
 
             // Applies to all methods; for streaming ones the error is still a plain response, as no stream is open yet
-            checkVersion(ctx)
+            checkVersion(callCtx)
 
             if (jsonRpcRequest.a2aMethod.streaming) {
-                respondStreamingOrError(onRequestStreaming(jsonRpcRequest.request, ctx), respond, respondStreaming)
+                respondStreamingOrError(onRequestStreaming(jsonRpcRequest.request, callCtx), respond, respondStreaming)
             } else {
-                respond(onRequest(jsonRpcRequest.request, ctx))
+                respond(onRequest(jsonRpcRequest.request, callCtx))
             }
         } catch (ce: CancellationException) {
             throw ce

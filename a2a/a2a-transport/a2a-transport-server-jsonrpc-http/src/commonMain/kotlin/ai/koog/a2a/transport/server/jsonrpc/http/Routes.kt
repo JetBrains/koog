@@ -105,7 +105,7 @@ public fun Route.a2aJsonRpcTransportRoute(
 
         transport.handleRequest(
             requestRaw = call.receiveText(),
-            ctxProvider = { call.customizeCallContext(defaultCtx) },
+            ctx = defaultCtx,
             respond = { response ->
                 // Bypass content negotiation: streaming requests send `Accept: text/event-stream`,
                 // but errors raised before the stream starts are still answered with plain JSON
@@ -127,7 +127,8 @@ public fun Route.a2aJsonRpcTransportRoute(
                         }
                     }
                 )
-            }
+            },
+            customizeCallContext = { call.customizeCallContext(it) },
         )
     }
 }
