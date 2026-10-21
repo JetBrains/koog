@@ -58,14 +58,14 @@ To cancel the agent, you must implement the `cancel` method.
 ```kotlin
 class MyAgentExecutor : AgentExecutor {
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: TurnEventProcessor
     ) {
         // Agent logic here
     }
 
     override suspend fun cancel(
-        context: RequestContext<TaskIdParams>,
+        context: RequestContext<CancelTaskRequest>,
         eventProcessor: TurnEventProcessor,
         agentJob: Deferred<Unit>?
     ) {
@@ -75,7 +75,9 @@ class MyAgentExecutor : AgentExecutor {
 ```
 
 The `RequestContext` provides rich information about the current request,
-including the `contextId` and `taskId` of the current turn, the `message` sent, and the `params` of the request.
+including the `contextId` and `taskId` of the current turn, the `params` of the request
+(for example, `params.message` for a sent message), the stored `task` (if the request refers to an existing task),
+and the `callContext` with the request headers and custom state.
 
 The `TurnEventProcessor` communicates with clients:
 
@@ -87,7 +89,7 @@ The `TurnEventProcessor` communicates with clients:
 eventProcessor.sendMessage(
     Message(
         messageId = generateId(),
-        role = Role.Agent,
+        role = Role.ROLE_AGENT,
         parts = listOf(TextPart("Here's your answer!")),
         contextId = context.contextId
     )
@@ -99,14 +101,70 @@ eventProcessor.sendTaskEvent(
         contextId = context.contextId,
         taskId = context.taskId,
         status = TaskStatus(
-            state = TaskState.Working,
+            state = TaskState.TASK_STATE_WORKING,
             message = Message(/* progress update */),
             timestamp = Clock.System.now()
-        ),
-        final = false  // More updates to come
+        )
     )
 )
 ```
+
+There is no `final` flag on status updates: a turn ends when `execute` returns,
+and a terminal task state ends the task.
+
+#### Error handling in AgentExecutor
+
+How the server treats an exception thrown by `execute` depends on whether the agent has already sent an event in this turn:
+
+- **An `A2AException` thrown before the first event** rejects the request: the client gets that error
+  (for example, `A2AContentTypeNotSupportedException` or `A2AUnsupportedOperationException`),
+  and the task, if it exists, stays unchanged. Use this to reject invalid input.
+- **Any other exception, or any exception after the first event,** fails the turn: the server moves a non-terminal task
+  to `TASK_STATE_FAILED` with a generic message and notifies all streams of the task.
+
+```kotlin
+override suspend fun execute(
+    context: RequestContext<SendMessageRequest>,
+    eventProcessor: TurnEventProcessor
+) {
+    if (context.params.message.parts.none { it is TextPart }) {
+        // Nothing was sent yet, so the task keeps its state and the client gets the error code
+        throw A2AContentTypeNotSupportedException("Only text input is supported")
+    }
+
+    // ...
+}
+```
+
+An exception that an agent throws on its own, including a `CancellationException` (for example, from `withTimeout`),
+is a failure too. Only a cancellation coming from the server (for example, CancelTask or shutdown) does not fail the task.
+
+To customize the message of a failed task, override `failureMessage` in `A2AServer`:
+
+```kotlin
+class MyA2AServer(
+    agentExecutor: AgentExecutor,
+    agentCard: AgentCard
+) : A2AServer(agentExecutor, agentCard) {
+    override suspend fun failureMessage(taskId: String, contextId: String, error: Throwable): Message =
+        Message(
+            messageId = idGenerator.generateMessageId(taskId, contextId),
+            role = Role.ROLE_AGENT,
+            parts = listOf(
+                TextPart(
+                    if (error is TimeoutCancellationException) "The agent took too long to answer."
+                    else "The agent failed to answer."
+                )
+            )
+        )
+}
+```
+
+`failureMessage` is called when the server marks a task as failed because its turn failed.
+The server sets the task id, context id, and role of the returned message itself. Clients see this message,
+so don't put exception details in it unless they are meant for the client. If the override throws, the default message
+("Task failed due to an internal error") is used. Keep it short: until it returns, the turn has not ended,
+so follow-up requests to the same task wait.
 
 ### AgentCard
 
@@ -210,6 +268,80 @@ transport.start(
 )
 ```
 
+To mount the transport into an existing Ktor application instead, use the `a2aJsonRpcTransportRoute` and
+`a2aAgentCardRoute` routes (the `SSE` plugin must be installed):
+
+```kotlin
+embeddedServer(Netty, port = 8080) {
+    install(SSE)
+
+    routing {
+        a2aJsonRpcTransportRoute("/a2a", transport)
+        a2aAgentCardRoute("/.well-known/agent-card.json", agentCard)
+    }
+}.startSuspend(wait = true)
+```
+
+#### Customizing the call context
+
+Every request is handled with a `ServerCallContext` that holds the request headers and a typed `state` map.
+Agents read it from `RequestContext.callContext`. By default, the state is empty. To fill it from the HTTP call, for example
+with the authenticated user, pass `customizeCallContext` to `a2aJsonRpcTransportRoute` or to `HttpJSONRPCServerTransport.start`.
+The function is suspending and runs for every parsed JSON-RPC request, with the Ktor `ApplicationCall` as the receiver.
+
+```kotlin
+val UserKey = StateKey<String>("user")
+
+embeddedServer(Netty, port = 8080) {
+    install(SSE)
+    install(Authentication) { // requires io.ktor:ktor-server-auth
+        basic("auth-basic") { /* validate credentials */ }
+    }
+
+    routing {
+        authenticate("auth-basic") {
+            a2aJsonRpcTransportRoute("/a2a", transport) { ctx ->
+                ctx.copy(state = ctx.state + (UserKey to principal<UserIdPrincipal>()!!.name))
+            }
+        }
+    }
+}.startSuspend(wait = true)
+```
+
+With the standalone transport, pass it to `start`. Here the user comes from a token that is checked by your own code.
+The function only enriches the context: to reject unauthenticated requests, use Ktor authentication on the route
+or check the state in your executor.
+
+```kotlin
+transport.start(
+    engineFactory = CIO,
+    port = 8080,
+    path = "/a2a",
+    customizeCallContext = { ctx ->
+        val token = request.headers[HttpHeaders.Authorization]?.removePrefix("Bearer ")
+        val user = token?.let { verifyToken(it) } // returns the user name or null
+        if (user != null) ctx.copy(state = ctx.state + (UserKey to user)) else ctx
+    }
+)
+```
+
+The agent then reads the value:
+
+```kotlin
+override suspend fun execute(
+    context: RequestContext<SendMessageRequest>,
+    eventProcessor: TurnEventProcessor
+) {
+    val user = context.callContext.getFromStateOrNull(UserKey)
+        ?: throw A2AInvalidRequestException("Authentication required")
+    // ...
+}
+```
+
+The customization runs before the `A2A-Version` header is checked. An `A2AException` thrown from it is answered as
+a JSON-RPC error with the exception's code, and any other exception as an internal error.
+The key type and the stored value must match, otherwise `getFromState` and `getFromStateOrNull` throw.
+
 ### Storage
 
 The A2A server uses a pluggable storage architecture that separates different types of data.
@@ -265,7 +397,7 @@ In executor manages implement agent logic, handles incoming requests and sends r
 ```kotlin
 class EchoAgentExecutor : AgentExecutor {
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: TurnEventProcessor
     ) {
         val userMessage = context.params.message
@@ -276,7 +408,7 @@ class EchoAgentExecutor : AgentExecutor {
         // Echo the user's message back
         val response = Message(
             messageId = UUID.randomUUID().toString(),
-            role = Role.Agent,
+            role = Role.ROLE_AGENT,
             parts = listOf(TextPart("You said: $userText")),
             contextId = context.contextId,
             taskId = context.taskId
@@ -319,12 +451,12 @@ It can be also used if agent execution logic is not complex and time-consuming.
 ```kotlin
 class SimpleAgentExecutor : AgentExecutor {
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: TurnEventProcessor
     ) {
         val response = Message(
             messageId = UUID.randomUUID().toString(),
-            role = Role.Agent,
+            role = Role.ROLE_AGENT,
             parts = listOf(TextPart("Hello from agent!")),
             contextId = context.contextId,
             taskId = context.taskId
@@ -338,22 +470,22 @@ class SimpleAgentExecutor : AgentExecutor {
 ### Task-Based Agent
 If the execution logic of your agent is complex and requires multiple steps, you can implement it as a task-based agent.
 It can be also used if agent execution logic is time-consuming and suspending.
+The first event for a new task must be the `Task` itself; after that, send status and artifact updates.
 ```kotlin
 class TaskAgentExecutor : AgentExecutor {
     override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
+        context: RequestContext<SendMessageRequest>,
         eventProcessor: TurnEventProcessor
     ) {
-        // Send working status
+        // Create the task in the working state
         eventProcessor.sendTaskEvent(
-            TaskStatusUpdateEvent(
+            Task(
+                id = context.taskId,
                 contextId = context.contextId,
-                taskId = context.taskId,
                 status = TaskStatus(
-                    state = TaskState.Working,
+                    state = TaskState.TASK_STATE_WORKING,
                     timestamp = Clock.System.now()
-                ),
-                final = false
+                )
             )
         )
 
@@ -365,10 +497,9 @@ class TaskAgentExecutor : AgentExecutor {
                 contextId = context.contextId,
                 taskId = context.taskId,
                 status = TaskStatus(
-                    state = TaskState.Completed,
+                    state = TaskState.TASK_STATE_COMPLETED,
                     timestamp = Clock.System.now()
-                ),
-                final = true
+                )
             )
         )
     }
