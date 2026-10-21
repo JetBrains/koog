@@ -30,7 +30,6 @@ import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonArray
@@ -164,14 +163,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
         val jsonrpcRequest = toJSONRPCRequest(request, serializer<TRequest>(), method)
         val jsonrpcResponse = requestStreaming(jsonrpcRequest, ctx)
 
-        return jsonrpcResponse
-            .map { toResponse(it, serializer<TResponse>()) }
-            .onCompletion { thr ->
-                // Do not wrap A2A exceptions, propagate them directly
-                if (thr?.cause is A2AException) {
-                    throw thr.cause!!
-                }
-            }
+        return jsonrpcResponse.map { toResponse(it, serializer<TResponse>()) }
     }
 
     override suspend fun getExtendedAgentCard(

@@ -11,7 +11,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
+import io.ktor.client.plugins.sse.sseSession
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -20,9 +20,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 
 /**
@@ -74,30 +74,33 @@ public open class HttpJSONRPCClientTransport(
         request: JSONRPCRequest,
         ctx: ClientCallContext
     ): Flow<JSONRPCResponse> = flow {
-        try {
-            httpClient.sse(
-                request = {
-                    method = HttpMethod.Post
+        val session = try {
+            httpClient.sseSession {
+                method = HttpMethod.Post
 
-                    headers {
-                        ctx.headers.forEach { (key, values) ->
-                            appendAll(key, values)
-                        }
+                headers {
+                    ctx.headers.forEach { (key, values) ->
+                        appendAll(key, values)
                     }
-
-                    setBody(request)
                 }
-            ) {
-                incoming
-                    .map { event ->
-                        requireNotNull(event.data) { "SSE data must not be null" }
-                            .let { data -> JSONRPCJson.decodeFromString<JSONRPCResponse>(data) }
-                    }
-                    .collect(this@flow)
+
+                setBody(request)
             }
         } catch (e: SSEClientException) {
             // Errors raised before the stream starts are sent as a plain JSON-RPC response instead of an SSE stream
-            emit(e.toJSONRPCResponse() ?: throw e)
+            val errorResponse = e.toJSONRPCResponse() ?: throw e
+            emit(errorResponse)
+            return@flow
+        }
+
+        // Collected outside Ktor's `sse {}` block, which would wrap every downstream exception in SSEClientException
+        try {
+            session.incoming.collect { event ->
+                val data = requireNotNull(event.data) { "SSE data must not be null" }
+                emit(JSONRPCJson.decodeFromString<JSONRPCResponse>(data))
+            }
+        } finally {
+            session.cancel()
         }
     }
 
