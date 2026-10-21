@@ -33,10 +33,13 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -51,6 +54,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -291,6 +295,77 @@ class TurnManagerTest {
 
         assertNull(taskStorage.get(taskId))
         assertEquals(0, turnManager.activeStreams())
+    }
+
+    /** A scope with a plain, non-supervisor job, like `CoroutineScope(Dispatchers.IO)`. */
+    private fun TestScope.nonSupervisorScope(): CoroutineScope =
+        CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
+
+    @Test
+    fun testFailedTurnDoesNotCancelNonSupervisorScope() = runTest(timeout = TEST_TIMEOUT) {
+        val scope = nonSupervisorScope()
+        val turnManager = TurnManager(scope, taskStorage, pushConfigStorage, pushSender, FixedMessageIdGenerator)
+        savePushConfig()
+        val task = createTask(taskId, contextId)
+        val runningTask = createTask("task-2", contextId)
+        val gate = CompletableDeferred<Unit>()
+
+        val running = turnManager.startTurn(createContext("task-2", contextId)) { processor ->
+            processor.sendTaskEvent(runningTask)
+            gate.await()
+            processor.sendTaskEvent(statusUpdate("task-2", contextId, TaskState.TASK_STATE_COMPLETED))
+        }
+        val runningEvents = drain(running)
+
+        turnManager.startTurn(createContext(taskId, contextId)) { processor ->
+            processor.sendTaskEvent(task)
+            throw IllegalStateException("boom")
+        }.also { drain(it) }.join()
+        runCurrent()
+
+        assertTrue(scope.isActive)
+        val stored = assertNotNull(taskStorage.get(taskId))
+        val failed = TaskStatusUpdateEvent(
+            taskId = taskId,
+            contextId = contextId,
+            status = failedStatus(taskId, contextId, stored.status.timestamp),
+        )
+        assertEquals(failed.status, stored.status)
+        assertEquals(listOf<Pair<String, Event>>("c1" to task.withUserMessage(), "c1" to failed), pushSender.sent)
+
+        // The other running agent goes on, and a new turn runs normally.
+        gate.complete(Unit)
+        assertEquals(
+            listOf(runningTask.withUserMessage(), statusUpdate("task-2", contextId, TaskState.TASK_STATE_COMPLETED)),
+            runningEvents.await(),
+        )
+
+        val newTask = createTask("task-3", contextId, TaskState.TASK_STATE_COMPLETED)
+        val next = turnManager.startTurn(createContext("task-3", contextId)) { processor ->
+            processor.sendTaskEvent(newTask)
+        }
+        assertEquals(listOf(newTask.withUserMessage()), next.events.toList())
+        assertTrue(scope.isActive)
+    }
+
+    @Test
+    fun testCancellingNonSupervisorScopeCancelsRunningAgent() = runTest(timeout = TEST_TIMEOUT) {
+        val scope = nonSupervisorScope()
+        val turnManager = TurnManager(coroutineScope = scope, taskStorage = taskStorage)
+        val agentStarted = CompletableDeferred<Unit>()
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) {
+            agentStarted.complete(Unit)
+            awaitCancellation()
+        }
+        drain(turn)
+        agentStarted.await()
+
+        scope.cancel()
+        turn.join()
+
+        assertFailsWith<CancellationException> { turn.agentJob.await() }
+        assertEquals(0, turnManager.activeTurns())
     }
 
     @Test

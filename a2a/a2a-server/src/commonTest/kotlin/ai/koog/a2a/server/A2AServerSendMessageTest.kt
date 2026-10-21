@@ -22,12 +22,18 @@ import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
+import ai.koog.a2a.server.turn.IdGenerator
+import ai.koog.a2a.server.turn.RequestContext
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -278,6 +284,65 @@ class A2AServerSendMessageTest {
             server.onSendMessage(request("crash"), ctx)
         }
         assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testFailingAgentDoesNotCancelNonSupervisorScope() = runTest(timeout = TEST_TIMEOUT) {
+        // A plain job, like `CoroutineScope(Dispatchers.IO)`.
+        val scope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
+        val idGenerator = object : IdGenerator {
+            override suspend fun generateContextId(message: Message): String = CONTEXT_ID
+            override suspend fun generateTaskId(message: Message): String = "task-${message.messageId}"
+            override suspend fun generateMessageId(taskId: String, contextId: String): String = "server-message"
+        }
+        fun newTask(context: RequestContext<SendMessageRequest>, state: TaskState) = Task(
+            id = context.taskId,
+            contextId = context.contextId,
+            status = TaskStatus(state = state, timestamp = TIMESTAMP),
+        )
+        executor = ScriptedAgentExecutor(
+            mapOf(
+                "crash" to AgentScript { context, processor ->
+                    processor.sendTaskEvent(newTask(context, TaskState.TASK_STATE_WORKING))
+                    throw IllegalStateException("Agent crashed")
+                },
+                "complete" to AgentScript { context, processor ->
+                    processor.sendTaskEvent(newTask(context, TaskState.TASK_STATE_COMPLETED))
+                },
+            )
+        )
+        val server = A2AServer(
+            agentExecutor = executor,
+            agentCard = testAgentCard(),
+            taskStorage = taskStorage,
+            idGenerator = idGenerator,
+            coroutineScope = scope,
+        )
+
+        val failedResponse = server.onSendMessage(request("crash"), ctx)
+        val failedTask = assertNotNull(taskStorage.get("task-user-crash"))
+        val failedStatus = TaskStatus(
+            state = TaskState.TASK_STATE_FAILED,
+            message = Message(
+                messageId = "server-message",
+                role = Role.ROLE_AGENT,
+                parts = listOf(TextPart("Task failed due to an internal error")),
+                contextId = CONTEXT_ID,
+                taskId = "task-user-crash",
+            ),
+            timestamp = failedTask.status.timestamp,
+        )
+        assertEquals(failedStatus, failedTask.status)
+        assertEquals(failedTask, failedResponse)
+
+        val completedTask = Task(
+            id = "task-user-complete",
+            contextId = CONTEXT_ID,
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED, timestamp = TIMESTAMP),
+            history = listOf(userMessage("complete").copy(taskId = "task-user-complete")),
+        )
+        assertEquals(completedTask, server.onSendMessage(request("complete"), ctx))
+        assertTrue(scope.isActive)
     }
 
     // SendStreamingMessage

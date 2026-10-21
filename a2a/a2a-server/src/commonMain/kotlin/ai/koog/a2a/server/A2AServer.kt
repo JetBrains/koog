@@ -325,7 +325,8 @@ import kotlin.time.Clock
  * notifications are enabled only if both it and [pushSender] are set.
  * @param pushSender Optional push notification sender implementation (defaults to `null`), see [pushConfigStorage].
  * @param idGenerator Generator for new task, context and push notification config IDs (defaults to [UuidIdGenerator])
- * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc.
+ * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc. It needn't be a supervisor:
+ * a failing agent doesn't cancel it (see [TurnManager]). Cancelling it, e.g. with [cancel], stops all of them.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks

@@ -22,6 +22,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
@@ -101,6 +102,8 @@ import kotlinx.coroutines.withContext
  * are dropped when [coroutineScope] is cancelled.
  *
  * @param coroutineScope The scope in which agent jobs, turn monitoring jobs, and push notification jobs are launched.
+ * They run under a child [SupervisorJob] of its job, so a failing agent doesn't cancel the scope or other jobs, even if
+ * the scope isn't a supervisor. Cancelling the scope cancels them all.
  * @param taskStorage The storage for tasks.
  * @param pushConfigStorage The storage for push notification configurations.
  * @param pushSender The push notification sender.
@@ -108,7 +111,7 @@ import kotlinx.coroutines.withContext
  * as failed. Defaults to [UuidIdGenerator].
  */
 public class TurnManager(
-    private val coroutineScope: CoroutineScope,
+    coroutineScope: CoroutineScope,
     private val taskStorage: TaskStorage,
     pushConfigStorage: PushNotificationConfigStorage? = null,
     pushSender: PushNotificationSender? = null,
@@ -118,9 +121,13 @@ public class TurnManager(
         private val logger = KotlinLogging.logger {}
     }
 
+    /** The scope of all jobs launched here, isolating their failures from each other and from `coroutineScope`. */
+    private val scope: CoroutineScope =
+        CoroutineScope(coroutineScope.coroutineContext + SupervisorJob(coroutineScope.coroutineContext[Job]))
+
     private val pushDispatcher: PushNotificationDispatcher? =
         if (pushConfigStorage != null && pushSender != null) {
-            PushNotificationDispatcher(coroutineScope, pushConfigStorage, pushSender)
+            PushNotificationDispatcher(scope, pushConfigStorage, pushSender)
         } else {
             null
         }
@@ -148,7 +155,7 @@ public class TurnManager(
     private val shutdownSignal = Job()
 
     /**
-     * Starts a new turn for [RequestContext.taskId]: runs [block] in [coroutineScope] with a [TurnEventProcessor]
+     * Starts a new turn for [RequestContext.taskId]: runs [block] in `coroutineScope` with a [TurnEventProcessor]
      * bound to the task stream.
      *
      * The returned [Turn.events] is registered before [block] starts, so it receives every event of the turn.
@@ -226,16 +233,16 @@ public class TurnManager(
                         taskExists = taskExists,
                         userMessage = context.params.message,
                     )
-                    val agentJob = coroutineScope.async(start = CoroutineStart.LAZY) { block(processor) }
+                    val agentJob = scope.async(start = CoroutineStart.LAZY) { block(processor) }
 
                     /*
                      Starts the agent job and ends the turn. It ends the turn under the gate, which is held until the turn
-                     is registered below, so it can be launched first. ATOMIC (not LAZY): if coroutineScope is already
+                     is registered below, so it can be launched first. ATOMIC (not LAZY): if the scope is already
                      cancelled (server shutdown), the monitor still runs and ends the turn, so the view completes and join()
                      doesn't hang.
                      */
                     @OptIn(DelicateCoroutinesApi::class)
-                    val monitor = coroutineScope.launch(start = CoroutineStart.ATOMIC) {
+                    val monitor = scope.launch(start = CoroutineStart.ATOMIC) {
                         monitorTurn(agentJob, processor, taskId, contextId, stream, turnId)
                     }
                     // The monitor releases the stream from here on.
@@ -435,7 +442,7 @@ public class TurnManager(
     /**
      * Ends every [subscribe] flow, current and future, normally (without an error), e.g. on server shutdown, including
      * those of idle tasks that no turn would ever close. Doesn't stop turns: their views end when the turns end, e.g.
-     * when [coroutineScope] is cancelled. Takes no lock, so it never waits for a stalled task.
+     * when `coroutineScope` is cancelled. Takes no lock, so it never waits for a stalled task.
      */
     @InternalA2AApi
     public fun shutdown() {
