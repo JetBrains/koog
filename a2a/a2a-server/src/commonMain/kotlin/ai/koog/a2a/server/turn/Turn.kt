@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.consumeAsFlow
  * created it yet or replies with a message instead.
  * @property contextId Context ID associated with this turn.
  * @property agentJob The job executing the agent for this turn; awaiting it propagates the agent's exception, if any.
+ * A [kotlinx.coroutines.CancellationException] thrown by the agent itself (e.g. from its own `withTimeout`) is
+ * rethrown as a failure, with the original exception as its cause.
  */
 public class Turn internal constructor(
     public val taskId: String,

@@ -518,6 +518,26 @@ class TurnManagerTest {
     }
 
     @Test
+    fun testTurnProcessorIsClosedAfterTurnEnds() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val task = createTask(taskId, contextId)
+        var leaked: TurnEventProcessor? = null
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) { processor ->
+            leaked = processor
+            processor.sendTaskEvent(task)
+        }
+        val events = drain(turn)
+        turn.join()
+
+        assertFailsWith<TurnNotActiveException> {
+            assertNotNull(leaked).sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
+        }
+        assertEquals(listOf<Event>(task.withUserMessage()), events.await())
+        assertEquals(task.withUserMessage(), taskStorage.get(taskId))
+    }
+
+    @Test
     fun testTurnStartedInCancelledScopeEndsWithoutRunningAgent() = runTest(timeout = TEST_TIMEOUT) {
         // The scope of a server that has been shut down.
         val cancelledScope = CoroutineScope(backgroundScope.coroutineContext + Job().apply { cancel() })

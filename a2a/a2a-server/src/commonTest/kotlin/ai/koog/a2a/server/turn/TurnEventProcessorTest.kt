@@ -23,7 +23,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -127,7 +126,6 @@ class TurnEventProcessorTest {
         assertFailsWith<TurnNotActiveException> {
             processor.sendTaskEvent(createTask(taskId, contextId))
         }
-        assertFalse(processor.isOpen)
     }
 
     // Task turn tests
@@ -177,8 +175,7 @@ class TurnEventProcessorTest {
             processor.sendMessage(createMessage("msg-1", contextId, "Hello"))
         }
 
-        // The processor is still open and accepts updates of the existing task without a Task first.
-        assertTrue(processor.isOpen)
+        // The processor still accepts updates of the existing task without a Task first.
         val statusUpdate = statusUpdate(TaskState.TASK_STATE_WORKING)
         processor.sendTaskEvent(statusUpdate)
 
@@ -197,7 +194,6 @@ class TurnEventProcessorTest {
         // Even a terminal Task is not applied, and doesn't close the processor.
         processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
 
-        assertTrue(processor.isOpen)
         assertEquals(existingTask, taskStorage.get(taskId))
 
         val statusUpdate = statusUpdate(TaskState.TASK_STATE_WORKING)
@@ -246,7 +242,6 @@ class TurnEventProcessorTest {
         assertFailsWith<TurnNotActiveException> {
             processor.sendTaskEvent(anotherEvent)
         }
-        assertFalse(processor.isOpen)
     }
 
     @Test
@@ -342,7 +337,6 @@ class TurnEventProcessorTest {
             }
 
             assertEquals(listOf(message1), turnView.endTurnAndCollect(), "Only the first message should be delivered")
-            assertFalse(processor.isOpen)
         }
 
     @Test
@@ -365,6 +359,5 @@ class TurnEventProcessorTest {
 
         assertEquals(listOf(task), turnView.endTurnAndCollect(), "Only the first event should be delivered")
         assertEquals(task, taskStorage.get(taskId))
-        assertFalse(processor.isOpen)
     }
 }

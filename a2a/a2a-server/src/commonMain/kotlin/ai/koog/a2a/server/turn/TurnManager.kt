@@ -315,9 +315,10 @@ public class TurnManager(
             withContext(NonCancellable) {
                 try {
                     /*
-                     Waits for any withTaskProcessor block still publishing through this turn's processor, then closes
-                     the processor and the view (endTurn closes it even if it fails) and removes the turn. Removal under
-                     the gate means a block never gets the closed processor of an ended turn.
+                     Waits for any withTaskProcessor block still publishing through this turn's processor; the agent job
+                     has completed, so no supported send is in flight. Then closes the processor and the view (endTurn
+                     closes it even if it fails) and removes the turn. Removal under the gate means a block never gets the
+                     closed processor of an ended turn.
                      */
                     stream.processorGate.withLock {
                         processor.close()
@@ -445,9 +446,8 @@ public class TurnManager(
                     block(processor, turn?.agentJob, publish)
                 } finally {
                     isBlockRunning = false
-                    // Nothing may publish through a standalone processor once the stream may be dropped. Closed without
-                    // waiting for a send in progress, which could hold the gate for long.
-                    if (turn == null) processor.closeImmediately()
+                    // Nothing may publish through a standalone processor once the stream may be dropped.
+                    if (turn == null) processor.close()
                 }
             }
         } finally {

@@ -27,6 +27,11 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  *   doesn't close the processor even if terminal. To change an existing task, send status and artifact updates.
  * - **Turn end**: when [ai.koog.a2a.server.agent.AgentExecutor.execute] returns, the processor closes.
  *
+ * Send only from within the [ai.koog.a2a.server.agent.AgentExecutor.execute] or
+ * [ai.koog.a2a.server.agent.AgentExecutor.cancel] call the processor was passed to (including its child coroutines).
+ * Sending from elsewhere, e.g. through a processor kept after that call, is unsupported: such an event may still be
+ * delivered after the processor has closed.
+ *
  * Instances are created by [TurnManager].
  *
  * @property contextId The context id of this turn: the incoming request's or a generated one.
@@ -74,14 +79,11 @@ public class TurnEventProcessor internal constructor(
         require(stream.taskId == taskId) { "Event stream of task '${stream.taskId}' can't be used for task '$taskId'" }
     }
 
-    private val _isOpen: AtomicBoolean = AtomicBoolean(true)
-
-    /** Whether the processor still accepts events. */
-    internal val isOpen: Boolean get() = _isOpen.load()
+    /** Atomic since [close] writes it without [turnMutex]. */
+    private val isOpen: AtomicBoolean = AtomicBoolean(true)
 
     /** Whether a task event was sent through this processor, after which [Message] events are rejected. */
-    internal var isTaskEventSent: Boolean = false
-        private set
+    private var isTaskEventSent: Boolean = false
 
     private val turnMutex = Mutex()
 
@@ -95,7 +97,7 @@ public class TurnEventProcessor internal constructor(
      * @see TurnEventProcessor
      */
     public suspend fun sendMessage(message: Message): Unit = turnMutex.withLock {
-        if (_isOpen.load()) {
+        if (isOpen.load()) {
             if (taskExists) {
                 throw reject(InvalidEventException(TASK_EXISTS))
             }
@@ -109,7 +111,7 @@ public class TurnEventProcessor internal constructor(
             }
 
             stream.publish(message, turnId)
-            _isOpen.store(false)
+            isOpen.store(false)
         } else {
             throw TurnNotActiveException(TURN_CLOSED)
         }
@@ -130,7 +132,7 @@ public class TurnEventProcessor internal constructor(
      * @see TurnEventProcessor
      */
     public suspend fun sendTaskEvent(event: TaskEvent): Unit = turnMutex.withLock {
-        if (!_isOpen.load()) {
+        if (!isOpen.load()) {
             throw TurnNotActiveException(TURN_CLOSED)
         }
 
@@ -157,7 +159,7 @@ public class TurnEventProcessor internal constructor(
         }
 
         if (isApplied && event.isTerminal()) {
-            _isOpen.store(false)
+            isOpen.store(false)
         }
     }
 
@@ -166,13 +168,11 @@ public class TurnEventProcessor internal constructor(
         return e
     }
 
-    /** Closes the processor: later events are rejected with [TurnNotActiveException]. Waits for an event being sent. */
-    internal suspend fun close(): Unit = turnMutex.withLock {
-        _isOpen.store(false)
-    }
-
-    /** Like [close], but doesn't wait for an event being sent, which can take as long as the slowest stream needs. */
-    internal fun closeImmediately() {
-        _isOpen.store(false)
+    /**
+     * Closes the processor: later events are rejected with [TurnNotActiveException]. Doesn't wait for an event being
+     * sent, see [TurnEventProcessor] for where sending is supported.
+     */
+    internal fun close() {
+        isOpen.store(false)
     }
 }
