@@ -32,6 +32,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.ktor.server.test.host)
+                implementation(libs.ktor.server.cio)
             }
         }
 

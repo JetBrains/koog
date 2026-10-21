@@ -8,6 +8,7 @@ import ai.koog.a2a.transport.withCaseInsensitiveNames
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
@@ -63,12 +64,30 @@ import io.ktor.util.toMap
  * }.startSuspend(wait = true)
  * ```
  *
+ * [customizeCallContext] can enrich the [ServerCallContext] built from the request headers, e.g. with the
+ * authenticated principal:
+ * ```kotlin
+ * val UserKey = StateKey<String>("user")
+ *
+ * authenticate("auth-basic") {
+ *     a2aJsonRpcTransportRoute("/agent", transport) { ctx ->
+ *         ctx.copy(state = ctx.state + (UserKey to principal<UserIdPrincipal>()!!.name))
+ *     }
+ * }
+ * ```
+ *
  * @param path JSON-RPC endpoint path that will be mounted under the base route.
  * @param transport The JSON-RPC server transport to handle requests.
+ * @param customizeCallContext Called for every parsed JSON-RPC request with the current [ApplicationCall] as the
+ * receiver and the default context built from the request headers; the returned context is passed to the
+ * [transport]. It runs before the requested version is checked. An [ai.koog.a2a.exceptions.A2AException] thrown
+ * here is answered as a JSON-RPC error with its code, any other exception as an internal error.
+ * Defaults to returning the default context unchanged.
  */
 public fun Route.a2aJsonRpcTransportRoute(
     path: String,
     transport: JSONRPCServerTransport,
+    customizeCallContext: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { it },
 ): Route = route(path) {
     // Check SSE plugin is installed
     plugin(SSE)
@@ -80,13 +99,13 @@ public fun Route.a2aJsonRpcTransportRoute(
     // Handle incoming JSON-RPC requests, both regular and streaming
     post {
         // HTTP header names are case-insensitive (HTTP/2 lowercases them), but Ktor's toMap() keeps names as received
-        val ctx = ServerCallContext(
+        val defaultCtx = ServerCallContext(
             headers = call.request.headers.toMap().withCaseInsensitiveNames()
         )
 
         transport.handleRequest(
             requestRaw = call.receiveText(),
-            ctx = ctx,
+            ctxProvider = { call.customizeCallContext(defaultCtx) },
             respond = { response ->
                 // Bypass content negotiation: streaming requests send `Accept: text/event-stream`,
                 // but errors raised before the stream starts are still answered with plain JSON

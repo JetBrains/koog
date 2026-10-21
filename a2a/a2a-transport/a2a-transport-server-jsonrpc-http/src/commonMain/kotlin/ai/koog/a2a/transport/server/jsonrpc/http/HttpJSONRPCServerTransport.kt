@@ -5,9 +5,11 @@ import ai.koog.a2a.consts.A2APaths
 import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
+import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.ApplicationEngineFactory
@@ -65,6 +67,8 @@ public class HttpJSONRPCServerTransport(
      * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
      * @param agentCardPath The path at which the [agentCard] will be served, if specified.
      * Defaults to [A2APaths.AGENT_CARD_WELL_KNOWN_PATH].
+     * @param customizeCallContext Customizes the [ServerCallContext] of every request, see [a2aJsonRpcTransportRoute].
+     * Defaults to returning the context built from the request headers unchanged.
      *
      * @throws IllegalStateException if the server is already running.
      */
@@ -75,6 +79,7 @@ public class HttpJSONRPCServerTransport(
         wait: Boolean = false,
         agentCard: AgentCard? = null,
         agentCardPath: String = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
+        customizeCallContext: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { it },
     ): Unit = serverMutex.withLock {
         check(server == null) { "Server is already configured and running. Stop it before starting a new one." }
 
@@ -91,7 +96,7 @@ public class HttpJSONRPCServerTransport(
                     allowNonSimpleContentTypes = true
                 }
 
-                a2aJsonRpcTransportRoute(path, this@HttpJSONRPCServerTransport)
+                a2aJsonRpcTransportRoute(path, this@HttpJSONRPCServerTransport, customizeCallContext)
 
                 if (agentCard != null) {
                     a2aAgentCardRoute(agentCardPath, agentCard)

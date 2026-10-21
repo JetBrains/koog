@@ -38,6 +38,7 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
+import ai.koog.a2a.transport.StateKey
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
@@ -48,6 +49,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
+import io.ktor.client.HttpClient
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
 import io.ktor.client.request.header
@@ -58,6 +60,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.cio.CIO
 import io.ktor.server.sse.SSE
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.flow.Flow
@@ -69,9 +73,11 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import java.net.ServerSocket
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.plugins.sse.SSE as SSEClient
 
 class HttpJSONRPCServerTransportTest {
@@ -703,6 +709,7 @@ class HttpJSONRPCServerTransportTest {
         streaming: Boolean = false,
         handler: RequestHandler = MockRequestHandler,
         transportFactory: (RequestHandler) -> JSONRPCServerTransport = { JSONRPCServerTransport(it) },
+        customizeCallContext: (suspend ApplicationCall.(ServerCallContext) -> ServerCallContext)? = null,
     ): RawResponse {
         var result: RawResponse? = null
 
@@ -710,7 +717,11 @@ class HttpJSONRPCServerTransportTest {
             install(SSE)
 
             routing {
-                a2aJsonRpcTransportRoute("/a2a", transportFactory(handler))
+                if (customizeCallContext == null) {
+                    a2aJsonRpcTransportRoute("/a2a", transportFactory(handler))
+                } else {
+                    a2aJsonRpcTransportRoute("/a2a", transportFactory(handler), customizeCallContext)
+                }
             }
 
             val response = client.post("/a2a") {
@@ -880,5 +891,172 @@ class HttpJSONRPCServerTransportTest {
         assertEquals(setOf("urn:a", "urn:b", "urn:c"), seen?.requestedExtensions)
         // The headers themselves are looked up case-insensitively, too
         assertEquals(listOf("1.0.2"), seen?.headers?.get(A2AHeaders.A2A_VERSION))
+        assertEquals(emptyMap(), seen?.state)
+    }
+
+    private val userKey = StateKey<String>("user")
+
+    /** Puts the `X-User` request header, read from the [ApplicationCall], into the context state. */
+    private val putUserIntoState: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { ctx ->
+        ctx.copy(state = ctx.state + (userKey to request.headers["X-User"]!!))
+    }
+
+    private fun recordingHandler(onCall: (ServerCallContext) -> Unit) = object : RequestHandler by MockRequestHandler {
+        override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
+            onCall(ctx)
+            return MockRequestHandler.taskGet
+        }
+    }
+
+    @Test
+    fun testCustomizedCallContextReachesRequestHandler() = runTest {
+        var seen: ServerCallContext? = null
+
+        val response = postRaw(
+            A2AMethod.GetTask,
+            getTaskParams,
+            headers = mapOf(A2AHeaders.A2A_VERSION to "1.0", "X-User" to "alice"),
+            handler = recordingHandler { seen = it },
+            customizeCallContext = putUserIntoState,
+        )
+
+        assertEquals(MockRequestHandler.taskGet, decodeTask(response))
+        assertEquals(mapOf<StateKey<*>, Any>(userKey to "alice"), seen?.state)
+        // The default context the customizer starts from is the one built from the headers
+        assertEquals("1.0", seen?.requestedVersion)
+        assertEquals(listOf("alice"), seen?.headers?.get("x-user"))
+    }
+
+    @Test
+    fun testVersionIsCheckedOnCustomizedCallContext() = runTest {
+        // No A2A-Version header: only the customized context carries a supported version
+        val response = postRaw(
+            A2AMethod.GetTask,
+            getTaskParams,
+            headers = mapOf("X-Version" to "1.0"),
+            customizeCallContext = { ctx ->
+                ctx.copy(headers = ctx.headers + (A2AHeaders.A2A_VERSION to listOf(request.headers["X-Version"]!!)))
+            },
+        )
+
+        assertEquals(MockRequestHandler.taskGet, decodeTask(response))
+    }
+
+    @Test
+    fun testA2AExceptionInCallContextCustomizerIsJsonRpcError() = runTest {
+        listOf(
+            A2AMethod.GetTask to getTaskParams,
+            A2AMethod.SubscribeToTask to subscribeParams,
+        ).forEach { (method, params) ->
+            var handlerCalled = false
+            val handler = object : RequestHandler by recordingHandler({ handlerCalled = true }) {
+                override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> {
+                    handlerCalled = true
+                    return MockRequestHandler.updateEvents.asFlow()
+                }
+            }
+
+            val response = postRaw(
+                method,
+                params,
+                headers = mapOf(A2AHeaders.A2A_VERSION to "1.0"),
+                streaming = method.streaming,
+                handler = handler,
+                customizeCallContext = { throw A2AUnsupportedOperationException("Tenant is not allowed") },
+            )
+
+            val expectedResponse = JSONRPCErrorResponse(
+                id = RequestId.StringId("version-test"),
+                error = JSONRPCError(
+                    code = A2AErrorCodes.UNSUPPORTED_OPERATION,
+                    message = "Tenant is not allowed",
+                    data = json.encodeToJsonElement<List<ErrorData>>(
+                        listOf(ErrorInfo(reason = A2AErrorReasons.UNSUPPORTED_OPERATION))
+                    ),
+                ),
+                jsonrpc = JSONRPC_VERSION,
+            )
+
+            assertEquals(HttpStatusCode.OK, response.status, method.value)
+            assertEquals(ContentType.Application.Json, response.contentType, method.value)
+            assertEquals(expectedResponse, json.decodeFromString<JSONRPCErrorResponse>(response.body), method.value)
+            assertEquals(false, handlerCalled, method.value)
+        }
+    }
+
+    @Test
+    fun testNonA2AExceptionInCallContextCustomizerIsInternalError() = runTest {
+        val response = postRaw(
+            A2AMethod.GetTask,
+            getTaskParams,
+            headers = mapOf(A2AHeaders.A2A_VERSION to "1.0"),
+            customizeCallContext = { error("Principal lookup failed") },
+        )
+
+        val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.body)
+
+        assertEquals(RequestId.StringId("version-test"), jsonRpcResponse.id)
+        assertEquals(A2AErrorCodes.INTERNAL_ERROR, jsonRpcResponse.error.code)
+    }
+
+    @Test
+    fun testCallContextCustomizerIsNotCalledForUnparsableRequest() = runTest {
+        var customizerCalled = false
+
+        testApplication {
+            install(SSE)
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", JSONRPCServerTransport(MockRequestHandler)) { ctx ->
+                    customizerCalled = true
+                    ctx
+                }
+            }
+
+            val response = client.post("/a2a") {
+                contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
+                setBody("invalid json")
+            }
+
+            assertEquals(A2AErrorCodes.PARSE_ERROR, json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText()).error.code)
+        }
+
+        assertEquals(false, customizerCalled)
+    }
+
+    @Test
+    fun testStandaloneTransportPassesCallContextCustomizerToRoute() = runTest {
+        var seen: ServerCallContext? = null
+        val port = ServerSocket(0).use { it.localPort }
+        val transport = HttpJSONRPCServerTransport(recordingHandler { seen = it })
+
+        transport.start(CIO, port, "/a2a", customizeCallContext = putUserIntoState)
+
+        try {
+            HttpClient(ClientCIO).use { httpClient ->
+                val response = httpClient.post("http://localhost:$port/a2a") {
+                    contentType(ContentType.Application.Json)
+                    header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
+                    header("X-User", "bob")
+                    setBody(
+                        json.encodeToString(
+                            JSONRPCRequest(
+                                id = RequestId.StringId("standalone"),
+                                method = A2AMethod.GetTask.value,
+                                params = getTaskParams,
+                                jsonrpc = JSONRPC_VERSION,
+                            )
+                        )
+                    )
+                }
+
+                assertEquals(HttpStatusCode.OK, response.status)
+            }
+        } finally {
+            transport.stop()
+        }
+
+        assertEquals(mapOf<StateKey<*>, Any>(userKey to "bob"), seen?.state)
     }
 }
