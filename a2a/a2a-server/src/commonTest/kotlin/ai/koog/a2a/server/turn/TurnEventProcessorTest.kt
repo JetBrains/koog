@@ -96,7 +96,7 @@ class TurnEventProcessorTest {
      * Ends the turn and returns all events its view received.
      */
     private suspend fun Deferred<List<Event>>.endTurnAndCollect(): List<Event> {
-        stream.endTurn(turnId, contextId, failure = null)
+        stream.endTurn(turnId, contextId, outcome = TurnOutcome.Completed(rejection = null))
         return await()
     }
 
@@ -309,7 +309,7 @@ class TurnEventProcessorTest {
         val (_, taskSubscriber) = stream.subscribe { taskStorage.get(taskId) }
 
         processor.sendMessage(message)
-        stream.endTurn(turnId + 1, contextId, failure = null)
+        stream.endTurn(turnId + 1, contextId, outcome = TurnOutcome.Completed(rejection = null))
 
         assertEquals(listOf(message), turnView.endTurnAndCollect(), "Own turn view should receive the message")
         assertEquals(emptyList(), otherTurnView.await(), "Other turn view should not receive the message")

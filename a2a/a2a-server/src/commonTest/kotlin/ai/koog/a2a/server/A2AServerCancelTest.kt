@@ -347,6 +347,52 @@ class A2AServerCancelTest {
         assertEquals(response.copy(history = null), result.getOrThrow())
     }
 
+    /**
+     * A running agent whose invalid event is rejected, failing its job, while CancelTask holds the turn: the cancellation
+     * (by the executor if [executorCancels], else forced by the server) reaches the requester before the turn ends.
+     *
+     * @return the CancelTask result and the requester's response
+     */
+    private suspend fun TestScope.cancelAfterRejectedEvent(executorCancels: Boolean): Pair<Task, Event> {
+        val started = CompletableDeferred<Unit>()
+        val rejectNow = CompletableDeferred<Unit>()
+        val script = AgentScript { _, processor ->
+            processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING))
+            started.complete(Unit)
+            rejectNow.await()
+            // Another task's id: rejected, and the agent lets the exception fail its job.
+            processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING).copy(taskId = "other-task"))
+        }
+        val cancelAfterRejection = CancelHandler { processor, agentJob ->
+            rejectNow.complete(Unit)
+            assertIs<InvalidEventException>(runCatching { assertNotNull(agentJob).await() }.exceptionOrNull())
+            if (executorCancels) processor.sendTaskEvent(canceledByExecutor)
+        }
+        val server = createServer(mapOf("run" to script), cancelAfterRejection)
+        val response = async { server.onSendMessage(request("run"), ctx) }
+        started.await()
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+
+        return canceled to response.await()
+    }
+
+    @Test
+    fun testRequesterGetsCanceledTaskWhenExecutorCancelsAfterRejectedEvent() = runTest(timeout = TEST_TIMEOUT) {
+        val (canceled, response) = cancelAfterRejectedEvent(executorCancels = true)
+
+        assertEquals(canceledByExecutor.status, canceled.status)
+        assertEquals<Event?>(taskStorage.get(TASK_ID), response)
+    }
+
+    @Test
+    fun testRequesterGetsCanceledTaskWhenServerForcesCancelAfterRejectedEvent() = runTest(timeout = TEST_TIMEOUT) {
+        val (canceled, response) = cancelAfterRejectedEvent(executorCancels = false)
+
+        assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
+        assertEquals<Event?>(taskStorage.get(TASK_ID), response)
+    }
+
     @Test
     fun testCancelTerminalOrUnknownTaskFails() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(emptyMap(), cancelingExecutor)

@@ -12,6 +12,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
 import kotlinx.coroutines.CancellationException
@@ -142,7 +143,7 @@ class TaskEventStreamTest {
 
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)
         stream.publish(working, turnId = 1)
-        stream.endTurn(1, contextId, failure = null)
+        stream.endTurn(1, contextId, outcome = TurnOutcome.Completed(rejection = null))
 
         assertEquals(inputRequired, snapshot)
         assertEquals(listOf(working), turnView.await())
@@ -210,7 +211,7 @@ class TaskEventStreamTest {
         val turnView = collect(stream.openTurnView(1))
 
         val applied = stream.publish(task(TaskState.TASK_STATE_WORKING), turnId = 1, userMessage = user)
-        stream.endTurn(1, contextId, failure = null)
+        stream.endTurn(1, contextId, outcome = TurnOutcome.Completed(rejection = null))
 
         val expected = task(TaskState.TASK_STATE_WORKING).copy(history = listOf(user))
         assertTrue(applied)
@@ -259,7 +260,7 @@ class TaskEventStreamTest {
 
         val inputRequired = statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED)
         stream.publish(inputRequired, turnId = 1)
-        stream.endTurn(1, contextId, failure = null)
+        stream.endTurn(1, contextId, outcome = TurnOutcome.Completed(rejection = null))
 
         assertEquals(listOf(inputRequired), turnView.await())
 
@@ -278,7 +279,7 @@ class TaskEventStreamTest {
         val turnView = collect(stream.openTurnView(1))
         val subscriber = collect(stream.subscribeToStored().second)
 
-        stream.endTurn(1, contextId, failure = IllegalStateException("boom"))
+        stream.endTurn(1, contextId, outcome = TurnOutcome.Failed(IllegalStateException("boom")))
 
         val stored = assertNotNull(taskStorage.get(taskId))
         assertNotNull(stored.status.timestamp)
@@ -292,16 +293,36 @@ class TaskEventStreamTest {
     }
 
     @Test
+    fun testEndTurnWithRejectionMarksTaskFailedWithoutDeliveringItToTurnView() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+
+        val turnView = collect(stream.openTurnView(1))
+        val subscriber = collect(stream.subscribeToStored().second)
+
+        stream.endTurn(1, contextId, outcome = TurnOutcome.Rejected(InvalidEventException("invalid")))
+
+        val stored = assertNotNull(taskStorage.get(taskId))
+        val expectedStatus = failedStatus(taskId, contextId, assertNotNull(stored.status.timestamp))
+        assertEquals(expectedStatus, stored.status)
+
+        // The requester gets an error instead, see TurnOutcome.Rejected.
+        assertEquals(emptyList(), turnView.await())
+        val failed = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = expectedStatus)
+        assertEquals(listOf(failed), subscriber.await())
+    }
+
+    @Test
     fun testEndTurnWithFailureKeepsTerminalTaskAndCancellationDoesNotMarkTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
         listOf(
-            task(TaskState.TASK_STATE_COMPLETED) to IllegalStateException("boom"),
-            task(TaskState.TASK_STATE_WORKING) to CancellationException("canceled"),
-        ).forEach { (stored, failure) ->
+            task(TaskState.TASK_STATE_COMPLETED) to TurnOutcome.Failed(IllegalStateException("boom")),
+            task(TaskState.TASK_STATE_WORKING) to TurnOutcome.of(CancellationException("canceled"), rejection = null),
+        ).forEach { (stored, outcome) ->
             taskStorage = InMemoryTaskStorage().also { it.update(stored) }
             val stream = createStream()
             val turnView = stream.openTurnView(1)
 
-            stream.endTurn(1, contextId, failure = failure)
+            stream.endTurn(1, contextId, outcome = outcome)
 
             assertEquals(stored, taskStorage.get(taskId), stored.status.state.name)
             assertEquals(emptyList(), turnView.toList(), stored.status.state.name)

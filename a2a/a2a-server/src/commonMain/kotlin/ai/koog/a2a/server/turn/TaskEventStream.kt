@@ -252,19 +252,25 @@ internal class TaskEventStream(
     }
 
     /**
-     * Ends the turn [turnId]: closes its view after the last event of the turn.
+     * Ends the turn [turnId] with [outcome]: closes its view after the last event of the turn.
      *
-     * If the turn failed with [failure] (other than a cancellation) and the task exists in a non-terminal state, first
+     * If the agent failed ([TurnOutcome.Failed], [TurnOutcome.Rejected]) and the task exists in a non-terminal state,
      * marks the task [TaskState.TASK_STATE_FAILED] and delivers that update to all subscribers, which are then closed.
+     * For [TurnOutcome.Rejected], the view is closed first, so the turn's requester doesn't receive that update.
      *
      * @param turnId the turn to end
      * @param contextId the context id of the task, used for the failure status update
-     * @param failure the exception the turn failed with, or `null` if it completed normally
+     * @param outcome how the turn ended
      */
-    suspend fun endTurn(turnId: Long, contextId: String, failure: Throwable?): Unit = mutex.withLock {
+    suspend fun endTurn(turnId: Long, contextId: String, outcome: TurnOutcome): Unit = mutex.withLock {
         try {
-            if (failure != null && failure !is CancellationException) {
-                markFailed(contextId)
+            when (outcome) {
+                is TurnOutcome.Completed -> Unit
+                is TurnOutcome.Failed -> markFailed(contextId)
+                is TurnOutcome.Rejected -> {
+                    closeTurnView(turnId)
+                    markFailed(contextId)
+                }
             }
         } finally {
             closeTurnView(turnId)

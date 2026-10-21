@@ -2,6 +2,9 @@ package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.server.exceptions.InvalidEventException
+import ai.koog.a2a.server.exceptions.TaskOperationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -36,6 +39,11 @@ public class Turn internal constructor(
      * i.e. as of right before its first event. `null` for a turn of a new task.
      */
     internal val taskSnapshot: Task?,
+    /**
+     * How the turn ended. Completed by [TurnManager] before the turn's end completes [events], so it tells a consumer
+     * of [events] why the turn ended without a terminal update, but not which party sent an update it received.
+     */
+    internal val outcome: Deferred<TurnOutcome>,
 ) {
     /**
      * This turn's view of the task's event stream: every event the task receives while the turn runs (including
@@ -58,5 +66,41 @@ public class Turn internal constructor(
      */
     public suspend fun join() {
         monitor.join()
+    }
+}
+
+/** How a [Turn] ended, decided by [TurnManager] once the agent job has completed. */
+internal sealed interface TurnOutcome {
+    /**
+     * The agent returned, or its job was cancelled (e.g. by CancelTask or server shutdown).
+     *
+     * @property rejection the first event of the turn rejected as invalid, if the agent went on despite it
+     */
+    data class Completed(val rejection: Exception?) : TurnOutcome
+
+    /**
+     * The agent failed with the exception rejecting one of its events ([InvalidEventException], or
+     * [TaskOperationException] from the storage). The task, if it exists and isn't terminal, is marked failed, but that
+     * update isn't part of [Turn.events]: the requester gets an error instead.
+     */
+    data class Rejected(val cause: Exception) : TurnOutcome
+
+    /**
+     * The agent failed otherwise. The task, if it exists and isn't terminal, is marked failed, and [Turn.events] ends
+     * with that update.
+     */
+    data class Failed(val cause: Throwable) : TurnOutcome
+
+    companion object {
+        /**
+         * The outcome of a turn whose agent job ended with [failure] (`null` if it returned), with [rejection] being
+         * the first of its events rejected as invalid, if any.
+         */
+        fun of(failure: Throwable?, rejection: Exception?): TurnOutcome = when (failure) {
+            null, is CancellationException -> Completed(rejection)
+            is InvalidEventException -> Rejected(failure)
+            is TaskOperationException -> Rejected(failure)
+            else -> Failed(failure)
+        }
     }
 }

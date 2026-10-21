@@ -16,6 +16,7 @@ import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
@@ -153,6 +154,22 @@ public class TurnManager(
     private val turns = mutableMapOf<String, Turn>()
     private var nextTurnId = 0L
 
+    /**
+     * Decides the [Turn.outcome] of one turn. Rejections are recorded under the processor's lock, by the agent job or a
+     * [withTaskProcessor] block, and read by the monitor after both, under the gate.
+     */
+    private class TurnOutcomeRecorder {
+        val outcome = CompletableDeferred<TurnOutcome>()
+
+        private var rejection: Exception? = null
+
+        fun onRejected(e: Exception) {
+            if (rejection == null) rejection = e
+        }
+
+        fun complete(failure: Throwable?): TurnOutcome = TurnOutcome.of(failure, rejection).also { outcome.complete(it) }
+    }
+
     /** Completed by [shutdown]; ends every [subscribe] flow without taking any lock. */
     private val shutdownSignal = Job()
 
@@ -171,7 +188,8 @@ public class TurnManager(
      *
      * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
      * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
-     * update. Then the processor is closed, [Turn.events] completes, and the turn is removed.
+     * update, except [Turn.events] if the failure is the rejection of one of the agent's events. Then the processor is
+     * closed, [Turn.events] completes, and the turn is removed.
      *
      * Turns of the same task must be serialized by the caller, see [TurnManager].
      *
@@ -227,6 +245,7 @@ public class TurnManager(
 
                 // The view is registered: from here on, the turn starts even if the caller is cancelled.
                 withContext(NonCancellable) {
+                    val outcomeRecorder = TurnOutcomeRecorder()
                     val processor = TurnEventProcessor(
                         contextId = contextId,
                         taskId = taskId,
@@ -234,6 +253,7 @@ public class TurnManager(
                         turnId = turnId,
                         taskExists = taskExists,
                         userMessage = context.params.message,
+                        onRejected = outcomeRecorder::onRejected,
                     )
                     val agentJob = scope.async(start = CoroutineStart.LAZY) { runAgent(processor, block) }
 
@@ -245,7 +265,7 @@ public class TurnManager(
                      */
                     @OptIn(DelicateCoroutinesApi::class)
                     val monitor = scope.launch(start = CoroutineStart.ATOMIC) {
-                        monitorTurn(agentJob, processor, taskId, contextId, stream, turnId)
+                        monitorTurn(agentJob, processor, outcomeRecorder, taskId, contextId, stream, turnId)
                     }
                     // The monitor releases the stream from here on.
                     started = true
@@ -258,6 +278,7 @@ public class TurnManager(
                         view = channel,
                         monitor = monitor,
                         taskSnapshot = snapshot,
+                        outcome = outcomeRecorder.outcome,
                     )
 
                     registryMutex.withLock { turns[taskId] = turn }
@@ -292,6 +313,7 @@ public class TurnManager(
     private suspend fun monitorTurn(
         agentJob: Deferred<Unit>,
         processor: TurnEventProcessor,
+        outcomeRecorder: TurnOutcomeRecorder,
         taskId: String,
         contextId: String,
         stream: TaskEventStream,
@@ -316,15 +338,15 @@ public class TurnManager(
                 try {
                     /*
                      Waits for any withTaskProcessor block still publishing through this turn's processor; the agent job
-                     has completed, so no supported send is in flight. Then closes the processor and the view (endTurn
-                     closes it even if it fails) and removes the turn. Removal under the gate means a block never gets the
-                     closed processor of an ended turn.
+                     has completed, so no supported send is in flight. Then closes the processor, decides the outcome
+                     before the view can complete, closes the view (endTurn closes it even if it fails) and removes the
+                     turn. Removal under the gate means a block never gets the closed processor of an ended turn.
                      */
                     stream.processorGate.withLock {
                         processor.close()
 
                         try {
-                            stream.endTurn(turnId, contextId, failure)
+                            stream.endTurn(turnId, contextId, outcomeRecorder.complete(failure))
                         } finally {
                             registryMutex.withLock { turns -= taskId }
                         }

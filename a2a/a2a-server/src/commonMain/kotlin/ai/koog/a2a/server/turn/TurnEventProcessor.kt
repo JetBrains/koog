@@ -41,6 +41,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * in task mode and rejects [Message] events.
  * @param userMessage The message of the request that starts the turn, added to the task history with this turn's task
  * id and context id, see [sendTaskEvent]; `null` when the processor isn't bound to a turn.
+ * @param onRejected Called with the exception of every event the processor rejects as invalid.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public class TurnEventProcessor internal constructor(
@@ -50,6 +51,7 @@ public class TurnEventProcessor internal constructor(
     private val turnId: Long?,
     private val taskExists: Boolean = false,
     userMessage: Message? = null,
+    private val onRejected: (Exception) -> Unit = {},
 ) {
     private companion object {
         private const val TURN_CLOSED = "Turn event processor is closed, can't send events"
@@ -70,10 +72,6 @@ public class TurnEventProcessor internal constructor(
 
     /** The user message of a follow-up turn that is not persisted yet, see [sendTaskEvent]. */
     private var pendingFollowUpMessage: Message? = storedUserMessage.takeIf { taskExists }
-
-    /** The first agent event rejected as invalid (by validation or by the storage), if any. */
-    internal var rejection: Exception? = null
-        private set
 
     init {
         require(stream.taskId == taskId) { "Event stream of task '${stream.taskId}' can't be used for task '$taskId'" }
@@ -163,10 +161,7 @@ public class TurnEventProcessor internal constructor(
         }
     }
 
-    private fun <E : Exception> reject(e: E): E {
-        if (rejection == null) rejection = e
-        return e
-    }
+    private fun <E : Exception> reject(e: E): E = e.also(onRejected)
 
     /**
      * Closes the processor: later events are rejected with [TurnNotActiveException]. Doesn't wait for an event being
