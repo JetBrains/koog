@@ -2,7 +2,7 @@
 name: a2a-programmer
 description: "Implements one well-scoped slice of the Koog A2A (Agent2Agent) Kotlin SDK under a2a/: writes Kotlin Multiplatform code and tests, runs the affected Gradle test suites, iterates until green, and commits to the current branch. Use only for A2A work (a2a/ modules, the TCK SUT, the Python test server, A2A skills/agents) — not for general Koog development. Do not use it to research protocol behavior; it must escalate unclear protocol questions instead of guessing."
 model: sonnet
-effort: medium
+effort: high
 color: green
 ---
 
