@@ -127,6 +127,7 @@ import kotlinx.coroutines.withContext
  * @param idGenerator The generator of ids of messages created by the server, e.g. the status message of a task marked
  * as failed. Defaults to [UuidIdGenerator].
  */
+@InternalA2AApi
 public class TurnManager(
     coroutineScope: CoroutineScope,
     private val taskStorage: TaskStorage,
@@ -250,7 +251,6 @@ public class TurnManager(
      * @throws A2AInvalidParamsException if the message's context id differs from the continued task's.
      * @throws A2AUnsupportedOperationException if the continued task is in a terminal state.
      */
-    @InternalA2AApi
     public suspend fun startTurn(
         request: SendMessageRequest,
         ctx: ServerCallContext,
@@ -492,7 +492,6 @@ public class TurnManager(
      * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller).
      * @throws A2AUnsupportedOperationException if the task is already in a terminal state.
      */
-    @InternalA2AApi
     public fun subscribe(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> = flow {
         val stream = acquire(request.id)
 
@@ -554,7 +553,6 @@ public class TurnManager(
      * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller), before [block] or
      * the processor exist.
      */
-    @InternalA2AApi
     public suspend fun <T> withTaskProcessor(
         lookup: GetTaskRequest,
         ctx: ServerCallContext,
@@ -606,7 +604,6 @@ public class TurnManager(
      * those of idle tasks that no turn would ever close. Doesn't stop turns: their views end when the turns end, e.g.
      * when `coroutineScope` is cancelled. Takes no lock, so it never waits for a stalled task.
      */
-    @InternalA2AApi
     public fun shutdown() {
         shutdownSignal.complete()
     }

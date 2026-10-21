@@ -349,10 +349,10 @@ public open class A2AServer(
     }
 
     /**
-     * Manages [Turn]s and per-task event streams. Must use the same [taskStorage], [pushConfigStorage] and
-     * [coroutineScope] as this server.
+     * The server's internal turn layer, exposed to subclasses via opt-in.
      */
-    protected open val turnManager: TurnManager = TurnManager(
+    @InternalA2AApi
+    protected val turnManager: TurnManager = TurnManager(
         coroutineScope = coroutineScope,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
@@ -471,6 +471,7 @@ public open class A2AServer(
     }
 
     /** Emits the events of [turn] for [onSendMessageCommon]. */
+    @OptIn(InternalA2AApi::class)
     private suspend fun FlowCollector<Event>.emitTurnEvents(turn: Turn, includeTaskSnapshot: Boolean, isNewTask: Boolean) {
         val snapshot = if (includeTaskSnapshot) turn.taskSnapshot else null
         var isFirstEvent = true

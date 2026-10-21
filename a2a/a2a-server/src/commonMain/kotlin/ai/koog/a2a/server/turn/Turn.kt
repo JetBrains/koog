@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.turn
 
+import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
  * A [kotlinx.coroutines.CancellationException] thrown by the agent itself (e.g. from its own `withTimeout`) is
  * rethrown as a failure, with the original exception as its cause.
  */
+@InternalA2AApi
 public class Turn internal constructor(
     public val taskId: String,
     public val contextId: String,
