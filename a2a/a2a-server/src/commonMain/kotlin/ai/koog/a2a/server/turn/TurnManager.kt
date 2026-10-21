@@ -9,6 +9,7 @@ import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationDispatcher
 import ai.koog.a2a.server.notifications.PushNotificationSender
@@ -70,6 +71,9 @@ import kotlinx.coroutines.withContext
  * while acquiring a stream lock, so a stalled task can't block other tasks. The stream lock may be followed by the push
  * queue lock, a leaf lock held only for queue bookkeeping.
  *
+ * Storage I/O happens under the gate: task reads and writes of the task stream, and the save of a turn's inline push
+ * notification config in [startTurn]. A slow storage delays only turns and [withTaskProcessor] blocks of the same task.
+ *
  * ## Back-pressure
  *
  * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task
@@ -116,7 +120,7 @@ import kotlinx.coroutines.withContext
 public class TurnManager(
     coroutineScope: CoroutineScope,
     private val taskStorage: TaskStorage,
-    pushConfigStorage: PushNotificationConfigStorage? = null,
+    private val pushConfigStorage: PushNotificationConfigStorage? = null,
     pushSender: PushNotificationSender? = null,
     private val idGenerator: IdGenerator = UuidIdGenerator,
 ) {
@@ -192,6 +196,12 @@ public class TurnManager(
      *   [ai.koog.a2a.model.SendMessageConfiguration.historyLength], all artifacts) and kept as the turn's task snapshot;
      * - if the stored task is terminal by then (e.g. cancelled after the caller validated it), the turn isn't started.
      *
+     * [inlinePushConfig] is saved to [pushConfigStorage] once the turn is sure to start (after the terminal check), and
+     * before [block] starts, so the turn's first task event is pushed to it. If the turn doesn't start, it isn't saved.
+     * If the turn creates no task ([RequestContext.task] is `null` and no task is stored when the turn ends, e.g. the
+     * agent replied with a [ai.koog.a2a.model.Message] or never ran because `coroutineScope` was cancelled), every push
+     * notification config of the task is deleted when the turn ends.
+     *
      * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
      * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
      * update, except [Turn.events] if the failure is the rejection of one of the agent's events. An
@@ -202,6 +212,8 @@ public class TurnManager(
      *
      * @param context The request context of the turn; its [RequestContext.contextId] and [RequestContext.taskId] are
      * enforced by the processor.
+     * @param inlinePushConfig The resolved and validated push notification config of the turn's task to save, if any;
+     * ignored without [pushConfigStorage]. Saved with [RequestContext.callContext].
      * @param block The agent logic of the turn.
      * @return The started turn.
      * @throws IllegalStateException if a turn for the same task is already running.
@@ -210,11 +222,14 @@ public class TurnManager(
     @InternalA2AApi
     public suspend fun startTurn(
         context: RequestContext<SendMessageRequest>,
+        inlinePushConfig: TaskPushNotificationConfig? = null,
         block: suspend (TurnEventProcessor) -> Unit,
     ): Turn {
         val taskId = context.taskId
         val contextId = context.contextId
         val taskExists = context.task != null
+        val pushStorage = pushConfigStorage
+        val savesInlinePushConfig = inlinePushConfig != null && pushStorage != null
 
         // Pinned until the turn has ended (released by monitorTurn), or right away if the turn doesn't start.
         val stream = acquire(taskId)
@@ -252,6 +267,9 @@ public class TurnManager(
 
                 // The view is registered: from here on, the turn starts even if the caller is cancelled.
                 withContext(NonCancellable) {
+                    // If this fails, the turn doesn't start and the config may not be saved; nothing to undo.
+                    if (savesInlinePushConfig) pushStorage.save(inlinePushConfig, context.callContext)
+
                     val outcomeRecorder = TurnOutcomeRecorder()
                     val processor = TurnEventProcessor(
                         contextId = contextId,
@@ -263,17 +281,25 @@ public class TurnManager(
                         onRejected = outcomeRecorder::onRejected,
                         onPublished = outcomeRecorder::onPublished,
                     )
-                    val agentJob = scope.async(start = CoroutineStart.LAZY) { runAgent(processor, block) }
+                    val agentJob = scope.async { runAgent(processor, block) }
 
                     /*
-                     Starts the agent job and ends the turn. It ends the turn under the gate, which is held until the turn
-                     is registered below, so it can be launched first. ATOMIC (not LAZY): if the scope is already
-                     cancelled (server shutdown), the monitor still runs and ends the turn, so the view completes and join()
-                     doesn't hang.
+                     Ends the turn under the gate, which is held until the turn is registered below, so it can be launched
+                     before that. ATOMIC: if the scope is already cancelled (server shutdown), the agent job never runs,
+                     but the monitor still does and ends the turn, so the view completes and join() doesn't hang.
                      */
                     @OptIn(DelicateCoroutinesApi::class)
                     val monitor = scope.launch(start = CoroutineStart.ATOMIC) {
-                        monitorTurn(agentJob, processor, outcomeRecorder, taskId, contextId, stream, turnId)
+                        monitorTurn(
+                            agentJob,
+                            processor,
+                            outcomeRecorder,
+                            taskId,
+                            contextId,
+                            stream,
+                            turnId,
+                            deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !taskExists,
+                        )
                     }
                     // The monitor releases the stream from here on.
                     started = true
@@ -317,7 +343,12 @@ public class TurnManager(
         }
     }
 
-    /** Waits for the turn's agent job to complete (starting it, if needed), ends the turn, and cleans up. */
+    /**
+     * Waits for the turn's agent job to complete, ends the turn, and cleans up.
+     *
+     * @param deletesPushConfigsIfTaskAbsent whether the turn saved an inline push config for a task it was to create,
+     * see [startTurn].
+     */
     private suspend fun monitorTurn(
         agentJob: Deferred<Unit>,
         processor: TurnEventProcessor,
@@ -326,6 +357,7 @@ public class TurnManager(
         contextId: String,
         stream: TaskEventStream,
         turnId: Long,
+        deletesPushConfigsIfTaskAbsent: Boolean,
     ) {
         // Fails with a CancellationException if this monitor is cancelled, e.g. on server shutdown.
         val failure = try {
@@ -360,6 +392,8 @@ public class TurnManager(
                         }
                     }
                 } finally {
+                    // After the turn has ended nothing can create the task anymore; Turn.join() still waits for this.
+                    if (deletesPushConfigsIfTaskAbsent) deletePushConfigsIfTaskAbsent(taskId)
                     release(stream)
                 }
             }
@@ -367,6 +401,19 @@ public class TurnManager(
             throw e
         } catch (e: Exception) {
             logger.error(e) { "Failed to finish the turn of taskId='$taskId'" }
+        }
+    }
+
+    /** Deletes the push notification configs of [taskId] if the task was never stored. Failures are only logged. */
+    private suspend fun deletePushConfigsIfTaskAbsent(taskId: String) {
+        val pushStorage = pushConfigStorage ?: return
+
+        try {
+            if (taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) == null) {
+                pushStorage.deleteAll(taskId)
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to delete push notification configs of task '$taskId', which was not created" }
         }
     }
 

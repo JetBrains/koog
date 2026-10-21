@@ -33,7 +33,7 @@ public class Turn internal constructor(
     internal val eventProcessor: TurnEventProcessor,
     /** This turn's view of the task stream, see [events]. */
     private val view: ReceiveChannel<Event>,
-    /** The job that runs the agent job and then ends the turn, see [TurnManager.startTurn]. */
+    /** The job that waits for the agent job and then ends the turn, see [TurnManager.startTurn]. */
     private val monitor: Job,
     /**
      * For a turn that continues an existing task: the stored task, read atomically with the registration of [events],

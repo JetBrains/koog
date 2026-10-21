@@ -54,10 +54,8 @@ import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.agents.lock.KeyedMutex
 import ai.koog.agents.lock.withLock
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
@@ -67,7 +65,6 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.transformWhile
-import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 /**
@@ -344,8 +341,6 @@ public open class A2AServer(
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
 ) : RequestHandler {
     private companion object {
-        private val logger = KotlinLogging.logger {}
-
         private const val MIN_LIST_TASKS_PAGE_SIZE = 1
         private const val MAX_LIST_TASKS_PAGE_SIZE = 100
 
@@ -362,7 +357,8 @@ public open class A2AServer(
     protected val tasksMutex: KeyedMutex<String> = KeyedMutex()
 
     /**
-     * Manages [Turn]s and per-task event streams. Must use the same [taskStorage] and [coroutineScope] as this server.
+     * Manages [Turn]s and per-task event streams. Must use the same [taskStorage], [pushConfigStorage] and
+     * [coroutineScope] as this server.
      */
     protected open val turnManager: TurnManager = TurnManager(
         coroutineScope = coroutineScope,
@@ -408,7 +404,7 @@ public open class A2AServer(
      * referenced task, the agent can only send task events, see [TurnEventProcessor].
      *
      * The inline [taskPushNotificationConfig][ai.koog.a2a.model.SendMessageConfiguration.taskPushNotificationConfig]
-     * is saved for the turn's task after validation and before the turn starts, so the turn's first task event is
+     * is saved for the turn's task when the turn starts, before the agent does, so the turn's first task event is
      * already pushed to it:
      * - its `taskId` and `tenant` are set to the turn's task and the request's tenant;
      * - without an id, the task id is used, so re-sending the same config with every message replaces it;
@@ -418,9 +414,9 @@ public open class A2AServer(
      *   [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications], or [pushConfigStorage] or
      *   [pushSender] is `null`.
      *
-     * If a turn that would create a new task ends without a stored task (e.g. the agent replied with a [Message]),
-     * the inline config saved for it is deleted. If a follow-up's turn doesn't start (e.g. the task became terminal
-     * meanwhile), its inline config is deleted unless it replaced an existing config with the same id.
+     * If the turn doesn't start (e.g. the task became terminal meanwhile), the inline config isn't saved. If a turn
+     * that would create a new task ends without a stored task (e.g. the agent replied with a [Message], or never ran
+     * because [coroutineScope] was cancelled), the inline config saved for it is deleted.
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state (e.g. the CANCELED of a
      * concurrent CancelTask, even if the agent then fails), or when the turn ends. Only in the last case is the agent's
@@ -492,30 +488,11 @@ public open class A2AServer(
 
             val requestContext = newRequestContext(ctx, request, contextId, taskId, task)
 
-            // Saved before the turn starts, so that the turn's first task event is pushed to it.
-            val inlinePushConfig = saveInlinePushConfig(request, taskId, ctx, isFollowUp = task != null)
-            // Never for a follow-up: the task exists and may have other configs.
-            val cleansUpPushConfigs = inlinePushConfig != null && task == null
+            val inlinePushConfig = resolveInlinePushConfig(request, taskId, ctx)
 
-            try {
-                // The event view is registered before the agent starts, so no event is missed.
-                turnManager.startTurn(requestContext) { eventProcessor ->
-                    try {
-                        agentExecutor.execute(requestContext, eventProcessor)
-                    } finally {
-                        if (cleansUpPushConfigs) {
-                            withContext(NonCancellable) { deletePushConfigsIfTaskAbsent(taskId) }
-                        }
-                    }
-                }
-            } catch (e: Throwable) {
-                if (cleansUpPushConfigs) {
-                    withContext(NonCancellable) { deletePushConfigsIfTaskAbsent(taskId) }
-                } else if (inlinePushConfig?.isNew == true) {
-                    // The follow-up's turn didn't start (e.g. a concurrent cancel made the task terminal).
-                    withContext(NonCancellable) { deleteInlinePushConfig(inlinePushConfig, request.tenant, ctx) }
-                }
-                throw e
+            // The event view is registered, and the inline config saved, before the agent starts, so no event is missed.
+            turnManager.startTurn(requestContext, inlinePushConfig) { eventProcessor ->
+                agentExecutor.execute(requestContext, eventProcessor)
             }
         }
 
@@ -578,27 +555,19 @@ public open class A2AServer(
     }
 
     /**
-     * An inline push notification config saved by [saveInlinePushConfig].
+     * Resolves and validates the inline push notification config of [request] for [taskId], see [onSendMessageCommon].
+     * [TurnManager.startTurn] saves it once the turn starts.
      *
-     * @property isNew whether no config with [id] existed for [taskId] before; only known for a follow-up, `false` otherwise.
+     * @return the config to save, or `null` if there is none or it is ignored.
      */
-    private class SavedInlinePushConfig(val taskId: String, val id: String, val isNew: Boolean)
-
-    /**
-     * Saves the inline push notification config of [request] for [taskId], see [onSendMessageCommon].
-     *
-     * @return the saved config, or `null` if none was saved.
-     */
-    private suspend fun saveInlinePushConfig(
+    private suspend fun resolveInlinePushConfig(
         request: SendMessageRequest,
         taskId: String,
         ctx: ServerCallContext,
-        isFollowUp: Boolean,
-    ): SavedInlinePushConfig? {
+    ): TaskPushNotificationConfig? {
         val inline = request.configuration?.taskPushNotificationConfig ?: return null
-        val pushStorage = pushConfigStorage
 
-        if (agentCard.capabilities.pushNotifications != true || pushStorage == null || pushSender == null) {
+        if (agentCard.capabilities.pushNotifications != true || pushConfigStorage == null || pushSender == null) {
             return null
         }
 
@@ -609,35 +578,7 @@ public open class A2AServer(
 
         validatePushNotificationConfig(config, ctx)
 
-        // A config this request replaces must not be deleted if the follow-up is rejected.
-        val isNew = isFollowUp && pushStorage.getAll(taskId).none { it.id == id }
-        pushStorage.save(config, ctx)
-
-        return SavedInlinePushConfig(taskId, id, isNew)
-    }
-
-    /** Deletes [config], saved for a follow-up whose turn didn't start. Failures are only logged. */
-    private suspend fun deleteInlinePushConfig(config: SavedInlinePushConfig, tenant: String?, ctx: ServerCallContext) {
-        val pushStorage = pushConfigStorage ?: return
-
-        try {
-            pushStorage.delete(DeleteTaskPushNotificationConfigRequest(config.taskId, config.id, tenant), ctx)
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to delete push notification config '${config.id}' of task '${config.taskId}'" }
-        }
-    }
-
-    /** Deletes the push notification configs of [taskId] if the task was never stored. Failures are only logged. */
-    private suspend fun deletePushConfigsIfTaskAbsent(taskId: String) {
-        val pushStorage = pushConfigStorage ?: return
-
-        try {
-            if (taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) == null) {
-                pushStorage.deleteAll(taskId)
-            }
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to delete push notification configs of task '$taskId', which was not created" }
-        }
+        return config
     }
 
     private fun <T> newRequestContext(

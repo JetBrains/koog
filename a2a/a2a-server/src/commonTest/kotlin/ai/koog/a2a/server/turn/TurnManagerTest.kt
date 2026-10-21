@@ -247,8 +247,8 @@ class TurnManagerTest {
             processor.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_COMPLETED))
         }
 
-        val turn1 = turnManager.startTurn(createContext("task-1", "context-1"), turn("task-1", "context-1"))
-        val turn2 = turnManager.startTurn(createContext("task-2", "context-2"), turn("task-2", "context-2"))
+        val turn1 = turnManager.startTurn(createContext("task-1", "context-1"), block = turn("task-1", "context-1"))
+        val turn2 = turnManager.startTurn(createContext("task-2", "context-2"), block = turn("task-2", "context-2"))
         drain(turn1)
         drain(turn2)
 
@@ -597,7 +597,8 @@ class TurnManagerTest {
         val blockEntered = CompletableDeferred<Unit>()
         val releaseBlock = CompletableDeferred<Unit>()
 
-        val turn = turnManager.startTurn(createContext(taskId, contextId)) {}
+        // The agent completes only once the block below holds the turn gate.
+        val turn = turnManager.startTurn(createContext(taskId, contextId)) { blockEntered.await() }
         val events = drain(turn)
         // Holds the turn gate, so the turn can't end after its agent job has completed.
         val block = launch {
@@ -785,7 +786,7 @@ class TurnManagerTest {
         val subscriber = subscribeWith(turnManager) { received += it }
         runCurrent()
 
-        val turn = turnManager.startTurn(createContext(taskId, contextId, inputRequired), agent)
+        val turn = turnManager.startTurn(createContext(taskId, contextId, inputRequired), block = agent)
 
         assertEquals(emptyList(), turn.events.toList())
         val outcome = assertIs<TurnOutcome.RequestError>(turn.outcome.await())

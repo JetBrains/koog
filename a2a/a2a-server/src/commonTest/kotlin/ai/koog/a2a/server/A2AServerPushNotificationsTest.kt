@@ -23,6 +23,8 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.pushConfig
 import ai.koog.a2a.server.notifications.pushes
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
@@ -345,7 +347,7 @@ class A2AServerPushNotificationsTest {
 
     private fun TestScope.createTurnServer(
         pushNotifications: Boolean = true,
-        pushConfigStorage: InMemoryPushNotificationConfigStorage? = pushStorage,
+        pushConfigStorage: PushNotificationConfigStorage? = pushStorage,
         sender: GatedPushNotificationSender? = pushSender,
         rejectConfigs: Boolean = false,
         onValidate: suspend A2AServer.() -> Unit = {},
@@ -406,14 +408,18 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
-    fun testResentInlineConfigWithoutIdOnFollowUpReplacesConfig() = runTest(timeout = TEST_TIMEOUT) {
+    fun testResentInlineConfigWithoutIdOnFollowUpReplacesConfigBeforeAgentStarts() = runTest(timeout = TEST_TIMEOUT) {
         val server = createTurnServer()
+        val resent = webhook.copy(token = "new-token")
 
         server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
-        server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = webhook), ctx)
+        server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = resent), ctx)
         runCurrent()
 
-        assertEquals(listOf(webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)), pushStorage.getAll(NEW_TASK_ID))
+        val stored = webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)
+        val replaced = resent.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)
+        assertEquals(listOf(listOf(stored), listOf(replaced)), configsAtAgentStart)
+        assertEquals(listOf(replaced), pushStorage.getAll(NEW_TASK_ID))
         assertEquals(
             pushes(NEW_TASK_ID, listOf(submittedTask, inputRequired("ask"), inputRequired("again"))),
             pushSender.sent
@@ -549,35 +555,68 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
-    fun testFollowUpInlineConfigIsDeletedWhenConcurrentCancelRejectsTurn() = runTest(timeout = TEST_TIMEOUT) {
-        val server = createTurnServer(onValidate = cancelTask)
-        server.onSendMessage(sendRequest("ask"), ctx)
+    fun testFollowUpInlineConfigIsNotSavedWhenConcurrentCancelRejectsTurn() = runTest(timeout = TEST_TIMEOUT) {
+        val recording = RecordingPushConfigStorage(pushStorage)
+        var cancels = false
+        val server = createTurnServer(pushConfigStorage = recording, onValidate = { if (cancels) cancelTask() })
+        server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
+        runCurrent()
+        cancels = true
+        recording.calls.clear()
 
-        assertFailsWith<A2AUnsupportedOperationException> {
-            server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = webhook.copy(id = "new")), ctx)
+        // Neither a replacement of the existing config nor a new one is saved.
+        for (inline in listOf(webhook.copy(token = "new-token"), webhook.copy(id = "new"))) {
+            taskStorage.update(inputRequiredTask)
+
+            assertFailsWith<A2AUnsupportedOperationException> {
+                server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = inline), ctx)
+            }
         }
+        runCurrent()
 
         assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(NEW_TASK_ID)).status.state)
-        assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
+        assertEquals(emptyList(), recording.calls)
+        assertEquals(listOf(webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)), pushStorage.getAll(NEW_TASK_ID))
         assertEquals(1, executor.executed.size)
     }
 
     @Test
-    fun testReplacedConfigIsKeptWhenConcurrentCancelRejectsFollowUp() = runTest(timeout = TEST_TIMEOUT) {
+    fun testConfigCreatedConcurrentlyWithRejectedFollowUpWithSameIdIsKept() = runTest(timeout = TEST_TIMEOUT) {
         var cancels = false
-        val server = createTurnServer(onValidate = { if (cancels) cancelTask() })
-        server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
+        val created = pushConfig(NEW_TASK_ID, id = "shared")
+        val server = createTurnServer(
+            onValidate = {
+                if (cancels) {
+                    cancels = false
+                    onCreateTaskPushNotificationConfig(created, ctx)
+                    cancelTask()
+                }
+            }
+        )
+        server.onSendMessage(sendRequest("ask"), ctx)
         cancels = true
-        val resent = webhook.copy(token = "new-token")
 
         assertFailsWith<A2AUnsupportedOperationException> {
-            server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = resent), ctx)
+            server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = webhook.copy(id = "shared")), ctx)
         }
+        runCurrent()
 
-        // The config with the task id existed before the follow-up, so it isn't deleted.
-        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(NEW_TASK_ID)).status.state)
-        assertEquals(listOf(resent.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)), pushStorage.getAll(NEW_TASK_ID))
-        assertEquals(1, executor.executed.size)
+        assertEquals(listOf(created), pushStorage.getAll(NEW_TASK_ID))
+    }
+
+    @Test
+    fun testInlineConfigIsDeletedWhenServerIsCancelledBeforeAgentRuns() = runTest(timeout = TEST_TIMEOUT) {
+        val recording = RecordingPushConfigStorage(pushStorage)
+        val server = createTurnServer(pushConfigStorage = recording, onValidate = { this.cancel() })
+
+        assertFailsWith<A2AInvalidAgentResponseException> {
+            server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
+        }
+        runCurrent()
+
+        assertEquals(listOf("save $NEW_TASK_ID/$NEW_TASK_ID", "deleteAll $NEW_TASK_ID"), recording.calls)
+        assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
+        assertEquals(emptyList(), executor.executed)
     }
 
     @Test
@@ -632,5 +671,32 @@ class A2AServerPushNotificationsTest {
 
         assertEquals(listOf(config), validated)
         assertEquals(emptyList(), pushStorage.getAll("task-1"))
+    }
+}
+
+/** Records the calls to [save], [delete], [getAll] and [deleteAll] of [delegate], in call order. */
+private class RecordingPushConfigStorage(
+    private val delegate: PushNotificationConfigStorage,
+) : PushNotificationConfigStorage by delegate {
+    val calls = mutableListOf<String>()
+
+    override suspend fun save(config: TaskPushNotificationConfig, context: ServerCallContext): TaskPushNotificationConfig {
+        calls += "save ${config.taskId}/${config.id}"
+        return delegate.save(config, context)
+    }
+
+    override suspend fun delete(request: DeleteTaskPushNotificationConfigRequest, context: ServerCallContext) {
+        calls += "delete ${request.taskId}/${request.id}"
+        delegate.delete(request, context)
+    }
+
+    override suspend fun getAll(taskId: String): List<TaskPushNotificationConfig> {
+        calls += "getAll $taskId"
+        return delegate.getAll(taskId)
+    }
+
+    override suspend fun deleteAll(taskId: String) {
+        calls += "deleteAll $taskId"
+        delegate.deleteAll(taskId)
     }
 }
