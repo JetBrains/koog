@@ -7,6 +7,7 @@ import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageRequest
@@ -21,15 +22,18 @@ import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.pushConfig
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -51,14 +55,43 @@ import kotlin.time.Instant
  * subscribers and on the requester of the cancelled turn.
  */
 class A2AServerCancelTest {
+    private companion object {
+        /** Marks the coroutine of a CancelTask call whose task reads are counted, see [CancelReadCounter]. */
+        private val CANCEL_CALL = CoroutineName("cancel-call")
+    }
+
+    /** Counts the task reads made in [CANCEL_CALL] coroutines, i.e. by CancelTask, not by the agent or the turn. */
+    private class CancelReadCounter(private val delegate: TaskStorage) : TaskStorage by delegate {
+        var reads = 0
+            private set
+
+        private suspend fun <T> counted(read: T): T = read.also {
+            if (currentCoroutineContext()[CoroutineName] == CANCEL_CALL) reads++
+        }
+
+        override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? =
+            counted(delegate.get(request, context))
+
+        override suspend fun get(taskId: String, historyLength: Int?, includeArtifacts: Boolean): Task? =
+            counted(delegate.get(taskId, historyLength, includeArtifacts))
+
+        override suspend fun getAll(taskIds: List<String>, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
+            counted(delegate.getAll(taskIds, historyLength, includeArtifacts))
+
+        override suspend fun getByContext(contextId: String, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
+            counted(delegate.getByContext(contextId, historyLength, includeArtifacts))
+    }
+
     private val ctx = ServerCallContext()
     private lateinit var taskStorage: InMemoryTaskStorage
+    private lateinit var cancelReads: CancelReadCounter
     private lateinit var pushConfigStorage: InMemoryPushNotificationConfigStorage
     private lateinit var pushSender: GatedPushNotificationSender
 
     @BeforeTest
     fun setUp() {
         taskStorage = InMemoryTaskStorage()
+        cancelReads = CancelReadCounter(taskStorage)
         pushConfigStorage = InMemoryPushNotificationConfigStorage()
         pushSender = GatedPushNotificationSender()
     }
@@ -67,7 +100,7 @@ class A2AServerCancelTest {
         scripts: Map<String, AgentScript>,
         cancelHandler: CancelHandler,
         scope: CoroutineScope,
-        storage: InMemoryTaskStorage = taskStorage,
+        storage: TaskStorage = cancelReads,
     ) = A2AServer(
         agentExecutor = ScriptedAgentExecutor(scripts, cancelHandler),
         agentCard = testAgentCard(AgentCapabilities(streaming = true, pushNotifications = true)),
@@ -80,6 +113,10 @@ class A2AServerCancelTest {
 
     private fun TestScope.createServer(scripts: Map<String, AgentScript>, cancelHandler: CancelHandler) =
         newServer(scripts, cancelHandler, agentScope())
+
+    /** Cancels the task, counting its task reads in [cancelReads]. */
+    private suspend fun A2AServer.cancelCountingReads(): Task =
+        withContext(CANCEL_CALL) { onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
 
     private fun request(text: String) = SendMessageRequest(
         message = Message(
@@ -326,7 +363,7 @@ class A2AServerCancelTest {
         val response = async { server.onSendMessage(request("run"), ctx) }
         started.await()
 
-        val result = runCatching { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
+        val result = runCatching { server.cancelCountingReads() }
 
         return result to response.await()
     }
@@ -338,6 +375,8 @@ class A2AServerCancelTest {
         assertIs<A2ATaskNotCancelableException>(result.exceptionOrNull())
         assertEquals(TaskState.TASK_STATE_COMPLETED, assertIs<Task>(response).status.state)
         assertEquals(response, taskStorage.get(TASK_ID))
+        // The task before the executor runs, and its state after the executor's send failed on the closed processor.
+        assertEquals(2, cancelReads.reads)
     }
 
     @Test
@@ -346,6 +385,7 @@ class A2AServerCancelTest {
 
         assertEquals(TaskState.TASK_STATE_CANCELED, assertIs<Task>(response).status.state)
         assertEquals(response.copy(history = null), result.getOrThrow())
+        assertEquals(2, cancelReads.reads)
     }
 
     /**
@@ -419,6 +459,62 @@ class A2AServerCancelTest {
         // The forced CANCELED reaches the requester before the turn ends, so it wins over the agent's error.
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
         assertEquals<Event?>(taskStorage.get(TASK_ID), response.await())
+    }
+
+    @Test
+    fun testCancelOfIdleTaskByExecutorReadsTaskTwice() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(emptyMap(), cancelingExecutor)
+        // An idle task: no turn is running.
+        val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(idle)
+
+        val canceled = server.cancelCountingReads()
+
+        assertEquals(idle.copy(status = canceledByExecutor.status), canceled)
+        // The task before the executor runs, and after it, which is the result.
+        assertEquals(2, cancelReads.reads)
+    }
+
+    @Test
+    fun testCancelOfRunningTaskByExecutorReadsTaskTwice() = runTest(timeout = TEST_TIMEOUT) {
+        val running = RunningTask()
+        val server = createServer(mapOf("run" to running.script), cancelingExecutor)
+        val response = async { server.onSendMessage(request("run"), ctx) }
+        running.started.await()
+
+        val canceled = server.cancelCountingReads()
+
+        assertEquals(canceledByExecutor.status, canceled.status)
+        assertEquals(2, cancelReads.reads)
+        response.await()
+    }
+
+    @Test
+    fun testForcedCancelOfIdleTaskReadsTaskThreeTimes() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(emptyMap(), doNothingOnCancel)
+        // An idle task: no turn is running.
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+
+        val canceled = server.cancelCountingReads()
+
+        assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
+        // No agent to stop, so no re-read before the forced CANCELED; the result is read back after it.
+        assertEquals(3, cancelReads.reads)
+    }
+
+    @Test
+    fun testForcedCancelOfRunningTaskReadsTaskFourTimes() = runTest(timeout = TEST_TIMEOUT) {
+        val running = RunningTask()
+        val server = createServer(mapOf("run" to running.script), doNothingOnCancel)
+        val response = async { server.onSendMessage(request("run"), ctx) }
+        running.started.await()
+
+        val canceled = server.cancelCountingReads()
+
+        assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
+        // Also re-read after the agent is stopped, since it may have ended the task first.
+        assertEquals(4, cancelReads.reads)
+        response.await()
     }
 
     @Test

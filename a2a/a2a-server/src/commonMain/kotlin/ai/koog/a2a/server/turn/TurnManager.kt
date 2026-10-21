@@ -71,8 +71,8 @@ import kotlinx.coroutines.withContext
  * while acquiring a stream lock, so a stalled task can't block other tasks. The stream lock may be followed by the push
  * queue lock, a leaf lock held only for queue bookkeeping.
  *
- * Storage I/O happens under the gate: task reads and writes of the task stream, and the save of a turn's inline push
- * notification config in [startTurn]. A slow storage delays only turns and [withTaskProcessor] blocks of the same task.
+ * Storage I/O happens under the gate: task reads and writes of the task stream, the task read of [withTaskProcessor],
+ * and the save of a turn's inline push notification config in [startTurn]. A slow storage delays only turns and [withTaskProcessor] blocks of the same task.
  *
  * ## Back-pressure
  *
@@ -465,6 +465,10 @@ public class TurnManager(
     /**
      * Runs [block] with a [TurnEventProcessor] bound to the task stream of [taskId], e.g. to cancel a task.
      *
+     * [getTask] is called first, under the turn gate, and its result is passed to [block]. No turn starts or ends
+     * between that read and the end of [block] (a running agent may still change the task). An exception thrown by
+     * [getTask], e.g. for an unknown task, propagates before [block] or the processor exist.
+     *
      * If a turn of the task is running, [block] receives that turn's processor and agent job, and the turn can't finish
      * until [block] returns, so everything [block] publishes reaches the turn's requester as well. Otherwise, [block]
      * receives a new processor and `null`; the processor is closed when [block] returns (later events are rejected with
@@ -483,15 +487,16 @@ public class TurnManager(
      * to start, since neither can happen while [block] runs.
      *
      * @param taskId The task id.
-     * @param contextId The context id of the task, used for the new processor when no turn is running.
+     * @param getTask Reads the task. Its context id is used for the new processor when no turn is running.
      * @param block The action to run.
      * @return The result of [block].
      */
     @InternalA2AApi
     public suspend fun <T> withTaskProcessor(
         taskId: String,
-        contextId: String,
+        getTask: suspend () -> Task,
         block: suspend (
+            task: Task,
             processor: TurnEventProcessor,
             agentJob: Deferred<Unit>?,
             publish: suspend (TaskEvent) -> Unit,
@@ -501,10 +506,11 @@ public class TurnManager(
 
         try {
             return stream.processorGate.withLock {
+                val task = getTask()
                 val turn = registryMutex.withLock { turns[taskId] }
 
                 val processor = turn?.eventProcessor ?: TurnEventProcessor(
-                    contextId = contextId,
+                    contextId = task.contextId.orEmpty(),
                     taskId = taskId,
                     stream = stream,
                     turnId = null,
@@ -520,7 +526,7 @@ public class TurnManager(
                 }
 
                 try {
-                    block(processor, turn?.agentJob, publish)
+                    block(task, processor, turn?.agentJob, publish)
                 } finally {
                     isBlockRunning = false
                     // Nothing may publish through a standalone processor once the stream may be dropped.

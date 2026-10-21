@@ -744,45 +744,51 @@ public open class A2AServer(
 
         val taskId = request.id
 
-        // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
-        val initialTask = taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant), ctx)
-            ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
-
         /*
          Get a processor bound to the task's event stream, so that cancellation events reach every stream of the task. If
          a turn is running, it's the turn's processor, and the turn can't end until we're done. Otherwise, no turn can
          start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. The task
          lock isn't taken: a follow-up holding it may be waiting for the very turn being cancelled to end.
          */
-        return turnManager.withTaskProcessor(taskId, initialTask.contextId.orEmpty()) { eventProcessor, agentJob, publish ->
-            // Re-read the task: a turn may have ended in the meantime.
-            val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
-                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
-
+        return turnManager.withTaskProcessor(
+            taskId,
+            getTask = {
+                // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
+                taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant), ctx)
+                    ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+            },
+        ) { task, eventProcessor, agentJob, publish ->
             if (task.status.state.terminal) {
                 throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
             }
 
             val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
 
-            try {
+            // A running agent may end the task after it was read, closing the turn's processor: report that state below.
+            val processorClosed = try {
                 agentExecutor.cancel(requestContext, eventProcessor, agentJob)
+                null
             } catch (e: TurnNotActiveException) {
-                // The agent ended the task since it was read, closing the turn's processor: report that state below.
-                val current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
-                if (current == null || !current.status.state.terminal) throw e
+                e
             }
 
+            var current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+
+            if (processorClosed != null && (current == null || !current.status.state.terminal)) throw processorClosed
+            if (current == null) throw A2ATaskNotFoundException("Task '$taskId' not found")
+
             // The executor may have left the task running: force it to canceled.
-            val afterCancel = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
-                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+            if (!current.status.state.terminal) {
+                // Without an agent, nothing else publishes under the gate, so the task read above is current.
+                if (agentJob != null) {
+                    // Nothing may publish for the task after the forced cancellation.
+                    agentJob.cancelAndJoin()
+                    // The agent may have ended the task before it stopped.
+                    current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                        ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+                }
 
-            if (!afterCancel.status.state.terminal) {
-                // Nothing may publish for the task after the forced cancellation.
-                agentJob?.cancelAndJoin()
-
-                val current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
-                if (current != null && !current.status.state.terminal) {
+                if (!current.status.state.terminal) {
                     // Straight to the task stream: a running follow-up's user message isn't persisted by the server.
                     publish(
                         TaskStatusUpdateEvent(
@@ -794,16 +800,18 @@ public open class A2AServer(
                             ),
                         )
                     )
+
+                    // Read back rather than built: the result is the task as stored.
+                    current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                        ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
                 }
             }
 
-            taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
-                ?.also {
-                    if (it.status.state != TaskState.TASK_STATE_CANCELED) {
-                        throw A2ATaskNotCancelableException("Task '$taskId' was not canceled successfully, current state is ${it.status.state}")
-                    }
-                }
-                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+            if (current.status.state != TaskState.TASK_STATE_CANCELED) {
+                throw A2ATaskNotCancelableException("Task '$taskId' was not canceled successfully, current state is ${current.status.state}")
+            }
+
+            current
         }
     }
 

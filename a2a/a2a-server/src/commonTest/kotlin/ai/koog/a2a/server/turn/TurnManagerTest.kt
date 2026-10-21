@@ -6,6 +6,7 @@ import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
+import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
@@ -498,7 +499,7 @@ class TurnManagerTest {
         runCurrent()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
-        turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob, _ ->
+        turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, processor, agentJob, _ ->
             assertNull(agentJob)
             processor.sendTaskEvent(canceled)
         }
@@ -512,12 +513,52 @@ class TurnManagerTest {
         val turnManager = createManager()
         val inputRequired = storeTask()
 
-        val leaked = turnManager.withTaskProcessor(taskId, contextId) { processor, _, _ -> processor }
+        val leaked = turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, processor, _, _ -> processor }
 
         assertFailsWith<TurnNotActiveException> {
             leaked.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
         }
         assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(0, turnManager.activeStreams())
+    }
+
+    @Test
+    fun testWithTaskProcessorReadsTaskUnderGate() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeTask()
+        val releaseFirst = CompletableDeferred<Unit>()
+        var secondReadDone = false
+
+        val first = launch {
+            turnManager.withTaskProcessor(taskId, { inputRequired }) { _, _, _, _ -> releaseFirst.await() }
+        }
+        runCurrent()
+        val second = async {
+            turnManager.withTaskProcessor(
+                taskId,
+                { assertNotNull(taskStorage.get(taskId)).also { secondReadDone = true } },
+            ) { task, processor, _, _ -> task to processor.contextId }
+        }
+        runCurrent()
+        assertEquals(false, secondReadDone)
+
+        releaseFirst.complete(Unit)
+        first.join()
+
+        assertEquals(inputRequired to contextId, second.await())
+    }
+
+    @Test
+    fun testWithTaskProcessorFailingGetTaskSkipsBlock() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        var blockRan = false
+
+        assertFailsWith<A2ATaskNotFoundException> {
+            turnManager.withTaskProcessor(taskId, { throw A2ATaskNotFoundException("Task '$taskId' not found") }) { _, _, _, _ ->
+                blockRan = true
+            }
+        }
+        assertEquals(false, blockRan)
         assertEquals(0, turnManager.activeStreams())
     }
 
@@ -576,7 +617,7 @@ class TurnManagerTest {
         taskSent.await()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
-        turnManager.withTaskProcessor(taskId, contextId) { processor, agentJob, _ ->
+        turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, processor, agentJob, _ ->
             assertSame(turn.agentJob, agentJob)
             agentJob?.cancelAndJoin()
             // Give the turn a chance to finish, if it (wrongly) could.
@@ -602,7 +643,7 @@ class TurnManagerTest {
         val events = drain(turn)
         // Holds the turn gate, so the turn can't end after its agent job has completed.
         val block = launch {
-            turnManager.withTaskProcessor(taskId, contextId) { _, _, _ ->
+            turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, _, _, _ ->
                 blockEntered.complete(Unit)
                 releaseBlock.await()
             }
@@ -639,7 +680,7 @@ class TurnManagerTest {
         agentStarted.await()
 
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
-        turnManager.withTaskProcessor(taskId, contextId) { _, agentJob, publish ->
+        turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, _, agentJob, publish ->
             agentJob?.cancelAndJoin()
             publish(canceled)
         }
@@ -660,7 +701,7 @@ class TurnManagerTest {
         val turnManager = createManager()
         val inputRequired = storeTask()
 
-        val leaked = turnManager.withTaskProcessor(taskId, contextId) { _, _, publish -> publish }
+        val leaked = turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, _, _, publish -> publish }
 
         assertFailsWith<IllegalStateException> {
             leaked(statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED))
@@ -684,7 +725,7 @@ class TurnManagerTest {
         // E.g. CancelTask's forced cancellation, whose request is cancelled while it waits for the stuck subscriber.
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
         val canceller = launch {
-            turnManager.withTaskProcessor(taskId, contextId) { _, _, publish -> publish(canceled) }
+            turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, _, _, publish -> publish(canceled) }
         }
         advanceUntilIdle()
         assertTrue(canceller.isActive)
@@ -959,7 +1000,7 @@ class TurnManagerTest {
         savePushConfig()
         val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
 
-        turnManager.withTaskProcessor(taskId, contextId) { _, _, publish ->
+        turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, _, _, publish ->
             publish(canceled)
         }
         runCurrent()
@@ -1149,7 +1190,7 @@ class TurnManagerTest {
         runCurrent()
 
         launch {
-            turnManager.withTaskProcessor(taskId, contextId) { processor, _, _ ->
+            turnManager.withTaskProcessor(taskId, { createTask(taskId, contextId) }) { _, processor, _, _ ->
                 processor.sendTaskEvent(statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING))
             }
         }
