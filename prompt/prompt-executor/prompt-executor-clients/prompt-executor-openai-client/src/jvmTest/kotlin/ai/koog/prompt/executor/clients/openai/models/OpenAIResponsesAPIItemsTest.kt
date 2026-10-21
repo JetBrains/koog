@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai.models
 
+import ai.koog.prompt.message.MessagePart
 import ai.koog.test.utils.runWithBothJsonConfigurations
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.collections.shouldHaveSize
@@ -89,7 +90,8 @@ class OpenAIResponsesAPIItemsTest {
                     ),
                     id = "msg-123",
                     role = "assistant",
-                    status = OpenAIInputStatus.COMPLETED
+                    status = OpenAIInputStatus.COMPLETED,
+                    phase = MessagePart.Text.Phase.FINAL_ANSWER
                 )
             ) shouldEqualJson """
             {
@@ -97,7 +99,8 @@ class OpenAIResponsesAPIItemsTest {
                 "content": [{"type": "output_text", "annotations": [], "text": "Response text"}],
                 "id": "msg-123",
                 "role": "assistant",
-                "status": "completed"
+                "status": "completed",
+                "phase": "final_answer"
             }
             """.trimIndent()
         }
