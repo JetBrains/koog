@@ -27,7 +27,7 @@ public class InMemoryMessageStorage : MessageStorage {
         messagesByContext[contextId]?.toList() ?: emptyList()
     }
 
-    override suspend fun deleteByContext(contextId: String): Unit = rwLock.withReadLock {
+    override suspend fun deleteByContext(contextId: String): Unit = rwLock.withWriteLock {
         messagesByContext -= contextId
     }
 
