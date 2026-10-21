@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
@@ -7,6 +8,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponse
+import ai.koog.test.utils.CapturingKoogHttpClient
 import ai.koog.utils.time.KoogClock
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -16,6 +20,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -26,6 +33,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.reflect.KClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -147,6 +155,64 @@ class OpenAIChatCompletionLLMClientTest {
         val delta = streamJson.decodeFromString<OpenAIChatCompletionStreamResponse>(streamChunkWithDelta).choices.single().delta
 
         assertEquals("Let me think about this.", delta.reasoningContent)
+    }
+
+    @Test
+    fun testStreamingReasoningPreservesWhitespaceAndIsReplayed() = runTest {
+        assertStreamingReasoning("reasoning_content")
+    }
+
+    @Test
+    fun testStreamingReasoningAliasIsReplayed() = runTest {
+        assertStreamingReasoning("reasoning")
+    }
+
+    private suspend fun assertStreamingReasoning(field: String) {
+        val pieces = listOf("Let", " ", "me", "\n", "\t", "think.")
+        val reasoning = pieces.joinToString("")
+        val chunks = pieces.map { piece ->
+            """{"id":"c","object":"chat.completion.chunk","created":0,"model":"fixture","choices":[{"index":0,"delta":{"$field":${JsonPrimitive(piece)}}}]}"""
+        } + """{"id":"c","object":"chat.completion.chunk","created":0,"model":"fixture","choices":[{"index":0,"delta":{"content":"answer"},"finish_reason":"stop"}]}"""
+        val capturing = CapturingKoogHttpClient("streaming-test") { plainResponseBody }
+        val transport = object : KoogHttpClient by capturing {
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<O> = flow {
+                for (data in chunks.filter(dataFilter)) {
+                    processStreamingChunk(decodeStreamingResponse(data))?.let { emit(it) }
+                }
+            }
+        }
+        OpenAILLMClient(httpClient = transport, clock = FixedClock).use { client ->
+            val frames = client.executeStreaming(
+                Prompt.build("stream", clock = FixedClock, params = OpenAIChatParams()) { user("Question") },
+                OpenAIModels.Chat.GPT4o,
+            ).toList()
+            assertEquals(pieces, frames.filterIsInstance<StreamFrame.ReasoningDelta>().map { it.text })
+            val completedReasoning = frames.filterIsInstance<StreamFrame.ReasoningComplete>().single()
+            assertEquals(listOf(reasoning), completedReasoning.content)
+            val assistant = frames.toMessageResponse()
+            assertEquals(listOf(reasoning), assistant.parts.filterIsInstance<MessagePart.Reasoning>().single().content)
+            client.execute(
+                Prompt(
+                    id = "follow-up",
+                    messages = listOf(Message.User("Question", RequestMetaInfo.Empty), assistant),
+                    params = OpenAIChatParams(),
+                ),
+                OpenAIModels.Chat.GPT4o,
+            )
+            val body = assertIs<String>(capturing.lastRequest)
+            val messages = Json.parseToJsonElement(body).jsonObject.getValue("messages").jsonArray
+            val replayed = messages.first { it.jsonObject["role"]?.jsonPrimitive?.content == "assistant" }.jsonObject
+            assertEquals(reasoning, replayed.getValue("reasoning_content").jsonPrimitive.content)
+        }
     }
 
     @Test
