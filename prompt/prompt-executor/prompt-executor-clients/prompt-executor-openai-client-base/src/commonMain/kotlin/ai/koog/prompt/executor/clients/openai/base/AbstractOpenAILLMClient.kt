@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.jvm.JvmOverloads
@@ -527,7 +528,18 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         clock,
         totalTokensCount = usage?.totalTokens,
         inputTokensCount = usage?.promptTokens,
-        outputTokensCount = usage?.completionTokens
+        outputTokensCount = usage?.completionTokens,
+        metadata = usage
+            ?.let {
+                buildJsonObject {
+                    it.promptTokensDetails?.cachedTokens?.let { put("cachedInputTokens", it) }
+                    it.completionTokensDetails?.reasoningTokens?.let { put("reasoningTokens", it) }
+                    it.completionTokensDetails?.acceptedPredictionTokens?.let { put("acceptedPredictionTokens", it) }
+                    it.completionTokensDetails?.rejectedPredictionTokens?.let { put("rejectedPredictionTokens", it) }
+                    it.completionTokensDetails?.audioTokens?.let { put("completionAudioTokens", it) }
+                    it.promptTokensDetails?.audioTokens?.let { put("promptAudioTokens", it) }
+                }.takeIf { it.isNotEmpty() }
+            }
     )
 
     protected open fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
