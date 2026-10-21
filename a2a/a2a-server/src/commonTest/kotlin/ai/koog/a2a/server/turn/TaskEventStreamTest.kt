@@ -415,6 +415,30 @@ class TaskEventStreamTest {
     }
 
     @Test
+    fun testPublisherCancelledDuringTerminalFanOutStillClosesEverySubscriber() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+
+        // The stuck subscriber is registered first, so the publisher never reaches the other one.
+        val (_, stuck) = stream.subscribeToStored()
+        val other = collect(stream.subscribeToStored().second)
+
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+        val publisher = launch { stream.publish(completed, turnId = 1) }
+        advanceUntilIdle()
+        assertTrue(publisher.isActive)
+
+        publisher.cancelAndJoin()
+        advanceUntilIdle()
+
+        // The task is terminal, so nothing would ever close the subscribers later.
+        assertEquals(completed.status, assertNotNull(taskStorage.get(taskId)).status)
+        assertTrue(other.isCompleted)
+        assertEquals(emptyList(), other.await())
+        assertTrue(stuck.receiveCatching().isClosed)
+    }
+
+    @Test
     fun testCommittedEventIsReportedEvenIfPublisherIsCancelledMeanwhile() = runTest(timeout = TEST_TIMEOUT) {
         taskStorage.update(task(TaskState.TASK_STATE_WORKING))
         lateinit var publisher: Job

@@ -643,6 +643,41 @@ class TurnManagerTest {
         assertEquals(inputRequired, taskStorage.get(taskId))
     }
 
+    @Test
+    fun testCancelledServerPublishOfTerminalEventEndsEverySubscriber() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeTask()
+
+        // The stuck subscriber holds the snapshot and doesn't receive further; it is registered first.
+        val stuckGate = CompletableDeferred<Unit>()
+        val stuck = subscribeWith(turnManager) { stuckGate.await() }
+        runCurrent()
+        val received = mutableListOf<Event>()
+        val other = subscribeWith(turnManager) { received += it }
+        runCurrent()
+
+        // E.g. CancelTask's forced cancellation, whose request is cancelled while it waits for the stuck subscriber.
+        val canceled = statusUpdate(taskId, contextId, TaskState.TASK_STATE_CANCELED)
+        val canceller = launch {
+            turnManager.withTaskProcessor(taskId, contextId) { _, _, publish -> publish(canceled) }
+        }
+        advanceUntilIdle()
+        assertTrue(canceller.isActive)
+
+        canceller.cancelAndJoin()
+        advanceUntilIdle()
+
+        assertEquals(inputRequired.copy(status = canceled.status), taskStorage.get(taskId))
+        assertTrue(other.isCompleted)
+        assertEquals(listOf<Event>(inputRequired), received)
+        assertEquals(1, turnManager.activeStreams())
+
+        // Once the stuck subscriber goes on, its flow ends too and the stream is dropped.
+        stuckGate.complete(Unit)
+        stuck.join()
+        assertEquals(0, turnManager.activeStreams())
+    }
+
     private fun followUpPrompt() = Message(
         messageId = "agent-prompt",
         role = Role.ROLE_AGENT,

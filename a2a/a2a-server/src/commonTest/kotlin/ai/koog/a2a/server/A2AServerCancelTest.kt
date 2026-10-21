@@ -30,7 +30,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -40,6 +42,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 /**
@@ -170,6 +173,34 @@ class A2AServerCancelTest {
             canceled,
         )
         assertEquals(canceled, taskStorage.get(TASK_ID, historyLength = 0, includeArtifacts = true))
+    }
+
+    @Test
+    fun testCancelRequestCancelledDuringForcedCanceledFanOutStillEndsSubscribers() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createServer(mapOf("start" to idleScript), doNothingOnCancel)
+        server.onSendMessage(request("start"), ctx)
+        val stored = assertNotNull(taskStorage.get(TASK_ID))
+
+        // The stuck subscriber holds the snapshot and doesn't receive further; it is registered first.
+        val stuckGate = CompletableDeferred<Unit>()
+        val stuck = subscribe(server) { stuckGate.await() }.also { it.firstEvent.await() }
+        val other = subscribe(server).also { it.firstEvent.await() }
+
+        // E.g. the CancelTask client times out while the forced CANCELED waits for the stuck subscriber.
+        val cancelRequest = launch { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
+        advanceUntilIdle()
+        assertTrue(cancelRequest.isActive)
+
+        cancelRequest.cancelAndJoin()
+        advanceUntilIdle()
+
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertTrue(other.job.isCompleted)
+        assertEquals(listOf<Event>(stored), other.events)
+
+        stuckGate.complete(Unit)
+        stuck.job.join()
+        assertEquals(listOf<Event>(stored), stuck.events)
     }
 
     @Test

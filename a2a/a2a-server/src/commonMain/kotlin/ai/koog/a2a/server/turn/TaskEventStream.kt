@@ -49,7 +49,8 @@ import kotlin.time.Clock
  * A subscriber whose consumer has gone away must cancel its channel (see [unsubscribe]). Cancelling doesn't need the
  * stream lock, so it works even while the fan-out is suspended on that subscriber: the pending delivery fails and the
  * fan-out drops the subscriber and goes on. If the publisher itself is cancelled mid-fan-out, the event is already
- * persisted but the subscribers not reached yet don't receive it.
+ * persisted but the subscribers not reached yet don't receive it. A terminal event still closes every subscriber, so
+ * none of them waits for an event that will never come.
  *
  * Every persisted [TaskEvent] is passed to [onPersisted] right after it is stored, before the fan-out and still under
  * the stream lock, so its calls follow the storage order. Storing and reporting an event isn't interrupted by the
@@ -216,10 +217,14 @@ internal class TaskEventStream(
 
     private suspend fun persistAndDeliver(event: TaskEvent) {
         persist(event)
-        fanOut(event) { true }
 
-        if (event.isTerminal()) {
-            closeAll()
+        try {
+            fanOut(event) { true }
+        } finally {
+            // Even if the publisher is cancelled mid-fan-out: the task is terminal, so nothing else would close them.
+            if (event.isTerminal()) {
+                closeAll()
+            }
         }
     }
 
@@ -288,9 +293,7 @@ internal class TaskEventStream(
                 ),
             )
 
-            persist(failed)
-            fanOut(failed) { true }
-            closeAll()
+            persistAndDeliver(failed)
         }
     }
 
@@ -342,6 +345,7 @@ internal class TaskEventStream(
         false
     }
 
+    /** Doesn't suspend, so it is safe in a `finally` of a cancelled publisher. */
     private fun closeAll() {
         subscribers.forEach { it.channel.close() }
         subscribers.clear()
