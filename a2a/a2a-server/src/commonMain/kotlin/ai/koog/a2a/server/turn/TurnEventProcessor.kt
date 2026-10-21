@@ -42,6 +42,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * @param userMessage The message of the request that starts the turn, added to the task history with this turn's task
  * id and context id, see [sendTaskEvent]; `null` when the processor isn't bound to a turn.
  * @param onRejected Called with the exception of every event the processor rejects as invalid.
+ * @param onPublished Called after an event is published, and when publishing fails, since the storage may have been
+ * written by then. Not called for events rejected before publishing, or for an ignored [Task].
  */
 @OptIn(ExperimentalAtomicApi::class)
 public class TurnEventProcessor internal constructor(
@@ -52,6 +54,7 @@ public class TurnEventProcessor internal constructor(
     private val taskExists: Boolean = false,
     userMessage: Message? = null,
     private val onRejected: (Exception) -> Unit = {},
+    private val onPublished: () -> Unit = {},
 ) {
     private companion object {
         private const val TURN_CLOSED = "Turn event processor is closed, can't send events"
@@ -109,6 +112,7 @@ public class TurnEventProcessor internal constructor(
             }
 
             stream.publish(message, turnId)
+            onPublished()
             isOpen.store(false)
         } else {
             throw TurnNotActiveException(TURN_CLOSED)
@@ -148,8 +152,13 @@ public class TurnEventProcessor internal constructor(
 
         val isApplied = try {
             stream.publish(event, turnId, userMessage = storedUserMessage.takeUnless { taskExists }, followUpMessage)
-        } catch (e: TaskOperationException) {
-            throw reject(e)
+        } catch (e: Exception) {
+            onPublished()
+            throw if (e is TaskOperationException) reject(e) else e
+        }
+
+        if (isApplied) {
+            onPublished()
         }
 
         if (isApplied && followUpMessage != null) {

@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.turn
 
+import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Artifact
@@ -313,10 +314,30 @@ class TaskEventStreamTest {
     }
 
     @Test
+    fun testEndTurnWithRequestErrorLeavesTaskAndSubscribersUnchanged() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
+        taskStorage.update(inputRequired)
+
+        val turnView = collect(stream.openTurnView(1))
+        val subscriber = collect(stream.subscribeToStored().second)
+
+        stream.endTurn(1, contextId, outcome = TurnOutcome.RequestError(A2AContentTypeNotSupportedException()))
+
+        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(emptyList(), turnView.await())
+
+        // The task subscriber is still open and receives the next event.
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+        stream.publish(completed, turnId = 2)
+        assertEquals(listOf(completed), subscriber.await())
+    }
+
+    @Test
     fun testEndTurnWithFailureKeepsTerminalTaskAndCancellationDoesNotMarkTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
         listOf(
             task(TaskState.TASK_STATE_COMPLETED) to TurnOutcome.Failed(IllegalStateException("boom")),
-            task(TaskState.TASK_STATE_WORKING) to TurnOutcome.of(CancellationException("canceled"), rejection = null),
+            task(TaskState.TASK_STATE_WORKING) to TurnOutcome.of(CancellationException("canceled"), rejection = null, isEventPublished = false),
         ).forEach { (stored, outcome) ->
             taskStorage = InMemoryTaskStorage().also { it.update(stored) }
             val stream = createStream()

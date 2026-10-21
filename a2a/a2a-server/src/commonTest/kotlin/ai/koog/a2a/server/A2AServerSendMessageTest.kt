@@ -1,5 +1,8 @@
 package ai.koog.a2a.server
 
+import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
+import ai.koog.a2a.exceptions.A2AException
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
@@ -288,6 +291,117 @@ class A2AServerSendMessageTest {
             server.onSendMessage(request("crash"), ctx)
         }
         assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    /** How the requester sees an error: its type, message, and A2A error code. */
+    private fun Throwable.asError() = Triple(this::class, message, (this as? A2AException)?.errorCode)
+
+    @Test
+    fun testA2AErrorBeforeNewTaskCreatedSurfacesToRequesterWithoutCreatingTask() = runTest(timeout = TEST_TIMEOUT) {
+        val error = A2AContentTypeNotSupportedException("Unsupported content type")
+        val server = createServer(mapOf("reject" to AgentScript { _, _ -> throw error }))
+
+        val blockingFailure = assertFailsWith<A2AException> { server.onSendMessage(request("reject"), ctx) }
+        val (streamingFailure, received) = server.onSendMessageStreaming(request("reject"), ctx).collectExpectingFailure()
+
+        assertEquals(error.asError(), blockingFailure.asError())
+        assertEquals(error.asError(), streamingFailure.asError())
+        assertEquals(emptyList(), received)
+        assertEquals(null, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testA2AErrorBeforeFirstEventOfFollowUpFailsRequestAndLeavesTaskUnchanged() = runTest(timeout = TEST_TIMEOUT) {
+        listOf(A2AContentTypeNotSupportedException("Unsupported content type"), A2AInternalErrorException("Agent error"))
+            .forEach { error ->
+                taskStorage = InMemoryTaskStorage()
+                val server = createServer(
+                    mapOf("ask" to askScript, "reject" to AgentScript { _, _ -> throw error }, "finish" to finishScript)
+                )
+                server.onSendMessage(request("ask"), ctx)
+                val subscription = subscribe(server).also { it.firstEvent.await() }
+
+                val failure = assertFailsWith<A2AException> { server.onSendMessage(request("reject", TASK_ID), ctx) }
+                runCurrent()
+
+                assertEquals(error.asError(), failure.asError())
+                assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+                // The subscriber gets nothing and keeps waiting.
+                assertEquals(listOf<Event>(inputRequiredTask), subscription.events)
+                assertTrue(subscription.job.isActive)
+                subscription.job.cancel()
+
+                // The conversation goes on; the rejected message isn't in the history.
+                assertEquals(
+                    inputRequiredTask.copy(
+                        status = status(TaskState.TASK_STATE_COMPLETED).status,
+                        history = listOf(
+                            userMessage("ask"),
+                            agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name),
+                            userMessage("finish", TASK_ID),
+                            agentMessage(TaskState.TASK_STATE_WORKING.name),
+                        ),
+                        artifacts = listOf(artifactChunk("result").artifact),
+                    ),
+                    server.onSendMessage(request("finish", TASK_ID), ctx),
+                )
+            }
+    }
+
+    @Test
+    fun testA2AErrorBeforeFirstEventOfStreamingFollowUpEmitsNoSnapshot() = runTest(timeout = TEST_TIMEOUT) {
+        val error = A2AContentTypeNotSupportedException("Unsupported content type")
+        val server = createServer(mapOf("ask" to askScript, "reject" to AgentScript { _, _ -> throw error }))
+        server.onSendMessage(request("ask"), ctx)
+
+        val (failure, received) = server.onSendMessageStreaming(request("reject", TASK_ID), ctx).collectExpectingFailure()
+
+        assertEquals(error.asError(), failure.asError())
+        assertEquals(emptyList(), received)
+        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+    }
+
+    @Test
+    fun testFollowUpFailureOtherThanA2AErrorBeforeFirstEventFailsTask() = runTest(timeout = TEST_TIMEOUT) {
+        /** The FAILED task the server stores, with [history]; the message id and timestamp are taken from [stored]. */
+        fun failedTask(stored: Task?, history: List<Message>): Task {
+            val storedStatus = assertNotNull(stored).status
+            return inputRequiredTask.copy(
+                status = TaskStatus(
+                    state = TaskState.TASK_STATE_FAILED,
+                    message = Message(
+                        messageId = assertNotNull(storedStatus.message).messageId,
+                        role = Role.ROLE_AGENT,
+                        parts = listOf(TextPart("Task failed due to an internal error")),
+                        contextId = CONTEXT_ID,
+                        taskId = TASK_ID,
+                    ),
+                    timestamp = storedStatus.timestamp,
+                ),
+                history = history,
+            )
+        }
+
+        val askHistory = listOf(userMessage("ask"), agentMessage(TaskState.TASK_STATE_INPUT_REQUIRED.name))
+        listOf(
+            // An A2A error after the first event.
+            AgentScript { _, processor ->
+                processor.sendTaskEvent(status(TaskState.TASK_STATE_WORKING))
+                throw A2AContentTypeNotSupportedException("Unsupported content type")
+            } to askHistory + listOf(userMessage("fail", TASK_ID), agentMessage(TaskState.TASK_STATE_WORKING.name)),
+            // Another exception before the first event: the user message isn't persisted.
+            AgentScript { _, _ -> throw IllegalStateException("Agent crashed") } to askHistory,
+        ).forEachIndexed { index, (script, history) ->
+            taskStorage = InMemoryTaskStorage()
+            val server = createServer(mapOf("ask" to askScript, "fail" to script))
+            server.onSendMessage(request("ask"), ctx)
+
+            val response = server.onSendMessage(request("fail", TASK_ID), ctx)
+
+            val stored = taskStorage.get(TASK_ID)
+            assertEquals(failedTask(stored, history), stored, "case $index")
+            assertEquals<Any?>(stored, response, "case $index")
+        }
     }
 
     @Test

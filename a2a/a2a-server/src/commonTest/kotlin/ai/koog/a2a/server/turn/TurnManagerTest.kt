@@ -3,6 +3,9 @@
 package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.annotations.InternalA2AApi
+import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
+import ai.koog.a2a.exceptions.A2AException
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
@@ -16,6 +19,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
@@ -767,6 +771,107 @@ class TurnManagerTest {
         assertNull(turnManager.getTurn(taskId))
         assertEquals(0, turnManager.activeStreams())
         assertEquals(canceled, taskStorage.get(taskId))
+    }
+
+    /**
+     * Runs a follow-up turn of an input-required task that has a push config and a subscriber, with [agent] failing
+     * with [error] before its first event, and asserts that the turn changed nothing.
+     */
+    private suspend fun TestScope.assertFollowUpRejectedWith(error: A2AException, agent: suspend (TurnEventProcessor) -> Unit) {
+        val turnManager = createManager()
+        val inputRequired = storeInputRequiredTask()
+        savePushConfig()
+        val received = mutableListOf<Event>()
+        val subscriber = subscribeWith(turnManager) { received += it }
+        runCurrent()
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId, inputRequired), agent)
+
+        assertEquals(emptyList(), turn.events.toList())
+        val outcome = assertIs<TurnOutcome.RequestError>(turn.outcome.await())
+        assertEquals(error::class to error.message, outcome.cause::class to outcome.cause.message)
+        turn.join()
+        runCurrent()
+
+        // Neither the user message nor a failed status is persisted, delivered, or pushed.
+        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(listOf<Event>(inputRequired), received)
+        assertTrue(subscriber.isActive)
+        assertEquals(emptyList(), pushSender.started)
+
+        subscriber.cancelAndJoin()
+    }
+
+    @Test
+    fun testA2AErrorBeforeFirstEventOfFollowUpLeavesTaskUnchanged() = runTest(timeout = TEST_TIMEOUT) {
+        val error = A2AContentTypeNotSupportedException("Unsupported content type")
+
+        assertFollowUpRejectedWith(error) { throw error }
+    }
+
+    @Test
+    fun testInternalA2AErrorBeforeFirstEventOfFollowUpLeavesTaskUnchanged() = runTest(timeout = TEST_TIMEOUT) {
+        val error = A2AInternalErrorException("Agent error")
+
+        assertFollowUpRejectedWith(error) { throw error }
+    }
+
+    @Test
+    fun testRejectedAndIgnoredEventsDoNotCountAsFirstEventOfFollowUp() = runTest(timeout = TEST_TIMEOUT) {
+        val error = A2AContentTypeNotSupportedException("Unsupported content type")
+
+        assertFollowUpRejectedWith(error) { processor ->
+            processor.sendTaskEvent(createTask(taskId, contextId, TaskState.TASK_STATE_WORKING))
+            assertFailsWith<InvalidEventException> {
+                processor.sendTaskEvent(statusUpdate(taskId, "other-context", TaskState.TASK_STATE_WORKING))
+            }
+            throw error
+        }
+    }
+
+    @Test
+    fun testA2AErrorAfterFirstEventOfFollowUpMarksTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
+        val turnManager = createManager()
+        val inputRequired = storeInputRequiredTask()
+        val userMessage = createMessage("user-msg", contextId, "Hello").copy(taskId = taskId)
+        val working = statusUpdate(taskId, contextId, TaskState.TASK_STATE_WORKING)
+
+        val turn = turnManager.startTurn(createContext(taskId, contextId, inputRequired)) { processor ->
+            processor.sendTaskEvent(working)
+            throw A2AContentTypeNotSupportedException("Unsupported content type")
+        }
+
+        val events = turn.events.toList()
+        assertIs<TurnOutcome.Failed>(turn.outcome.await())
+        turn.join()
+
+        val stored = assertNotNull(taskStorage.get(taskId))
+        val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
+        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
+        assertEquals(listOf<Event>(working, failedEvent), events)
+        assertEquals(inputRequired.copy(status = failedStatus, history = listOf(followUpPrompt(), userMessage)), stored)
+    }
+
+    @Test
+    fun testNonA2AErrorBeforeFirstEventOfFollowUpMarksTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
+        listOf(IllegalStateException("boom"), CancellationException("agent gave up")).forEach { error ->
+            taskStorage = InMemoryTaskStorage()
+            val turnManager = createManager()
+            val inputRequired = storeInputRequiredTask()
+
+            val turn = turnManager.startTurn(createContext(taskId, contextId, inputRequired)) { throw error }
+
+            val events = turn.events.toList()
+            assertIs<TurnOutcome.Failed>(turn.outcome.await(), error.toString())
+            turn.join()
+
+            // The user message is not persisted, the status message moves into the history.
+            val stored = assertNotNull(taskStorage.get(taskId))
+            val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
+            val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
+            assertEquals(listOf<Event>(failedEvent), events, error.toString())
+            assertEquals(inputRequired.copy(status = failedStatus, history = listOf(followUpPrompt())), stored, error.toString())
+        }
     }
 
     private suspend fun savePushConfig() {

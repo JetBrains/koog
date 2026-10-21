@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.turn
 
+import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.server.exceptions.InvalidEventException
@@ -86,6 +87,12 @@ internal sealed interface TurnOutcome {
     data class Rejected(val cause: Exception) : TurnOutcome
 
     /**
+     * The agent failed with an [A2AException] before publishing any event of the turn, so the turn changed nothing:
+     * the task is left as it was, and the requester gets [cause] as the error.
+     */
+    data class RequestError(val cause: A2AException) : TurnOutcome
+
+    /**
      * The agent failed otherwise. The task, if it exists and isn't terminal, is marked failed, and [Turn.events] ends
      * with that update.
      */
@@ -94,12 +101,15 @@ internal sealed interface TurnOutcome {
     companion object {
         /**
          * The outcome of a turn whose agent job ended with [failure] (`null` if it returned), with [rejection] being
-         * the first of its events rejected as invalid, if any.
+         * the first of its events rejected as invalid, if any, and [isEventPublished] telling whether any event of the
+         * turn was published (or may have been written to the storage). Rejected events and ignored [Task]s aren't
+         * published events.
          */
-        fun of(failure: Throwable?, rejection: Exception?): TurnOutcome = when (failure) {
+        fun of(failure: Throwable?, rejection: Exception?, isEventPublished: Boolean): TurnOutcome = when (failure) {
             null, is CancellationException -> Completed(rejection)
             is InvalidEventException -> Rejected(failure)
             is TaskOperationException -> Rejected(failure)
+            is A2AException -> if (isEventPublished) Failed(failure) else RequestError(failure)
             else -> Failed(failure)
         }
     }

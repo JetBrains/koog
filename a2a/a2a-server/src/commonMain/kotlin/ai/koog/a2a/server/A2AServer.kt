@@ -422,20 +422,27 @@ public open class A2AServer(
      * the inline config saved for it is deleted. If a follow-up's turn doesn't start (e.g. the task became terminal
      * meanwhile), its inline config is deleted unless it replaced an existing config with the same id.
      *
-     * The flow ends after the agent's [Message], after an event with a terminal task state, or when the turn ends.
-     * Only in the last case is the agent's exception rethrown (if the task exists, it is marked failed instead and the
-     * flow ends with that update). An event rejected as invalid (e.g. a status update before a [Task] for a new task,
-     * or a [Message] for an existing task) is reported the same way as [A2AInvalidAgentResponseException], also when
-     * the agent swallowed the failure and produced nothing else; for an existing task the requester gets the error
-     * instead of the failed update. A turn of a new task that ends without any event and without a failure is also
-     * reported as [A2AInvalidAgentResponseException]. After the flow ends or its collection stops, the agent keeps running in
+     * The flow ends after the agent's [Message], after an event with a terminal task state (e.g. the CANCELED of a
+     * concurrent CancelTask, even if the agent then fails), or when the turn ends. Only in the last case is the agent's
+     * exception rethrown:
+     * - an [ai.koog.a2a.exceptions.A2AException] thrown before the agent's first event of the turn is rethrown and
+     *   leaves the task unchanged; the task snapshot isn't emitted;
+     * - any other exception is rethrown if the task doesn't exist; otherwise the task is marked failed and the flow
+     *   ends with that update.
+     *
+     * An event rejected as invalid (e.g. a status update before a [Task] for a new task, or a [Message] for an existing
+     * task) is reported the same way as [A2AInvalidAgentResponseException], also when the agent swallowed the failure
+     * and produced nothing else; for an existing task the requester gets the error instead of the failed update. A turn
+     * of a new task that ends without any event and without a failure is also reported as
+     * [A2AInvalidAgentResponseException]. After the flow ends or its collection stops, the agent keeps running in
      * [coroutineScope] and its later failures are not reported to the requester.
      *
      * @param request The SendMessage request.
      * @param ctx The context of the call.
      * @param includeTaskSnapshot For a message to an existing task: whether to emit the task as stored right before
      * the turn's first event (without the request's user message, which is persisted later) ahead of the agent's first
-     * event, so the stream always begins with the task. If the turn produces no events, the flow is the snapshot only.
+     * event, so the stream always begins with the task. If the turn produces no events and the agent doesn't fail, the
+     * flow is the snapshot only.
      * @return A cold flow of the turn's events; each collection sends the message again.
      */
     @OptIn(InternalA2AApi::class)
@@ -548,6 +555,8 @@ public open class A2AServer(
         // The turn has ended (or the task became terminal without the update reaching this view): respond by its outcome.
         when (val outcome = turn.outcome.await()) {
             is TurnOutcome.Failed -> throw outcome.cause
+
+            is TurnOutcome.RequestError -> throw outcome.cause
 
             is TurnOutcome.Rejected -> throw when (outcome.cause) {
                 is InvalidEventException -> A2AInvalidAgentResponseException("Agent sent an invalid event: ${outcome.cause.message}")

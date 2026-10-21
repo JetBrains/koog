@@ -1,5 +1,6 @@
 package ai.koog.a2a.server
 
+import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
@@ -391,6 +392,33 @@ class A2AServerCancelTest {
 
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
         assertEquals<Event?>(taskStorage.get(TASK_ID), response)
+    }
+
+    @Test
+    fun testRequesterGetsCanceledTaskWhenFollowUpAgentThrowsA2AErrorDuringCancel() = runTest(timeout = TEST_TIMEOUT) {
+        val followUpStarted = CompletableDeferred<Unit>()
+        val failNow = CompletableDeferred<Unit>()
+        val failingScript = AgentScript { _, _ ->
+            followUpStarted.complete(Unit)
+            failNow.await()
+            throw A2AContentTypeNotSupportedException("Unsupported content type")
+        }
+        // Lets the agent fail before its first event, then leaves the cancellation to the server.
+        val failAgentFirst = CancelHandler { _, agentJob ->
+            failNow.complete(Unit)
+            assertIs<A2AContentTypeNotSupportedException>(runCatching { assertNotNull(agentJob).await() }.exceptionOrNull())
+        }
+        val server = createServer(mapOf("start" to idleScript, "fail" to failingScript), failAgentFirst)
+        server.onSendMessage(request("start"), ctx)
+        val followUpRequest = request("fail").let { it.copy(message = it.message.copy(taskId = TASK_ID)) }
+        val response = async { server.onSendMessage(followUpRequest, ctx) }
+        followUpStarted.await()
+
+        val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
+
+        // The forced CANCELED reaches the requester before the turn ends, so it wins over the agent's error.
+        assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
+        assertEquals<Event?>(taskStorage.get(TASK_ID), response.await())
     }
 
     @Test

@@ -28,9 +28,13 @@ public interface AgentExecutor {
      *
      * All events must have context id from [RequestContext.contextId] and for task events task id from [RequestContext.taskId].
      *
-     * Can throw an exception if the input is invalid or the agent fails to execute the request. If the task exists and
-     * is not in a terminal state when this method throws (other than on cancellation), the server marks the task
-     * [TaskState.TASK_STATE_FAILED] and notifies all streams of the task.
+     * Can throw an exception if the input is invalid or the agent fails to execute the request:
+     * - an [ai.koog.a2a.exceptions.A2AException] thrown before sending any event in this turn (events rejected as
+     *   invalid and ignored [Task]s don't count) rejects the request with that error and leaves the task, if it exists,
+     *   unchanged;
+     * - any other exception, or any exception after the first event, fails the turn: if the task exists and is not in a
+     *   terminal state (other than on cancellation), the server marks it [TaskState.TASK_STATE_FAILED] and notifies all
+     *   streams of the task.
      *
      * The server persists the user message ([RequestContext.params] message) into the task history itself, deduplicated
      * by message id, with the task's task id and context id. For a new task it is added to the initial [Task] the agent
@@ -91,9 +95,9 @@ public interface AgentExecutor {
      *
      * @param context The context containing the necessary information and accessors for executing the agent.
      * @param eventProcessor The event processor to publish events to.
-     * @throws Exception if something goes wrong during execution. Should prefer more specific exceptions when possible,
-     * e.g., [A2AContentTypeNotSupportedException], [A2AUnsupportedOperationException], etc. See full list of available
-     * A2A exceptions in [ai.koog.a2a.exceptions].
+     * @throws Exception if something goes wrong during execution. To reject invalid input, throw a specific A2A
+     * exception before sending any event, e.g., [A2AContentTypeNotSupportedException],
+     * [A2AUnsupportedOperationException], etc. See full list of available A2A exceptions in [ai.koog.a2a.exceptions].
      */
     public suspend fun execute(context: RequestContext<SendMessageRequest>, eventProcessor: TurnEventProcessor)
 

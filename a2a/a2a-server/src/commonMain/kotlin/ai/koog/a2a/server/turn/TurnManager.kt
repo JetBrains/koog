@@ -155,19 +155,25 @@ public class TurnManager(
     private var nextTurnId = 0L
 
     /**
-     * Decides the [Turn.outcome] of one turn. Rejections are recorded under the processor's lock, by the agent job or a
-     * [withTaskProcessor] block, and read by the monitor after both, under the gate.
+     * Decides the [Turn.outcome] of one turn. Rejected and published events are recorded under the processor's lock, by
+     * the agent job or a [withTaskProcessor] block, and read by the monitor after both, under the gate.
      */
     private class TurnOutcomeRecorder {
         val outcome = CompletableDeferred<TurnOutcome>()
 
         private var rejection: Exception? = null
+        private var isEventPublished = false
 
         fun onRejected(e: Exception) {
             if (rejection == null) rejection = e
         }
 
-        fun complete(failure: Throwable?): TurnOutcome = TurnOutcome.of(failure, rejection).also { outcome.complete(it) }
+        fun onPublished() {
+            isEventPublished = true
+        }
+
+        fun complete(failure: Throwable?): TurnOutcome =
+            TurnOutcome.of(failure, rejection, isEventPublished).also { outcome.complete(it) }
     }
 
     /** Completed by [shutdown]; ends every [subscribe] flow without taking any lock. */
@@ -188,8 +194,9 @@ public class TurnManager(
      *
      * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
      * the task is marked [ai.koog.a2a.model.TaskState.TASK_STATE_FAILED] and every stream of the task receives that
-     * update, except [Turn.events] if the failure is the rejection of one of the agent's events. Then the processor is
-     * closed, [Turn.events] completes, and the turn is removed.
+     * update, except [Turn.events] if the failure is the rejection of one of the agent's events. An
+     * [ai.koog.a2a.exceptions.A2AException] thrown before the turn published any event leaves the task unchanged
+     * instead. Then the processor is closed, [Turn.events] completes, and the turn is removed.
      *
      * Turns of the same task must be serialized by the caller, see [TurnManager].
      *
@@ -254,6 +261,7 @@ public class TurnManager(
                         taskExists = taskExists,
                         userMessage = context.params.message,
                         onRejected = outcomeRecorder::onRejected,
+                        onPublished = outcomeRecorder::onPublished,
                     )
                     val agentJob = scope.async(start = CoroutineStart.LAZY) { runAgent(processor, block) }
 
