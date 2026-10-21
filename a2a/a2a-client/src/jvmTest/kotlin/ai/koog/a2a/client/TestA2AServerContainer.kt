@@ -31,7 +31,12 @@ object TestA2AServerContainer {
 
     private val image =
         ImageFromDockerfile("test-python-a2a-server:latest", false) // "false" prevents deleting intermediate images
-            .withFileFromPath(".", Path("../test-python-a2a-server")) // Specify Dockerfile context path
+            // Pass only the files the Dockerfile needs: Testcontainers ignores .dockerignore, and a local `.venv`
+            // with symlinks pointing outside the context breaks the build context tar
+            .withFileFromPath("Dockerfile", Path("../test-python-a2a-server/Dockerfile"))
+            .withFileFromPath("pyproject.toml", Path("../test-python-a2a-server/pyproject.toml"))
+            .withFileFromPath("uv.lock", Path("../test-python-a2a-server/uv.lock"))
+            .withFileFromPath("src", Path("../test-python-a2a-server/src"))
     private val container: GenericContainer<*> =
         GenericContainer(image)
             .withTmpFs(mapOf("/tmp" to "rw,noexec,size=16m"))
