@@ -215,7 +215,7 @@ class OpenAIPrimaryConstructorTest {
             frames[1]
         )
         val end = assertIs<StreamFrame.End>(frames[2])
-        assertEquals(null, end.finishReason)
+        assertEquals(OpenAIInputStatus.COMPLETED.name, end.finishReason)
         assertEquals(totalTokens, end.metaInfo.totalTokensCount)
         assertEquals(inputTokens, end.metaInfo.inputTokensCount)
         assertEquals(outputTokens, end.metaInfo.outputTokensCount)
