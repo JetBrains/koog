@@ -11,6 +11,7 @@ import ai.koog.a2a.exceptions.A2AParseException
 import ai.koog.a2a.exceptions.A2AVersionNotSupportedException
 import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.exceptions.ErrorInfo
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.ServerTransport

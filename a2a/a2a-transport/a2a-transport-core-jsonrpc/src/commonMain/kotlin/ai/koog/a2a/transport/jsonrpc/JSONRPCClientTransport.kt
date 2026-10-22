@@ -19,6 +19,7 @@ import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.ClientTransport
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse

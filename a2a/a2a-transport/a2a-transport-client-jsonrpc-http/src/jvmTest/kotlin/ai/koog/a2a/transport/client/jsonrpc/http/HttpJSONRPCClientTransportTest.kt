@@ -32,8 +32,8 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.ClientTransport
-import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest

@@ -36,10 +36,10 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.StateKey
-import ai.koog.a2a.transport.jsonrpc.A2AMethod
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
