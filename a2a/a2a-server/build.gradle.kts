@@ -43,6 +43,7 @@ kotlin {
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.server.netty)
+                implementation(libs.ktor.server.cio)
                 runtimeOnly(libs.logback.classic)
             }
         }

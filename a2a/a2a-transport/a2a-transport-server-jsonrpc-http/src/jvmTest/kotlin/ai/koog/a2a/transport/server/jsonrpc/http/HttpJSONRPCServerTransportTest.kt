@@ -720,7 +720,7 @@ class HttpJSONRPCServerTransportTest {
                 if (customizeCallContext == null) {
                     a2aJsonRpcTransportRoute("/a2a", transportFactory(handler))
                 } else {
-                    a2aJsonRpcTransportRoute("/a2a", transportFactory(handler), customizeCallContext)
+                    a2aJsonRpcTransportRoute("/a2a", transportFactory(handler), customizeCallContext = customizeCallContext)
                 }
             }
 

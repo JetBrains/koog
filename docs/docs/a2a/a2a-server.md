@@ -342,6 +342,27 @@ The customization runs before the `A2A-Version` header is checked. An `A2AExcept
 a JSON-RPC error with the exception's code, and any other exception as an internal error.
 The key type and the stored value must match, otherwise `getFromState` and `getFromStateOrNull` throw.
 
+#### Detecting disconnected streaming clients
+
+A server can only tell that a streaming client has gone away when a write to it fails, so a stream that stays idle
+(for example, a subscription to a task waiting for input) would otherwise be held until the task ends or the server
+stops. Both `a2aJsonRpcTransportRoute` and `HttpJSONRPCServerTransport.start` therefore send an SSE comment line
+(`: heartbeat`) every `heartbeatPeriod`, 15 seconds by default, so that the stream is released after the connection
+is closed. Pass a shorter period for faster cleanup, or `null` to disable heartbeats:
+
+```kotlin
+transport.start(
+    engineFactory = CIO,
+    port = 8080,
+    path = "/a2a",
+    heartbeatPeriod = 5.seconds
+)
+```
+
+Detection is best-effort and depends on the engine: it needs a failing write and takes a few periods. With Ktor 3.3.3
+on Netty, a client that closes with unread data (a TCP reset) may not be detected, and its stream then ends with the
+task or when the server stops.
+
 ### Storage
 
 The A2A server uses a pluggable storage architecture that separates different types of data.
