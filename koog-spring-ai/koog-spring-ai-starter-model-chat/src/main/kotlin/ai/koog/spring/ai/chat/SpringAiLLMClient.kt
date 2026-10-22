@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.chat.model.ChatResponse
+import org.springframework.ai.chat.metadata.Usage
 import org.springframework.ai.chat.prompt.ChatOptions
 import org.springframework.ai.model.tool.ToolCallingChatOptions
 import org.springframework.ai.moderation.ModerationModel
@@ -200,10 +201,13 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed: ${e.message}", e)
         }
-        var lastChatResponse: ChatResponse? = null
+        var lastUsage: Usage? = null
+        var lastFinishReason: String? = null
         try {
             flux.asFlow().collect { chatResponse ->
-                lastChatResponse = chatResponse
+                chatResponse.metadata.usage?.let {
+                    lastUsage = it
+                }
                 for ((generationIndex, generation) in chatResponse.results.withIndex()) {
                     val assistantMessage = generation.output
                     val text = assistantMessage.text
@@ -220,6 +224,15 @@ public class SpringAiLLMClient(
                     if (assistantMessage.hasToolCalls()) {
                         toolCallAssembler.accept(assistantMessage.toolCalls, generationIndex, this)
                     }
+
+                    generation.metadata?.finishReason
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { lastFinishReason = it }
+
+                    assistantMessage.metadata["finishReason"]
+                        ?.toString()
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { lastFinishReason = it }
                 }
             }
             toolCallAssembler.flush(this)
@@ -230,20 +243,17 @@ public class SpringAiLLMClient(
         } catch (e: Exception) {
             throw LLMClientException(clientName, "ChatModel.stream() failed during collection: ${e.message}", e)
         } finally {
-            // Always emit End frame so downstream consumers are not left hanging
-            val finishReason = lastChatResponse?.results?.firstOrNull()?.metadata?.finishReason
-            val usage = lastChatResponse?.metadata?.usage
-            val metaInfo = if (usage != null) {
+            val metaInfo = if (lastUsage != null) {
                 ResponseMetaInfo.create(
                     clock = clock,
-                    totalTokensCount = usage.totalTokens,
-                    inputTokensCount = usage.promptTokens,
-                    outputTokensCount = usage.completionTokens
+                    totalTokensCount = lastUsage.totalTokens,
+                    inputTokensCount = lastUsage.promptTokens,
+                    outputTokensCount = lastUsage.completionTokens
                 )
             } else {
                 null
             }
-            emitEnd(finishReason = finishReason, metaInfo = metaInfo)
+            emitEnd(finishReason = lastFinishReason, metaInfo = metaInfo)
         }
     }.flowOn(dispatcher)
 

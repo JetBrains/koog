@@ -1,6 +1,7 @@
 package ai.koog.agents.cli
 
 import ai.koog.agents.cli.claude.ClaudeAgentBuilder
+import ai.koog.agents.cli.copilot.CopilotAgentBuilder
 import ai.koog.agents.cli.codex.CodexAgentBuilder
 import ai.koog.agents.cli.transport.CliTransport
 
@@ -32,6 +33,22 @@ public class CliAgentBuilder internal constructor(transport: CliTransport) : Cli
      * Configures the agent to use Codex CLI.
      */
     public fun codex(): CodexAgentBuilder = CodexAgentBuilder(
+        transport = transport,
+        binaryPath = binaryPath,
+        name = name,
+        systemPrompt = systemPrompt,
+        llModel = llModel,
+        workspace = workspace,
+        timeout = timeout,
+        id = id,
+        clock = clock,
+        featureInstallers = featureInstallers
+    )
+
+    /**
+     * Configures the agent to use Copilot CLI.
+     */
+    public fun copilot(): CopilotAgentBuilder = CopilotAgentBuilder(
         transport = transport,
         binaryPath = binaryPath,
         name = name,
