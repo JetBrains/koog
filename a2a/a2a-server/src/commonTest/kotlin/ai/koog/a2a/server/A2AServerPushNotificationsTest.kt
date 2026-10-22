@@ -590,11 +590,12 @@ class A2AServerPushNotificationsTest {
         val recording = RecordingPushConfigStorage(pushStorage, onSave = { server.cancel() })
         server = createTurnServer(pushConfigStorage = recording)
 
-        assertFailsWith<A2AInvalidAgentResponseException> {
+        val e = assertFailsWith<A2AInternalErrorException> {
             server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
         }
         runCurrent()
 
+        assertEquals("Server is shut down", e.message)
         assertEquals(listOf("save $NEW_TASK_ID/$NEW_TASK_ID", "deleteAll $NEW_TASK_ID"), recording.calls)
         assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
         assertEquals(emptyList(), executor.executed)

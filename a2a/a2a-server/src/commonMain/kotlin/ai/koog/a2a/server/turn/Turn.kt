@@ -8,6 +8,7 @@ import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,8 @@ public class Turn internal constructor(
     internal val eventProcessor: TurnEventProcessor,
     /** This turn's view of the task stream, see [events]. */
     private val view: ReceiveChannel<Event>,
+    /** The registration of [view] with the server shutdown, see [TurnManager.shutdown]. */
+    private val viewShutdownHandle: DisposableHandle,
     /** The job that waits for the agent job and then ends the turn, see [TurnManager.startTurn]. */
     private val monitor: Job,
     /**
@@ -52,7 +55,9 @@ public class Turn internal constructor(
     /**
      * This turn's view of the task's event stream: every event the task receives while the turn runs (including
      * events published by a concurrent cancellation), plus the agent's [ai.koog.a2a.model.Message] reply, if any.
-     * Completes when the turn ends or the task reaches a terminal state, whichever comes first.
+     * Completes when the turn ends or the task reaches a terminal state, whichever comes first. If the server is shut
+     * down before, it fails instead with [ServerShutdownException], a [CancellationException], see
+     * [TurnManager.shutdown].
      *
      * Delivery is back-pressured, so the flow must be collected (and collection cancelled when the consumer goes
      * away), see [TurnManager]. No event of the turn is lost, but it can be collected **only once**.
@@ -61,6 +66,7 @@ public class Turn internal constructor(
 
     /** Stops [events] for a consumer that won't collect it (any more), so deliveries to it don't wait. */
     internal fun cancelEvents() {
+        viewShutdownHandle.dispose()
         view.cancel()
     }
 

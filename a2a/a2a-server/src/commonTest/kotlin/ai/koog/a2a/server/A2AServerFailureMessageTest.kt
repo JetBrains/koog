@@ -2,6 +2,7 @@ package ai.koog.a2a.server
 
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.CancelTaskRequest
@@ -202,15 +203,18 @@ class A2AServerFailureMessageTest {
             hookEntered.complete(assertNotNull(server.turn(taskId)))
             awaitCancellation()
         }
-        val response = backgroundScope.async { server.onSendMessage(request("crash"), ctx) }
+        val response = backgroundScope.async { runCatching { server.onSendMessage(request("crash"), ctx) } }
         val turn = hookEntered.await()
 
         server.cancel()
         turn.join()
 
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
-        assertEquals(storedFailedStatus(generic), stored.status)
-        assertEquals(stored, response.await())
+        // The shutdown ends the requester's view before the turn marks the task failed.
+        assertEquals(storedFailedStatus(generic), assertNotNull(taskStorage.get(TASK_ID)).status)
+        assertEquals(
+            A2AInternalErrorException::class to "Server is shut down",
+            response.await().exceptionOrNull()?.let { it::class to it.message },
+        )
     }
 
     @Test

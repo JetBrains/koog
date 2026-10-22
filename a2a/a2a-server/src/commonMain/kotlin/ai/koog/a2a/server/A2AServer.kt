@@ -47,6 +47,7 @@ import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.turn.IdGenerator
 import ai.koog.a2a.server.turn.LifecycleState
 import ai.koog.a2a.server.turn.RequestContext
+import ai.koog.a2a.server.turn.ServerShutdownException
 import ai.koog.a2a.server.turn.Turn
 import ai.koog.a2a.server.turn.TurnEventProcessor
 import ai.koog.a2a.server.turn.TurnManager
@@ -60,6 +61,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.emitAll
@@ -323,7 +326,7 @@ import kotlin.time.Clock
  * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc. They run under a child
  * supervisor job of it, so it needn't be a supervisor: a failing agent doesn't cancel it (see [TurnManager]). [cancel]
  * cancels only that child, not the scope. Cancelling the scope from outside stops them all and shuts the server down
- * as [cancel] does, except that open SubscribeToTask streams aren't ended.
+ * as [cancel] does.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -426,8 +429,9 @@ public open class A2AServer(
      * because the server was shut down meanwhile), the inline config saved for it is deleted.
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state (e.g. the CANCELED of a
-     * concurrent CancelTask, even if the agent then fails), or when the turn ends. Only in the last case is the agent's
-     * exception rethrown:
+     * concurrent CancelTask, even if the agent then fails), or when the turn ends. If the server is shut down before
+     * (see [cancel]), the flow fails with [A2AInternalErrorException] "Server is shut down" instead, and the agent is
+     * cancelled. Only when the turn ends is the agent's exception rethrown:
      * - an [ai.koog.a2a.exceptions.A2AException] thrown before the agent's first event of the turn is rethrown and
      *   leaves the task unchanged; the task snapshot isn't emitted;
      * - any other exception is rethrown if the task doesn't exist; otherwise the task is marked failed and the flow
@@ -476,9 +480,23 @@ public open class A2AServer(
 
         // The view must not outlive this flow: an uncollected view blocks every delivery to the task.
         try {
-            emitTurnEvents(turn, includeTaskSnapshot, isNewTask = message.taskId == null)
+            failOnShutdown { emitTurnEvents(turn, includeTaskSnapshot, isNewTask = message.taskId == null) }
         } finally {
             turn.cancelEvents()
+        }
+    }
+
+    /**
+     * Runs [block], which collects a turn view or a subscription, replacing the [ServerShutdownException] it fails with
+     * when the server shuts down with the shutdown error. A collector cancelled itself (e.g. the client went away) stays
+     * cancelled.
+     */
+    private suspend inline fun failOnShutdown(block: () -> Unit) {
+        try {
+            block()
+        } catch (e: ServerShutdownException) {
+            currentCoroutineContext().ensureActive()
+            throw e.toA2AException()
         }
     }
 
@@ -584,7 +602,8 @@ public open class A2AServer(
      * - If `returnImmediately` is `true`, returns after the first task event of the turn.
      * - Otherwise (blocking, the default), returns at the first [Task] or [TaskStatusUpdateEvent] whose state is
      *   terminal or interrupted ([TaskState.TASK_STATE_INPUT_REQUIRED], [TaskState.TASK_STATE_AUTH_REQUIRED]), or when
-     *   the turn ends, whichever comes first.
+     *   the turn ends, whichever comes first. If the server is shut down before, fails with
+     *   [A2AInternalErrorException] "Server is shut down".
      *
      * A task result is read from [taskStorage] at that point like GetTask (with [ctx] and the request's tenant), with
      * the history limited to [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all
@@ -634,7 +653,8 @@ public open class A2AServer(
      * Handles SendStreamingMessage, see [onSendMessageCommon] for the validation and the turn.
      *
      * The stream ends after the agent's [Message], at a terminal task state, or when the turn ends (e.g. at an
-     * interrupted state), whichever comes first. A stream of a task begins with the [Task]: for a message to an
+     * interrupted state), whichever comes first. If the server is shut down before, its last event is the error
+     * [A2AInternalErrorException] "Server is shut down". A stream of a task begins with the [Task]: for a message to an
      * existing task, the task as stored before the turn's first event is emitted first. The history of that task is
      * limited to
      * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength].
@@ -790,8 +810,10 @@ public open class A2AServer(
     }
 
     /**
-     * Streams the task snapshot followed by its live events until the task reaches a terminal state or the server is
-     * shut down with [cancel], see [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
+     * Streams the task snapshot followed by its live events until the task reaches a terminal state, see
+     * [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
+     * If the server is shut down before (see [cancel]), the stream's last event is the error [A2AInternalErrorException]
+     * "Server is shut down".
      *
      * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
      * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
@@ -804,7 +826,7 @@ public open class A2AServer(
         checkAccepting(A2AMethod.SubscribeToTask, ctx)
         checkStreamingSupport()
 
-        emitAll(turnManager.subscribe(request, ctx))
+        failOnShutdown { emitAll(turnManager.subscribe(request, ctx)) }
     }
 
     /**
@@ -1020,9 +1042,14 @@ public open class A2AServer(
     /**
      * Shuts the server down immediately, without waiting:
      * - every later request fails with [A2AInternalErrorException] "Server is shut down", see [checkAccepting];
-     * - every open SubscribeToTask stream ends normally;
+     * - every open stream (SendStreamingMessage, SubscribeToTask) that hasn't delivered a terminal state of its task
+     *   yet ends with that error as its last event, and every waiting blocking SendMessage fails with it;
      * - the running agents are cancelled and their tasks keep their last persisted state; pending push notifications
      *   are dropped.
+     *
+     * The streams are ended before the agents are cancelled, so a stalled client can't delay the shutdown. What the
+     * server's jobs may still wait for is non-cancellable storage I/O and a running [AgentExecutor.cancel], see
+     * [TurnManager].
      *
      * Cancels only the server's own jobs, not [coroutineScope]. Idempotent. See [TurnManager.shutdown].
      *

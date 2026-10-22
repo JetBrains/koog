@@ -46,11 +46,11 @@ import kotlin.time.Clock
  * other subscribers, and any operation waiting for the stream lock ([subscribe], [openTurnView], [endTurn], other
  * publishers); no event is dropped and no subscriber is evicted.
  *
- * A subscriber whose consumer has gone away must cancel its channel (see [unsubscribe]). Cancelling doesn't need the
- * stream lock, so it works even while the fan-out is suspended on that subscriber: the pending delivery fails and the
- * fan-out drops the subscriber and goes on. If the publisher itself is cancelled mid-fan-out, the event is already
- * persisted but the subscribers not reached yet don't receive it. A terminal event still closes every subscriber, so
- * none of them waits for an event that will never come.
+ * A subscriber whose consumer has gone away must cancel its channel (see [unsubscribe]); on shutdown, [TurnManager]
+ * cancels every channel. Cancelling doesn't need the stream lock, so it works even while the fan-out is suspended on
+ * that subscriber: the pending delivery fails and the fan-out drops the subscriber and goes on. If the publisher itself
+ * is cancelled mid-fan-out, the event is already persisted but the subscribers not reached yet don't receive it. A
+ * terminal event still closes every subscriber, so none of them waits for an event that will never come.
  *
  * Every persisted [TaskEvent] is passed to [onPersisted] right after it is stored, before the fan-out and still under
  * the stream lock, so its calls follow the storage order. Storing and reporting an event isn't interrupted by the
