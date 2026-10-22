@@ -1,6 +1,7 @@
 package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.annotations.InternalA2AApi
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
@@ -87,6 +88,14 @@ import kotlin.concurrent.Volatile
  * [withTaskProcessor], and the save of a turn's inline push notification config in [startTurn]. A slow storage delays
  * only turns and [withTaskProcessor] blocks of the same task.
  *
+ * ## Shutdown
+ *
+ * [shutdown] switches the server to [LifecycleState.SHUT_DOWN] and cancels every job launched here. It doesn't take
+ * any lock: a [startTurn] that passed its check just before may still start, in the cancelled scope, so its agent never
+ * runs. A state switch made under the registry lock is decisive: [startTurn] checks the state under that lock right
+ * before the turn's side effects (saving the inline push notification config, launching the agent), so no turn starts
+ * after it.
+ *
  * ## Back-pressure
  *
  * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task
@@ -119,11 +128,12 @@ import kotlin.concurrent.Volatile
  * Push notifications are queued when the event is persisted and sent in the background, holding no lock, so a slow
  * webhook never delays the agent, the streams, or other tasks. The configs are read when an event is sent. Every config
  * receives the events of its task in storage order. Failed sends are logged and not retried, and pending notifications
- * are dropped when [coroutineScope] is cancelled.
+ * are dropped on [shutdown] or when [coroutineScope] is cancelled.
  *
  * @param coroutineScope The scope in which agent jobs, turn monitoring jobs, and push notification jobs are launched.
  * They run under a child [SupervisorJob] of its job, so a failing agent doesn't cancel the scope or other jobs, even if
- * the scope isn't a supervisor. Cancelling the scope cancels them all.
+ * the scope isn't a supervisor. [shutdown] cancels only that child. Cancelling the scope cancels them all and counts as
+ * a shutdown, see [lifecycleState].
  * @param taskStorage The storage for tasks.
  * @param pushConfigStorage The storage for push notification configurations.
  * @param pushSender The push notification sender.
@@ -156,9 +166,21 @@ public class TurnManager(
         private val logger = KotlinLogging.logger {}
     }
 
-    /** The scope of all jobs launched here, isolating their failures from each other and from `coroutineScope`. */
-    private val scope: CoroutineScope =
-        CoroutineScope(coroutineScope.coroutineContext + SupervisorJob(coroutineScope.coroutineContext[Job]))
+    /** The parent of all jobs launched here, isolating their failures from each other and from `coroutineScope`. */
+    private val supervisor = SupervisorJob(coroutineScope.coroutineContext[Job])
+
+    private val scope: CoroutineScope = CoroutineScope(coroutineScope.coroutineContext + supervisor)
+
+    /** Read without a lock; written by [shutdown] without one, see "Shutdown" above. */
+    @Volatile
+    private var state = LifecycleState.RUNNING
+
+    /**
+     * The current lifecycle state. [LifecycleState.SHUT_DOWN] also once `coroutineScope` is cancelled from outside,
+     * since no job can run any more.
+     */
+    internal val lifecycleState: LifecycleState
+        get() = if (supervisor.isActive) state else LifecycleState.SHUT_DOWN
 
     private val pushDispatcher: PushNotificationDispatcher? =
         if (pushConfigStorage != null && pushSender != null) {
@@ -179,8 +201,9 @@ public class TurnManager(
     }
 
     /**
-     * Guards [streams] and [turns]. May be acquired while holding [TaskEventStream.processorGate], but is never held
-     * while acquiring a stream lock, which a fan-out may hold for long.
+     * Guards [streams] and [turns], and the lifecycle check of [startTurn], see "Shutdown" above. May be acquired while
+     * holding [TaskEventStream.processorGate], but is never held while acquiring a stream lock, which a fan-out may hold
+     * for long.
      */
     private val registryMutex = Mutex()
     private val streams = mutableMapOf<String, StreamEntry>()
@@ -250,10 +273,13 @@ public class TurnManager(
      * The turn's context id is the continued task's, else the message's, else one generated with
      * [IdGenerator.generateContextId] (called only then).
      *
+     * The turn is rejected, starting nothing, if the server isn't [LifecycleState.RUNNING], checked under the registry
+     * lock after the slot and the gate are acquired, so it also rejects a turn that waited for the previous one.
+     *
      * [inlinePushConfig] is saved to [pushConfigStorage] once the turn is sure to start (after the checks), and before
      * [block] starts, so the turn's first task event is pushed to it. If the turn doesn't start, it isn't saved. If the
      * turn creates no task (it is for a new task and no task is stored when the turn ends, e.g. the agent replied with
-     * a [ai.koog.a2a.model.Message] or never ran because `coroutineScope` was cancelled), every push notification
+     * a [ai.koog.a2a.model.Message] or never ran because the server was shut down meanwhile), every push notification
      * config of the task is deleted when the turn ends.
      *
      * When [block] completes: if it failed (other than by cancellation) and the task exists in a non-terminal state,
@@ -275,6 +301,7 @@ public class TurnManager(
      * @throws A2ATaskNotFoundException if the continued task doesn't exist (or isn't visible to the caller).
      * @throws A2AInvalidParamsException if the message's context id differs from the continued task's.
      * @throws A2AUnsupportedOperationException if the continued task is in a terminal state.
+     * @throws A2AInternalErrorException if the server is shutting down or shut down, see [LifecycleState.checkAccepting].
      */
     public suspend fun startTurn(
         request: SendMessageRequest,
@@ -315,6 +342,9 @@ public class TurnManager(
 
                     val channel = stream.openTurnView()
                     view = channel
+
+                    // The decisive check, right before the turn's side effects, see "Shutdown" above.
+                    registryMutex.withLock { lifecycleState.checkAccepting() }
 
                     // The view is registered: from here on, the turn starts even if the caller is cancelled.
                     withContext(NonCancellable) {
@@ -644,12 +674,20 @@ public class TurnManager(
     }
 
     /**
-     * Ends every [subscribe] flow, current and future, normally (without an error), e.g. on server shutdown, including
-     * those of idle tasks that no turn would ever close. Doesn't stop turns: their views end when the turns end, e.g.
-     * when `coroutineScope` is cancelled. Takes no lock, so it never waits for a stalled task.
+     * Shuts down immediately: switches to [LifecycleState.SHUT_DOWN], so later turns are rejected (see [startTurn]),
+     * ends every [subscribe] flow, current and future, normally (without an error), including those of idle tasks that
+     * no turn would ever close, and cancels every agent job, turn monitor, and push notification job, dropping the
+     * pending notifications. `coroutineScope` itself isn't cancelled. Running turns end once their cancelled agents
+     * stop; their tasks keep their last persisted state.
+     *
+     * Takes no lock and doesn't wait, so it never waits for a stalled task. Idempotent.
+     *
+     * @param cause The cause of the cancellation of the jobs.
      */
-    public fun shutdown() {
+    public fun shutdown(cause: CancellationException? = null) {
+        state = LifecycleState.SHUT_DOWN
         shutdownSignal.complete()
+        supervisor.cancel(cause)
     }
 
     /**
@@ -702,3 +740,30 @@ public class TurnManager(
  * original exception, so the requester gets the same error as for any other agent crash.
  */
 internal class AgentCancellationFailure(cause: CancellationException) : IllegalStateException(cause.message, cause)
+
+/**
+ * The lifecycle states of the server, see [TurnManager.lifecycleState].
+ */
+internal enum class LifecycleState {
+    /** Accepting every request. */
+    RUNNING,
+
+    /** Shutting down gracefully: no new turns or subscriptions, the running turns finish. */
+    DRAINING,
+
+    /** Shut down: no request is accepted. */
+    SHUT_DOWN;
+
+    /**
+     * Throws the shutdown error unless [RUNNING].
+     *
+     * @throws A2AInternalErrorException "Server is shutting down" if [DRAINING], "Server is shut down" if [SHUT_DOWN].
+     */
+    fun checkAccepting() {
+        when (this) {
+            RUNNING -> Unit
+            DRAINING -> throw A2AInternalErrorException("Server is shutting down")
+            SHUT_DOWN -> throw A2AInternalErrorException("Server is shut down")
+        }
+    }
+}

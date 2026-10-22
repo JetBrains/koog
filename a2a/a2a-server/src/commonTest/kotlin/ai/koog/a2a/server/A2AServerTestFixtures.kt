@@ -4,22 +4,31 @@ import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.CancelTaskRequest
+import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetExtendedAgentCardRequest
+import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
+import ai.koog.a2a.model.GetTaskRequest
+import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
+import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
+import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.turn.IdGenerator
 import ai.koog.a2a.server.turn.RequestContext
 import ai.koog.a2a.server.turn.TurnEventProcessor
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.seconds
@@ -126,3 +135,33 @@ internal fun CoroutineScope.subscribe(
 
     return Subscription(events, firstEvent, job)
 }
+
+private fun operation(call: suspend (ServerCallContext) -> Unit) = call
+
+/**
+ * A call of every operation of [server], on [TASK_ID] where it takes a task, collecting the streaming ones. The
+ * results are discarded.
+ */
+internal fun operations(server: A2AServer): Map<A2AMethod, suspend (ServerCallContext) -> Unit> = mapOf(
+    A2AMethod.GetExtendedAgentCard to operation { server.onGetExtendedAgentCard(GetExtendedAgentCardRequest(), it) },
+    A2AMethod.SendMessage to operation { server.onSendMessage(SendMessageRequest(userMessage("hi")), it) },
+    A2AMethod.SendMessageStreaming to operation {
+        server.onSendMessageStreaming(SendMessageRequest(userMessage("hi")), it).toList()
+    },
+    A2AMethod.GetTask to operation { server.onGetTask(GetTaskRequest(id = TASK_ID), it) },
+    A2AMethod.ListTasks to operation { server.onListTasks(ListTasksRequest(), it) },
+    A2AMethod.CancelTask to operation { server.onCancelTask(CancelTaskRequest(id = TASK_ID), it) },
+    A2AMethod.SubscribeToTask to operation { server.onSubscribeToTask(SubscribeToTaskRequest(id = TASK_ID), it).toList() },
+    A2AMethod.CreateTaskPushNotificationConfig to operation {
+        server.onCreateTaskPushNotificationConfig(TaskPushNotificationConfig(taskId = TASK_ID, url = "http://localhost/hook"), it)
+    },
+    A2AMethod.GetTaskPushNotificationConfig to operation {
+        server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest(taskId = TASK_ID, id = "c"), it)
+    },
+    A2AMethod.ListTaskPushNotificationConfigs to operation {
+        server.onListTaskPushNotificationConfigs(ListTaskPushNotificationConfigsRequest(taskId = TASK_ID), it)
+    },
+    A2AMethod.DeleteTaskPushNotificationConfig to operation {
+        server.onDeleteTaskPushNotificationConfig(DeleteTaskPushNotificationConfigRequest(taskId = TASK_ID, id = "c"), it)
+    },
+)

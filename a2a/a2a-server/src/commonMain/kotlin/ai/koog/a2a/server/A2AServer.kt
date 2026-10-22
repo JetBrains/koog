@@ -4,6 +4,7 @@ import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.consts.A2AHeaders
 import ai.koog.a2a.exceptions.A2AExtendedAgentCardNotConfiguredException
 import ai.koog.a2a.exceptions.A2AExtensionSupportRequiredException
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
@@ -44,6 +45,7 @@ import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.turn.IdGenerator
+import ai.koog.a2a.server.turn.LifecycleState
 import ai.koog.a2a.server.turn.RequestContext
 import ai.koog.a2a.server.turn.Turn
 import ai.koog.a2a.server.turn.TurnEventProcessor
@@ -51,12 +53,12 @@ import ai.koog.a2a.server.turn.TurnManager
 import ai.koog.a2a.server.turn.TurnOutcome
 import ai.koog.a2a.server.turn.UuidIdGenerator
 import ai.koog.a2a.server.turn.genericFailureMessage
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -318,8 +320,10 @@ import kotlin.time.Clock
  * notifications are enabled only if both it and [pushSender] are set.
  * @param pushSender Optional push notification sender implementation (defaults to `null`), see [pushConfigStorage].
  * @param idGenerator Generator for new task, context and push notification config IDs (defaults to [UuidIdGenerator])
- * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc. It needn't be a supervisor:
- * a failing agent doesn't cancel it (see [TurnManager]). Cancelling it, e.g. with [cancel], stops all of them.
+ * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc. They run under a child
+ * supervisor job of it, so it needn't be a supervisor: a failing agent doesn't cancel it (see [TurnManager]). [cancel]
+ * cancels only that child, not the scope. Cancelling the scope from outside stops them all and shuts the server down
+ * as [cancel] does, except that open SubscribeToTask streams aren't ended.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -347,6 +351,10 @@ public open class A2AServer(
          * Non-terminal states in which the task waits for the client, ending a blocking SendMessage.
          */
         private val INTERRUPTED_STATES = setOf(TaskState.TASK_STATE_INPUT_REQUIRED, TaskState.TASK_STATE_AUTH_REQUIRED)
+
+        /** The operations rejected while the server is shutting down: those that start turns or subscriptions. */
+        private val REJECTED_WHILE_DRAINING =
+            setOf(A2AMethod.SendMessage, A2AMethod.SendMessageStreaming, A2AMethod.SubscribeToTask)
     }
 
     /**
@@ -363,8 +371,9 @@ public open class A2AServer(
     )
 
     /**
-     * Returns [agentCardExtended]. Unlike the other operations, this one doesn't run [checkRequiredExtensions]: the
-     * client may need the extended card to learn which extensions to request.
+     * Returns [agentCardExtended]. Unlike the other operations, by default it doesn't require the extensions the
+     * [agentCard] declares as required, see [checkAccepting]: the client may need the extended card to learn which
+     * extensions to request.
      *
      * @throws A2AUnsupportedOperationException if the [agentCard] doesn't declare
      * [extendedAgentCard][ai.koog.a2a.model.AgentCapabilities.extendedAgentCard].
@@ -374,6 +383,8 @@ public open class A2AServer(
         request: GetExtendedAgentCardRequest,
         ctx: ServerCallContext
     ): AgentCard {
+        checkAccepting(A2AMethod.GetExtendedAgentCard, ctx)
+
         if (agentCard.capabilities.extendedAgentCard != true) {
             throw A2AUnsupportedOperationException("Extended agent card is not supported")
         }
@@ -412,7 +423,7 @@ public open class A2AServer(
      *
      * If the turn doesn't start (e.g. the referenced task is terminal), the inline config isn't saved. If a turn
      * that would create a new task ends without a stored task (e.g. the agent replied with a [Message], or never ran
-     * because [coroutineScope] was cancelled), the inline config saved for it is deleted.
+     * because the server was shut down meanwhile), the inline config saved for it is deleted.
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state (e.g. the CANCELED of a
      * concurrent CancelTask, even if the agent then fails), or when the turn ends. Only in the last case is the agent's
@@ -585,7 +596,7 @@ public open class A2AServer(
         request: SendMessageRequest,
         ctx: ServerCallContext
     ): ResponseEvent {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.SendMessage, ctx)
 
         val messageConfiguration = request.configuration
         val returnImmediately = messageConfiguration?.returnImmediately == true
@@ -636,7 +647,7 @@ public open class A2AServer(
         request: SendMessageRequest,
         ctx: ServerCallContext
     ): Flow<Event> = flow {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.SendMessageStreaming, ctx)
         checkStreamingSupport()
         emitAll(onSendMessageCommon(request, ctx, includeTaskSnapshot = true))
     }
@@ -651,7 +662,7 @@ public open class A2AServer(
         request: GetTaskRequest,
         ctx: ServerCallContext
     ): Task {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.GetTask, ctx)
         validateHistoryLength(request.historyLength)
 
         return taskStorage.get(request, ctx)
@@ -662,7 +673,7 @@ public open class A2AServer(
         request: ListTasksRequest,
         ctx: ServerCallContext
     ): ListTasksResponse {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.ListTasks, ctx)
 
         request.pageSize?.let { pageSize ->
             if (pageSize !in MIN_LIST_TASKS_PAGE_SIZE..MAX_LIST_TASKS_PAGE_SIZE) {
@@ -706,7 +717,7 @@ public open class A2AServer(
         request: CancelTaskRequest,
         ctx: ServerCallContext
     ): Task {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.CancelTask, ctx)
 
         val taskId = request.id
 
@@ -790,7 +801,7 @@ public open class A2AServer(
         request: SubscribeToTaskRequest,
         ctx: ServerCallContext
     ): Flow<Event> = flow {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.SubscribeToTask, ctx)
         checkStreamingSupport()
 
         emitAll(turnManager.subscribe(request, ctx))
@@ -810,7 +821,7 @@ public open class A2AServer(
         request: TaskPushNotificationConfig,
         ctx: ServerCallContext
     ): TaskPushNotificationConfig {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.CreateTaskPushNotificationConfig, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
         val taskId = request.taskId?.takeIf { it.isNotBlank() }
@@ -835,7 +846,7 @@ public open class A2AServer(
         request: GetTaskPushNotificationConfigRequest,
         ctx: ServerCallContext
     ): TaskPushNotificationConfig {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.GetTaskPushNotificationConfig, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
         checkTaskExists(request.taskId, request.tenant, ctx)
@@ -850,7 +861,7 @@ public open class A2AServer(
         request: ListTaskPushNotificationConfigsRequest,
         ctx: ServerCallContext
     ): ListTaskPushNotificationConfigsResponse {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.ListTaskPushNotificationConfigs, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
         checkTaskExists(request.taskId, request.tenant, ctx)
@@ -862,7 +873,7 @@ public open class A2AServer(
         request: DeleteTaskPushNotificationConfigRequest,
         ctx: ServerCallContext
     ) {
-        checkRequiredExtensions(ctx)
+        checkAccepting(A2AMethod.DeleteTaskPushNotificationConfig, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
         checkTaskExists(request.taskId, request.tenant, ctx)
@@ -932,20 +943,39 @@ public open class A2AServer(
     }
 
     /**
-     * Checks that the client requested all extensions that [agentCard] declares as required, called first in every
-     * [RequestHandler] operation except [onGetExtendedAgentCard]. The extensions requested by the client are
-     * [ServerCallContext.requestedExtensions]; requested extensions that the card doesn't declare are ignored.
+     * Checks that the server accepts the operation [method], called first in every [RequestHandler] operation, before
+     * any validation and holding no lock. In order:
+     * - **Shutdown.** After [cancel] (or once [coroutineScope] is cancelled), every operation fails with
+     *   [A2AInternalErrorException] "Server is shut down". While the server is shutting down, SendMessage,
+     *   SendStreamingMessage, and SubscribeToTask fail with [A2AInternalErrorException] "Server is shutting down"; the
+     *   other operations are accepted.
+     * - **Required extensions.** Except for [A2AMethod.GetExtendedAgentCard], the client must request every extension
+     *   that [agentCard] (not [agentCardExtended]) declares as required. The extensions requested by the client are
+     *   [ServerCallContext.requestedExtensions]; requested extensions that the card doesn't declare are ignored.
      *
-     * Only the public [agentCard] is consulted, not [agentCardExtended]. Override to customize the check,
-     * e.g. to skip some operations.
+     * Override to add checks or to relax the extension requirement for some operations. Call `super` to keep the
+     * shutdown check and the extension check. An override that doesn't still can't start a turn after shutdown:
+     * [TurnManager.startTurn] checks that too, after the request's validation.
      *
+     * @param method The operation being called.
+     * @param ctx The context of the call.
+     * @throws A2AInternalErrorException if the server is shut down, or shutting down and [method] isn't accepted then.
      * @throws A2AExtensionSupportRequiredException if some required extensions were not requested.
      */
-    protected open fun checkRequiredExtensions(context: ServerCallContext) {
+    @OptIn(InternalA2AApi::class)
+    protected open fun checkAccepting(method: A2AMethod, ctx: ServerCallContext) {
+        when (val state = turnManager.lifecycleState) {
+            LifecycleState.RUNNING -> Unit
+            LifecycleState.DRAINING -> if (method in REJECTED_WHILE_DRAINING) state.checkAccepting()
+            LifecycleState.SHUT_DOWN -> state.checkAccepting()
+        }
+
+        if (method == A2AMethod.GetExtendedAgentCard) return
+
         val missing = agentCard.capabilities.extensions.orEmpty()
             .filter { it.required == true }
             .mapNotNull { it.uri }
-            .filter { it !in context.requestedExtensions }
+            .filter { it !in ctx.requestedExtensions }
 
         if (missing.isNotEmpty()) {
             throw A2AExtensionSupportRequiredException(
@@ -956,7 +986,7 @@ public open class A2AServer(
 
     /**
      * Checks that the [agentCard] declares [streaming][ai.koog.a2a.model.AgentCapabilities.streaming], called in
-     * streaming operations after [checkRequiredExtensions] and before anything is emitted.
+     * streaming operations after [checkAccepting] and before anything is emitted.
      *
      * @throws A2AUnsupportedOperationException if streaming is not declared or is `false`.
      */
@@ -969,7 +999,7 @@ public open class A2AServer(
     /**
      * Checks that the [agentCard] declares [pushNotifications][ai.koog.a2a.model.AgentCapabilities.pushNotifications]
      * and that both [pushConfigStorage] and [pushSender] are configured, called in push notification config operations
-     * after [checkRequiredExtensions]. Without a sender, saved configs would never be notified.
+     * after [checkAccepting]. Without a sender, saved configs would never be notified.
      *
      * @return The configured push notification config storage.
      * @throws A2APushNotificationNotSupportedException if push notifications are not declared, or the storage or the
@@ -988,14 +1018,18 @@ public open class A2AServer(
     }
 
     /**
-     * Shuts the server down: ends every SubscribeToTask stream normally (see [TurnManager.shutdown]) and cancels
-     * [coroutineScope], cancelling all running agent jobs and turns.
+     * Shuts the server down immediately, without waiting:
+     * - every later request fails with [A2AInternalErrorException] "Server is shut down", see [checkAccepting];
+     * - every open SubscribeToTask stream ends normally;
+     * - the running agents are cancelled and their tasks keep their last persisted state; pending push notifications
+     *   are dropped.
      *
-     * @param cause Optional cause of the cancellation
+     * Cancels only the server's own jobs, not [coroutineScope]. Idempotent. See [TurnManager.shutdown].
+     *
+     * @param cause Optional cause of the cancellation of the server's jobs.
      */
     @OptIn(InternalA2AApi::class)
     public open fun cancel(cause: CancellationException? = null) {
-        turnManager.shutdown()
-        coroutineScope.cancel(cause)
+        turnManager.shutdown(cause)
     }
 }

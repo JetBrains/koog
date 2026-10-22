@@ -18,11 +18,9 @@ import ai.koog.a2a.server.turn.Turn
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -200,9 +198,7 @@ class A2AServerFailureMessageTest {
     fun testServerShutdownInterruptsHangingFailureMessage() = runTest(timeout = TEST_TIMEOUT) {
         val hookEntered = CompletableDeferred<Turn>()
         lateinit var server: CustomFailureServer
-        // The server is shut down, which cancels its scope: it must not be the test's.
-        val serverScope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
-        server = createServer(mapOf("crash" to crashScript), scope = serverScope) { taskId, _, _ ->
+        server = createServer(mapOf("crash" to crashScript)) { taskId, _, _ ->
             hookEntered.complete(assertNotNull(server.turn(taskId)))
             awaitCancellation()
         }

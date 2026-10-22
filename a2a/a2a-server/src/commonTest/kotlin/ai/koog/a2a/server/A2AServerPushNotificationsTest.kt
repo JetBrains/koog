@@ -1,5 +1,6 @@
 package ai.koog.a2a.server
 
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidAgentResponseException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
@@ -568,9 +569,26 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
-    fun testInlineConfigIsDeletedWhenServerIsCancelledBeforeAgentRuns() = runTest(timeout = TEST_TIMEOUT) {
+    fun testInlineConfigIsNotSavedWhenServerIsCancelledBeforeTurnStarts() = runTest(timeout = TEST_TIMEOUT) {
         val recording = RecordingPushConfigStorage(pushStorage)
         val server = createTurnServer(pushConfigStorage = recording, onValidate = { this.cancel() })
+
+        val e = assertFailsWith<A2AInternalErrorException> {
+            server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
+        }
+        runCurrent()
+
+        assertEquals("Server is shut down", e.message)
+        assertEquals(emptyList(), recording.calls)
+        assertEquals(emptyList(), executor.executed)
+    }
+
+    @Test
+    fun testInlineConfigIsDeletedWhenServerIsCancelledWhileTurnStarts() = runTest(timeout = TEST_TIMEOUT) {
+        lateinit var server: A2AServer
+        // The turn has passed the shutdown check: it starts, but its agent never runs.
+        val recording = RecordingPushConfigStorage(pushStorage, onSave = { server.cancel() })
+        server = createTurnServer(pushConfigStorage = recording)
 
         assertFailsWith<A2AInvalidAgentResponseException> {
             server.onSendMessage(sendRequest("ask", pushConfig = webhook), ctx)
@@ -640,12 +658,13 @@ class A2AServerPushNotificationsTest {
 /** Records the calls to [save], [delete], [getAll] and [deleteAll] of [delegate], in call order. */
 private class RecordingPushConfigStorage(
     private val delegate: PushNotificationConfigStorage,
+    private val onSave: () -> Unit = {},
 ) : PushNotificationConfigStorage by delegate {
     val calls = mutableListOf<String>()
 
     override suspend fun save(config: TaskPushNotificationConfig, context: ServerCallContext): TaskPushNotificationConfig {
         calls += "save ${config.taskId}/${config.id}"
-        return delegate.save(config, context)
+        return delegate.save(config, context).also { onSave() }
     }
 
     override suspend fun delete(request: DeleteTaskPushNotificationConfigRequest, context: ServerCallContext) {

@@ -6,19 +6,13 @@ import ai.koog.a2a.exceptions.A2AExtensionSupportRequiredException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentExtension
-import ai.koog.a2a.model.CancelTaskRequest
-import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetExtendedAgentCardRequest
-import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetTaskRequest
-import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
@@ -26,8 +20,8 @@ import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.turn.RequestContext
 import ai.koog.a2a.server.turn.TurnEventProcessor
+import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.ServerCallContext
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -97,59 +91,11 @@ class A2AServerRequiredExtensionsTest {
         agentCardExtended = extendedCard,
     )
 
-    private fun operations(): Map<String, suspend (ServerCallContext) -> Unit> = mapOf(
-        "SendMessage" to { c ->
-            server.onSendMessage(SendMessageRequest(message), c)
-            Unit
-        },
-        "SendMessageStreaming" to { c ->
-            server.onSendMessageStreaming(SendMessageRequest(message), c).toList()
-            Unit
-        },
-        "GetTask" to { c ->
-            server.onGetTask(GetTaskRequest(id = "task-1"), c)
-            Unit
-        },
-        "ListTasks" to { c ->
-            server.onListTasks(ListTasksRequest(), c)
-            Unit
-        },
-        "CancelTask" to { c ->
-            server.onCancelTask(CancelTaskRequest(id = "task-1"), c)
-            Unit
-        },
-        "SubscribeToTask" to { c ->
-            server.onSubscribeToTask(SubscribeToTaskRequest(id = "task-1"), c).toList()
-            Unit
-        },
-        "CreateTaskPushNotificationConfig" to { c ->
-            server.onCreateTaskPushNotificationConfig(
-                TaskPushNotificationConfig(taskId = "task-1", url = "http://localhost/hook"),
-                c
-            )
-            Unit
-        },
-        "GetTaskPushNotificationConfig" to { c ->
-            server.onGetTaskPushNotificationConfig(GetTaskPushNotificationConfigRequest(taskId = "task-1", id = "c"), c)
-            Unit
-        },
-        "ListTaskPushNotificationConfigs" to { c ->
-            server.onListTaskPushNotificationConfigs(ListTaskPushNotificationConfigsRequest(taskId = "task-1"), c)
-            Unit
-        },
-        "DeleteTaskPushNotificationConfig" to { c ->
-            server.onDeleteTaskPushNotificationConfig(
-                DeleteTaskPushNotificationConfigRequest(taskId = "task-1", id = "c"),
-                c
-            )
-        },
-    )
-
     @Test
     fun testEveryOperationRequiresDeclaredExtensions() = runTest {
-        operations().forEach { (name, operation) ->
-            val e = assertFailsWith<A2AExtensionSupportRequiredException>(name) { operation(withoutExtensions) }
-            assertEquals(A2AErrorCodes.EXTENSION_SUPPORT_REQUIRED, e.errorCode, name)
+        (operations(server) - A2AMethod.GetExtendedAgentCard).forEach { (method, operation) ->
+            val e = assertFailsWith<A2AExtensionSupportRequiredException>(method.value) { operation(withoutExtensions) }
+            assertEquals(A2AErrorCodes.EXTENSION_SUPPORT_REQUIRED, e.errorCode, method.value)
         }
     }
 
@@ -205,14 +151,19 @@ class A2AServerRequiredExtensionsTest {
     }
 
     @Test
-    fun testCheckIsOverridable() = runTest {
+    fun testOverrideCanSkipExtensionCheckForOneOperation() = runTest {
         val lenient = object : A2AServer(
             agentExecutor = UnusedAgentExecutor,
             agentCard = agentCard(AgentExtension(uri = REQUIRED, required = true)),
         ) {
-            override fun checkRequiredExtensions(context: ServerCallContext) = Unit
+            override fun checkAccepting(method: A2AMethod, ctx: ServerCallContext) {
+                if (method != A2AMethod.ListTasks) super.checkAccepting(method, ctx)
+            }
         }
 
         assertEquals(emptyList(), lenient.onListTasks(ListTasksRequest(), withoutExtensions).tasks)
+        assertFailsWith<A2AExtensionSupportRequiredException> {
+            lenient.onGetTask(GetTaskRequest(id = "task-1"), withoutExtensions)
+        }
     }
 }

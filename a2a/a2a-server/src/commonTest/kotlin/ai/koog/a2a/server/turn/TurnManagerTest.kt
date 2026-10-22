@@ -540,21 +540,17 @@ class TurnManagerTest {
     }
 
     @Test
-    fun testTurnStartedInCancelledScopeEndsWithoutRunningAgent() = runTest(timeout = TEST_TIMEOUT) {
-        // The scope of a server that has been shut down.
+    fun testTurnInCancelledScopeIsRejected() = runTest(timeout = TEST_TIMEOUT) {
+        // A scope cancelled from outside shuts the turn layer down.
         val cancelledScope = CoroutineScope(backgroundScope.coroutineContext + Job().apply { cancel() })
         val turnManager = TurnManager(coroutineScope = cancelledScope, taskStorage = taskStorage)
         var agentStarted = false
 
-        val turn = turnManager.start(taskId, contextId) { agentStarted = true }
+        val e = assertFailsWith<A2AInternalErrorException> { turnManager.start(taskId, contextId) { agentStarted = true } }
 
-        withTimeout(5.seconds) {
-            assertEquals(emptyList(), turn.events.toList())
-            turn.join()
-        }
-        assertFailsWith<CancellationException> { turn.agentJob.await() }
+        assertEquals("Server is shut down", e.message)
         assertEquals(false, agentStarted)
-        assertNull(turnManager.getTurn(taskId))
+        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
