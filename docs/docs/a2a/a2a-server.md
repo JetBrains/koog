@@ -372,6 +372,72 @@ All storage implementations are optional and default to in-memory variants for d
 - **MessageStorage**: Conversation history - manages message history within conversation contexts
 - **PushNotificationConfigStorage**: Webhook management - manages webhook configurations for asynchronous notifications
 
+## Shutting down
+
+`A2AServer` has two ways to stop:
+
+- **`shutdown(gracePeriod)`** is the graceful one. It is a `suspend` function that waits for the work in flight for
+  at most `gracePeriod` and returns once the server is shut down. The default period is zero, which shuts down at once.
+- **`cancel()`** shuts down immediately without waiting, as `shutdown()` with no grace period does.
+
+During the grace period, the server accepts no new work: `SendMessage`, `SendStreamingMessage`, and new
+`SubscribeToTask` requests fail with the JSON-RPC error `-32603` "Server is shutting down", including a message that
+waits for the running turn of its task. Other operations, such as `GetTask`, `ListTasks`, `CancelTask`, and push
+notification config operations, are still accepted. After the shutdown, every request fails with `-32603`
+"Server is shut down".
+
+During the grace period, the server waits for:
+
+1. every running turn (`AgentExecutor.execute` call) to end, so its client gets the usual response;
+2. then every pending push notification to be sent.
+
+Open `SubscribeToTask` streams are not waited for. They stay open during the grace period and keep receiving
+the events of the running turns. Then, when both waits are over or the grace period has passed, whichever comes first,
+the server shuts down as `cancel()` does:
+
+- Open streams end. A stream that has already delivered the terminal state of its task ends normally; any other
+  stream gets `-32603` "Server is shut down" as its last event, and a blocking `SendMessage` that is still waiting
+  fails with it.
+- The agents that are still running are cancelled. Tasks keep their last persisted state: they are not moved to
+  `TASK_STATE_FAILED` or `TASK_STATE_CANCELED`.
+- Push notifications that are not sent yet are dropped.
+
+`shutdown` can be called concurrently and repeatedly: all calls wait for the same shutdown, and the earliest deadline
+wins. Calling `cancel()` or cancelling the calling coroutine shuts the server down at once, and the waiting calls return.
+Cancelling the `coroutineScope` that you passed to `A2AServer` from outside also counts as a shutdown, while
+`shutdown` and `cancel` never cancel that scope.
+
+Call `a2aServer.shutdown(...)` **before** stopping the transport or the Ktor server. If the HTTP server stops first,
+the connections of the clients are cut while the agents keep running, and the clients see a broken connection instead of
+the final events.
+
+```kotlin
+val server = embeddedServer(Netty, port = 8080) {
+    install(SSE)
+
+    routing {
+        a2aJsonRpcTransportRoute("/a2a", transport)
+        a2aAgentCardRoute("/.well-known/agent-card.json", agentCard)
+    }
+}.startSuspend(wait = false)
+
+// Later, when the application stops:
+a2aServer.shutdown(gracePeriod = 30.seconds) // drain the turns first
+server.stopSuspend(gracePeriod = 1_000, timeoutMillis = 5_000) // then stop the HTTP server
+```
+
+With the standalone `HttpJSONRPCServerTransport`, call `a2aServer.shutdown(...)` and then `transport.stop()`.
+
+The shutdown is bounded except for a few things that it cannot interrupt:
+
+- an agent that ignores cancellation may keep running after the shutdown;
+- storage writes that the server runs as non-cancellable (persisting an event, saving an inline push notification
+  config), so a slow storage delays the shutdown;
+- a running `AgentExecutor.cancel` of a `CancelTask` request: the turns of that task can't end until it returns.
+
+To add your own checks for every operation, override `A2AServer.checkAccepting(method, ctx)` and call `super`
+to keep the shutdown check and the required-extensions check.
+
 ## Quickstart
 
 ### 1. Create AgentCard
