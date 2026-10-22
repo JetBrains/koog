@@ -3,7 +3,6 @@ package ai.koog.koogelis.tools
 import ai.koog.koogelis.AgentConfiguration
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.js.Js
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -44,7 +43,7 @@ class McpTransportManager(private val logger: KLogger) {
         transports.clear()
     }
 
-    private fun createHttpClient(headers: Map<String, String>) = HttpClient(Js) {
+    private fun createHttpClient(headers: Map<String, String>) = HttpClient {
         defaultRequest {
             headers.forEach { (key, value) -> header(key, value)}
         }

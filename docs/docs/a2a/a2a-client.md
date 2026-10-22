@@ -24,7 +24,7 @@ dependencies {
     implementation("ai.koog:a2a-transport-client-jsonrpc-http:$koogVersion")
 
     // Ktor client engine (choose one that fits your needs)
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-engine-defaults:$ktorVersion")
 }
 ```
 
@@ -76,7 +76,7 @@ The most common transport for A2A agents:
 ```kotlin
 val transport = HttpJSONRPCClientTransport(
     url = "https://agent.example.com/a2a",        // Agent endpoint URL
-    httpClient = HttpClient(CIO) {                // Optional: custom HTTP client
+    httpClient = HttpClient {                     // Optional: custom HTTP client
         install(ContentNegotiation) {
             json()
         }
@@ -100,7 +100,7 @@ Fetch agent cards from HTTP endpoints following A2A conventions:
 val agentCardResolver = UrlAgentCardResolver(
     baseUrl = "https://agent.example.com",           // Base URL of the agent service
     path = "/.well-known/agent-card.json",           // Standard agent card location
-    httpClient = HttpClient(CIO),                    // Optional: custom HTTP client
+    httpClient = HttpClient,                         // Optional: custom HTTP client
 )
 ```
 

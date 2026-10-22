@@ -25,6 +25,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.engine.defaults)
                 implementation(libs.ktor.client.mock)
             }
         }
@@ -33,7 +34,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.mokksy.a2a)
-                implementation(libs.ktor.client.cio)
                 runtimeOnly(libs.logback.classic)
             }
         }
