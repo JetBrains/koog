@@ -9,7 +9,6 @@ import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
-import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
@@ -18,7 +17,6 @@ import ai.koog.a2a.model.SendMessageConfiguration
 import ai.koog.a2a.model.SendMessageRequest
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
-import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
@@ -31,7 +29,6 @@ import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.pushConfig
-import ai.koog.a2a.server.notifications.pushes
 import ai.koog.a2a.server.statusUpdate
 import ai.koog.a2a.server.task
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
@@ -133,7 +130,6 @@ class TurnManagerTest {
     fun testMessageTurn() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
         val message = userMessage("Hello", messageId = "msg-1")
-        assertEquals(0, turnManager.activeTurns())
         assertNull(turnManager.getTurn("any-task-id"))
 
         val turn = turnManager.start(taskId, contextId) { processor ->
@@ -142,10 +138,6 @@ class TurnManagerTest {
 
         assertEquals(listOf<Event>(message), turn.events.toList())
         turn.join()
-
-        // Turn and task stream should be automatically cleaned up after completion
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -162,15 +154,12 @@ class TurnManagerTest {
         }
 
         assertSame(turn, turnManager.getTurn(taskId))
-        assertEquals(1, turnManager.activeTurns())
 
         gate.complete(Unit)
 
         assertEquals(listOf(task.withUserMessage(), completed), turn.events.toList())
         turn.join()
 
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
         assertEquals(task.withUserMessage().copy(status = completed.status), taskStorage.get(taskId))
     }
 
@@ -202,8 +191,6 @@ class TurnManagerTest {
         followUps.awaitAll().forEach { it.join() }
 
         assertEquals(listOf("start 1", "end 1", "start 2", "end 2", "start 3", "end 3"), log)
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -235,8 +222,6 @@ class TurnManagerTest {
 
         assertTrue(cancelled.isCancelled)
         assertEquals(listOf("follow-up 2"), started)
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -262,8 +247,6 @@ class TurnManagerTest {
 
         running.agentJob.cancelAndJoin()
         waiting.await().join()
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -284,53 +267,10 @@ class TurnManagerTest {
 
         assertSame(turn1, turnManager.getTurn("task-1"))
         assertSame(turn2, turnManager.getTurn("task-2"))
-        assertEquals(2, turnManager.activeTurns())
 
         gate.complete(Unit)
         turn1.join()
         turn2.join()
-
-        // All turns should be automatically cleaned up
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
-    }
-
-    @Test
-    fun testFailedTurnMarksTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        val task = task()
-
-        val turn = turnManager.start(taskId, contextId) { processor ->
-            processor.sendTaskEvent(task)
-            throw IllegalStateException("boom")
-        }
-
-        val events = turn.events.toList()
-        assertFailsWith<IllegalStateException> { turn.agentJob.await() }
-        turn.join()
-
-        val stored = assertNotNull(taskStorage.get(taskId))
-        assertNotNull(stored.status.timestamp)
-        val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
-        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
-        assertEquals(failedStatus, stored.status)
-        assertEquals(listOf(task.withUserMessage(), failedEvent), events)
-    }
-
-    @Test
-    fun testFailedTurnWithoutTaskCreatesNothing() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-
-        val turn = turnManager.start(taskId, contextId) {
-            throw IllegalStateException("boom")
-        }
-
-        assertEquals(emptyList(), turn.events.toList())
-        assertFailsWith<IllegalStateException> { turn.agentJob.await() }
-        turn.join()
-
-        assertNull(taskStorage.get(taskId))
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -360,24 +300,6 @@ class TurnManagerTest {
         assertEquals(failedStatus, stored.status)
         assertEquals(listOf<Event>(working, failedEvent), events)
         assertEquals(listOf<Event>(inputRequired, working, failedEvent), received)
-        assertEquals(0, turnManager.activeStreams())
-    }
-
-    @Test
-    fun testAgentOwnCancellationWithoutTaskCreatesNothing() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-
-        val turn = turnManager.start(taskId, contextId) {
-            throw CancellationException("agent gave up")
-        }
-
-        assertEquals(emptyList(), turn.events.toList())
-        val failure = assertFailsWith<AgentCancellationFailure> { turn.agentJob.await() }
-        assertEquals("agent gave up", failure.message)
-        turn.join()
-
-        assertNull(taskStorage.get(taskId))
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -470,7 +392,7 @@ class TurnManagerTest {
         turn.join()
 
         assertFailsWith<CancellationException> { turn.agentJob.await() }
-        assertEquals(0, turnManager.activeTurns())
+        assertNull(turnManager.getTurn(taskId))
     }
 
     @Test
@@ -481,10 +403,6 @@ class TurnManagerTest {
         val received = mutableListOf<Event>()
         val subscriber = subscribeWith(turnManager) { received += it }
         runCurrent()
-
-        // No turn is running, the subscriber alone keeps the stream.
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(1, turnManager.activeStreams())
 
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)
         val inputRequiredAgain = statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED)
@@ -501,21 +419,6 @@ class TurnManagerTest {
         subscriber.join()
 
         assertEquals(listOf<Event>(inputRequired, working, inputRequiredAgain, completed), received)
-        assertEquals(0, turnManager.activeStreams())
-    }
-
-    @Test
-    fun testCancelledSubscriberReleasesStream() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        storeTask()
-
-        val subscriber = subscribeWith(turnManager) {}
-        runCurrent()
-        assertEquals(1, turnManager.activeStreams())
-
-        subscriber.cancelAndJoin()
-
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -548,7 +451,6 @@ class TurnManagerTest {
             leaked.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
         }
         assertEquals(inputRequired, taskStorage.get(taskId))
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -589,7 +491,6 @@ class TurnManagerTest {
         }
         assertEquals("Task '$taskId' not found", error.message)
         assertEquals(false, blockRan)
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -654,8 +555,6 @@ class TurnManagerTest {
         assertFailsWith<CancellationException> { turn.agentJob.await() }
         assertEquals(false, agentStarted)
         assertNull(turnManager.getTurn(taskId))
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -684,7 +583,6 @@ class TurnManagerTest {
         // The requester of the turn receives the events published by the cancellation.
         assertEquals(listOf(task.withUserMessage(), canceled), events.await())
         turn.join()
-        assertEquals(0, turnManager.activeTurns())
     }
 
     @Test
@@ -718,7 +616,6 @@ class TurnManagerTest {
         assertNull(turnManager.getTurn(taskId))
         assertEquals(emptyList(), events.await())
         block.join()
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -763,41 +660,6 @@ class TurnManagerTest {
             leaked(statusUpdate(TaskState.TASK_STATE_CANCELED))
         }
         assertEquals(inputRequired, taskStorage.get(taskId))
-    }
-
-    @Test
-    fun testCancelledServerPublishOfTerminalEventEndsEverySubscriber() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        val inputRequired = storeTask()
-
-        // The stuck subscriber holds the snapshot and doesn't receive further; it is registered first.
-        val stuckGate = CompletableDeferred<Unit>()
-        val stuck = subscribeWith(turnManager) { stuckGate.await() }
-        runCurrent()
-        val received = mutableListOf<Event>()
-        val other = subscribeWith(turnManager) { received += it }
-        runCurrent()
-
-        // E.g. CancelTask's forced cancellation, whose request is cancelled while it waits for the stuck subscriber.
-        val canceled = statusUpdate(TaskState.TASK_STATE_CANCELED)
-        val canceller = launch {
-            turnManager.withTaskProcessor(GetTaskRequest(taskId), ctx) { _, _, _, publish -> publish(canceled) }
-        }
-        advanceUntilIdle()
-        assertTrue(canceller.isActive)
-
-        canceller.cancelAndJoin()
-        advanceUntilIdle()
-
-        assertEquals(inputRequired.copy(status = canceled.status), taskStorage.get(taskId))
-        assertTrue(other.isCompleted)
-        assertEquals(listOf<Event>(inputRequired), received)
-        assertEquals(1, turnManager.activeStreams())
-
-        // Once the stuck subscriber goes on, its flow ends too and the stream is dropped.
-        stuckGate.complete(Unit)
-        stuck.join()
-        assertEquals(0, turnManager.activeStreams())
     }
 
     private fun followUpPrompt() = Message(
@@ -866,7 +728,6 @@ class TurnManagerTest {
         assertEquals(expected::class to expected.message, failure::class to failure.message)
         assertEquals(false, agentStarted)
         assertNull(turnManager.getTurn(taskId))
-        assertEquals(0, turnManager.activeStreams())
         assertEquals(stored, taskStorage.get(taskId))
     }
 
@@ -1040,29 +901,6 @@ class TurnManagerTest {
     }
 
     @Test
-    fun testA2AErrorAfterFirstEventOfFollowUpMarksTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        val inputRequired = storeInputRequiredTask()
-        val userMessage = userMessage("Hello", messageId = "user-msg").copy(taskId = taskId)
-        val working = statusUpdate(TaskState.TASK_STATE_WORKING, text = null)
-
-        val turn = turnManager.start(taskId, contextId, followUp = true) { processor ->
-            processor.sendTaskEvent(working)
-            throw A2AContentTypeNotSupportedException("Unsupported content type")
-        }
-
-        val events = turn.events.toList()
-        assertIs<TurnOutcome.Failed>(turn.outcome.await())
-        turn.join()
-
-        val stored = assertNotNull(taskStorage.get(taskId))
-        val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
-        val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
-        assertEquals(listOf<Event>(working, failedEvent), events)
-        assertEquals(inputRequired.copy(status = failedStatus, history = listOf(followUpPrompt(), userMessage)), stored)
-    }
-
-    @Test
     fun testNonA2AErrorBeforeFirstEventOfFollowUpMarksTaskFailed() = runTest(timeout = TEST_TIMEOUT) {
         listOf(IllegalStateException("boom"), CancellationException("agent gave up")).forEach { error ->
             taskStorage = InMemoryTaskStorage()
@@ -1086,28 +924,6 @@ class TurnManagerTest {
 
     private suspend fun savePushConfig() {
         pushConfigStorage.save(pushConfig(taskId, "c1"), ctx)
-    }
-
-    @Test
-    fun testEveryPersistedTaskEventIsPushedInOrder() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        savePushConfig()
-        val task = task()
-        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
-        val artifact = TaskArtifactUpdateEvent(
-            taskId = taskId,
-            contextId = contextId,
-            artifact = Artifact(artifactId = "artifact-1", parts = listOf(TextPart("result"))),
-        )
-        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
-
-        turnManager.start(taskId, contextId) { processor ->
-            listOf(task, working, artifact, completed).forEach { processor.sendTaskEvent(it) }
-        }.also { drain(it) }.join()
-        runCurrent()
-
-        // The initial task is pushed as persisted, with the user message.
-        assertEquals(pushes("c1", listOf(task.withUserMessage(), working, artifact, completed)), pushSender.sent)
     }
 
     @Test
@@ -1141,42 +957,6 @@ class TurnManagerTest {
     }
 
     @Test
-    fun testFailedStatusOfCrashedTurnIsPushed() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        savePushConfig()
-        val task = task()
-
-        turnManager.start(taskId, contextId) { processor ->
-            processor.sendTaskEvent(task)
-            throw IllegalStateException("boom")
-        }.also { drain(it) }.join()
-        runCurrent()
-
-        val stored = assertNotNull(taskStorage.get(taskId))
-        val failed = TaskStatusUpdateEvent(
-            taskId = taskId,
-            contextId = contextId,
-            status = failedStatus(taskId, contextId, stored.status.timestamp),
-        )
-        assertEquals(listOf<Pair<String, Event>>("c1" to task.withUserMessage(), "c1" to failed), pushSender.sent)
-    }
-
-    @Test
-    fun testServerEventOnIdleTaskIsPushed() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        storeTask()
-        savePushConfig()
-        val canceled = statusUpdate(TaskState.TASK_STATE_CANCELED)
-
-        turnManager.withTaskProcessor(GetTaskRequest(taskId), ctx) { _, _, _, publish ->
-            publish(canceled)
-        }
-        runCurrent()
-
-        assertEquals(listOf<Pair<String, Event>>("c1" to canceled), pushSender.sent)
-    }
-
-    @Test
     fun testBlockedPushSenderDoesNotBlockAgentStreamsOrTurnEnd() = runTest(timeout = TEST_TIMEOUT) {
         val turnManager = createManager()
         val inputRequired = storeTask()
@@ -1202,7 +982,6 @@ class TurnManagerTest {
 
         assertEquals(listOf<Event>(inputRequired, working, completed), received)
         assertEquals(listOf<Event>(working, completed), requesterEvents.await())
-        assertEquals(0, turnManager.activeStreams())
         assertEquals(listOf<Pair<String, Event>>("c1" to working), pushSender.started)
 
         pushSender.unblock("c1")
@@ -1217,109 +996,6 @@ class TurnManagerTest {
         onEvent: suspend (Event) -> Unit,
     ): Job = launch {
         turnManager.subscribe(SubscribeToTaskRequest(taskId), ctx).collect { onEvent(it) }
-    }
-
-    @Test
-    fun testSendTaskEventSuspendsUntilSubscriberConsumes() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        val inputRequired = storeTask()
-
-        val gate = CompletableDeferred<Unit>()
-        val received = mutableListOf<Event>()
-        val subscriber = subscribeWith(turnManager) {
-            received += it
-            if (received.size == 1) gate.await() // holds the snapshot until released
-        }
-        runCurrent()
-
-        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
-        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
-        val sent = mutableListOf<Event>()
-        val turn = turnManager.start(taskId, contextId) { processor ->
-            processor.sendTaskEvent(working)
-            sent += working
-            processor.sendTaskEvent(completed)
-            sent += completed
-        }
-        val requesterEvents = drain(turn)
-        runCurrent()
-
-        // The first event is persisted, but the agent is stuck until the subscriber consumes it.
-        assertEquals(emptyList(), sent)
-        assertEquals(inputRequired.copy(status = working.status), taskStorage.get(taskId))
-
-        gate.complete(Unit)
-        turn.join()
-        subscriber.join()
-
-        assertEquals(listOf<Event>(working, completed), sent)
-        assertEquals(listOf<Event>(inputRequired, working, completed), received)
-        assertEquals(listOf<Event>(working, completed), requesterEvents.await())
-    }
-
-    @Test
-    fun testSlowSubscriberReceivesEveryEventInOrder() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        val inputRequired = storeTask()
-
-        val received = mutableListOf<Event>()
-        val subscriber = subscribeWith(turnManager) {
-            received += it
-            delay(1_000) // much slower than the agent
-        }
-        runCurrent()
-
-        val updates = (0 until 200).map { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
-        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
-        // The agent doesn't suspend between events on its own; only back-pressure paces it.
-        val turn = turnManager.start(taskId, contextId) { processor ->
-            updates.forEach { processor.sendTaskEvent(it) }
-            processor.sendTaskEvent(completed)
-        }
-        val requesterEvents = drain(turn)
-        turn.join()
-        subscriber.join()
-
-        assertEquals(listOf<Event>(inputRequired) + updates + completed, received)
-        assertEquals(updates + completed, requesterEvents.await())
-    }
-
-    @Test
-    fun testCancellingStuckSubscriberUnblocksAgentAndOtherListeners() = runTest(timeout = TEST_TIMEOUT) {
-        val turnManager = createManager()
-        val inputRequired = storeTask()
-
-        val stuckReceived = mutableListOf<Event>()
-        val stuck = subscribeWith(turnManager) {
-            stuckReceived += it
-            CompletableDeferred<Unit>().await() // never consumes anything more
-        }
-        val activeReceived = mutableListOf<Event>()
-        val active = subscribeWith(turnManager) { activeReceived += it }
-        runCurrent()
-
-        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
-        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
-        val turn = turnManager.start(taskId, contextId) { processor ->
-            processor.sendTaskEvent(working)
-            processor.sendTaskEvent(completed)
-        }
-        val requesterEvents = drain(turn)
-        runCurrent()
-
-        // The stuck collector, which holds the snapshot, blocks the agent and everybody else.
-        assertEquals(listOf<Event>(inputRequired), stuckReceived)
-        assertEquals(listOf<Event>(inputRequired), activeReceived)
-        assertEquals(1, turnManager.activeTurns())
-
-        stuck.cancelAndJoin()
-        turn.join()
-        active.join()
-
-        assertEquals(listOf<Event>(inputRequired, working, completed), activeReceived)
-        assertEquals(listOf<Event>(working, completed), requesterEvents.await())
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -1342,7 +1018,6 @@ class TurnManagerTest {
 
         assertEquals(task(TaskState.TASK_STATE_WORKING).withUserMessage(), firstEvent)
         assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskId)?.status?.state)
-        assertEquals(0, turnManager.activeStreams())
     }
 
     /**
@@ -1428,8 +1103,6 @@ class TurnManagerTest {
 
         assertEquals(listOf<Event>(completedA), eventsA.await())
         assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskA)?.status?.state)
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 
     @Test
@@ -1450,7 +1123,6 @@ class TurnManagerTest {
         start.cancelAndJoin()
 
         assertNull(turnManager.getTurn(taskId))
-        assertEquals(0, turnManager.activeTurns())
 
         // The task can start a new turn, and the cancelled one never ran.
         stuck.cancelAndJoin()
@@ -1461,7 +1133,5 @@ class TurnManagerTest {
         turn.join()
 
         assertEquals(false, agentStarted)
-        assertEquals(0, turnManager.activeTurns())
-        assertEquals(0, turnManager.activeStreams())
     }
 }

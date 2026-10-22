@@ -52,7 +52,6 @@ class PushNotificationDispatcherTest {
         runCurrent()
 
         assertEquals(listOf<Pair<String, Event>>("c1" to events[0]), sender.started)
-        assertEquals(1, dispatcher.activeWorkers())
 
         sender.release("c1")
         runCurrent()
@@ -64,7 +63,6 @@ class PushNotificationDispatcherTest {
         runCurrent()
 
         assertEquals(pushes("c1", events), sender.sent)
-        assertEquals(0, dispatcher.activeWorkers())
 
         // A drained task gets a new worker for its next event.
         val next = event("task-1", 4)
@@ -72,7 +70,6 @@ class PushNotificationDispatcherTest {
         runCurrent()
 
         assertEquals(pushes("c1", events + next), sender.sent)
-        assertEquals(0, dispatcher.activeWorkers())
     }
 
     @Test
@@ -114,13 +111,11 @@ class PushNotificationDispatcherTest {
         runCurrent()
 
         assertEquals(pushes("b1", eventsB), sender.sent)
-        assertEquals(1, dispatcher.activeWorkers())
 
         sender.unblock("a1")
         runCurrent()
 
         assertEquals(pushes("b1", eventsB) + pushes("a1", eventsA), sender.sent)
-        assertEquals(0, dispatcher.activeWorkers())
     }
 
     @Test
@@ -144,7 +139,6 @@ class PushNotificationDispatcherTest {
             listOf<Pair<String, Event>>("c2" to events[0], "c1" to events[1], "c1" to events[2], "c2" to events[2]),
             sender.sent
         )
-        assertEquals(0, dispatcher.activeWorkers())
     }
 
     @Test
@@ -164,6 +158,27 @@ class PushNotificationDispatcherTest {
         runCurrent()
 
         assertEquals(listOf<Pair<String, Event>>("c2" to first, "c1" to first, "c1" to second), sender.sent)
+    }
+
+    @Test
+    fun testNoWorkerIsLeftAfterQueuesAreDrained() = runTest {
+        val dispatcher = createDispatcher()
+        saveConfigs("task-a", "a1")
+        saveConfigs("task-b", "b1")
+        sender.block("a1")
+        sender.failure = { configId, _ -> if (configId == "b1") IllegalStateException("webhook down") else null }
+
+        dispatcher.enqueue("task-a", event("task-a", 1))
+        dispatcher.enqueue("task-b", event("task-b", 1))
+        runCurrent()
+
+        // Only the stuck task still has a worker; the one whose send failed has been drained.
+        assertEquals(1, dispatcher.activeWorkers())
+
+        sender.unblock("a1")
+        runCurrent()
+
+        assertEquals(0, dispatcher.activeWorkers())
     }
 
     @Test
