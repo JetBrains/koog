@@ -10,6 +10,8 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -24,7 +26,8 @@ import kotlinx.coroutines.withContext
  * event of the task only after that, so every config receives the events of its task in order. Tasks don't wait for
  * each other.
  *
- * Failures of [sender] are logged and skipped, without retries. Queued events are dropped when [scope] is cancelled.
+ * Failures of [sender] are logged and skipped, without retries. Queued events are dropped when [scope] is cancelled;
+ * [awaitIdle] waits until none are left instead.
  *
  * @param scope the scope the workers run in
  * @param configStorage the storage of the push notification configs
@@ -45,6 +48,9 @@ internal class PushNotificationDispatcher(
     /** Pending events by task id. A key exists if and only if a worker for that task runs. */
     private val queues = mutableMapOf<String, ArrayDeque<TaskEvent>>()
 
+    /** The size of [queues], updated under [lock] with every change of it, for [awaitIdle]. */
+    private val workers = MutableStateFlow(0)
+
     /**
      * Queues [event] of the task [taskId], starting a worker if the task has none. Waits only for the leaf lock, and
      * isn't interrupted by cancellation, so an event that has been persisted is never lost here.
@@ -54,7 +60,10 @@ internal class PushNotificationDispatcher(
             val queue = queues[taskId]
 
             if (queue == null) {
-                ArrayDeque(listOf(event)).also { queues[taskId] = it }
+                ArrayDeque(listOf(event)).also {
+                    queues[taskId] = it
+                    workers.value = queues.size
+                }
             } else {
                 queue.addLast(event)
                 null
@@ -71,6 +80,14 @@ internal class PushNotificationDispatcher(
     /** Returns the number of tasks with a running worker. */
     internal suspend fun activeWorkers(): Int = lock.withLock { queues.size }
 
+    /**
+     * Suspends until no event is pending: every queued event has been sent (or failed), and no worker runs. Events
+     * queued meanwhile are waited for as well, so this may not return while events keep coming.
+     */
+    suspend fun awaitIdle() {
+        workers.first { it == 0 }
+    }
+
     private suspend fun drain(taskId: String, queue: ArrayDeque<TaskEvent>) {
         try {
             while (true) {
@@ -81,6 +98,7 @@ internal class PushNotificationDispatcher(
                 val event = lock.withLock {
                     queue.removeFirstOrNull() ?: run {
                         queues -= taskId
+                        workers.value = queues.size
                         null
                     }
                 } ?: return
@@ -91,7 +109,10 @@ internal class PushNotificationDispatcher(
             // Drops the queue if the worker was cancelled; once removed, the key may belong to a new worker.
             withContext(NonCancellable) {
                 lock.withLock {
-                    if (queues[taskId] === queue) queues -= taskId
+                    if (queues[taskId] === queue) {
+                        queues -= taskId
+                        workers.value = queues.size
+                    }
                 }
             }
         }

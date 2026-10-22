@@ -34,16 +34,23 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.Volatile
+import kotlin.time.Duration
 
 /**
  * Manages the turns ([Turn]s) of tasks and the per-task event streams that connect the agent to every stream of a
@@ -91,12 +98,18 @@ import kotlin.concurrent.Volatile
  *
  * ## Shutdown
  *
+ * [shutdownGracefully] switches the server to [LifecycleState.DRAINING] under the registry lock. That switch is
+ * decisive: [startTurn] checks the state under that lock right before the turn's side effects (saving the inline push
+ * notification config, launching the agent) and counts the turn as admitted there, so no turn is admitted after it, and
+ * the drain waits until the admitted count drops to zero, which then is final. The count includes turns not yet in
+ * [getTurn] (still being started), and a turn leaves it only when its monitor has fully ended. Then the drain waits for
+ * the push queue to be empty, and ends with [shutdown], as does the deadline. [subscribe] streams aren't waited for:
+ * they stay open during the drain and are ended by [shutdown].
+ *
  * [shutdown] switches the server to [LifecycleState.SHUT_DOWN], cancels every turn view and [subscribe] channel with
  * [ServerShutdownException], and then cancels every job launched here. It doesn't take any lock: a [startTurn] that
  * passed its check just before may still start, in the cancelled scope, so its agent never runs, and its view is
- * cancelled too. A state switch made under the registry lock is decisive: [startTurn] checks the state under that lock
- * right before the turn's side effects (saving the inline push notification config, launching the agent), so no turn
- * starts after it.
+ * cancelled too.
  *
  * The channels are cancelled first, without the stream lock, so no delivery waits for a stalled collector any more,
  * not even the non-cancellable delivery of a failed turn's FAILED update. Each channel is registered with
@@ -136,8 +149,8 @@ import kotlin.concurrent.Volatile
  *
  * Push notifications are queued when the event is persisted and sent in the background, holding no lock, so a slow
  * webhook never delays the agent, the streams, or other tasks. The configs are read when an event is sent. Every config
- * receives the events of its task in storage order. Failed sends are logged and not retried, and pending notifications
- * are dropped on [shutdown] or when [coroutineScope] is cancelled.
+ * receives the events of its task in storage order. Failed sends are logged and not retried. [shutdownGracefully] waits
+ * for the pending notifications; they are dropped on [shutdown] or when [coroutineScope] is cancelled.
  *
  * @param coroutineScope The scope in which agent jobs, turn monitoring jobs, and push notification jobs are launched.
  * They run under a child [SupervisorJob] of its job, so a failing agent doesn't cancel the scope or other jobs, even if
@@ -181,22 +194,34 @@ public class TurnManager(
     private val scope: CoroutineScope = CoroutineScope(coroutineScope.coroutineContext + supervisor)
 
     /**
-     * Cancelled by [shutdown], or with [supervisor] when `coroutineScope` is cancelled. Its completion handlers cancel
+     * Cancelled by [shutdown], or with [supervisor] when `coroutineScope` is cancelled; its cancellation is the switch to
+     * [LifecycleState.SHUT_DOWN], see [lifecycleState]. Its completion handlers cancel
      * the open turn views and [subscribe] channels, see [cancelOnShutdown]. The first child of [supervisor], so even a
      * cancellation from outside reaches it before any agent job.
      */
     private val shutdownSignal = Job(supervisor)
 
-    /** Read without a lock; written by [shutdown] without one, see "Shutdown" above. */
+    /** Set by [shutdownGracefully] under the registry lock, read without a lock, see "Shutdown" above. */
     @Volatile
-    private var state = LifecycleState.RUNNING
+    private var isDraining = false
 
     /**
-     * The current lifecycle state. [LifecycleState.SHUT_DOWN] also once `coroutineScope` is cancelled from outside,
-     * since no job can run any more; the streams are then ended as on [shutdown].
+     * The number of turns admitted by [startTurn] whose monitor hasn't ended yet. Incremented under the registry lock
+     * by the check of [startTurn], see "Shutdown" above.
+     */
+    private val admittedTurns = MutableStateFlow(0)
+
+    /**
+     * The current lifecycle state. [LifecycleState.SHUT_DOWN] once [shutdownSignal] is cancelled: by [shutdown], or
+     * once `coroutineScope` is cancelled from outside, since no job can run any more; the streams are then ended as on
+     * [shutdown].
      */
     internal val lifecycleState: LifecycleState
-        get() = if (supervisor.isActive) state else LifecycleState.SHUT_DOWN
+        get() = when {
+            !shutdownSignal.isActive -> LifecycleState.SHUT_DOWN
+            isDraining -> LifecycleState.DRAINING
+            else -> LifecycleState.RUNNING
+        }
 
     private val pushDispatcher: PushNotificationDispatcher? =
         if (pushConfigStorage != null && pushSender != null) {
@@ -217,9 +242,9 @@ public class TurnManager(
     }
 
     /**
-     * Guards [streams] and [turns], and the lifecycle check of [startTurn], see "Shutdown" above. May be acquired while
-     * holding [TaskEventStream.processorGate], but is never held while acquiring a stream lock, which a fan-out may hold
-     * for long.
+     * Guards [streams], [turns], [isDraining], and the lifecycle check of [startTurn], see "Shutdown" above. May be
+     * acquired while holding [TaskEventStream.processorGate], but is never held while acquiring a stream lock, which a
+     * fan-out may hold for long.
      */
     private val registryMutex = Mutex()
     private val streams = mutableMapOf<String, StreamEntry>()
@@ -287,7 +312,8 @@ public class TurnManager(
      * [IdGenerator.generateContextId] (called only then).
      *
      * The turn is rejected, starting nothing, if the server isn't [LifecycleState.RUNNING], checked under the registry
-     * lock after the slot and the gate are acquired, so it also rejects a turn that waited for the previous one.
+     * lock after the slot and the gate are acquired, so it also rejects a turn that waited for the previous one. Once
+     * past that check, the turn is admitted: [shutdownGracefully] waits for it.
      *
      * [inlinePushConfig] is saved to [pushConfigStorage] once the turn is sure to start (after the checks), and before
      * [block] starts, so the turn's first task event is pushed to it. If the turn doesn't start, it isn't saved. If the
@@ -334,6 +360,7 @@ public class TurnManager(
 
         // Held until the turn has ended (released by monitorTurn), or released right away if the turn doesn't start.
         turnSlots.lock(taskId)
+        var admitted = false
         var started = false
 
         try {
@@ -360,7 +387,11 @@ public class TurnManager(
                     shutdownHandle = viewShutdownHandle
 
                     // The decisive check, right before the turn's side effects, see "Shutdown" above.
-                    registryMutex.withLock { lifecycleState.checkAccepting() }
+                    registryMutex.withLock {
+                        lifecycleState.checkAccepting()
+                        admittedTurns.update { it + 1 }
+                        admitted = true
+                    }
 
                     // The view is registered: from here on, the turn starts even if the caller is cancelled.
                     withContext(NonCancellable) {
@@ -387,18 +418,23 @@ public class TurnManager(
                          */
                         @OptIn(DelicateCoroutinesApi::class)
                         val monitor = scope.launch(start = CoroutineStart.ATOMIC) {
-                            monitorTurn(
-                                agentJob,
-                                processor,
-                                outcomeRecorder,
-                                taskId,
-                                contextId,
-                                stream,
-                                viewShutdownHandle,
-                                deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !isFollowUp,
-                            )
+                            try {
+                                monitorTurn(
+                                    agentJob,
+                                    processor,
+                                    outcomeRecorder,
+                                    taskId,
+                                    contextId,
+                                    stream,
+                                    viewShutdownHandle,
+                                    deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !isFollowUp,
+                                )
+                            } finally {
+                                // The turn has fully ended, as for Turn.join().
+                                admittedTurns.update { it - 1 }
+                            }
                         }
-                        // The monitor releases the stream and the slot from here on.
+                        // The monitor releases the stream and the slot, and ends the admission, from here on.
                         started = true
 
                         val turn = Turn(
@@ -427,7 +463,10 @@ public class TurnManager(
                 if (!started) release(stream)
             }
         } finally {
-            if (!started) turnSlots.unlock(taskId)
+            if (!started) {
+                turnSlots.unlock(taskId)
+                if (admitted) admittedTurns.update { it - 1 }
+            }
         }
     }
 
@@ -700,6 +739,54 @@ public class TurnManager(
     }
 
     /**
+     * Shuts down gracefully, waiting at most [gracePeriod]:
+     * 1. switches to [LifecycleState.DRAINING] (unless already shut down), so later turns are rejected (see
+     *    [startTurn]); [subscribe] streams stay open;
+     * 2. waits until every turn admitted before has fully ended (as [Turn.join]), then until no push notification is
+     *    pending;
+     * 3. then, or at the deadline, whichever comes first, shuts down as [shutdown] does, which also ends the
+     *    [subscribe] streams.
+     *
+     * Returns once the server is [LifecycleState.SHUT_DOWN], also when that happens otherwise meanwhile: by [shutdown],
+     * by another call of this function whose deadline comes earlier or whose drain completes, or when `coroutineScope`
+     * is cancelled. So concurrent calls return together, at the earliest deadline at the latest. If the caller is
+     * cancelled while waiting, shuts down at once, then rethrows the [CancellationException]. A non-positive
+     * [gracePeriod] shuts down at once.
+     *
+     * The wait for the push notifications also covers those queued meanwhile, e.g. by a CancelTask; one queued after
+     * the drain completed is dropped by the shutdown.
+     *
+     * @param gracePeriod How long to wait for the running turns and pending push notifications.
+     */
+    public suspend fun shutdownGracefully(gracePeriod: Duration) {
+        try {
+            registryMutex.withLock { isDraining = true }
+
+            withTimeoutOrNull(gracePeriod) {
+                coroutineScope {
+                    val drain = async { awaitDrained() }
+                    select {
+                        drain.onAwait {}
+                        // Shut down meanwhile: the admitted turns may never be counted out, e.g. after the scope's
+                        // cancellation they can still be waiting for storage I/O.
+                        shutdownSignal.onJoin {}
+                    }
+                    drain.cancel()
+                }
+            }
+        } finally {
+            shutdown()
+        }
+    }
+
+    /** Waits for the admitted turns, then for the push notifications, see [shutdownGracefully]. */
+    private suspend fun awaitDrained() {
+        // Final once zero: no turn is admitted while draining.
+        admittedTurns.first { it == 0 }
+        pushDispatcher?.awaitIdle()
+    }
+
+    /**
      * Shuts down immediately, in this order:
      * 1. switches to [LifecycleState.SHUT_DOWN], so later turns are rejected (see [startTurn]);
      * 2. cancels every open [Turn.events] and [subscribe] channel, and every one opened later, with
@@ -708,7 +795,8 @@ public class TurnManager(
      * 3. cancels every agent job, turn monitor, and push notification job, dropping the pending notifications.
      *
      * `coroutineScope` itself isn't cancelled. Running turns end once their cancelled agents stop; their tasks keep
-     * their last persisted state. Cancelling `coroutineScope` from outside does the last two steps as well.
+     * their last persisted state. Cancelling `coroutineScope` from outside does all three steps as well. A running
+     * [shutdownGracefully] returns.
      *
      * Takes no lock and doesn't wait, so it never waits for a stalled task; see "Shutdown" above for what the jobs may
      * still wait for. Idempotent.
@@ -716,8 +804,7 @@ public class TurnManager(
      * @param cause The cause of the cancellation of the jobs.
      */
     public fun shutdown(cause: CancellationException? = null) {
-        state = LifecycleState.SHUT_DOWN
-        // Before the jobs, which may be delivering to the channels.
+        // Switches to SHUT_DOWN, before the jobs are cancelled, which may be delivering to the channels.
         shutdownSignal.cancel()
         supervisor.cancel(cause)
     }

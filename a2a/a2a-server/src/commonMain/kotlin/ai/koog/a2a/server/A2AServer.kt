@@ -70,6 +70,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.transformWhile
 import kotlin.time.Clock
+import kotlin.time.Duration
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -324,9 +325,9 @@ import kotlin.time.Clock
  * @param pushSender Optional push notification sender implementation (defaults to `null`), see [pushConfigStorage].
  * @param idGenerator Generator for new task, context and push notification config IDs (defaults to [UuidIdGenerator])
  * @param coroutineScope Scope for managing all turns, agent jobs, event processing, etc. They run under a child
- * supervisor job of it, so it needn't be a supervisor: a failing agent doesn't cancel it (see [TurnManager]). [cancel]
- * cancels only that child, not the scope. Cancelling the scope from outside stops them all and shuts the server down
- * as [cancel] does.
+ * supervisor job of it, so it needn't be a supervisor: a failing agent doesn't cancel it (see [TurnManager]).
+ * [shutdown] and [cancel] cancel only that child, not the scope. Cancelling the scope from outside stops them all and
+ * shuts the server down as [cancel] does.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -430,7 +431,7 @@ public open class A2AServer(
      *
      * The flow ends after the agent's [Message], after an event with a terminal task state (e.g. the CANCELED of a
      * concurrent CancelTask, even if the agent then fails), or when the turn ends. If the server is shut down before
-     * (see [cancel]), the flow fails with [A2AInternalErrorException] "Server is shut down" instead, and the agent is
+     * (see [shutdown]), the flow fails with [A2AInternalErrorException] "Server is shut down" instead, and the agent is
      * cancelled. Only when the turn ends is the agent's exception rethrown:
      * - an [ai.koog.a2a.exceptions.A2AException] thrown before the agent's first event of the turn is rethrown and
      *   leaves the task unchanged; the task snapshot isn't emitted;
@@ -812,8 +813,8 @@ public open class A2AServer(
     /**
      * Streams the task snapshot followed by its live events until the task reaches a terminal state, see
      * [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
-     * If the server is shut down before (see [cancel]), the stream's last event is the error [A2AInternalErrorException]
-     * "Server is shut down".
+     * If the server is shut down before (see [shutdown]), the stream's last event is the error
+     * [A2AInternalErrorException] "Server is shut down"; during a graceful shutdown the stream stays open until then.
      *
      * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
      * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
@@ -967,7 +968,7 @@ public open class A2AServer(
     /**
      * Checks that the server accepts the operation [method], called first in every [RequestHandler] operation, before
      * any validation and holding no lock. In order:
-     * - **Shutdown.** After [cancel] (or once [coroutineScope] is cancelled), every operation fails with
+     * - **Shutdown.** Once the server is shut down (see [shutdown]), every operation fails with
      *   [A2AInternalErrorException] "Server is shut down". While the server is shutting down, SendMessage,
      *   SendStreamingMessage, and SubscribeToTask fail with [A2AInternalErrorException] "Server is shutting down"; the
      *   other operations are accepted.
@@ -1040,7 +1041,35 @@ public open class A2AServer(
     }
 
     /**
-     * Shuts the server down immediately, without waiting:
+     * Shuts the server down gracefully, waiting at most [gracePeriod] for the work in flight:
+     * 1. From now on, SendMessage, SendStreamingMessage, and SubscribeToTask fail with [A2AInternalErrorException]
+     *    "Server is shutting down", including a message that waits for the running turn of its task; the other
+     *    operations are accepted, see [checkAccepting].
+     * 2. Waits until every running turn ([AgentExecutor.execute] call) has ended, its requester getting its response as
+     *    usual, then until every pending push notification has been sent. Open SubscribeToTask streams stay open and
+     *    receive the events meanwhile; they aren't waited for.
+     * 3. Then, or once [gracePeriod] has passed, whichever comes first, shuts down as [cancel] does: the turns still
+     *    running are cut, the remaining push notifications are dropped, and the open streams end.
+     *
+     * Returns once the server is shut down. Idempotent: concurrent and repeated calls wait for the same shutdown, and
+     * the earliest deadline wins, so a call with a shorter [gracePeriod] shuts down sooner, while a longer one never
+     * delays it. [cancel] (or cancelling [coroutineScope]) shuts down at once, and the waiting calls return. If the
+     * calling coroutine is cancelled while waiting, the server shuts down at once, as by [cancel], before the
+     * [CancellationException] is rethrown.
+     *
+     * An agent that ignores cancellation may keep running after that; what the shutdown itself may still wait for is
+     * described in [cancel].
+     *
+     * @param gracePeriod How long to wait for the running turns and push notifications. [Duration.ZERO] (the default),
+     * or a negative one, shuts down at once, as [cancel] does.
+     */
+    @OptIn(InternalA2AApi::class)
+    public open suspend fun shutdown(gracePeriod: Duration = Duration.ZERO) {
+        turnManager.shutdownGracefully(gracePeriod)
+    }
+
+    /**
+     * Shuts the server down immediately, without waiting, i.e. [shutdown] without a grace period:
      * - every later request fails with [A2AInternalErrorException] "Server is shut down", see [checkAccepting];
      * - every open stream (SendStreamingMessage, SubscribeToTask) that hasn't delivered a terminal state of its task
      *   yet ends with that error as its last event, and every waiting blocking SendMessage fails with it;
@@ -1051,7 +1080,8 @@ public open class A2AServer(
      * server's jobs may still wait for is non-cancellable storage I/O and a running [AgentExecutor.cancel], see
      * [TurnManager].
      *
-     * Cancels only the server's own jobs, not [coroutineScope]. Idempotent. See [TurnManager.shutdown].
+     * Cancels only the server's own jobs, not [coroutineScope]. Idempotent; a waiting [shutdown] returns. See
+     * [TurnManager.shutdown].
      *
      * @param cause Optional cause of the cancellation of the server's jobs.
      */
