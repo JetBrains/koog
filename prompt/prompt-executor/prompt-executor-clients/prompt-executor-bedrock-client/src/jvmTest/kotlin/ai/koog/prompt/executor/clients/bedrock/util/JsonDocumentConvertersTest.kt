@@ -11,6 +11,16 @@ import kotlin.test.assertEquals
 class JsonDocumentConvertersTest {
 
     @Test
+    fun testNumericAndBooleanLookingStringsStayStrings() {
+        for (value in listOf("123", "001", "3.14", "1e3", "true", "false", "null", "1h")) {
+            assertEquals(
+                Document.String(value),
+                JsonDocumentConverters.convertToDocument(JsonPrimitive(value))
+            )
+        }
+    }
+
+    @Test
     fun `test convertToDocument`() {
         /*
          kotlin.Number and therefore Document.Number doesn't have a proper equality check, so their asserts are
