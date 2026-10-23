@@ -7,6 +7,7 @@ import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.bedrock.util.JsonDocumentConverters
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -50,13 +51,18 @@ import aws.sdk.kotlin.services.bedrockruntime.model.MessageStopEvent
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.StopReason
+import aws.sdk.kotlin.services.bedrockruntime.model.ToolConfiguration
+import aws.sdk.kotlin.services.bedrockruntime.model.ToolInputSchema
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.random.Random.Default.nextInt
 import kotlin.random.Random.Default.nextLong
 import kotlin.test.Test
@@ -64,10 +70,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import aws.sdk.kotlin.services.bedrockruntime.model.Message as BedrockMessage
+import aws.sdk.kotlin.services.bedrockruntime.model.Tool as BedrockTool
 
 class BedrockLLMClientTest {
 
@@ -636,6 +644,66 @@ class BedrockLLMClientTest {
 
             val request = requireNotNull(capturedRequest) { "Request should have been captured" }
             assertEquals(null, request.guardrailConfig, "Guardrail config should be null")
+        } finally {
+            client.close()
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun testConverseClientSendsNullableSchemaOnce(streaming: Boolean) = runTest {
+        var requestCount = 0
+        var capturedConfig: ToolConfiguration? = null
+        val mockClient = createMockBedrockClient(
+            onConverse = {
+                requestCount++
+                capturedConfig = it.toolConfig
+                defaultConverseResponse()
+            },
+            onConverseStream = {
+                requestCount++
+                capturedConfig = it.toolConfig
+                defaultConverseStreamResponse()
+            }
+        )
+        val tool = ToolDescriptor(
+            name = "analyze_price_trend",
+            description = "Analyze price trend",
+            optionalParameters = listOf(
+                ToolParameterDescriptor(
+                    "analysisMode",
+                    "Analysis mode",
+                    ToolParameterType.AnyOf(
+                        arrayOf(
+                            ToolParameterDescriptor("", "", ToolParameterType.Null),
+                            ToolParameterDescriptor("", "", ToolParameterType.String)
+                        )
+                    )
+                )
+            )
+        )
+        val client = BedrockLLMClient(mockClient, apiMethod = BedrockAPIMethod.Converse)
+        try {
+            val prompt = Prompt.build("nullable-schema") { user("Analyze XRP-USDT") }
+            if (streaming) {
+                client.executeStreaming(prompt, BedrockModels.AnthropicClaude4Sonnet, listOf(tool)).toList()
+            } else {
+                client.execute(prompt, BedrockModels.AnthropicClaude4Sonnet, listOf(tool))
+            }
+            assertEquals(1, requestCount)
+            val config = assertNotNull(capturedConfig)
+            val spec = assertIs<BedrockTool.ToolSpec>(config.tools.single()).value
+            val schema = assertIs<ToolInputSchema.Json>(spec.inputSchema).value
+            assertEquals(
+                Json.parseToJsonElement(
+                    """{
+                    "type":"object",
+                    "properties":{"analysisMode":{"description":"Analysis mode","type":["string","null"]}},
+                    "required":[]
+                }"""
+                ),
+                JsonDocumentConverters.convertToJsonElement(schema)
+            )
         } finally {
             client.close()
         }
