@@ -318,6 +318,7 @@ internal object BedrockConverseConverters {
             this.outputConfig = params.outputConfig
             this.performanceConfig = params.performanceConfig
             this.promptVariables = params.promptVariables
+            this.requestMetadata = params.requestMetadata
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages
@@ -349,6 +350,7 @@ internal object BedrockConverseConverters {
             this.outputConfig = params.outputConfig
             this.performanceConfig = params.performanceConfig
             this.promptVariables = params.promptVariables
+            this.requestMetadata = params.requestMetadata
             this.toolConfig = params.toolConfig
             this.system = params.system
             this.messages = params.messages

@@ -156,4 +156,18 @@ class JsonDocumentConvertersTest {
             )
         )
     }
+
+    @Test
+    fun testConvertToDocumentKeepsNumericLookingStringsAsStrings() {
+        assertEquals(Document.String("1917"), JsonDocumentConverters.convertToDocument(JsonPrimitive("1917")))
+        assertEquals(Document.String("3.14"), JsonDocumentConverters.convertToDocument(JsonPrimitive("3.14")))
+        assertEquals(Document.String("true"), JsonDocumentConverters.convertToDocument(JsonPrimitive("true")))
+    }
+
+    @Test
+    fun testConvertToDocumentKeepsNonFiniteNumberLiteralsAsStrings() {
+        listOf("Infinity", "-Infinity", "NaN").forEach { literal ->
+            assertEquals(Document.String(literal), JsonDocumentConverters.convertToDocument(JsonPrimitive(literal)))
+        }
+    }
 }
