@@ -37,20 +37,24 @@ public abstract class MissingToolsConversionStrategy(private val format: ToolCal
     public fun convertMessage(message: Message, toolNames: List<String>): Message {
         when (message) {
             is Message.User -> {
-                return message.copy(
-                    parts = message.parts.map { part ->
-                        when (part) {
-                            is MessagePart.Tool.Result -> {
-                                if (part.tool in toolNames) {
-                                    part
-                                } else {
-                                    MessagePart.Text(format.describeToolResult(part))
-                                }
+                if (message.parts.none { it is MessagePart.Tool.Result && it.tool !in toolNames }) return message
+
+                val parts = message.parts.map { part ->
+                    when (part) {
+                        is MessagePart.Tool.Result -> {
+                            if (part.tool in toolNames) {
+                                part
+                            } else {
+                                MessagePart.Text(format.describeToolResult(part))
                             }
-                            else -> part
                         }
+                        else -> part
                     }
-                )
+                }
+                // Providers such as Anthropic require the tool results answering the previous assistant turn
+                // to open the message, so a result converted to text must not end up ahead of one that was kept.
+                val (keptResults, otherParts) = parts.partition { it is MessagePart.Tool.Result }
+                return message.copy(parts = keptResults + otherParts)
             }
             is Message.Assistant -> {
                 return message.copy(
