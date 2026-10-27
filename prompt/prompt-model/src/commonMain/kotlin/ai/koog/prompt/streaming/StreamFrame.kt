@@ -102,7 +102,7 @@ public sealed interface StreamFrame {
      *
      * @property id The ID of the tool call. Can be null for partial frames.
      * @property name The name of the tool being called. Can be null for partial frames.
-     * @property content The complete content/arguments of the tool call..
+     * @property content The complete content/arguments of the tool call.
      */
     @Serializable
     public data class ToolCallComplete(
