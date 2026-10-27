@@ -10,7 +10,10 @@ import ai.koog.prompt.llm.LLModel
  *
  * @property client The Ollama model client to use for embedding text.
  */
-public class LLMEmbedder(private val client: LLMEmbeddingProvider, private val model: LLModel) : Embedder {
+public class LLMEmbedder(
+    private val client: LLMEmbeddingProvider,
+    private val model: LLModel
+) : Embedder {
     /**
      * Embeds the given text using the Ollama model.
      *
@@ -19,6 +22,11 @@ public class LLMEmbedder(private val client: LLMEmbeddingProvider, private val m
      */
     override suspend fun embed(text: String): Vector {
         return Vector(client.embed(text, model))
+    }
+
+    override suspend fun embed(texts: List<String>): List<Vector> {
+        if (texts.isEmpty()) return emptyList()
+        return client.embed(texts, model).map { Vector(it) }
     }
 
     /**

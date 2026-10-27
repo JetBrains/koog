@@ -15,6 +15,17 @@ public interface Embedder {
     public suspend fun embed(text: String): Vector
 
     /**
+     * Embeds the given texts into vector representations.
+     *
+     * The default implementation embeds each text sequentially via [embed]. Implementations backed by a
+     * provider with a native batch endpoint should override this to embed all inputs in a single request efficiently.
+     *
+     * @param texts The texts to embed.
+     * @return The vector representations, one per input, in the same order as [texts].
+     */
+    public suspend fun embed(texts: List<String>): List<Vector> = texts.map { embed(it) }
+
+    /**
      * Calculates the difference between two embeddings.
      * Lower values indicate more similar embeddings.
      *
