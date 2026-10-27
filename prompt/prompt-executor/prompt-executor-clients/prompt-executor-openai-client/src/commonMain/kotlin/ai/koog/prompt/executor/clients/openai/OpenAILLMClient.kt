@@ -451,6 +451,34 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                             )
                         }
 
+                        is OpenAIStreamEvent.ResponseIncomplete -> {
+                            StreamFrame.End(
+                                finishReason = it.response.status.name,
+                                metaInfo = it.response.usage.let { usage ->
+                                    ResponseMetaInfo.create(
+                                        clock = clock,
+                                        totalTokensCount = usage?.totalTokens,
+                                        inputTokensCount = usage?.inputTokens,
+                                        outputTokensCount = usage?.outputTokens
+                                    )
+                                }
+                            )
+                        }
+
+                        is OpenAIStreamEvent.ResponseFailed -> {
+                            StreamFrame.End(
+                                finishReason = it.response.status.name,
+                                metaInfo = it.response.usage.let { usage ->
+                                    ResponseMetaInfo.create(
+                                        clock = clock,
+                                        totalTokensCount = usage?.totalTokens,
+                                        inputTokensCount = usage?.inputTokens,
+                                        outputTokensCount = usage?.outputTokens
+                                    )
+                                }
+                            )
+                        }
+
                         else -> {
                             null
                         }
