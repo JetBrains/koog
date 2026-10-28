@@ -50,7 +50,7 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
                             role = "assistant",
                             content = message.textContent(),
                             thinking = message.parts.filterIsInstance<MessagePart.Reasoning>()
-                                .flatMap { it.content }.takeIf { it.isNotEmpty() }?.joinToString { "\n" },
+                                .flatMap { it.content }.takeIf { it.isNotEmpty() }?.joinToString(separator = "\n"),
                             toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>().map { part ->
                                 OllamaToolCallDTO(
                                     function = OllamaToolCallDTO.Call(
