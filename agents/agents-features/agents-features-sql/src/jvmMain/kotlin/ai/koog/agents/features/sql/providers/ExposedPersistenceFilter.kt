@@ -1,6 +1,6 @@
 package ai.koog.agents.features.sql.providers
 
-import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.v1.jdbc.Query
 
 /**
  * A filter contract for SQL-backed persistence based on JetBrains Exposed.

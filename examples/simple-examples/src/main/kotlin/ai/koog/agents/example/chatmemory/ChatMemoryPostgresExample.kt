@@ -6,7 +6,7 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.chatmemory.sql.PostgresChatHistoryProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 
 /**
  * Demonstrates the ChatMemory feature backed by a PostgreSQL database.

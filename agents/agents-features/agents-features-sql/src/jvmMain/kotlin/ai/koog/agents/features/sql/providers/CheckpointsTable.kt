@@ -1,7 +1,7 @@
 package ai.koog.agents.features.sql.providers
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
 
 /**
  * Exposed table definition for storing agent checkpoints.

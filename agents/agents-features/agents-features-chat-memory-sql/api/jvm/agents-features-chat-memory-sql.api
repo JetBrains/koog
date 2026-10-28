@@ -1,24 +1,24 @@
-public class ai/koog/agents/features/chatmemory/sql/ChatHistoryTable : org/jetbrains/exposed/sql/Table {
+public class ai/koog/agents/features/chatmemory/sql/ChatHistoryTable : org/jetbrains/exposed/v1/core/Table {
 	public fun <init> (Ljava/lang/String;)V
-	public final fun getConversationId ()Lorg/jetbrains/exposed/sql/Column;
-	public final fun getMessagesJson ()Lorg/jetbrains/exposed/sql/Column;
-	public fun getPrimaryKey ()Lorg/jetbrains/exposed/sql/Table$PrimaryKey;
-	public final fun getTtlTimestamp ()Lorg/jetbrains/exposed/sql/Column;
-	public final fun getUpdatedAt ()Lorg/jetbrains/exposed/sql/Column;
+	public final fun getConversationId ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getMessagesJson ()Lorg/jetbrains/exposed/v1/core/Column;
+	public fun getPrimaryKey ()Lorg/jetbrains/exposed/v1/core/Table$PrimaryKey;
+	public final fun getTtlTimestamp ()Lorg/jetbrains/exposed/v1/core/Column;
+	public final fun getUpdatedAt ()Lorg/jetbrains/exposed/v1/core/Column;
 }
 
 public abstract class ai/koog/agents/features/chatmemory/sql/ExposedChatHistoryProvider : ai/koog/agents/features/chatmemory/sql/SQLChatHistoryProvider {
 	public static final field Companion Lai/koog/agents/features/chatmemory/sql/ExposedChatHistoryProvider$Companion;
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun cleanupExpired (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteHistory (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected fun getChatHistoryTable ()Lai/koog/agents/features/chatmemory/sql/ChatHistoryTable;
 	public fun getConversationCount (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	protected final fun getDatabase ()Lorg/jetbrains/exposed/sql/Database;
+	protected final fun getDatabase ()Lorg/jetbrains/exposed/v1/jdbc/Database;
 	public fun load (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun store (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	protected abstract fun transaction (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -30,8 +30,8 @@ public final class ai/koog/agents/features/chatmemory/sql/ExposedChatHistoryProv
 
 public final class ai/koog/agents/features/chatmemory/sql/H2ChatHistoryProvider : ai/koog/agents/features/chatmemory/sql/ExposedChatHistoryProvider {
 	public static final field Companion Lai/koog/agents/features/chatmemory/sql/H2ChatHistoryProvider$Companion;
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun transaction (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -43,17 +43,17 @@ public final class ai/koog/agents/features/chatmemory/sql/H2ChatHistoryProvider$
 }
 
 public final class ai/koog/agents/features/chatmemory/sql/H2ChatHistorySchemaMigrator : ai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;)V
 	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class ai/koog/agents/features/chatmemory/sql/MySQLChatHistoryProvider : ai/koog/agents/features/chatmemory/sql/ExposedChatHistoryProvider {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class ai/koog/agents/features/chatmemory/sql/MySQLChatHistorySchemaMigrator : ai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;)V
 	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -64,18 +64,18 @@ public final class ai/koog/agents/features/chatmemory/sql/NoOpSQLChatHistorySche
 
 public final class ai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider : ai/koog/agents/features/chatmemory/sql/ExposedChatHistoryProvider {
 	public static final field Companion Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Companion;
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
-	public synthetic fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;Ljava/lang/Long;Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun builder ()Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder;
 }
 
 public final class ai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder {
 	public final fun build ()Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider;
-	public final fun database (Lorg/jetbrains/exposed/sql/Database;)Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder;
+	public final fun database (Lorg/jetbrains/exposed/v1/jdbc/Database;)Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder;
 	public final fun json (Lkotlinx/serialization/json/Json;)Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder;
 	public final fun migrator (Lai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator;)Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder;
 	public final fun tableName (Ljava/lang/String;)Lai/koog/agents/features/chatmemory/sql/PostgresChatHistoryProvider$Builder;
@@ -87,7 +87,7 @@ public final class ai/koog/agents/features/chatmemory/sql/PostgresChatHistoryPro
 }
 
 public final class ai/koog/agents/features/chatmemory/sql/PostgresChatHistorySchemaMigrator : ai/koog/agents/features/chatmemory/sql/SQLChatHistorySchemaMigrator {
-	public fun <init> (Lorg/jetbrains/exposed/sql/Database;Ljava/lang/String;)V
+	public fun <init> (Lorg/jetbrains/exposed/v1/jdbc/Database;Ljava/lang/String;)V
 	public fun migrate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

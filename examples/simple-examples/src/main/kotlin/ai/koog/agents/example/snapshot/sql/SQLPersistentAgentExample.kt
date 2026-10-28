@@ -11,7 +11,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.serialization.JSONPrimitive
 import kotlinx.coroutines.runBlocking
 import ai.koog.utils.time.KoogClock
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 
 /**
  * Examples demonstrating SQL-based persistence providers for agent checkpoints.
