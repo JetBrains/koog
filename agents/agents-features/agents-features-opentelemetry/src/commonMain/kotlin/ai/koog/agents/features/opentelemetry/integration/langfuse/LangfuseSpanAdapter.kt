@@ -10,11 +10,14 @@ import ai.koog.agents.features.opentelemetry.span.SpanType
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
@@ -105,6 +108,9 @@ internal class LangfuseSpanAdapter(
                 outputMessagesAttr?.messages?.let { messages ->
                     val entries = JsonArray(messages.filterIsInstance<Message.Assistant>().map(::completionEntry))
                     span.addAttribute(CustomAttribute(COMPLETION_KEY, HiddenString(entries.toString())))
+                    usageDetails(messages.filterIsInstance<Message.Assistant>().firstOrNull()?.metaInfo)?.let { details ->
+                        span.addAttribute(CustomAttribute(USAGE_DETAILS_KEY, details.toString()))
+                    }
                 }
             }
             else -> {}
@@ -144,6 +150,26 @@ internal class LangfuseSpanAdapter(
         }
         val entry = assistantEntry(message)
         return finishReason?.let { reason -> JsonObject(entry + ("finish_reason" to JsonPrimitive(reason))) } ?: entry
+    }
+
+    /**
+     * Builds the Langfuse `usage_details` for a response that reports cached or reasoning tokens in its
+     * metadata. Langfuse prices `input_cached_tokens` and `output_reasoning` apart from `input` and `output`,
+     * and the `langfuse.observation.usage_details` attribute takes precedence over `gen_ai.usage.*`.
+     * Google counts cached tokens inside the prompt token count, so they are subtracted from `input`,
+     * and counts thoughts apart from the candidate tokens. Returns null when neither count is present.
+     */
+    private fun usageDetails(metaInfo: ResponseMetaInfo?): JsonObject? {
+        val metadata = metaInfo?.metadata ?: return null
+        val cached = metadata[CACHED_TOKENS_KEY]?.jsonPrimitive?.intOrNull
+        val reasoning = metadata[REASONING_TOKENS_KEY]?.jsonPrimitive?.intOrNull
+        if (cached == null && reasoning == null) return null
+        return buildJsonObject {
+            metaInfo.inputTokensCount?.let { put("input", it - (cached ?: 0)) }
+            cached?.let { put("input_cached_tokens", it) }
+            metaInfo.outputTokensCount?.let { put("output", it) }
+            reasoning?.let { put("output_reasoning", it) }
+        }
     }
 
     private fun textEntry(role: Message.Role, text: String): JsonObject = buildJsonObject {
@@ -215,5 +241,8 @@ internal class LangfuseSpanAdapter(
     private companion object {
         const val PROMPT_KEY = "gen_ai.prompt"
         const val COMPLETION_KEY = "gen_ai.completion"
+        const val USAGE_DETAILS_KEY = "langfuse.observation.usage_details"
+        const val CACHED_TOKENS_KEY = "cachedContentTokenCount"
+        const val REASONING_TOKENS_KEY = "thoughtsTokenCount"
     }
 }
