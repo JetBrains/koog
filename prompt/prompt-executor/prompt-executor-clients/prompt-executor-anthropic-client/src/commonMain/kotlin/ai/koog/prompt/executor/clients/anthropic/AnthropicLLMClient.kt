@@ -193,17 +193,21 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         return buildStreamFrameFlow {
             var inputTokens: Int? = null
             var outputTokens: Int? = null
+            var cacheReadInputTokensCount: Int? = null
+            var cacheWriteInputTokensCount: Int? = null
 
             fun updateUsage(usage: AnthropicUsage) {
                 inputTokens = usage.inputTokens ?: inputTokens
                 outputTokens = usage.outputTokens ?: outputTokens
+                cacheReadInputTokensCount = usage.cacheReadInputTokens ?: cacheReadInputTokensCount
+                cacheWriteInputTokensCount = usage.cacheCreationInputTokens ?: cacheWriteInputTokensCount
             }
 
-            fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
-                clock = clock,
-                totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
+            fun getMetaInfo(): ResponseMetaInfo = createResponseMetaInfo(
                 inputTokensCount = inputTokens,
                 outputTokensCount = outputTokens,
+                cacheReadInputTokensCount = cacheReadInputTokensCount,
+                cacheWriteInputTokensCount = cacheWriteInputTokensCount,
             )
 
             try {
@@ -661,24 +665,11 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
         }
 
     private fun processAnthropicResponse(response: AnthropicResponse): Message.Assistant {
-        // Extract token count from the response
-        val inputTokensCount = response.usage?.inputTokens
-        val outputTokensCount = response.usage?.outputTokens
-        val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
-        val cacheCreationInputTokens = response.usage?.cacheCreationInputTokens
-        val cacheReadInputTokens = response.usage?.cacheReadInputTokens
-
-        val cacheMetadata = buildJsonObject {
-            cacheCreationInputTokens?.let { put("cacheCreationInputTokens", it) }
-            cacheReadInputTokens?.let { put("cacheReadInputTokens", it) }
-        }.takeIf { it.isNotEmpty() }
-
-        val metaInfo = ResponseMetaInfo.create(
-            clock,
-            totalTokensCount = totalTokensCount,
-            inputTokensCount = inputTokensCount,
-            outputTokensCount = outputTokensCount,
-            metadata = cacheMetadata,
+        val metaInfo = createResponseMetaInfo(
+            inputTokensCount = response.usage?.inputTokens,
+            outputTokensCount = response.usage?.outputTokens,
+            cacheReadInputTokensCount = response.usage?.cacheReadInputTokens,
+            cacheWriteInputTokensCount = response.usage?.cacheCreationInputTokens,
         )
 
         val parts = response.content.map { content ->
@@ -717,6 +708,24 @@ public open class AnthropicLLMClient @JvmOverloads constructor(
             metaInfo = metaInfo
         )
     }
+
+    private fun createResponseMetaInfo(
+        inputTokensCount: Int?,
+        outputTokensCount: Int?,
+        cacheReadInputTokensCount: Int?,
+        cacheWriteInputTokensCount: Int?,
+    ): ResponseMetaInfo = ResponseMetaInfo.create(
+        clock = clock,
+        totalTokensCount = inputTokensCount?.plus(outputTokensCount ?: 0) ?: outputTokensCount,
+        inputTokensCount = inputTokensCount,
+        outputTokensCount = outputTokensCount,
+        cacheReadInputTokensCount = cacheReadInputTokensCount,
+        cacheWriteInputTokensCount = cacheWriteInputTokensCount,
+        metadata = buildJsonObject {
+            cacheWriteInputTokensCount?.let { put("cacheCreationInputTokens", it) }
+            cacheReadInputTokensCount?.let { put("cacheReadInputTokens", it) }
+        }.takeIf { it.isNotEmpty() },
+    )
 
     /**
      * Helper function to get the type map for a parameter type without using smart casting
