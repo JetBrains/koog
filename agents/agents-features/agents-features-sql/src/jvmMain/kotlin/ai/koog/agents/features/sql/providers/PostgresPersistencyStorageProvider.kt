@@ -3,9 +3,9 @@ package ai.koog.agents.features.sql.providers
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * PostgreSQL-specific implementation of [ExposedPersistenceStorageProvider] for managing
