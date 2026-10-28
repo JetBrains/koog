@@ -43,6 +43,27 @@ Welcome to the **Koog Framework Simple Examples** collection! This project showc
 
 ## 📚 Examples
 
+### Parallel Search MCP
+
+Give a Koog agent free web search and page fetching with
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp).
+Anonymous search uses Fast mode, with no Parallel account or API key required.
+The free tier is intended for exploration and light use and has lower rate limits.
+The example uses OpenAI for the agent's model, so it requires `OPENAI_API_KEY`.
+
+From `examples/simple-examples`, run:
+
+```bash
+export OPENAI_API_KEY=your_openai_key
+./gradlew runExampleParallelSearchMcp
+```
+
+The [example](src/main/kotlin/ai/koog/agents/example/mcp/ParallelSearchMcpClient.kt)
+connects to `https://search.parallel.ai/mcp` over Streamable HTTP, discovers
+`web_search` and `web_fetch` through Koog's MCP tool registry, and asks the agent
+to explain Koog's MCP support with source links. It closes the MCP, HTTP and model
+clients after the run and limits the agent to ten iterations and five minutes.
+
 ### Core Examples
 
 | Example                     | Description                                                       | Gradle Task                         | Notebook                                             |

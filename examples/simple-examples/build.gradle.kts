@@ -56,6 +56,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation(libs.ktor.client.mock)
 }
 
 tasks.withType<Test> {
@@ -136,6 +137,7 @@ registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
 registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
+registerRunExampleTask("runExampleParallelSearchMcp", "ai.koog.agents.example.mcp.ParallelSearchMcpClientKt")
 registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
 registerRunExampleTask("runExampleStreamingKtorServer", "ai.koog.agents.example.streaming.StreamingKtorServerKt")
 
