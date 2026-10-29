@@ -8,6 +8,7 @@ public final class ai/koog/prompt/executor/clients/openai/OpenAIChatParams : ai/
 	public static synthetic fun copy$default (Lai/koog/prompt/executor/clients/openai/OpenAIChatParams;Ljava/lang/Double;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lai/koog/prompt/params/LLMParams$Schema;Lai/koog/prompt/params/LLMParams$ToolChoice;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Double;Ljava/lang/Double;Ljava/lang/Boolean;Ljava/lang/String;Ljava/lang/String;Lai/koog/prompt/executor/clients/openai/base/models/ServiceTier;Ljava/lang/Boolean;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig;Ljava/lang/Boolean;Lai/koog/prompt/executor/clients/openai/base/models/ReasoningEffort;Ljava/util/List;Ljava/lang/Integer;Ljava/lang/Double;Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions;ILjava/lang/Object;)Lai/koog/prompt/executor/clients/openai/OpenAIChatParams;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAudio ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIAudioConfig;
+	public final fun getChatTemplateKwargs ()Lkotlinx/serialization/json/JsonObject;
 	public final fun getFrequencyPenalty ()Ljava/lang/Double;
 	public final fun getLogprobs ()Ljava/lang/Boolean;
 	public final fun getParallelToolCalls ()Ljava/lang/Boolean;
@@ -23,6 +24,7 @@ public final class ai/koog/prompt/executor/clients/openai/OpenAIChatParams : ai/
 	public final fun getWebSearchOptions ()Lai/koog/prompt/executor/clients/openai/base/models/OpenAIWebSearchOptions;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+	public final fun withChatTemplateKwargs (Lkotlinx/serialization/json/JsonObject;)Lai/koog/prompt/executor/clients/openai/OpenAIChatParams;
 }
 
 public final class ai/koog/prompt/executor/clients/openai/OpenAIClientFactory {
