@@ -193,6 +193,47 @@ class MissingToolsConversionStrategyTest {
     }
 
     @Test
+    fun testMissingStrategyKeepsPresentToolResultsAheadOfConvertedOnesInParallelCalls() {
+        val testPrompt = prompt("test-prompt") {
+            assistant {
+                toolCall(anotherToolCall)
+                toolCall(testToolCall)
+            }
+            user {
+                toolResult(anotherToolResult)
+                toolResult(testToolResult)
+            }
+        }
+
+        val result = missingStrategy.convertPrompt(testPrompt, listOf(testToolDescriptor))
+
+        val callMsg = assertIs<Message.Assistant>(result.messages[0])
+        assertIs<MessagePart.Text>(callMsg.parts[0])
+        assertEquals("test-tool", assertIs<MessagePart.Tool.Call>(callMsg.parts[1]).tool)
+
+        val resultMsg = assertIs<Message.User>(result.messages[1])
+        assertEquals("test-tool", assertIs<MessagePart.Tool.Result>(resultMsg.parts[0]).tool)
+        assertEquals(
+            "{\"tool_call_id\":\"another-call-id\",\"tool_name\":\"another-tool\",\"tool_result\":\"Another test result content\"}",
+            assertIs<MessagePart.Text>(resultMsg.parts[1]).text,
+        )
+    }
+
+    @Test
+    fun testMissingStrategyLeavesUserMessageOrderAloneWhenNothingIsConverted() {
+        val testPrompt = prompt("test-prompt") {
+            user {
+                text("Answer now")
+                toolResult(testToolResult)
+            }
+        }
+
+        val result = missingStrategy.convertPrompt(testPrompt, listOf(testToolDescriptor))
+
+        assertEquals(testPrompt.messages, result.messages)
+    }
+
+    @Test
     fun testMissingStrategyConvertPromptWithAllToolsPresent() {
         val testPrompt = prompt("test-prompt") {
             user("User message")
