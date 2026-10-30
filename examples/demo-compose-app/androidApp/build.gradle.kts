@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.application)
 }
 
@@ -8,14 +7,14 @@ val javaVersion = libs.versions.javaVersion.get().toInt()
 
 android {
     namespace = "com.jetbrains.example.koog.compose"
-    compileSdk = 36
+    compileSdk = libs.versions.build.android.compileSdk.get().toInt()
 
     buildFeatures.compose = true
 
     defaultConfig {
         applicationId = "com.jetbrains.example.koog.compose"
-        minSdk = 26
-        targetSdk = 36
+        minSdk = libs.versions.build.android.minSdk.get().toInt()
+        targetSdk = libs.versions.build.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
 
