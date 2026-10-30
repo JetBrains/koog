@@ -6,8 +6,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.ResponseMetaInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmName
 
 private val logger = KotlinLogging.logger {}
@@ -105,7 +103,7 @@ public fun Iterable<StreamFrame>.toMessageResponse(): Message.Assistant {
                 MessagePart.Tool.Call(
                     id = frame.id,
                     tool = frame.name,
-                    args = Json.parseToJsonElement(frame.content).jsonObject,
+                    args = frame.content,
                 )
 
             is StreamFrame.End -> {
