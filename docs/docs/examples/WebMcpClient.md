@@ -76,7 +76,7 @@ try {
     
     // Create the agent with MCP tools
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(openAIApiKey),
         systemPrompt = "You are a helpful assistant with access to web scraping and data collection tools from Bright Data. You can help users gather information from websites, analyze web data, and provide insights.",
         llmModel = OpenAIModels.Chat.GPT4o,
         temperature = 0.7,
@@ -174,7 +174,7 @@ fun main() = runBlocking {
         
         // Create the agent with MCP tools
         val agent = AIAgent(
-            executor = simpleOpenAIExecutor(openAIApiKey),
+            promptExecutor = simpleOpenAIExecutor(openAIApiKey),
             systemPrompt = "You are a helpful assistant with access to web scraping and data collection tools from Bright Data. You can help users gather information from websites, analyze web data, and provide insights.",
             llmModel = OpenAIModels.Chat.GPT4o,
             temperature = 0.7,
