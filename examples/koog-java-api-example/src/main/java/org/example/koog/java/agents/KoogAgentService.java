@@ -7,7 +7,7 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext;
 import ai.koog.agents.core.tools.Tool;
 import ai.koog.agents.core.tools.ToolRegistry;
 import ai.koog.agents.features.eventHandler.feature.EventHandler;
-import ai.koog.prompt.dsl.Prompt;
+import ai.koog.prompt.Prompt;
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels;
 import ai.koog.prompt.executor.clients.openai.OpenAIModels;
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor;
@@ -47,6 +47,7 @@ public class KoogAgentService {
     // userId -> set of agentIds (Boolean.TRUE to emulate Kotlin's Unit placeholder)
     private final ConcurrentMap<String, ConcurrentMap<String, Boolean>> agentIdsByUser = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, AIAgent<String, OrderUpdateSummary>> agentsById = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, AIAgentState<OrderUpdateSummary>> statesById = new ConcurrentHashMap<>();
 
     // Lazily initialized Postgres storage created by Kotlin top-level function.
     // Replace the type with the concrete storage interface/class used by Persistence.storage.
@@ -94,14 +95,15 @@ public class KoogAgentService {
                         .build()
                     )
                     .maxAgentIterations(100)
-                    .strategyExecutorService(Executors.newSingleThreadExecutor()) // TODO: use better executor service
-                    .llmRequestExecutorService(Executors.newSingleThreadExecutor()) // TODO: use better executor service
+                    .strategyExecutor(Executors.newSingleThreadExecutor()) // TODO: use better executor service
+                    .llmRequestExecutor(Executors.newSingleThreadExecutor()) // TODO: use better executor service
                     .build()
             )
             .functionalStrategy((AIAgentFunctionalContext context, String userInput) -> {
+                statesById.put(context.getAgentId(), new AIAgentState.Running<>(context));
+
                 var orderRequest = context
                     .subtask("Identify the user's problem. Input: " + userInput + ".")
-                    .withInput(userInput)
                     .withOutput(OrderSupportRequest.class)
                     .withTools(readingTools)
                     .useLLM(OpenAIModels.Chat.GPT4o)
@@ -112,8 +114,7 @@ public class KoogAgentService {
                 }
 
                 var update = context
-                    .subtask("Solve the identified user's problem")
-                    .withInput(orderRequest)
+                    .subtask("Solve the identified user's problem. Input: " + orderRequest + ".")
                     .withOutput(OrderUpdateSummary.class)
                     .withTools(userTools.asTools())
                     .useLLM(AnthropicModels.Sonnet_4)
@@ -121,19 +122,17 @@ public class KoogAgentService {
 
                 while (true) {
                     var verification = context
-                        .subtask("Verify if the initial user's problem was solved")
-                        .withInput(update)
+                        .subtask("Verify if the initial user's problem was solved. Input: " + update + ".")
                         .withVerification()
                         .withTools(readingTools)
                         .useLLM(OpenAIModels.Chat.O3)
                         .run();
 
-                    if (verification.getSuccessful()) {
+                    if (verification.isSuccessful()) {
                         return update;
                     } else {
                         update = context
-                            .subtask("You must resolve the following issues: " + verification.getFeedback())
-                            .withInput(orderRequest)
+                            .subtask("You must resolve the following issues: " + verification.getFeedback() + ". Input: " + orderRequest + ".")
                             .withOutput(OrderUpdateSummary.class)
                             .useLLM(AnthropicModels.Haiku_4_5)
                             .withTools(userTools.asTools())
@@ -166,7 +165,7 @@ public class KoogAgentService {
                     System.out.println("tool called: " + ctx.getToolName());
                 });
                 config.onAgentClosing(ctx -> {
-                    System.out.println("agent finishing: " + ctx.getAgentId());
+                    System.out.println("agent finishing: " + ctx.getAgent().getId());
                 });
             })
             .build();
@@ -176,6 +175,7 @@ public class KoogAgentService {
             .put(agent.getId(), Boolean.TRUE);
 
         agentsById.put(agent.getId(), agent);
+        statesById.put(agent.getId(), new AIAgentState.NotStarted<>());
         return agent;
     }
 
@@ -184,25 +184,24 @@ public class KoogAgentService {
      */
     public String launchSupportAgent(String userId, String question) {
         AIAgent<String, OrderUpdateSummary> agent = createAgent(userId);
+        String agentId = agent.getId();
+        statesById.put(agentId, new AIAgentState.Starting<>());
         parallelExecutor.submit(() -> {
             try {
-                // If agent.run is suspend in Kotlin, wrap it with runBlocking in a small Kotlin helper,
-                // or expose a Java-friendly run method.
-                agent.run(question);
+                statesById.put(agentId, new AIAgentState.Finished<>(agent.run(question)));
             } catch (Throwable t) {
-                // Log the failure as appropriate for your project
+                statesById.put(agentId, new AIAgentState.Failed<>(t));
             }
         });
-        return agent.getId();
+        return agentId;
     }
 
     public AIAgentState<OrderUpdateSummary> getState(String agentId) throws Exception {
-        AIAgent<String, OrderUpdateSummary> agent = agentsById.get(agentId);
-        if (agent == null) {
+        AIAgentState<OrderUpdateSummary> state = statesById.get(agentId);
+        if (state == null) {
             throw new Exception("Agent with id = `" + agentId + "` not found");
         }
-        // If getState is suspend, expose a Java-friendly wrapper or call via runBlocking.
-        return agent.getState();
+        return state;
     }
 
     public List<String> getAgentIds(String userId) {
