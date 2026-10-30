@@ -216,15 +216,7 @@ public suspend fun PromptCache.get(
     clock: KoogClock = KoogClock.System
 ): Message.Assistant? {
     return get(PromptCache.Request.create(prompt, tools))?.let { message ->
-        val metaInfo = prompt
-            .messages
-            .filterIsInstance<Message.Assistant>()
-            .lastOrNull()
-            ?.metaInfo
-            ?.copy(timestamp = clock.now())
-            ?: ResponseMetaInfo.create(clock)
-
-        (message as Message.Assistant).copy(metaInfo = metaInfo)
+        message.copy(metaInfo = message.metaInfo.copy(timestamp = clock.now()))
     }
 }
 
