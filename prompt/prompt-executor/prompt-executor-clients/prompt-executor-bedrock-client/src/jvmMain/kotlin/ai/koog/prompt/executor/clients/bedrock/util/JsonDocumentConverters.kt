@@ -19,6 +19,10 @@ internal object JsonDocumentConverters {
         is JsonNull -> null
 
         is JsonPrimitive -> run {
+            if (element.isString) {
+                return@run Document.String(element.content)
+            }
+
             // Number
             val number = element.longOrNull ?: element.doubleOrNull
             if (number != null) {

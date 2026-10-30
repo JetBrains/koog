@@ -4,19 +4,16 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 internal object BedrockToolSerialization {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        explicitNulls = false
-    }
 
     /**
      * Builds a JSON schema for a tool parameter, including description.
@@ -43,7 +40,13 @@ internal object BedrockToolSerialization {
 
             is ToolParameterType.Enum -> {
                 put("type", "string")
-                putJsonArray("enum") { type.entries.forEach { add(json.parseToJsonElement(it)) } }
+                putJsonArray("enum") {
+                    type.entries.forEach { entry ->
+                        // Accept JSON-encoded strings as well as raw descriptor entries.
+                        val value = if (entry.startsWith('"')) Json.decodeFromString<String>(entry) else entry
+                        add(JsonPrimitive(value))
+                    }
+                }
             }
 
             is ToolParameterType.List -> {
@@ -53,10 +56,18 @@ internal object BedrockToolSerialization {
 
             is ToolParameterType.AnyOf -> {
                 // FIXME this is hack, represent union types properly in ToolDescriptor
-                type.hackRepresentAnyOfWithNullAsTypeUnionWithNull(::buildTypeSchema)
-                    ?: putJsonArray("anyOf") {
+                val nullableSchema = type.hackRepresentAnyOfWithNullAsTypeUnionWithNull(::buildTypeSchema)
+                if (nullableSchema != null) {
+                    nullableSchema.forEach { (key, value) -> put(key, value) }
+                    // A type union alone does not make null a valid enum value.
+                    (nullableSchema["enum"] as? JsonArray)?.let { values ->
+                        put("enum", JsonArray(values + JsonNull))
+                    }
+                } else {
+                    putJsonArray("anyOf") {
                         addAll(type.types.map { buildToolParameterSchema(it) })
                     }
+                }
             }
 
             is ToolParameterType.Object -> {
@@ -64,6 +75,19 @@ internal object BedrockToolSerialization {
                 putJsonObject("properties") {
                     type.properties.forEach { prop ->
                         put(prop.name, buildToolParameterSchema(prop))
+                    }
+                }
+                if (type.requiredProperties.isNotEmpty()) {
+                    putJsonArray("required") {
+                        type.requiredProperties.forEach { add(JsonPrimitive(it)) }
+                    }
+                }
+                type.additionalProperties?.let { allowed ->
+                    val additionalType = type.additionalPropertiesType
+                    if (allowed && additionalType != null) {
+                        put("additionalProperties", buildTypeSchema(additionalType))
+                    } else {
+                        put("additionalProperties", allowed)
                     }
                 }
             }
