@@ -63,7 +63,12 @@ public object GoogleModels : LLModelDefinitions {
      * Multimodal capabilities including vision (without tools)
      */
     private val multimodalCapabilities: List<LLMCapability> =
-        listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio)
+        listOf(
+            LLMCapability.Vision.Image,
+            LLMCapability.Vision.Video,
+            LLMCapability.Audio,
+            LLMCapability.Document
+        )
 
     /**
      * Native structured output capabilities
@@ -86,7 +91,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_0FlashLite001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite-001",
-        capabilities = fullCapabilities,
+        capabilities = fullCapabilities - LLMCapability.Document,
         contextLength = 1_048_576,
         maxOutputTokens = 8_192,
     )
@@ -114,7 +119,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash",
-        capabilities = fullCapabilities + LLMCapability.Thinking,
+        capabilities = fullCapabilities + LLMCapability.Thinking - LLMCapability.Document,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
