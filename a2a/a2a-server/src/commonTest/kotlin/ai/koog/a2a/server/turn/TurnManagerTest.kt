@@ -21,6 +21,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.CONTEXT_ID
+import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.TASK_ID
 import ai.koog.a2a.server.TEST_TIMEOUT
 import ai.koog.a2a.server.ctx
@@ -106,17 +107,21 @@ class TurnManagerTest {
         taskId = taskId,
     ) { _, processor -> block(processor) }
 
-    private fun TestScope.createManager() = TurnManager(
+    /** Back-pressured delivery by default, so a stalled collector holds up its task. */
+    private fun TestScope.createManager(
+        streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Suspend(),
+    ) = TurnManager(
         coroutineScope = backgroundScope,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
         idGenerator = FixedMessageIdGenerator,
+        streamDelivery = streamDelivery,
     )
 
     /**
-     * The events of a turn are delivered with back-pressure, so the requester's view must be consumed for the agent
-     * to make progress.
+     * The events of a turn are delivered with back-pressure by default, so the requester's view must be consumed for
+     * the agent to make progress.
      */
     private fun TestScope.drain(turn: Turn): Deferred<List<Event>> = async { turn.events.toList() }
 

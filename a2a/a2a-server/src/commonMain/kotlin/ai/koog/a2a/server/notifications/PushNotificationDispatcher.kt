@@ -17,6 +17,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+// TODO: the queue is unbounded, so a webhook slower than its task's events only grows memory; consider a per-task bound.
 /**
  * Sends a push notification for every persisted task event to every push notification config of its task.
  *

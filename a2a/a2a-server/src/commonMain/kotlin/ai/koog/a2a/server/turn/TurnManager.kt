@@ -5,6 +5,7 @@ import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
@@ -13,6 +14,7 @@ import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskPushNotificationConfig
+import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationDispatcher
 import ai.koog.a2a.server.notifications.PushNotificationSender
@@ -106,25 +108,30 @@ import kotlin.time.Duration
  * the push queue to be empty, and ends with [shutdown], as does the deadline. [subscribe] streams aren't waited for:
  * they stay open during the drain and are ended by [shutdown].
  *
- * [shutdown] switches the server to [LifecycleState.SHUT_DOWN], cancels every turn view and [subscribe] channel with
+ * [shutdown] switches the server to [LifecycleState.SHUT_DOWN], ends every open turn view and [subscribe] channel with
  * [ServerShutdownException], and then cancels every job launched here. It doesn't take any lock: a [startTurn] that
  * passed its check just before may still start, in the cancelled scope, so its agent never runs, and its view is
- * cancelled too.
+ * ended too. If the drain has completed, the channels are closed, so their readers still get the queued events first;
+ * otherwise (at the deadline, or a direct [shutdown]) they are cancelled, dropping the queued events. A channel ended
+ * by its task stream before (terminal event, end of turn, eviction) keeps its queued events either way.
  *
- * The channels are cancelled first, without the stream lock, so no delivery waits for a stalled collector any more,
+ * The channels are ended first, without the stream lock, so no delivery waits for a stalled collector any more,
  * not even the non-cancellable delivery of a failed turn's FAILED update. Each channel is registered with
  * [shutdownSignal] (a lock-free handler list) when it is opened, and unregistered when it is done. Shutdown is thus
  * bounded, except for non-cancellable storage I/O (persisting an event, saving an inline push notification config) and
  * the [ai.koog.a2a.server.agent.AgentExecutor.cancel] of a running CancelTask, which holds the task's gate: a turn of
  * that task can't end until they return.
  *
- * ## Back-pressure
+ * ## Delivery
  *
- * Delivery is synchronous: the agent's `sendTaskEvent`/`sendMessage` returns only after every stream of the task
- * (the requester's [Turn.events], a blocking SendMessage collector, every [subscribe] flow) has accepted the event.
- * Nothing is buffered or dropped, and no collector is disconnected for being slow. A slow collector therefore slows
- * the agent and the other collectors of that task, and operations needing its stream lock ([subscribe], [startTurn],
- * turn end, [withTaskProcessor] publishing) wait behind it. Other tasks, [getTurn], and [activeTurns] never wait.
+ * The agent's `sendTaskEvent`/`sendMessage` returns once the event is persisted and queued for every stream of the
+ * task (the requester's [Turn.events], every [subscribe] flow), each queued as its [StreamDeliveryConfig] says:
+ * [subscribe] flows and, by default, turn views as [streamDelivery], a turn view as its [startTurn] call says. A full
+ * [StreamDeliveryConfig.Suspend] queue makes the publisher wait for its collector, so a slow collector slows the agent
+ * and the other collectors of that task, and operations needing its stream lock ([subscribe], [startTurn], turn end,
+ * [withTaskProcessor] publishing) wait behind it. A full [StreamDeliveryConfig.Evict] queue is waited for at most its
+ * timeout, then that flow fails with an [A2AInternalErrorException] after its queued events; the turn and the other
+ * flows go on. Other tasks, [getTurn], and [activeTurns] never wait.
  *
  * A cancelled collector (e.g. the client went away) stops being a delivery target immediately: the delivery waiting
  * for it fails, the collector is dropped, and the agent and the other collectors go on.
@@ -165,6 +172,8 @@ import kotlin.time.Duration
  * [ai.koog.a2a.server.A2AServer.failureMessage]. Called by the turn's monitor with no lock held and cancellably, before
  * the turn ends, with the task id, the turn's context id, and the agent's exception. If it throws or is cancelled, the
  * generic message is used. Defaults to the generic message.
+ * @param streamDelivery How events are queued for [subscribe] flows, and for turn views unless [startTurn] says
+ * otherwise, see "Delivery" above. Defaults to [StreamDeliveryConfig.Evict] with its defaults.
  */
 @InternalA2AApi
 public class TurnManager(
@@ -175,6 +184,7 @@ public class TurnManager(
     private val idGenerator: IdGenerator = UuidIdGenerator,
     private val failureMessage: suspend (taskId: String, contextId: String, error: Throwable) -> Message =
         { taskId, contextId, _ -> idGenerator.genericFailureMessage(taskId, contextId) },
+    private val streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
 ) {
     /*
      Design rule: methods take data, not caller callbacks that run under this class's locks (the slot, the gate, the
@@ -195,8 +205,9 @@ public class TurnManager(
 
     /**
      * Cancelled by [shutdown], or with [supervisor] when `coroutineScope` is cancelled; its cancellation is the switch to
-     * [LifecycleState.SHUT_DOWN], see [lifecycleState]. Its completion handlers cancel
-     * the open turn views and [subscribe] channels, see [cancelOnShutdown]. The first child of [supervisor], so even a
+     * [LifecycleState.SHUT_DOWN], see [lifecycleState]. Cancelled with [DrainCompleted] by [shutdownGracefully] once the
+     * drain has completed. Its completion handlers end the open turn views and [subscribe] channels, see
+     * [endOnShutdown]. The first child of [supervisor], so even a
      * cancellation from outside reaches it before any agent job.
      */
     private val shutdownSignal = Job(supervisor)
@@ -334,6 +345,7 @@ public class TurnManager(
      * of the task the turn may create.
      * @param inlinePushConfig The resolved and validated push notification config of the turn's task to save, if any;
      * ignored without [pushConfigStorage].
+     * @param viewDelivery How events are queued for [Turn.events], see "Delivery" above. Defaults to `streamDelivery`.
      * @param block The agent logic of the turn. Receives the continued task, or `null` for a new task, and the
      * processor, whose [TurnEventProcessor.contextId] and [TurnEventProcessor.taskId] are those of the turn.
      * @return The started turn.
@@ -347,6 +359,7 @@ public class TurnManager(
         ctx: ServerCallContext,
         taskId: String,
         inlinePushConfig: TaskPushNotificationConfig? = null,
+        viewDelivery: StreamDeliveryConfig = streamDelivery,
         block: suspend (task: Task?, processor: TurnEventProcessor) -> Unit,
     ): Turn {
         val message = request.message
@@ -381,14 +394,15 @@ public class TurnManager(
                     val task = if (isFollowUp) getFollowUpTask(request, ctx, taskId) else null
                     val contextId = task?.contextId ?: message.contextId ?: idGenerator.generateContextId(message)
 
-                    val channel = stream.openTurnView()
+                    val viewSubscriber = stream.openTurnView(viewDelivery)
+                    val channel = viewSubscriber.events
                     view = channel
-                    val viewShutdownHandle = cancelOnShutdown(channel)
+                    val viewShutdownHandle = endOnShutdown(viewSubscriber)
                     shutdownHandle = viewShutdownHandle
 
                     // The decisive check, right before the turn's side effects, see "Shutdown" above.
                     registryMutex.withLock {
-                        lifecycleState.checkAccepting()
+                        lifecycleState.checkAccepting(message.taskId)
                         admittedTurns.update { it + 1 }
                         admitted = true
                     }
@@ -561,8 +575,7 @@ public class TurnManager(
                         processor.close()
 
                         try {
-                            // A FAILED update waits here for a stalled collector until it goes away or the server shuts
-                            // down, see "Shutdown" above.
+                            // A FAILED update may wait here for a slow collector, see "Delivery" and "Shutdown" above.
                             stream.endTurn(contextId, outcomeRecorder.complete(failure), failureMessage)
                         } finally {
                             // The view is closed: a shutdown can't change how it ends any more.
@@ -620,8 +633,9 @@ public class TurnManager(
      * The first event is the task as returned by [TaskStorage.get] (full history and artifacts), followed by every
      * later event of the task across turns. The snapshot is read and the subscription is registered atomically, so no
      * event is missed or repeated. The flow completes when the task reaches a terminal state. On [shutdown] (also once
-     * `coroutineScope` is cancelled), it fails with [ServerShutdownException] instead, unless it has emitted the
-     * terminal event already.
+     * `coroutineScope` is cancelled), it fails with [ServerShutdownException] instead, unless the terminal event was
+     * delivered to it already. Events are queued for it as `streamDelivery` says; if it is evicted, it fails with an
+     * [A2AInternalErrorException] after the queued events.
      *
      * Other errors are thrown on collection, before the first event.
      *
@@ -635,15 +649,16 @@ public class TurnManager(
         val stream = acquire(request.id)
 
         try {
-            val (snapshot, channel) = stream.subscribe {
+            val (snapshot, subscriber) = stream.subscribe(streamDelivery) {
                 taskStorage.get(GetTaskRequest(id = request.id, tenant = request.tenant), ctx)
             }
-            val shutdownHandle = cancelOnShutdown(channel)
+            val channel = subscriber.events
+            val shutdownHandle = endOnShutdown(subscriber)
 
             try {
                 emit(snapshot)
 
-                // Ends when the channel is closed after a terminal event; fails if it is cancelled on shutdown.
+                // Ends when the channel is closed after a terminal event; fails if it is ended on shutdown or evicted.
                 for (event in channel) {
                     emit(event)
 
@@ -745,7 +760,7 @@ public class TurnManager(
      * 2. waits until every turn admitted before has fully ended (as [Turn.join]), then until no push notification is
      *    pending;
      * 3. then, or at the deadline, whichever comes first, shuts down as [shutdown] does, which also ends the
-     *    [subscribe] streams.
+     *    [subscribe] streams; if the drain has completed, they get their queued events first, see "Shutdown" above.
      *
      * Returns once the server is [LifecycleState.SHUT_DOWN], also when that happens otherwise meanwhile: by [shutdown],
      * by another call of this function whose deadline comes earlier or whose drain completes, or when `coroutineScope`
@@ -762,18 +777,20 @@ public class TurnManager(
         try {
             registryMutex.withLock { isDraining = true }
 
-            withTimeoutOrNull(gracePeriod) {
+            val isDrained = withTimeoutOrNull(gracePeriod) {
                 coroutineScope {
                     val drain = async { awaitDrained() }
                     select {
-                        drain.onAwait {}
+                        drain.onAwait { true }
                         // Shut down meanwhile: the admitted turns may never be counted out, e.g. after the scope's
                         // cancellation they can still be waiting for storage I/O.
-                        shutdownSignal.onJoin {}
-                    }
-                    drain.cancel()
+                        shutdownSignal.onJoin { false }
+                    }.also { drain.cancel() }
                 }
-            }
+            } == true
+
+            // The streams get their queued events; a no-op if shut down meanwhile.
+            if (isDrained) shutdownSignal.cancel(DrainCompleted())
         } finally {
             shutdown()
         }
@@ -789,9 +806,10 @@ public class TurnManager(
     /**
      * Shuts down immediately, in this order:
      * 1. switches to [LifecycleState.SHUT_DOWN], so later turns are rejected (see [startTurn]);
-     * 2. cancels every open [Turn.events] and [subscribe] channel, and every one opened later, with
-     *    [ServerShutdownException], so their flows fail with it (a channel already closed, e.g. at a terminal state,
-     *    still ends normally), and no delivery waits for their collectors any more;
+     * 2. ends every open [Turn.events] and [subscribe] channel, and every one opened later, with
+     *    [ServerShutdownException], so their flows fail with it, dropping their queued events, unless
+     *    [shutdownGracefully] has completed its drain (a channel already closed, e.g. at a terminal state, still
+     *    delivers its queued events and ends as before), and no delivery waits for their collectors any more;
      * 3. cancels every agent job, turn monitor, and push notification job, dropping the pending notifications.
      *
      * `coroutineScope` itself isn't cancelled. Running turns end once their cancelled agents stop; their tasks keep
@@ -810,12 +828,12 @@ public class TurnManager(
     }
 
     /**
-     * Cancels [channel] with [ServerShutdownException] once [shutdownSignal] is cancelled, right away if it already is.
-     * Dispose the returned handle once the channel is closed or cancelled otherwise. Lock-free: the cancellation runs on
-     * the thread that shuts down.
+     * Ends [subscriber] with [TaskEventStream.Subscriber.endOnShutdown] once [shutdownSignal] is cancelled, right away
+     * if it already is. Dispose the returned handle once the subscriber is done otherwise. Lock-free: it runs on the
+     * thread that shuts down.
      */
-    private fun cancelOnShutdown(channel: ReceiveChannel<Event>): DisposableHandle =
-        shutdownSignal.invokeOnCompletion { channel.cancel(ServerShutdownException()) }
+    private fun endOnShutdown(subscriber: TaskEventStream.Subscriber): DisposableHandle =
+        shutdownSignal.invokeOnCompletion { cause -> subscriber.endOnShutdown(isDrained = cause is DrainCompleted) }
 
     /**
      * Returns the running turn of the task, if any. A turn still being started by [startTurn] isn't reported until its
@@ -867,11 +885,29 @@ public class TurnManager(
  * shutdown from their own cancellation (e.g. the client went away).
  */
 internal class ServerShutdownException : CancellationException(SHUT_DOWN_MESSAGE) {
-    /** The error a stream ended by the shutdown fails with, the same as for requests rejected after it. */
-    fun toA2AException(): A2AInternalErrorException = A2AInternalErrorException(SHUT_DOWN_MESSAGE)
+    /**
+     * The error a stream of task [taskId] ended by the shutdown fails with, the same as for requests rejected after
+     * it.
+     */
+    fun toA2AException(taskId: String?): A2AInternalErrorException = shutdownError(SHUT_DOWN_MESSAGE, taskId)
 }
 
+/** The cause [TurnManager.shutdownGracefully] cancels the shutdown signal with once the drain has completed. */
+private class DrainCompleted : CancellationException("The graceful shutdown has completed its drain")
+
 private const val SHUT_DOWN_MESSAGE = "Server is shut down"
+
+/** The [ErrorInfo.reason] of the shutdown errors, see [shutdownError]. */
+internal const val SERVER_SHUTDOWN_REASON = "SERVER_SHUTDOWN"
+
+/**
+ * A shutdown error: "Server is shutting down" or "Server is shut down", with an [ErrorInfo] detail whose metadata holds
+ * [taskId], if known.
+ */
+internal fun shutdownError(message: String, taskId: String?): A2AInternalErrorException = A2AInternalErrorException(
+    message = message,
+    details = listOf(ErrorInfo(reason = SERVER_SHUTDOWN_REASON, metadata = taskId?.let { mapOf("taskId" to it) })),
+)
 
 /**
  * The agent's own [CancellationException], rethrown from the agent job as a failure. It keeps the message of the
@@ -895,13 +931,14 @@ internal enum class LifecycleState {
     /**
      * Throws the shutdown error unless [RUNNING].
      *
+     * @param taskId the task the rejected request refers to, if any, see [shutdownError]
      * @throws A2AInternalErrorException "Server is shutting down" if [DRAINING], "Server is shut down" if [SHUT_DOWN].
      */
-    fun checkAccepting() {
+    fun checkAccepting(taskId: String? = null) {
         when (this) {
             RUNNING -> Unit
-            DRAINING -> throw A2AInternalErrorException("Server is shutting down")
-            SHUT_DOWN -> throw A2AInternalErrorException(SHUT_DOWN_MESSAGE)
+            DRAINING -> throw shutdownError("Server is shutting down", taskId)
+            SHUT_DOWN -> throw shutdownError(SHUT_DOWN_MESSAGE, taskId)
         }
     }
 }

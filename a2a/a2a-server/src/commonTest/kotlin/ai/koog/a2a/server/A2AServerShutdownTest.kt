@@ -68,6 +68,7 @@ class A2AServerShutdownTest {
         pushConfigStorage: PushNotificationConfigStorage,
         pushSender: GatedPushNotificationSender,
         scope: CoroutineScope,
+        streamDelivery: StreamDeliveryConfig,
     ) : A2AServer(
         // Cancellation leaves it to the server to cancel the task.
         agentExecutor = ScriptedAgentExecutor(scripts, cancelHandler = { _, _ -> }),
@@ -78,6 +79,7 @@ class A2AServerShutdownTest {
         pushSender = pushSender,
         idGenerator = FixedIdGenerator(),
         coroutineScope = scope,
+        streamDelivery = streamDelivery,
     ) {
         suspend fun turn(): Turn? = turnManager.getTurn(TASK_ID)
 
@@ -91,7 +93,8 @@ class A2AServerShutdownTest {
         taskStorage: TaskStorage = this@A2AServerShutdownTest.taskStorage,
         pushConfigStorage: PushNotificationConfigStorage = this@A2AServerShutdownTest.pushConfigStorage,
         pushSender: GatedPushNotificationSender = GatedPushNotificationSender(),
-    ) = ObservedServer(scripts, taskStorage, pushConfigStorage, pushSender, scope)
+        streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
+    ) = ObservedServer(scripts, taskStorage, pushConfigStorage, pushSender, scope, streamDelivery)
 
     /** The class and message of the failure of each operation of [server]. */
     private suspend fun failures(server: A2AServer): Map<A2AMethod, Pair<Any, String?>?> {
@@ -259,7 +262,10 @@ class A2AServerShutdownTest {
             artifactChunk("result"),
             statusUpdate(TaskState.TASK_STATE_COMPLETED),
         )
-        val server = createServer(mapOf("finish" to AgentScript { _, processor -> events.forEach { processor.sendTaskEvent(it) } }))
+        val server = createServer(
+            mapOf("finish" to AgentScript { _, processor -> events.forEach { processor.sendTaskEvent(it) } }),
+            streamDelivery = StreamDeliveryConfig.Suspend(),
+        )
         val release = CompletableDeferred<Unit>()
 
         // Gets the terminal event while its delivery to the stalled subscriber is pending, and shuts the server down.
@@ -290,7 +296,8 @@ class A2AServerShutdownTest {
                     processor.sendTaskEvent(task(TaskState.TASK_STATE_WORKING))
                     throw IllegalStateException("Agent crashed")
                 }
-            )
+            ),
+            streamDelivery = StreamDeliveryConfig.Suspend(),
         )
         val release = CompletableDeferred<Unit>()
         // Stalls on the task, so the delivery of the FAILED update, which isn't cancellable, waits for it.

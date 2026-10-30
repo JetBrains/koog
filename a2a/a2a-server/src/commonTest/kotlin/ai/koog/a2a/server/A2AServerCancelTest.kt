@@ -96,6 +96,7 @@ class A2AServerCancelTest {
         cancelHandler: CancelHandler,
         scope: CoroutineScope,
         storage: TaskStorage = cancelReads,
+        streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
     ) = A2AServer(
         agentExecutor = ScriptedAgentExecutor(scripts, cancelHandler),
         agentCard = testAgentCard(AgentCapabilities(streaming = true, pushNotifications = true)),
@@ -104,10 +105,14 @@ class A2AServerCancelTest {
         pushSender = pushSender,
         idGenerator = FixedIdGenerator(messageId = "generated-message-id"),
         coroutineScope = scope,
+        streamDelivery = streamDelivery,
     )
 
-    private fun TestScope.createServer(scripts: Map<String, AgentScript>, cancelHandler: CancelHandler) =
-        newServer(scripts, cancelHandler, backgroundScope)
+    private fun TestScope.createServer(
+        scripts: Map<String, AgentScript>,
+        cancelHandler: CancelHandler,
+        streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
+    ) = newServer(scripts, cancelHandler, backgroundScope, streamDelivery = streamDelivery)
 
     /** Cancels the task, counting its task reads in [cancelReads]. */
     private suspend fun A2AServer.cancelCountingReads(): Task =
@@ -177,7 +182,7 @@ class A2AServerCancelTest {
 
     @Test
     fun testCancelRequestCancelledDuringForcedCanceledFanOutStillEndsSubscribers() = runTest(timeout = TEST_TIMEOUT) {
-        val server = createServer(mapOf("start" to idleScript), doNothingOnCancel)
+        val server = createServer(mapOf("start" to idleScript), doNothingOnCancel, StreamDeliveryConfig.Suspend())
         server.onSendMessage(request("start"), ctx)
         val stored = assertNotNull(taskStorage.get(TASK_ID))
 

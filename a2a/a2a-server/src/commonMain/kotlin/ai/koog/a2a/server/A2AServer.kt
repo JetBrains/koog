@@ -328,6 +328,9 @@ import kotlin.time.Duration
  * supervisor job of it, so it needn't be a supervisor: a failing agent doesn't cancel it (see [TurnManager]).
  * [shutdown] and [cancel] cancel only that child, not the scope. Cancelling the scope from outside stops them all and
  * shuts the server down as [cancel] does.
+ * @param streamDelivery How task events are delivered to SubscribeToTask and SendStreamingMessage streams whose readers
+ * fall behind (defaults to [StreamDeliveryConfig.Evict]: up to 64 queued events per stream, then a stream still full
+ * after 30 seconds is ended with an error). A blocking SendMessage always waits for its in-process collector instead.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -346,6 +349,7 @@ public open class A2AServer(
     protected val pushSender: PushNotificationSender? = null,
     protected val idGenerator: IdGenerator = UuidIdGenerator,
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
+    protected val streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
 ) : RequestHandler {
     private companion object {
         private const val MIN_LIST_TASKS_PAGE_SIZE = 1
@@ -372,6 +376,7 @@ public open class A2AServer(
         pushSender = pushSender,
         idGenerator = idGenerator,
         failureMessage = { taskId, contextId, error -> failureMessage(taskId, contextId, error) },
+        streamDelivery = streamDelivery,
     )
 
     /**
@@ -432,7 +437,9 @@ public open class A2AServer(
      * The flow ends after the agent's [Message], after an event with a terminal task state (e.g. the CANCELED of a
      * concurrent CancelTask, even if the agent then fails), or when the turn ends. If the server is shut down before
      * (see [shutdown]), the flow fails with [A2AInternalErrorException] "Server is shut down" instead, and the agent is
-     * cancelled. Only when the turn ends is the agent's exception rethrown:
+     * cancelled. If its collector falls behind and is evicted (see [StreamDeliveryConfig.Evict]), the flow fails with
+     * an [A2AInternalErrorException] after the queued events, and the turn goes on. Only when the turn ends is the
+     * agent's exception rethrown:
      * - an [ai.koog.a2a.exceptions.A2AException] thrown before the agent's first event of the turn is rethrown and
      *   leaves the task unchanged; the task snapshot isn't emitted;
      * - any other exception is rethrown if the task doesn't exist; otherwise the task is marked failed and the flow
@@ -451,6 +458,8 @@ public open class A2AServer(
      * the turn's first event (without the request's user message, which is persisted later) ahead of the agent's first
      * event, so the stream always begins with the task. If the turn produces no events and the agent doesn't fail, the
      * flow is the snapshot only.
+     * @param viewDelivery How the turn's events are queued for the collector of the flow: [onSendMessage] passes
+     * [StreamDeliveryConfig.Suspend], since it collects in-process and must not be evicted.
      * @return A cold flow of the turn's events; each collection sends the message again.
      */
     @OptIn(InternalA2AApi::class)
@@ -458,6 +467,7 @@ public open class A2AServer(
         request: SendMessageRequest,
         ctx: ServerCallContext,
         includeTaskSnapshot: Boolean = false,
+        viewDelivery: StreamDeliveryConfig = streamDelivery,
     ): Flow<Event> = flow {
         val message = request.message
 
@@ -474,30 +484,30 @@ public open class A2AServer(
          Waits for the previous turn of the task, then validates a referenced task, saves the inline config, registers
          the event view, and starts the agent, so no event is missed. The agent gets the referenced task as read then.
          */
-        val turn = turnManager.startTurn(request, ctx, taskId, inlinePushConfig) { task, eventProcessor ->
+        val turn = turnManager.startTurn(request, ctx, taskId, inlinePushConfig, viewDelivery) { task, eventProcessor ->
             val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
             agentExecutor.execute(requestContext, eventProcessor)
         }
 
-        // The view must not outlive this flow: an uncollected view blocks every delivery to the task.
+        // The view must not outlive this flow: an uncollected view holds up every delivery to the task.
         try {
-            failOnShutdown { emitTurnEvents(turn, includeTaskSnapshot, isNewTask = message.taskId == null) }
+            failOnShutdown(taskId) { emitTurnEvents(turn, includeTaskSnapshot, isNewTask = message.taskId == null) }
         } finally {
             turn.cancelEvents()
         }
     }
 
     /**
-     * Runs [block], which collects a turn view or a subscription, replacing the [ServerShutdownException] it fails with
-     * when the server shuts down with the shutdown error. A collector cancelled itself (e.g. the client went away) stays
-     * cancelled.
+     * Runs [block], which collects a turn view or a subscription of task [taskId], replacing the
+     * [ServerShutdownException] it fails with when the server shuts down with the shutdown error. A collector cancelled
+     * itself (e.g. the client went away) stays cancelled.
      */
-    private suspend inline fun failOnShutdown(block: () -> Unit) {
+    private suspend inline fun failOnShutdown(taskId: String, block: () -> Unit) {
         try {
             block()
         } catch (e: ServerShutdownException) {
             currentCoroutineContext().ensureActive()
-            throw e.toA2AException()
+            throw e.toA2AException(taskId)
         }
     }
 
@@ -623,7 +633,8 @@ public open class A2AServer(
         var lastTaskEvent: TaskEvent? = null
 
         // Reusing streaming logic here, stopping at the event the response is based on.
-        val responseEvent = onSendMessageCommon(request, ctx).firstOrNull { event ->
+        val events = onSendMessageCommon(request, ctx, viewDelivery = StreamDeliveryConfig.Suspend())
+        val responseEvent = events.firstOrNull { event ->
             when (event) {
                 is Message -> true
 
@@ -655,7 +666,9 @@ public open class A2AServer(
      *
      * The stream ends after the agent's [Message], at a terminal task state, or when the turn ends (e.g. at an
      * interrupted state), whichever comes first. If the server is shut down before, its last event is the error
-     * [A2AInternalErrorException] "Server is shut down". A stream of a task begins with the [Task]: for a message to an
+     * [A2AInternalErrorException] "Server is shut down". If the client falls behind and the stream is evicted (see
+     * [streamDelivery]), its last event is an [A2AInternalErrorException] too, while the turn goes on. A stream of a
+     * task begins with the [Task]: for a message to an
      * existing task, the task as stored before the turn's first event is emitted first. The history of that task is
      * limited to
      * [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength].
@@ -815,6 +828,8 @@ public open class A2AServer(
      * [TurnManager.subscribe]. Works whether or not a turn of the task is running, e.g. for a task waiting for input.
      * If the server is shut down before (see [shutdown]), the stream's last event is the error
      * [A2AInternalErrorException] "Server is shut down"; during a graceful shutdown the stream stays open until then.
+     * If the client falls behind and the stream is evicted (see [streamDelivery]), its last event is an
+     * [A2AInternalErrorException] too.
      *
      * Errors are thrown before the first event: [A2AUnsupportedOperationException] if streaming is not supported or
      * the task is in a terminal state, [A2ATaskNotFoundException] if the task doesn't exist.
@@ -827,7 +842,7 @@ public open class A2AServer(
         checkAccepting(A2AMethod.SubscribeToTask, ctx)
         checkStreamingSupport()
 
-        failOnShutdown { emitAll(turnManager.subscribe(request, ctx)) }
+        failOnShutdown(request.id) { emitAll(turnManager.subscribe(request, ctx)) }
     }
 
     /**
@@ -1049,7 +1064,9 @@ public open class A2AServer(
      *    usual, then until every pending push notification has been sent. Open SubscribeToTask streams stay open and
      *    receive the events meanwhile; they aren't waited for.
      * 3. Then, or once [gracePeriod] has passed, whichever comes first, shuts down as [cancel] does: the turns still
-     *    running are cut, the remaining push notifications are dropped, and the open streams end.
+     *    running are cut, the remaining push notifications are dropped, and the open streams end. If everything has
+     *    finished in time, the open streams first deliver the events queued for them (see [streamDelivery]); at the
+     *    deadline, as with [cancel], those are dropped.
      *
      * Returns once the server is shut down. Idempotent: concurrent and repeated calls wait for the same shutdown, and
      * the earliest deadline wins, so a call with a shorter [gracePeriod] shuts down sooner, while a longer one never

@@ -1,8 +1,12 @@
 package ai.koog.a2a.server.turn
 
 import ai.koog.a2a.exceptions.A2AContentTypeNotSupportedException
+import ai.koog.a2a.exceptions.A2AException
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.exceptions.ErrorData
+import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.Artifact
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Task
@@ -12,6 +16,7 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.CONTEXT_ID
+import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.TASK_ID
 import ai.koog.a2a.server.TEST_TIMEOUT
 import ai.koog.a2a.server.agentMessage
@@ -29,10 +34,17 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.toList
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlin.test.BeforeTest
@@ -42,6 +54,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 class TaskEventStreamTest {
@@ -57,11 +71,13 @@ class TaskEventStreamTest {
 
     private fun createStream() = TaskEventStream(taskId, taskStorage, FixedMessageIdGenerator)
 
-    /** Delivery is back-pressured, so a channel must be consumed while events are published. */
+    /** Delivery is back-pressured by default, so a channel must be consumed while events are published. */
     private fun TestScope.collect(channel: ReceiveChannel<Event>): Deferred<List<Event>> = async { channel.toList() }
 
-    private suspend fun TaskEventStream.subscribeToStored(): Pair<Task, ReceiveChannel<Event>> =
-        subscribe { taskStorage.get(taskId) }
+    private suspend fun TaskEventStream.subscribeToStored(
+        delivery: StreamDeliveryConfig = StreamDeliveryConfig.Suspend(),
+    ): Pair<Task, ReceiveChannel<Event>> =
+        subscribe(delivery) { taskStorage.get(taskId) }.let { (task, subscriber) -> task to subscriber.events }
 
     @Test
     fun testSubscribeReturnsSnapshotAndSubsequentEventsUntilTerminal() = runTest(timeout = TEST_TIMEOUT) {
@@ -113,7 +129,7 @@ class TaskEventStreamTest {
         taskStorage.update(inputRequired)
 
         val secondUser = userMessage("user-2", taskId)
-        stream.openTurnView().cancel()
+        stream.openTurnViewChannel().cancel()
 
         // Nothing is persisted until the agent sends an event.
         assertEquals(inputRequired, taskStorage.get(taskId))
@@ -152,7 +168,7 @@ class TaskEventStreamTest {
     fun testPublishedTaskGetsUserMessageAppendedToHistory() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
         val user = userMessage("user-1", taskId)
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
 
         val applied = stream.publish(task(TaskState.TASK_STATE_WORKING), userMessage = user)
         stream.endTurn(contextId, outcome = TurnOutcome.Completed(rejection = null))
@@ -199,7 +215,7 @@ class TaskEventStreamTest {
         val stream = createStream()
         taskStorage.update(task(TaskState.TASK_STATE_WORKING))
 
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
         val subscriber = collect(stream.subscribeToStored().second)
 
         val inputRequired = statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED)
@@ -219,15 +235,15 @@ class TaskEventStreamTest {
     fun testTurnViewOpensOnlyWhenNoOtherTurnViewIsOpen() = runTest(timeout = TEST_TIMEOUT) {
         val stream = createStream()
 
-        val firstView = stream.openTurnView()
-        assertFailsWith<IllegalStateException> { stream.openTurnView() }
+        val firstView = stream.openTurnViewChannel()
+        assertFailsWith<IllegalStateException> { stream.openTurnViewChannel() }
         stream.endTurn(contextId, outcome = TurnOutcome.Completed(rejection = null))
         assertEquals(emptyList(), firstView.toList())
 
         // A view whose consumer has gone away, e.g. of a turn that didn't start, doesn't count.
-        stream.openTurnView().cancel()
+        stream.openTurnViewChannel().cancel()
 
-        val nextView = collect(stream.openTurnView())
+        val nextView = collect(stream.openTurnViewChannel())
         val message = agentMessage("reply")
         stream.publish(message)
         stream.endTurn(contextId, outcome = TurnOutcome.Completed(rejection = null))
@@ -240,7 +256,7 @@ class TaskEventStreamTest {
         val stream = createStream()
         taskStorage.update(task(TaskState.TASK_STATE_WORKING))
 
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
         val subscriber = collect(stream.subscribeToStored().second)
 
         stream.endTurn(contextId, outcome = TurnOutcome.Failed(IllegalStateException("boom")))
@@ -261,7 +277,7 @@ class TaskEventStreamTest {
         val stream = createStream()
         taskStorage.update(task(TaskState.TASK_STATE_WORKING))
 
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
         val subscriber = collect(stream.subscribeToStored().second)
 
         stream.endTurn(contextId, outcome = TurnOutcome.Rejected(InvalidEventException("invalid")))
@@ -282,7 +298,7 @@ class TaskEventStreamTest {
         val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED)
         taskStorage.update(inputRequired)
 
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
         val subscriber = collect(stream.subscribeToStored().second)
 
         stream.endTurn(contextId, outcome = TurnOutcome.RequestError(A2AContentTypeNotSupportedException()))
@@ -304,7 +320,7 @@ class TaskEventStreamTest {
         ).forEach { (stored, outcome) ->
             taskStorage = InMemoryTaskStorage().also { it.update(stored) }
             val stream = createStream()
-            val turnView = stream.openTurnView()
+            val turnView = stream.openTurnViewChannel()
 
             stream.endTurn(contextId, outcome = outcome)
 
@@ -482,5 +498,163 @@ class TaskEventStreamTest {
         stream.publish(completed)
 
         assertEquals(listOf(working, completed), active.await())
+    }
+
+    private val evict = StreamDeliveryConfig.Evict(capacity = 2, timeout = 5.seconds)
+
+    /** What an evicted subscriber fails with, see [StreamDeliveryConfig.Evict]. */
+    private val evicted = Triple(
+        A2AInternalErrorException::class,
+        "Stream closed because the client is not reading events fast enough; resubscribe with SubscribeToTask or " +
+            "call GetTask",
+        listOf<ErrorData>(ErrorInfo(reason = "SLOW_CONSUMER", metadata = mapOf("taskId" to TASK_ID))),
+    )
+
+    private fun Throwable.described() = Triple(this::class, message, (this as? A2AException)?.details)
+
+    /** Receives everything [channel] still delivers: the events and, if it ends with one, the failure. */
+    private suspend fun drainChannel(channel: ReceiveChannel<Event>): Pair<List<Event>, Throwable?> {
+        val received = mutableListOf<Event>()
+        val failure = runCatching { for (event in channel) received += event }.exceptionOrNull()
+        return received to failure
+    }
+
+    @Test
+    fun testEvictedSubscriberGetsQueuedEventsThenErrorWhileOthersGetEverything() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        val updates = List(3) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+
+        val (_, stalled) = stream.subscribeToStored(evict)
+        val active = collect(stream.subscribeToStored(evict).second)
+
+        // Two updates fit into the stalled queue; the third waits for the whole timeout, then evicts it.
+        val start = currentTime
+        updates.forEach { stream.publish(it) }
+        assertEquals(5.seconds.inWholeMilliseconds, currentTime - start)
+
+        // The evicted subscriber no longer holds anybody up.
+        stream.publish(completed)
+        assertEquals(5.seconds.inWholeMilliseconds, currentTime - start)
+
+        assertEquals(updates + completed, active.await())
+        val (received, failure) = drainChannel(stalled)
+        assertEquals(updates.take(2), received)
+        assertEquals(evicted, assertNotNull(failure).described())
+    }
+
+    @Test
+    fun testEvictionDeadlineIsSharedByAllStalledSubscribers() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        val updates = List(3) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val stalled = List(3) { stream.subscribeToStored(evict).second }
+
+        val start = currentTime
+        updates.forEach { stream.publish(it) }
+
+        // One timeout for the event that found all three queues full, not one per subscriber.
+        assertEquals(5.seconds.inWholeMilliseconds, currentTime - start)
+        stalled.forEach { channel ->
+            val (received, failure) = drainChannel(channel)
+            assertEquals(updates.take(2), received)
+            assertEquals(evicted, assertNotNull(failure).described())
+        }
+    }
+
+    @Test
+    fun testTerminalEventWaitsForFullQueueLikeAnyOtherAndThenEvicts() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        val updates = List(2) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+
+        val (_, stalled) = stream.subscribeToStored(evict)
+        val active = collect(stream.subscribeToStored(evict).second)
+
+        val start = currentTime
+        (updates + completed).forEach { stream.publish(it) }
+
+        assertEquals(5.seconds.inWholeMilliseconds, currentTime - start)
+        assertEquals(completed.status, assertNotNull(taskStorage.get(taskId)).status)
+        assertEquals(updates + completed, active.await())
+        val (received, failure) = drainChannel(stalled)
+        assertEquals(updates, received)
+        assertEquals(evicted, assertNotNull(failure).described())
+    }
+
+    @Test
+    fun testEvictWithoutQueueWaitsForSlowReaderAndEvictsStalledOne() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        val updates = List(3) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val noQueue = StreamDeliveryConfig.Evict(capacity = 0, timeout = 5.seconds)
+
+        // Slower than the publisher, but within the timeout.
+        val (_, slowChannel) = stream.subscribeToStored(noQueue)
+        val slow = async { slowChannel.consumeAsFlow().onEach { delay(1.seconds) }.toList() }
+        // Takes the first event and then stops reading.
+        val (_, stalled) = stream.subscribeToStored(noQueue)
+        val stalledFirst = async { stalled.receive() }
+        runCurrent()
+
+        val start = currentTime
+        updates.forEach { stream.publish(it) }
+        stream.publish(statusUpdate(TaskState.TASK_STATE_COMPLETED))
+
+        // The second update waits the whole timeout for the stalled reader; the slow one only delays the others.
+        assertEquals(updates[0], stalledFirst.await())
+        val (received, failure) = drainChannel(stalled)
+        assertEquals(emptyList(), received)
+        assertEquals(evicted, assertNotNull(failure).described())
+        assertEquals(updates + statusUpdate(TaskState.TASK_STATE_COMPLETED), slow.await())
+        assertEquals(7.seconds.inWholeMilliseconds, currentTime - start)
+    }
+
+    @Test
+    fun testSuspendWithQueueBuffersAndThenWaitsWithoutDropping() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        val updates = List(3) { statusUpdate(TaskState.TASK_STATE_WORKING, "step-$it") }
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+        val (_, channel) = stream.subscribeToStored(StreamDeliveryConfig.Suspend(capacity = 2))
+
+        // Two updates fit into the queue; the third waits for the reader however long it takes.
+        val publisher = launch { (updates + completed).forEach { stream.publish(it) } }
+        advanceTimeBy(1.hours)
+        runCurrent()
+        assertTrue(publisher.isActive)
+        assertEquals(updates[2].status, assertNotNull(taskStorage.get(taskId)).status)
+
+        assertEquals(updates + completed, channel.toList())
+        publisher.join()
+    }
+
+    @Test
+    fun testShutdownDropsQueuedEventsOnlyOfOpenSubscribersUnlessDrained() = runTest(timeout = TEST_TIMEOUT) {
+        val stream = createStream()
+        taskStorage.update(task(TaskState.TASK_STATE_WORKING))
+        val queue = StreamDeliveryConfig.Evict(capacity = 4)
+        val working = statusUpdate(TaskState.TASK_STATE_WORKING)
+        val completed = statusUpdate(TaskState.TASK_STATE_COMPLETED)
+
+        val (_, dropped) = stream.subscribe(queue) { taskStorage.get(taskId) }
+        val (_, drained) = stream.subscribe(queue) { taskStorage.get(taskId) }
+        stream.publish(working)
+        dropped.endOnShutdown(isDrained = false)
+        drained.endOnShutdown(isDrained = true)
+
+        // Already ended by the stream at the terminal event: the shutdown doesn't drop its queued terminal event.
+        val (_, closed) = stream.subscribe(queue) { taskStorage.get(taskId) }
+        stream.publish(completed)
+        closed.endOnShutdown(isDrained = false)
+
+        val shutDown = ServerShutdownException::class to "Server is shut down"
+        val (droppedEvents, droppedFailure) = drainChannel(dropped.events)
+        assertEquals(emptyList<Event>() to shutDown, droppedEvents to assertNotNull(droppedFailure).let { it::class to it.message })
+        val (drainedEvents, drainedFailure) = drainChannel(drained.events)
+        assertEquals(listOf<Event>(working) to shutDown, drainedEvents to assertNotNull(drainedFailure).let { it::class to it.message })
+        assertEquals(listOf<Event>(completed) to null, drainChannel(closed.events))
     }
 }

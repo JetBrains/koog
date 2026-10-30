@@ -1,7 +1,9 @@
 package ai.koog.a2a.server.turn
 
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
+import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
@@ -11,6 +13,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.tasks.plusIfAbsent
@@ -18,14 +21,21 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ChannelResult
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 
 /**
@@ -41,16 +51,25 @@ import kotlin.time.Clock
  * - [subscribe] reads the snapshot and registers the subscriber atomically, so a subscriber neither misses nor
  *   duplicates an event that is persisted concurrently.
  *
- * Delivery is back-pressured: every subscriber has its own rendezvous channel, and the fan-out suspends, still under
- * the stream lock, until each subscriber has accepted the event. A slow subscriber therefore slows the publisher, the
- * other subscribers, and any operation waiting for the stream lock ([subscribe], [openTurnView], [endTurn], other
- * publishers); no event is dropped and no subscriber is evicted.
+ * ## Delivery
+ *
+ * Every subscriber has its own queue, sized and handled as its [StreamDeliveryConfig] says, and the fan-out runs
+ * under the stream lock: it returns once the event is in every addressed queue, so it may wait for slow readers.
+ * Queues with room take the event without suspending. A full [StreamDeliveryConfig.Suspend] queue is waited for, so
+ * its slow reader slows the publisher, the other subscribers, and any operation waiting for the stream lock
+ * ([subscribe], [openTurnView], [endTurn], other publishers). Full [StreamDeliveryConfig.Evict] queues are waited for
+ * together, each at most its timeout, and those still full then are evicted: closed with [slowConsumerError] after
+ * their queued events, and removed. Closing keeps the queued events, so the in-band end-of-turn marker and the close
+ * at a terminal event still come after every event before them.
  *
  * A subscriber whose consumer has gone away must cancel its channel (see [unsubscribe]); on shutdown, [TurnManager]
- * cancels every channel. Cancelling doesn't need the stream lock, so it works even while the fan-out is suspended on
- * that subscriber: the pending delivery fails and the fan-out drops the subscriber and goes on. If the publisher itself
- * is cancelled mid-fan-out, the event is already persisted but the subscribers not reached yet don't receive it. A
- * terminal event still closes every subscriber, so none of them waits for an event that will never come.
+ * ends every subscriber with [Subscriber.endOnShutdown]. Neither needs the stream lock, so they work even while the
+ * fan-out waits for that subscriber: the pending delivery fails and the fan-out drops the subscriber and goes on. If
+ * the publisher itself is cancelled mid-fan-out, the event is already persisted but the subscribers not reached yet
+ * don't receive it. A terminal event still closes every subscriber, so none of them waits for an event that will never
+ * come.
+ *
+ * ## Push notifications
  *
  * Every persisted [TaskEvent] is passed to [onPersisted] right after it is stored, before the fan-out and still under
  * the stream lock, so its calls follow the storage order. Storing and reporting an event isn't interrupted by the
@@ -92,10 +111,65 @@ internal class TaskEventStream(
         private val logger = KotlinLogging.logger {}
     }
 
-    private class Subscriber(
-        val channel: Channel<Event>,
-        val isTurnView: Boolean,
-    )
+    /**
+     * A task subscriber or the turn view, reading the events delivered to it from [events].
+     *
+     * It is ended once, by whichever comes first: the task stream ([close]: at a terminal event, at the end of the
+     * turn, or on eviction), which keeps the queued events, or the shutdown ([endOnShutdown]). So a shutdown never
+     * drops the queued events of a subscriber that was ended before, e.g. a buffered terminal event. Its consumer may
+     * cancel [events] at any time.
+     *
+     * @property delivery how events are queued for it
+     * @property isTurnView whether it is the turn view
+     */
+    @OptIn(ExperimentalAtomicApi::class)
+    internal class Subscriber(val delivery: StreamDeliveryConfig, val isTurnView: Boolean) {
+        private val channel = Channel<Event>(delivery.capacity)
+
+        private val isEnded = AtomicBoolean(false)
+
+        /** The events delivered to this subscriber. */
+        val events: ReceiveChannel<Event> get() = channel
+
+        /** Whether nothing can be delivered any more, e.g. its consumer has cancelled [events]. */
+        @OptIn(DelicateCoroutinesApi::class)
+        val isClosed: Boolean get() = channel.isClosedForSend
+
+        /** Ends the delivery: [events] yields the queued events, then completes, or fails with [cause] if set. */
+        fun close(cause: Throwable? = null) {
+            if (isEnded.compareAndSet(expectedValue = false, newValue = true)) channel.close(cause)
+        }
+
+        /**
+         * Ends the subscriber with [ServerShutdownException], unless it has been ended already: after its queued
+         * events if [isDrained], else at once, dropping them, so no delivery waits for its reader any more. Lock-free.
+         */
+        fun endOnShutdown(isDrained: Boolean) {
+            if (isEnded.compareAndSet(expectedValue = false, newValue = true)) {
+                if (isDrained) channel.close(ServerShutdownException()) else channel.cancel(ServerShutdownException())
+            }
+        }
+
+        fun trySend(event: Event): ChannelResult<Unit> = channel.trySend(event)
+
+        /**
+         * Suspends until the consumer accepts [event].
+         *
+         * @return `false` if the channel is closed or cancelled, i.e. nobody will ever receive from it
+         * @throws CancellationException if the calling coroutine is cancelled
+         */
+        suspend fun deliver(event: Event): Boolean = try {
+            channel.send(event)
+            true
+        } catch (e: CancellationException) {
+            // A channel cancelled by its consumer also fails send() with a CancellationException: tell it apart from
+            // the publisher's own cancellation.
+            currentCoroutineContext().ensureActive()
+            false
+        } catch (e: ClosedSendChannelException) {
+            false
+        }
+    }
 
     /** The stream lock: guards [taskStorage] writes for this task, fan-out, and [subscribers]. */
     private val mutex = Mutex()
@@ -112,12 +186,16 @@ internal class TaskEventStream(
     /**
      * Atomically reads the current task with [lookup] and registers a task subscriber.
      *
+     * @param delivery how events are queued for the subscriber
      * @param lookup reads the current task from the storage; called under the stream lock
-     * @return the snapshot and the channel delivering every subsequent event of the task
+     * @return the snapshot and the subscriber receiving every subsequent event of the task
      * @throws A2ATaskNotFoundException if [lookup] returns `null`
      * @throws A2AUnsupportedOperationException if the task is in a terminal state
      */
-    suspend fun subscribe(lookup: suspend () -> Task?): Pair<Task, ReceiveChannel<Event>> = mutex.withLock {
+    suspend fun subscribe(
+        delivery: StreamDeliveryConfig,
+        lookup: suspend () -> Task?,
+    ): Pair<Task, Subscriber> = mutex.withLock {
         val task = lookup() ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
 
         if (task.status.state.terminal) {
@@ -126,15 +204,17 @@ internal class TaskEventStream(
             )
         }
 
-        task to register(isTurnView = false)
+        task to register(delivery, isTurnView = false)
     }
 
     /**
      * Registers the turn view. Must be called before the turn publishes its first event, and after the previous turn
      * of the task has ended.
+     *
+     * @param delivery how events are queued for the view
      */
-    suspend fun openTurnView(): ReceiveChannel<Event> = mutex.withLock {
-        register(isTurnView = true)
+    suspend fun openTurnView(delivery: StreamDeliveryConfig): Subscriber = mutex.withLock {
+        register(delivery, isTurnView = true)
     }
 
     /**
@@ -154,8 +234,8 @@ internal class TaskEventStream(
      * history, unless it has it already. A [TaskEvent] other than a [Task] is preceded, if [followUpMessage] is set, by
      * persisting [followUpMessage] into the stored task, see "History" above.
      *
-     * Returns once the event is persisted and every addressed subscriber has accepted it, however long a slow
-     * subscriber takes.
+     * Returns once the event is persisted and queued for every addressed subscriber, or that subscriber is evicted, see
+     * "Delivery" above.
      *
      * @param event the event to publish
      * @param userMessage the message of the request that started the turn, if the task is created by this turn
@@ -275,60 +355,98 @@ internal class TaskEventStream(
 
     private fun closeTurnView() {
         subscribers.removeAll { subscriber ->
-            subscriber.isTurnView.also { if (it) subscriber.channel.close() }
+            subscriber.isTurnView.also { if (it) subscriber.close() }
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun register(isTurnView: Boolean): ReceiveChannel<Event> {
+    private fun register(delivery: StreamDeliveryConfig, isTurnView: Boolean): Subscriber {
         // Drop subscribers whose consumers have gone away.
-        subscribers.removeAll { it.channel.isClosedForSend }
+        subscribers.removeAll { it.isClosed }
 
         check(!isTurnView || subscribers.none { it.isTurnView }) { "Task '$taskId' already has a turn view" }
 
-        val channel = Channel<Event>(Channel.RENDEZVOUS)
-        subscribers += Subscriber(channel, isTurnView)
-        return channel
+        return Subscriber(delivery, isTurnView).also { subscribers += it }
     }
 
+    /**
+     * Delivers [event] to the subscribers matching [filter], see "Delivery" above. Every subscriber gets at most this
+     * event in flight, so each one receives the events in publication order.
+     */
     private suspend fun fanOut(event: Event, filter: (Subscriber) -> Boolean) {
+        val full = mutableListOf<Subscriber>()
         val iterator = subscribers.iterator()
 
         while (iterator.hasNext()) {
             val subscriber = iterator.next()
             if (!filter(subscriber)) continue
 
-            if (!subscriber.channel.deliver(event)) {
-                // The consumer has gone away, e.g. its collector was cancelled.
-                iterator.remove()
+            val isOpen = when (subscriber.delivery) {
+                is StreamDeliveryConfig.Suspend -> subscriber.deliver(event)
+
+                is StreamDeliveryConfig.Evict -> {
+                    val result = subscriber.trySend(event)
+                    if (!result.isSuccess && !result.isClosed) full += subscriber
+                    !result.isClosed
+                }
+            }
+
+            // The consumer has gone away, e.g. its collector was cancelled.
+            if (!isOpen) iterator.remove()
+        }
+
+        if (full.isNotEmpty()) awaitOrEvict(event, full)
+    }
+
+    /**
+     * Waits for the full queues of [full] concurrently, so the deadline is shared: publishing [event] waits at most
+     * the longest timeout among them, not their sum. Those still full at their deadline are evicted.
+     */
+    private suspend fun awaitOrEvict(event: Event, full: List<Subscriber>) {
+        val timeouts = full.map { (it.delivery as StreamDeliveryConfig.Evict).timeout }
+        val results = coroutineScope {
+            full.zip(timeouts) { subscriber, timeout ->
+                async { withTimeoutOrNull(timeout) { subscriber.deliver(event) } }
+            }.awaitAll()
+        }
+
+        full.indices.forEach { index ->
+            val subscriber = full[index]
+            when (results[index]) {
+                true -> Unit
+
+                false -> subscribers.remove(subscriber)
+
+                null -> {
+                    logger.warn {
+                        "Evicting a stream of taskId='$taskId': its reader hasn't taken an event for ${timeouts[index]} " +
+                            "with ${subscriber.delivery.capacity} events queued"
+                    }
+                    subscriber.close(slowConsumerError(taskId))
+                    subscribers.remove(subscriber)
+                }
             }
         }
     }
 
-    /**
-     * Suspends until the consumer accepts [event].
-     *
-     * @return `false` if the channel is closed or cancelled, i.e. nobody will ever receive from it
-     * @throws CancellationException if the calling coroutine is cancelled
-     */
-    private suspend fun Channel<Event>.deliver(event: Event): Boolean = try {
-        send(event)
-        true
-    } catch (e: CancellationException) {
-        // A channel cancelled by its consumer also fails send() with a CancellationException: tell it apart from
-        // the publisher's own cancellation.
-        currentCoroutineContext().ensureActive()
-        false
-    } catch (e: ClosedSendChannelException) {
-        false
-    }
-
     /** Doesn't suspend, so it is safe in a `finally` of a cancelled publisher. */
     private fun closeAll() {
-        subscribers.forEach { it.channel.close() }
+        subscribers.forEach { it.close() }
         subscribers.clear()
     }
 }
+
+/**
+ * The error an evicted subscriber fails with after its queued events, see [StreamDeliveryConfig.Evict]. Not a
+ * [CancellationException], so the transport sends it to the client as the stream's last event.
+ */
+internal fun slowConsumerError(taskId: String): A2AInternalErrorException = A2AInternalErrorException(
+    message = "Stream closed because the client is not reading events fast enough; resubscribe with SubscribeToTask " +
+        "or call GetTask",
+    details = listOf(ErrorInfo(reason = SLOW_CONSUMER_REASON, metadata = mapOf("taskId" to taskId))),
+)
+
+/** The [ErrorInfo.reason] of [slowConsumerError]. */
+internal const val SLOW_CONSUMER_REASON = "SLOW_CONSUMER"
 
 /**
  * The status message of a task marked failed by the server when no custom one is given. Deliberately generic:

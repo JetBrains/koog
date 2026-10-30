@@ -6,6 +6,7 @@ import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.CONTEXT_ID
+import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.TASK_ID
 import ai.koog.a2a.server.TEST_TIMEOUT
 import ai.koog.a2a.server.exceptions.InvalidEventException
@@ -99,7 +100,7 @@ class TurnEventProcessorTest {
         val task = task()
 
         // Register the turn view before sending
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
 
         processor.sendTaskEvent(task)
 
@@ -132,7 +133,7 @@ class TurnEventProcessorTest {
         taskStorage.update(existingTask)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
 
         assertFailsWith<InvalidEventException> {
             processor.sendMessage(userMessage("Hello", messageId = "msg-1"))
@@ -152,7 +153,7 @@ class TurnEventProcessorTest {
         taskStorage.update(existingTask)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
 
         // Even a terminal Task is not applied, and doesn't close the processor.
         processor.sendTaskEvent(task(TaskState.TASK_STATE_COMPLETED))
@@ -174,7 +175,7 @@ class TurnEventProcessorTest {
             stream = stream,
             userMessage = userMessage,
         )
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
 
         processor.sendTaskEvent(task())
 
@@ -266,8 +267,8 @@ class TurnEventProcessorTest {
         val processor = createProcessor(contextId, taskId)
         val message = userMessage("Hello", messageId = "msg-1")
 
-        val turnView = collect(stream.openTurnView())
-        val (_, taskSubscriber) = stream.subscribe { taskStorage.get(taskId) }
+        val turnView = collect(stream.openTurnViewChannel())
+        val taskSubscriber = stream.subscribe(StreamDeliveryConfig.Suspend()) { taskStorage.get(taskId) }.second.events
 
         processor.sendMessage(message)
 
@@ -283,7 +284,7 @@ class TurnEventProcessorTest {
             val message1 = userMessage("Hello", messageId = "msg-1")
             val message2 = userMessage("World", messageId = "msg-2")
 
-            val turnView = collect(stream.openTurnView())
+            val turnView = collect(stream.openTurnViewChannel())
 
             // Send first message
             processor.sendMessage(message1)
@@ -302,7 +303,7 @@ class TurnEventProcessorTest {
     fun testClosedProcessorSendTaskEventFailsAndEventStreamIsEmpty() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
         val task = task()
-        val turnView = collect(stream.openTurnView())
+        val turnView = collect(stream.openTurnViewChannel())
 
         // Send first task event
         processor.sendTaskEvent(task)

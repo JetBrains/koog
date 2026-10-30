@@ -57,10 +57,12 @@ public class Turn internal constructor(
      * events published by a concurrent cancellation), plus the agent's [ai.koog.a2a.model.Message] reply, if any.
      * Completes when the turn ends or the task reaches a terminal state, whichever comes first. If the server is shut
      * down before, it fails instead with [ServerShutdownException], a [CancellationException], see
-     * [TurnManager.shutdown].
+     * [TurnManager.shutdown]. If it is evicted for falling behind, it fails with an
+     * [ai.koog.a2a.exceptions.A2AInternalErrorException] after the queued events, while the turn goes on.
      *
-     * Delivery is back-pressured, so the flow must be collected (and collection cancelled when the consumer goes
-     * away), see [TurnManager]. No event of the turn is lost, but it can be collected **only once**.
+     * Events are queued for it as its [TurnManager.startTurn] call says, and a full queue holds up the agent, so the
+     * flow must be collected (and collection cancelled when the consumer goes away), see [TurnManager]. It can be
+     * collected **only once**.
      */
     public val events: Flow<Event> = view.consumeAsFlow()
 

@@ -1,10 +1,13 @@
 package ai.koog.a2a.server.turn
 
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.StreamDeliveryConfig
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlin.time.Instant
 
 internal object FixedMessageIdGenerator : IdGenerator {
@@ -27,3 +30,8 @@ internal fun failedStatus(taskId: String, contextId: String, timestamp: Instant?
     ),
     timestamp = timestamp,
 )
+
+/** Opens the turn view and returns its channel; back-pressured (rendezvous) unless [delivery] says otherwise. */
+internal suspend fun TaskEventStream.openTurnViewChannel(
+    delivery: StreamDeliveryConfig = StreamDeliveryConfig.Suspend(),
+): ReceiveChannel<Event> = openTurnView(delivery).events

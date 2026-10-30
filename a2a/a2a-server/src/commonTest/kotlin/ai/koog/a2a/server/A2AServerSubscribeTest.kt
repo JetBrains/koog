@@ -54,12 +54,14 @@ class A2AServerSubscribeTest {
     private fun TestScope.createServer(
         scripts: Map<String, AgentScript>,
         scope: CoroutineScope = backgroundScope,
+        streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
     ): A2AServer = A2AServer(
         agentExecutor = ScriptedAgentExecutor(scripts),
         agentCard = testAgentCard(AgentCapabilities(streaming = true)),
         taskStorage = taskStorage,
         idGenerator = FixedIdGenerator(messageId = FAILURE_MESSAGE_ID),
         coroutineScope = scope,
+        streamDelivery = streamDelivery,
     )
 
     /** Creates the task and leaves it waiting for input; the turn ends. */
@@ -288,7 +290,10 @@ class A2AServerSubscribeTest {
             }
             processor.sendTaskEvent(completed)
         }
-        val server = createServer(mapOf("start" to startScript, "many" to manyScript))
+        val server = createServer(
+            mapOf("start" to startScript, "many" to manyScript),
+            streamDelivery = StreamDeliveryConfig.Suspend(),
+        )
         val stored = server.startIdleTask()
 
         val releaseSlow = CompletableDeferred<Unit>()
