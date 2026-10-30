@@ -104,6 +104,8 @@ import kotlinx.io.files.Path as KtPath
 
 abstract class ExecutorIntegrationTestBase {
     private val testScope = TestScope()
+
+    private val constrainedLimit = 16
     private val basicLimit = 256
     private val extendedLimit = 512
     private val reasoningLimit = 10000
@@ -159,32 +161,40 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    private fun createNoReasoningParams(model: LLModel): LLMParams = when (model.provider) {
-        is AnthropicLLMProvider -> AnthropicParams(
-            thinking = AnthropicThinking.Disabled()
-        )
-
-        is OpenAILLMProvider ->
-            if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
-                OpenAIResponsesParams(
-                    maxTokens = basicLimit
-                )
-            } else {
-                OpenAIChatParams(
-                    maxTokens = basicLimit
-                )
-            }
-
-        is GoogleLLMProvider ->
-            GoogleParams(
-                thinkingConfig = GoogleThinkingConfig(
-                    includeThoughts = false,
-                ),
-                // Slightly higher limit to avoid truncation in multi-step reasoning tests
-                maxTokens = extendedLimit
+    private fun createNoReasoningParams(
+        model: LLModel,
+        maxTokens: Int? = null
+    ): LLMParams {
+        val basicMaxTokens = maxTokens ?: basicLimit
+        val extendedMaxTokens = maxTokens ?: extendedLimit
+        return when (model.provider) {
+            is AnthropicLLMProvider -> AnthropicParams(
+                thinking = AnthropicThinking.Disabled(),
+                maxTokens = basicMaxTokens
             )
 
-        else -> LLMParams(maxTokens = basicLimit)
+            is OpenAILLMProvider ->
+                if (model.supports(LLMCapability.OpenAIEndpoint.Responses)) {
+                    OpenAIResponsesParams(
+                        maxTokens = basicMaxTokens
+                    )
+                } else {
+                    OpenAIChatParams(
+                        maxTokens = basicMaxTokens
+                    )
+                }
+
+            is GoogleLLMProvider ->
+                GoogleParams(
+                    thinkingConfig = GoogleThinkingConfig(
+                        includeThoughts = false,
+                    ),
+                    // Slightly higher limit to avoid truncation in multi-step reasoning tests
+                    maxTokens = extendedMaxTokens
+                )
+
+            else -> LLMParams(maxTokens = basicMaxTokens)
+        }
     }
 
     private fun toolRoundTripParams(model: LLModel): LLMParams = when (model.provider) {
@@ -301,6 +311,66 @@ abstract class ExecutorIntegrationTestBase {
                 shouldContain("3")
                 shouldContain("4")
                 shouldContain("5")
+            }
+        }
+    }
+
+    open fun integration_testExecuteStreamingWithConstrainedLimit(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(
+            model != GoogleModels.Gemini3_1Pro_Preview,
+            "KG-768 GoogleLLMClient.executeStreaming() may hang because the stream never completes with End frame"
+        )
+
+        val executor = getExecutor(model)
+        val params = createNoReasoningParams(model, maxTokens = constrainedLimit)
+
+        val prompt = Prompt.build("test-streaming", params = params) {
+            system("You are a helpful assistant.")
+            user("Count from 1 to 5. Like 1, 2, 3 ...")
+        }
+
+        withRetry(times = 3, testName = "integration_testExecuteStreamingWithConstrainedLimit[${model.id}]") {
+            val endFrames = mutableListOf<StreamFrame.End>()
+            val textDeltaFrames = mutableListOf<StreamFrame.TextDelta>()
+            val textCompleteFrames = mutableListOf<StreamFrame.TextComplete>()
+            val toolDeltaFrames = mutableListOf<StreamFrame.ToolCallDelta>()
+            val toolCompleteFrames = mutableListOf<StreamFrame.ToolCallComplete>()
+
+            executor.executeStreamAndCollect(
+                prompt = prompt,
+                model = model,
+                textDeltaFrames = textDeltaFrames,
+                textCompleteFrames = textCompleteFrames,
+                toolDeltaFrames = toolDeltaFrames,
+                toolCompleteFrames = toolCompleteFrames,
+                endFrame = endFrames,
+            )
+
+            toolDeltaFrames.shouldBeEmpty()
+            toolCompleteFrames.shouldBeEmpty()
+            when (model.provider) {
+                is OllamaLLMProvider -> endFrames.size shouldBe 0
+
+                else -> {
+                    endFrames.size shouldBe 1
+                    endFrames.first() should { end ->
+                        end.metaInfo should { meta ->
+                            withClue("ResponseMetaInfo should contain at least some non-nullable token count info") {
+                                listOf(meta.inputTokensCount, meta.outputTokensCount, meta.totalTokensCount)
+                                    .shouldForAny { it != null }
+                            }
+                        }
+                        when (model.provider) {
+                            is OpenAILLMProvider -> "INCOMPLETE"
+                            is GoogleLLMProvider -> "MAX_TOKENS"
+                            is AnthropicLLMProvider -> "max_tokens"
+                            else -> null
+                        }?.let { expectedFinishReason ->
+                            end.finishReason shouldBe expectedFinishReason
+                        }
+                    }
+                }
             }
         }
     }

@@ -143,6 +143,12 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
+    override fun integration_testExecuteStreamingWithConstrainedLimit(model: LLModel) {
+        super.integration_testExecuteStreamingWithConstrainedLimit(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
     override fun integration_testExecuteStreamingWithTools(model: LLModel) {
         super.integration_testExecuteStreamingWithTools(model)
     }
