@@ -250,7 +250,7 @@ in parallel:
 The Datadog exporter captures the same activity as Koog's general OpenTelemetry integration.
 For the full list of captured spans and how to include LLM prompt and response content, see [What gets traced](index.md#what-gets-traced).
 
-For more details on Datadog's OpenTelemetry support, see [Datadog OTLP API Intake](https://docs.datadoghq.com/opentelemetry/guide/otlp_api/).
+For more details on Datadog's OpenTelemetry support, see [Datadog OTLP Intake Endpoint](https://docs.datadoghq.com/opentelemetry/setup/otlp_ingest/).
 
 ---
 
