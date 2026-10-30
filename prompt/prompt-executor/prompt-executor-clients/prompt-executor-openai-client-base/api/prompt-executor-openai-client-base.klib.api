@@ -911,7 +911,7 @@ final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStaticConte
 }
 
 final class ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice { // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice|null[0]
-    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta, kotlin/String? = ..., kotlin/Int, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta;kotlin.String?;kotlin.Int;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs?){}[0]
+    constructor <init>(ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta = ..., kotlin/String? = ..., kotlin/Int, ai.koog.prompt.executor.clients.openai.base.models/OpenAIChoiceLogProbs? = ...) // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.<init>|<init>(ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta;kotlin.String?;kotlin.Int;ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs?){}[0]
 
     final val delta // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.delta|{}delta[0]
         final fun <get-delta>(): ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamDelta // ai.koog.prompt.executor.clients.openai.base.models/OpenAIStreamChoice.delta.<get-delta>|<get-delta>(){}[0]
