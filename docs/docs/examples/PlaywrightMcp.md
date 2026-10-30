@@ -71,7 +71,7 @@ runBlocking {
 
     // Create the agent
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(openAIApiToken),
+        promptExecutor = simpleOpenAIExecutor(openAIApiToken),
         llmModel = OpenAIModels.Chat.GPT4o,
         toolRegistry = toolRegistry,
     )

@@ -56,7 +56,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
  * @see <a href="https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint">Langfuse OpenTelemetry Docs</a>
  */
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You are a code assistant. Provide concise code examples."
 ) {
