@@ -18,6 +18,9 @@ public abstract class ai/koog/http/client/test/BaseKoogHttpClientTest {
 	public fun test return success string response on get with parameters ()V
 	public fun test return success string response on post ()V
 	public fun test return success string response on post with parameters ()V
+	public fun testCaptureHeadersOnLinesError ()V
+	public fun testCaptureHeadersOnNonSuccess ()V
+	public fun testCaptureHeadersOnSseError ()V
 }
 
 public final class ai/koog/http/client/test/BaseKoogHttpClientTest$TestRequest {
@@ -85,39 +88,42 @@ public final class ai/koog/http/client/test/MockWebServer {
 }
 
 public final class ai/koog/http/client/test/MockWebServer$GetEndpointConfig {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Lio/ktor/http/HttpStatusCode;
 	public final fun component4 ()Lio/ktor/http/ContentType;
 	public final fun component5 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;)Lai/koog/http/client/test/MockWebServer$GetEndpointConfig;
-	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$GetEndpointConfig;Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$GetEndpointConfig;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;)Lai/koog/http/client/test/MockWebServer$GetEndpointConfig;
+	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$GetEndpointConfig;Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$GetEndpointConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContentType ()Lio/ktor/http/ContentType;
 	public final fun getExpectedParameters ()Ljava/util/Map;
 	public final fun getPath ()Ljava/lang/String;
 	public final fun getResponseBody ()Ljava/lang/String;
+	public final fun getResponseHeaders ()Ljava/util/Map;
 	public final fun getStatusCode ()Lio/ktor/http/HttpStatusCode;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class ai/koog/http/client/test/MockWebServer$LinesEndpointConfig {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Lkotlin/jvm/functions/Function0;
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Lio/ktor/http/HttpStatusCode;
 	public final fun component4 ()Lio/ktor/http/ContentType;
 	public final fun component5 ()Ljava/util/Map;
 	public final fun component6 ()Ljava/util/Map;
-	public final fun component7 ()J
-	public final fun component8 ()Lkotlin/jvm/functions/Function1;
-	public final fun component9 ()Lkotlin/jvm/functions/Function0;
-	public final fun copy (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)Lai/koog/http/client/test/MockWebServer$LinesEndpointConfig;
-	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$LinesEndpointConfig;Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$LinesEndpointConfig;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun component8 ()J
+	public final fun component9 ()Lkotlin/jvm/functions/Function1;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;)Lai/koog/http/client/test/MockWebServer$LinesEndpointConfig;
+	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$LinesEndpointConfig;Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;JLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$LinesEndpointConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContentType ()Lio/ktor/http/ContentType;
 	public final fun getExpectedHeaders ()Ljava/util/Map;
@@ -127,42 +133,50 @@ public final class ai/koog/http/client/test/MockWebServer$LinesEndpointConfig {
 	public final fun getOnLineWritten ()Lkotlin/jvm/functions/Function1;
 	public final fun getOnStreamClosed ()Lkotlin/jvm/functions/Function0;
 	public final fun getPath ()Ljava/lang/String;
+	public final fun getResponseHeaders ()Ljava/util/Map;
 	public final fun getStatusCode ()Lio/ktor/http/HttpStatusCode;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class ai/koog/http/client/test/MockWebServer$PostEndpointConfig {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Lio/ktor/http/HttpStatusCode;
 	public final fun component4 ()Lio/ktor/http/ContentType;
 	public final fun component5 ()Ljava/util/Map;
 	public final fun component6 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;)Lai/koog/http/client/test/MockWebServer$PostEndpointConfig;
-	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$PostEndpointConfig;Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$PostEndpointConfig;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;)Lai/koog/http/client/test/MockWebServer$PostEndpointConfig;
+	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$PostEndpointConfig;Ljava/lang/String;Ljava/lang/String;Lio/ktor/http/HttpStatusCode;Lio/ktor/http/ContentType;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$PostEndpointConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContentType ()Lio/ktor/http/ContentType;
 	public final fun getExpectedHeaders ()Ljava/util/Map;
 	public final fun getExpectedParameters ()Ljava/util/Map;
 	public final fun getPath ()Ljava/lang/String;
 	public final fun getResponseBody ()Ljava/lang/String;
+	public final fun getResponseHeaders ()Ljava/util/Map;
 	public final fun getStatusCode ()Lio/ktor/http/HttpStatusCode;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class ai/koog/http/client/test/MockWebServer$SSEEndpointConfig {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lai/koog/http/client/test/MockWebServer$SSEEndpointConfig;
-	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$SSEEndpointConfig;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$SSEEndpointConfig;
+	public final fun component3 ()Lio/ktor/http/HttpStatusCode;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Ljava/util/Map;)Lai/koog/http/client/test/MockWebServer$SSEEndpointConfig;
+	public static synthetic fun copy$default (Lai/koog/http/client/test/MockWebServer$SSEEndpointConfig;Ljava/lang/String;Ljava/util/List;Lio/ktor/http/HttpStatusCode;Ljava/util/Map;ILjava/lang/Object;)Lai/koog/http/client/test/MockWebServer$SSEEndpointConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEvents ()Ljava/util/List;
 	public final fun getPath ()Ljava/lang/String;
+	public final fun getResponseHeaders ()Ljava/util/Map;
+	public final fun getStatusCode ()Lio/ktor/http/HttpStatusCode;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
