@@ -372,6 +372,42 @@ All storage implementations are optional and default to in-memory variants for d
 - **MessageStorage**: Conversation history - manages message history within conversation contexts
 - **PushNotificationConfigStorage**: Webhook management - manages webhook configurations for asynchronous notifications
 
+## Stream delivery
+
+Each `SubscribeToTask` and `SendStreamingMessage` stream has its own queue of events. When the agent sends an event,
+the server stores it and puts it into the queue of every stream of the task. Every stream receives the events in the
+same order. The `streamDelivery` parameter of `A2AServer` decides what happens when the client of a stream doesn't read
+fast enough and its queue is full:
+
+- **`StreamDeliveryConfig.Evict(capacity, timeout)`** (the default, `capacity = 64`, `timeout = 30.seconds`): the agent
+  waits up to `timeout` for the stream to make room, then the server evicts the stream. The client still receives the
+  events queued before, in order, and then the error `-32603` "Stream closed because the client is not reading events
+  fast enough; resubscribe with SubscribeToTask or call GetTask". The error has a `google.rpc.ErrorInfo` detail with the
+  reason `SLOW_CONSUMER` and the `taskId` in its metadata. The task, the agent, and the other streams of the task go on.
+  To recover, the client calls `GetTask` to read the current task, or `SubscribeToTask`, which starts again with the
+  current task.
+- **`StreamDeliveryConfig.Suspend(capacity)`** never drops an event: the agent waits until the client reads. With the
+  default `capacity = 0`, the agent waits for every client on every event. A client that stays connected but stops
+  reading then pauses its whole task: the agent, the other streams, `CancelTask`, follow-up messages, and new
+  subscriptions, until the client reads, disconnects, or the server shuts down. Other tasks are not affected.
+
+```kotlin
+val a2aServer = A2AServer(
+    agentExecutor = agentExecutor,
+    agentCard = agentCard,
+    streamDelivery = StreamDeliveryConfig.Evict(capacity = 128, timeout = 10.seconds),
+)
+```
+
+The timeout is per event and shared by all streams: however many streams are stalled, sending one event waits at most
+`timeout`, and every stream that is still full then is evicted. The terminal event of a task is no exception: a client
+evicted at that point learns the final state with `GetTask`.
+
+A non-streaming `SendMessage` (blocking or with `returnImmediately`) is never evicted: the server reads its events
+in-process and always waits for them, whatever `streamDelivery` says.
+
+Push notifications have their own queue and never wait for streams, or the other way round.
+
 ## Shutting down
 
 `A2AServer` has two ways to stop:
@@ -397,7 +433,9 @@ the server shuts down as `cancel()` does:
 
 - Open streams end. A stream that has already delivered the terminal state of its task ends normally; any other
   stream gets `-32603` "Server is shut down" as its last event, and a blocking `SendMessage` that is still waiting
-  fails with it.
+  fails with it. If the waits are over in time, every stream first receives the events still queued for it (see
+  [Stream delivery](#stream-delivery)); at the deadline or on `cancel()` those are dropped. The shutdown errors have a
+  `google.rpc.ErrorInfo` detail with the reason `SERVER_SHUTDOWN`.
 - The agents that are still running are cancelled. Tasks keep their last persisted state: they are not moved to
   `TASK_STATE_FAILED` or `TASK_STATE_CANCELED`.
 - Push notifications that are not sent yet are dropped.
