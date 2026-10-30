@@ -52,7 +52,8 @@ class GoogleLLMClientTest {
         val request = client.createGoogleRequest(
             prompt = Prompt(
                 messages = emptyList(),
-                id = "id"
+                id = "id",
+                params = LLMParams(temperature = 0.5)
             ),
             model = model,
             tools = emptyList()
@@ -318,12 +319,13 @@ class GoogleLLMClientTest {
     fun `toolChoice Auto None Required should map to Google function calling modes`() {
         val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
+        val tool = ToolDescriptor(name = "weather", description = "Get weather")
 
         fun getMode(tc: LLMParams.ToolChoice): GoogleFunctionCallingMode? {
             val req = client.createGoogleRequest(
                 prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(toolChoice = tc)),
                 model = model,
-                tools = emptyList()
+                tools = listOf(tool)
             )
             return req.toolConfig?.functionCallingConfig?.mode
         }
@@ -337,6 +339,7 @@ class GoogleLLMClientTest {
     fun `toolChoice Named should set ANY with allowedFunctionNames`() {
         val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
         val model = GoogleModels.Gemini2_5Pro
+        val tool = ToolDescriptor(name = "weather", description = "Get weather")
         val req = client.createGoogleRequest(
             prompt = Prompt(
                 messages = emptyList(),
@@ -344,12 +347,98 @@ class GoogleLLMClientTest {
                 params = GoogleParams(toolChoice = LLMParams.ToolChoice.Named("weather"))
             ),
             model = model,
-            tools = emptyList()
+            tools = listOf(tool)
         )
         val fc = req.toolConfig?.functionCallingConfig
         fc shouldNotBe null
         fc!!.mode shouldBe GoogleFunctionCallingMode.ANY
         fc.allowedFunctionNames shouldBe listOf("weather")
+    }
+
+    @Test
+    fun `createGoogleRequest should omit empty configs when no tools or params are specified`() {
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = listOf(Message.User("Hello", RequestMetaInfo.Empty)),
+                id = "id"
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        request.tools shouldBe null
+        request.toolConfig shouldBe null
+        request.generationConfig shouldBe null
+
+        val json = kotlinx.serialization.json.Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true
+            explicitNulls = false
+        }
+        val serialized = json.encodeToJsonElement(GoogleRequest.serializer(), request).jsonObject
+        serialized.containsKey("tools") shouldBe false
+        serialized.containsKey("toolConfig") shouldBe false
+        serialized.containsKey("generationConfig") shouldBe false
+    }
+
+    @Test
+    fun `createGoogleRequest should omit toolConfig when tools are empty even with toolChoice`() {
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val toolChoices = listOf(
+            LLMParams.ToolChoice.Auto,
+            LLMParams.ToolChoice.None,
+            LLMParams.ToolChoice.Required,
+            LLMParams.ToolChoice.Named("weather")
+        )
+
+        toolChoices.forEach { tc ->
+            val request = client.createGoogleRequest(
+                prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(toolChoice = tc)),
+                model = model,
+                tools = emptyList()
+            )
+            request.tools shouldBe null
+            request.toolConfig shouldBe null
+        }
+    }
+
+    @Test
+    fun `createGoogleRequest should omit toolConfig when toolChoice is null`() {
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+        val tool = ToolDescriptor(name = "weather", description = "Get weather")
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(toolChoice = null)),
+            model = model,
+            tools = listOf(tool)
+        )
+
+        request.tools shouldNotBe null
+        request.toolConfig shouldBe null
+    }
+
+    @Test
+    fun `createGoogleRequest should omit generationConfig when additionalProperties is empty`() {
+        val client = GoogleLLMClient(httpClientFactory = KtorKoogHttpClient.Factory(), apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(additionalProperties = emptyMap())
+            ),
+            model = model,
+            tools = emptyList()
+        )
+
+        request.generationConfig shouldBe null
     }
 
     @Test
