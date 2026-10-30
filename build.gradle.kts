@@ -368,7 +368,7 @@ tasks.register("listModules") {
                     try {
                         config.dependencies
                             .withType<ProjectDependency>()
-                            .filterNot { it.dependencyProject.path in testModules }
+                            .filterNot { it.path in testModules }
                             .forEach { dep ->
                                 deps += dep.path
                             }
