@@ -14,7 +14,6 @@ import ai.koog.a2a.test.BaseA2AProtocolTest
 import ai.koog.a2a.transport.client.jsonrpc.http.HttpJSONRPCClientTransport
 import ai.koog.a2a.transport.server.jsonrpc.http.HttpJSONRPCServerTransport
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -67,7 +66,7 @@ abstract class BaseA2AServerJsonRpcTest : BaseA2AProtocolTest() {
         )
 
         // Create client transport
-        httpClient = HttpClient(CIO) {
+        httpClient = HttpClient {
             install(Logging) {
                 level = LogLevel.ALL
             }
