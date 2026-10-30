@@ -30,4 +30,4 @@ official [A2A protocol specification](https://a2a-protocol.org/latest/specificat
 
 ## More information
 
-For more information, see the [A2A Testing Kit repo](https://a2a-protocol.org/latest/tck/).
+For more information, see the [A2A Testing Kit repo](https://github.com/a2aproject/a2a-tck).
