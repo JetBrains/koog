@@ -9,8 +9,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class BedrockToolSerializationTest {
@@ -258,5 +260,37 @@ class BedrockToolSerializationTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun testBuildToolParameterSchemaKeepsNestedRequiredAndAdditionalProperties() {
+        val entityType = ToolParameterType.Object(
+            properties = listOf(
+                ToolParameterDescriptor("type", "Entity type", ToolParameterType.String),
+                ToolParameterDescriptor("value", "Entity value", ToolParameterType.String),
+                ToolParameterDescriptor("note", "Optional note", ToolParameterType.String),
+            ),
+            requiredProperties = listOf("type", "value"),
+            additionalProperties = false,
+        )
+        val param = ToolParameterDescriptor("entities", "Entities", ToolParameterType.List(entityType))
+
+        val items = BedrockToolSerialization.buildToolParameterSchema(param)["items"]?.jsonObject
+        assertNotNull(items)
+        assertEquals(listOf("type", "value"), items["required"]?.jsonArray?.map { it.jsonPrimitive.content })
+        assertEquals("false", items["additionalProperties"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun testBuildToolParameterSchemaOmitsUnsetRequiredAndAdditionalProperties() {
+        val param = ToolParameterDescriptor(
+            "user",
+            "User",
+            ToolParameterType.Object(properties = listOf(ToolParameterDescriptor("name", "Name", ToolParameterType.String))),
+        )
+
+        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
+        assertNull(schema["required"])
+        assertNull(schema["additionalProperties"])
     }
 }
