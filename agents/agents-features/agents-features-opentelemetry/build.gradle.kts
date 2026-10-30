@@ -1,5 +1,5 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
-import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.api.variant.KotlinMultiplatformAndroidComponentsExtension
 
 
 plugins {
@@ -105,7 +105,7 @@ kotlin {
 // AGP ignores kotlin.sourceSets resources — register the generated dir with the Android variant
 // pipeline so it lands in the AAR's classes.jar. addGeneratedSourceDirectory both adds the dir as
 // a source for AGP's java-resource processing and wires the producing task automatically.
-extensions.configure<LibraryAndroidComponentsExtension> {
+extensions.configure<KotlinMultiplatformAndroidComponentsExtension> {
     onVariants { variant ->
         variant.sources.resources?.addGeneratedSourceDirectory(
             generateProductProperties,
