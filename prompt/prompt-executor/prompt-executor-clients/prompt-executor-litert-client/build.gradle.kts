@@ -21,7 +21,7 @@ kotlin {
             }
         }
 
-        androidUnitTest {
+        getByName("androidHostTest") {
             dependencies {
                 implementation(project(":test-utils"))
             }
