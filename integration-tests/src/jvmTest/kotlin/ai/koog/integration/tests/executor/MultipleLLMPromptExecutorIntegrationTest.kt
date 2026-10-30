@@ -148,6 +148,16 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
+    @MethodSource("ai.koog.integration.tests.utils.Models#latestModels")
+    override fun integration_testExecuteStreamingOpenAIResponsesAPI(model: LLModel) {
+        assumeTrue(
+            model.provider == LLMProvider.OpenAI,
+            "This test is specific to the OpenAI Responses API"
+        )
+        super.integration_testExecuteStreamingOpenAIResponsesAPI(model)
+    }
+
+    @ParameterizedTest
     @MethodSource("ai.koog.integration.tests.utils.Models#openAIReasoningModels")
     override fun integration_testReasoningStreamingSummaryDeltas(model: LLModel) {
         super.integration_testReasoningStreamingSummaryDeltas(model)
