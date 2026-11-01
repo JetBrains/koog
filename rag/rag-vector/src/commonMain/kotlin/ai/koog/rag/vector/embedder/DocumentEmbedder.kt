@@ -44,6 +44,8 @@ public open class TextDocumentEmbedder<Document, Path>(
      */
     override suspend fun embed(document: Document): Vector = embedder.embed(documentReader.text(document).toString())
 
+    override suspend fun embed(texts: List<String>): List<Vector> = embedder.embed(texts)
+
     /**
      * Embeds the given text into a vector representation.
      *
