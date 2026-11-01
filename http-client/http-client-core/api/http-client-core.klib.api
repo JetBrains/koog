@@ -32,16 +32,19 @@ abstract interface ai.koog.http.client/KoogHttpClient : kotlin/AutoCloseable { /
 }
 
 final class ai.koog.http.client/KoogHttpClientException : kotlin/Exception { // ai.koog.http.client/KoogHttpClientException|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Throwable? = ...) // ai.koog.http.client/KoogHttpClientException.<init>|<init>(kotlin.String?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.Throwable?){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Throwable? = ..., kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> = ...) // ai.koog.http.client/KoogHttpClientException.<init>|<init>(kotlin.String?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.Throwable?;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>){}[0]
 
     final val clientName // ai.koog.http.client/KoogHttpClientException.clientName|{}clientName[0]
         final fun <get-clientName>(): kotlin/String? // ai.koog.http.client/KoogHttpClientException.clientName.<get-clientName>|<get-clientName>(){}[0]
     final val errorBody // ai.koog.http.client/KoogHttpClientException.errorBody|{}errorBody[0]
         final fun <get-errorBody>(): kotlin/String? // ai.koog.http.client/KoogHttpClientException.errorBody.<get-errorBody>|<get-errorBody>(){}[0]
+    final val headers // ai.koog.http.client/KoogHttpClientException.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // ai.koog.http.client/KoogHttpClientException.headers.<get-headers>|<get-headers>(){}[0]
     final val statusCode // ai.koog.http.client/KoogHttpClientException.statusCode|{}statusCode[0]
         final fun <get-statusCode>(): kotlin/Int? // ai.koog.http.client/KoogHttpClientException.statusCode.<get-statusCode>|<get-statusCode>(){}[0]
 }
 
+final fun (kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>).ai.koog.http.client/lowercaseHeaderKeys(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // ai.koog.http.client/lowercaseHeaderKeys|lowercaseHeaderKeys@kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>(){}[0]
 final fun ai.koog.http.client/mergeHeaders(kotlin/Array<out kotlin.collections/Map<kotlin/String, kotlin/String>>...): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.koog.http.client/mergeHeaders|mergeHeaders(kotlin.Array<out|kotlin.collections.Map<kotlin.String,kotlin.String>>...){}[0]
 final inline fun <#A: reified kotlin/Any, #B: reified kotlin/Any, #C: kotlin/Any> (ai.koog.http.client/KoogHttpClient).ai.koog.http.client/sse(kotlin/String, #A, noinline kotlin/Function1<kotlin/String?, kotlin/Boolean> = ..., noinline kotlin/Function1<kotlin/String, #B>, noinline kotlin/Function1<#B, #C?>, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<#C> // ai.koog.http.client/sse|sse@ai.koog.http.client.KoogHttpClient(kotlin.String;0:0;kotlin.Function1<kotlin.String?,kotlin.Boolean>;kotlin.Function1<kotlin.String,0:1>;kotlin.Function1<0:1,0:2?>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>;1§<kotlin.Any>;2§<kotlin.Any>}[0]
 final inline fun <#A: reified kotlin/Any> (ai.koog.http.client/KoogHttpClient).ai.koog.http.client/lines(kotlin/String, #A, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.koog.http.client/lines|lines@ai.koog.http.client.KoogHttpClient(kotlin.String;0:0;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>){0§<kotlin.Any>}[0]

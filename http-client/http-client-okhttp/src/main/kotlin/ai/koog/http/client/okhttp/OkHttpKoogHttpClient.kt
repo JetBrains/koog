@@ -72,6 +72,7 @@ public class OkHttpKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.code,
             errorBody = response.body.string(),
+            headers = response.headers.toMultimap(),
         )
     }
 
@@ -204,12 +205,17 @@ public class OkHttpKoogHttpClient internal constructor(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                // On mid-stream failures okhttp-sse passes a response whose body is stripped and
+                // throws on read; swallow that so the exception is still built and the flow is
+                // always closed instead of hanging the collector. Headers are in-memory and safe.
+                val errorBody = response?.let { r -> runCatching { r.body.string() }.getOrNull() }
                 val exception = KoogHttpClientException(
                     clientName = clientName,
                     statusCode = response?.code,
-                    errorBody = response?.body?.string(),
+                    errorBody = errorBody,
                     message = t?.message,
-                    cause = t
+                    cause = t,
+                    headers = response?.headers?.toMultimap() ?: emptyMap()
                 )
                 logger.error(exception) { exception.message }
                 close(exception)
@@ -253,12 +259,14 @@ public class OkHttpKoogHttpClient internal constructor(
 
                 if (!response.isSuccessful) {
                     val errorBody = response.body.string()
+                    val responseHeaders = response.headers.toMultimap()
                     response.close()
                     close(
                         KoogHttpClientException(
                             clientName = clientName,
                             statusCode = response.code,
                             errorBody = errorBody,
+                            headers = responseHeaders,
                         )
                     )
                     return@launch
