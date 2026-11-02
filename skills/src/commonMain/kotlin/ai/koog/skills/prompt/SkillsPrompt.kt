@@ -225,6 +225,7 @@ private fun escapeJson(value: String): String = buildString {
             '\n' -> append("\\n")
             '\r' -> append("\\r")
             '\t' -> append("\\t")
+            in '\u0000'..'\u001f' -> append("\\u${character.code.toString(16).padStart(4, '0')}")
             else -> append(character)
         }
     }
