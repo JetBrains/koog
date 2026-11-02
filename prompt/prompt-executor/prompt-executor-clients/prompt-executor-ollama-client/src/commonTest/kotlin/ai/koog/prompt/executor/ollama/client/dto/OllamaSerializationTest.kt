@@ -82,6 +82,33 @@ class OllamaSerializationTest {
     }
 
     @Test
+    fun testOllamaAudioCapabilityDeserialization() {
+        val jsonInput = buildJsonObject {
+            put(
+                "details",
+                json.encodeToJsonElement(
+                    OllamaModelDetailsDTO(
+                        format = "gguf",
+                        family = "gemma",
+                        families = listOf("gemma"),
+                        parameterSize = "4B",
+                        quantizationLevel = "Q4_K_M"
+                    )
+                )
+            )
+            put(
+                "capabilities",
+                json.encodeToJsonElement(listOf("completion", "audio", "tools"))
+            )
+        }
+
+        val response = json.decodeFromJsonElement(OllamaShowModelResponseDTO.serializer(), jsonInput)
+
+        assertNotNull(response.details)
+        assertEquals("gemma", response.details.family)
+    }
+
+    @Test
     fun `test deserialization without additional properties`() {
         val jsonInput = buildJsonObject {
             put("model", JsonPrimitive("llama2"))
