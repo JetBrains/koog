@@ -39,7 +39,7 @@ Legend: ✅ done · 🟡 partial / buggy · ❌ missing / not migrated · ❓ ne
 - **`a2a-server` is migrated** (Phase 3): it compiles against the v1 core and implements the v1 behaviour (blocking by
   default, subscribe semantics, ListTasks, push via `StreamResponse`, inline push config). Its tests and the JSON-RPC
   server transport tests pass on JVM.
-- **`a2a-test`, `test-python-a2a-server` and the server tests are migrated.** Not migrated: the TCK SUT,
+- **`a2a-test`, `test-python-a2a-server`, the server tests and the TCK SUT are migrated.** Not migrated:
   `agents-features-a2a-{core,client,server}`, the examples, and the docs. The root `./gradlew build` is broken until
   they are migrated.
 
@@ -265,10 +265,10 @@ fixes. Public API breaks in `a2a/` were accepted for them.
 
 | #   | Item                                                                                                                                                                                                                                                                                                       | Status |
 |-----|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|
-| 4.1 | Rewrite `test-tck/a2a-test-server-tck` (also set `TaskStatus.timestamp` explicitly; it doesn't compile against the current API) with the v1 agent card (`protocolVersion` currently says `0.3.0`) and the v1 TCK messageId-prefix scenarios (`tck-complete-task`, `tck-input-required`, `tck-stream-*`, …) | ❌      |
+| 4.1 | Rewrite `test-tck/a2a-test-server-tck` (also set `TaskStatus.timestamp` explicitly; it doesn't compile against the current API) with the v1 agent card (`protocolVersion` currently says `0.3.0`) and the v1 TCK messageId-prefix scenarios (`tck-complete-task`, `tck-input-required`, `tck-stream-*`, …) | ✅      | Rewritten for v1: JSON-RPC at `/` (card url `http://localhost:9999`), `streaming` and a configured extended card, no push, no heartbeat. `TckAgentExecutor` routes by messageId prefix (longest first) and overrides `cancel`. TCK MUST run (`--transport jsonrpc --level must`): 66 pass, 25 skipped (other transports, push), 1 fails: CORE-HIST-002 (the TCK sends snake_case `history_length`, which the server drops). The full run also fails the SHOULD/MAY card caching tests (CARD-CACHE-001..003: no `Cache-Control`/`ETag`/`Last-Modified` on the card), which are hard failures in the TCK, not xfail. |
 | 4.2 | Decide whether the SUT declares `pushNotifications`. If it does, it needs a `pushSender` (e.g. `SimplePushNotificationSender`) passed to `A2AServer`; without one the server answers the push RPCs with -32003 and ignores inline configs (3.6).                                                           | ❓      |
 | 4.3 | Re-enable CI: remove `if: false` at `.github/workflows/a2a-tck-test.yml:22`. Optionally pass `--transport jsonrpc`. The TCK pin is already v1, and the rest of the workflow still fits.                                                                                                                    | ❌      |
-| 4.4 | Gate: all MUST tests green. SHOULD failures show up as xfail.                                                                                                                                                                                                                                              | ❌      |
+| 4.4 | Gate: all MUST tests green. (SHOULD tests xfail only inside the requirement runner; the card caching tests fail hard.)                                                                                                                                                                                                                                              | ❌      |
 
 ### Phase 5: Dependents outside `a2a/`
 
