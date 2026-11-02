@@ -1,6 +1,6 @@
 // Klib ABI Dump
-// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
-// Alias: ios => [iosArm64, iosSimulatorArm64, iosX64]
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, macosArm64, wasmJs]
+// Alias: apple => [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: true
@@ -17,10 +17,10 @@ final class ai.koog.prompt.xml/XmlContentBuilder : ai.koog.prompt.text/TextConte
     final fun processingInstruction(kotlin/String, kotlin/String) // ai.koog.prompt.xml/XmlContentBuilder.processingInstruction|processingInstruction(kotlin.String;kotlin.String){}[0]
     final fun xmlDeclaration(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean? = ...) // ai.koog.prompt.xml/XmlContentBuilder.xmlDeclaration|xmlDeclaration(kotlin.String;kotlin.String;kotlin.Boolean?){}[0]
 
-    // Targets: [ios, wasmJs]
+    // Targets: [apple, wasmJs]
     final fun selfClosingTag(kotlin/String, kotlin.collections/HashMap<kotlin/String, kotlin/String> = ...) // ai.koog.prompt.xml/XmlContentBuilder.selfClosingTag|selfClosingTag(kotlin.String;kotlin.collections.HashMap<kotlin.String,kotlin.String>){}[0]
 
-    // Targets: [ios, wasmJs]
+    // Targets: [apple, wasmJs]
     final fun tag(kotlin/String, kotlin.collections/HashMap<kotlin/String, kotlin/String> = ..., kotlin/Function1<ai.koog.prompt.xml/XmlContentBuilder, kotlin/Unit> = ...) // ai.koog.prompt.xml/XmlContentBuilder.tag|tag(kotlin.String;kotlin.collections.HashMap<kotlin.String,kotlin.String>;kotlin.Function1<ai.koog.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
 
     // Targets: [js]

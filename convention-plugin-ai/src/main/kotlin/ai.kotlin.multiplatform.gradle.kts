@@ -20,6 +20,11 @@ plugins {
 // for example, the "OTel Kotlin SDK 0.3.0" set `koog.target.wasmJs=false` in their gradle.properties.
 // The target is not registered at all, and no wasm-js publication is produced.
 val isWasmJsIncluded = (findProperty("koog.target.wasmJs") as? String)?.toBoolean() ?: true
+
+// Per-module opt-out for the macosArm64 target, mirroring the wasmJs flag above. Modules whose deps
+// have no macosArm64 publication (e.g. io.opentelemetry.kotlin 0.3.0) set `koog.target.macos=false`.
+val isMacosIncluded = (findProperty("koog.target.macos") as? String)?.toBoolean() ?: true
+
 kotlin {
     @OptIn(ExperimentalAbiValidation::class)
     abiValidation {
@@ -42,6 +47,7 @@ kotlin {
     // Tier 1
     iosSimulatorArm64()
     iosArm64()
+    if (isMacosIncluded) macosArm64()
 
     // Tier 2
 

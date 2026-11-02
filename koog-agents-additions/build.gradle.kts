@@ -198,10 +198,17 @@ kotlin {
         }
 
         appleMain {
-            dependsOn(nonWasmJsMain)
+            // NOTE: not dependsOn(nonWasmJsMain) — that holds the OpenTelemetry feature, whose dep
+            // (io.opentelemetry.kotlin) has no macosArm64. Keep Darwin here (both iOS + macOS need it)
+            // and attach the nonWasmJs modules at the iOS level only (below).
             dependencies {
                 api(libs.ktor.client.darwin)
             }
+        }
+
+        // OpenTelemetry et al. (nonWasmJsMain) are available on iOS but not macOS.
+        iosMain {
+            dependsOn(nonWasmJsMain)
         }
 
         jsMain {
