@@ -40,6 +40,9 @@ public class ContextualPromptExecutor(
         private val logger = KotlinLogging.logger { }
     }
 
+    internal fun withContext(context: AIAgentContext): ContextualPromptExecutor =
+        ContextualPromptExecutor(executor, context)
+
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): Message.Assistant {
         @OptIn(ExperimentalUuidApi::class)
         val eventId = Uuid.random().toString()
