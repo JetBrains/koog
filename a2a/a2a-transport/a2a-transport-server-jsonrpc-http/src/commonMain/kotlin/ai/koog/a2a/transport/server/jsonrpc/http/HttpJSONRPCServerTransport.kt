@@ -22,7 +22,6 @@ import io.ktor.server.sse.SSE
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Standalone Ktor server implementing A2A JSON-RPC server transport.
@@ -69,8 +68,8 @@ public class HttpJSONRPCServerTransport(
      * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
      * @param agentCardPath The path at which the [agentCard] will be served, if specified.
      * Defaults to [A2APaths.AGENT_CARD_WELL_KNOWN_PATH].
-     * @param heartbeatPeriod Period of the SSE heartbeats that detect disconnected streaming clients, `null` disables
-     * them. Detection is best-effort and engine-dependent, see [a2aJsonRpcTransportRoute]. Defaults to 15 seconds.
+     * @param heartbeatPeriod Period of the opt-in SSE heartbeats that detect disconnected streaming clients and keep
+     * idle streams alive, see [a2aJsonRpcTransportRoute]. Defaults to `null`, no heartbeat.
      * @param customizeCallContext Customizes the [ServerCallContext] of every request, see [a2aJsonRpcTransportRoute].
      * Defaults to returning the context built from the request headers unchanged.
      *
@@ -83,7 +82,7 @@ public class HttpJSONRPCServerTransport(
         wait: Boolean = false,
         agentCard: AgentCard? = null,
         agentCardPath: String = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
-        heartbeatPeriod: Duration? = 15.seconds,
+        heartbeatPeriod: Duration? = null,
         customizeCallContext: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { it },
     ): Unit = serverMutex.withLock {
         check(server == null) { "Server is already configured and running. Stop it before starting a new one." }

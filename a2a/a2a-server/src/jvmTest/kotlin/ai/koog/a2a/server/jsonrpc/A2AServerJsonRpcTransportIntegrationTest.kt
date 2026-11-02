@@ -123,18 +123,23 @@ class A2AServerJsonRpcTransportIntegrationTest {
         scripts: Map<String, AgentScript>,
         heartbeatPeriod: Duration? = this.heartbeatPeriod,
         streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
+        defaultHeartbeat: Boolean = false,
     ): Unit = runBlocking {
         val port = ServerSocket(0).use { it.localPort }
         val card = testAgentCard(AgentCapabilities(streaming = true))
         serverUrl = "http://localhost:$port$testPath"
         server = ObservedServer(ScriptedAgentExecutor(scripts), streamDelivery)
         serverTransport = HttpJSONRPCServerTransport(server)
-        serverTransport.start(
-            engineFactory = engineFactory,
-            port = port,
-            path = testPath,
-            heartbeatPeriod = heartbeatPeriod,
-        )
+        if (defaultHeartbeat) {
+            serverTransport.start(engineFactory = engineFactory, port = port, path = testPath)
+        } else {
+            serverTransport.start(
+                engineFactory = engineFactory,
+                port = port,
+                path = testPath,
+                heartbeatPeriod = heartbeatPeriod,
+            )
+        }
         client = A2AClient(card, HttpJSONRPCClientTransport(serverUrl, httpClient))
     }
 
@@ -306,7 +311,7 @@ class A2AServerJsonRpcTransportIntegrationTest {
         assertSubscriberReleasedAfterClientCloses()
     }
 
-    /** The server sends SSE comment heartbeats on an idle stream, and none with `heartbeatPeriod = null`. */
+    /** The server sends SSE comment heartbeats on an idle stream, and none with the default (disabled) period. */
     @Test
     fun testHeartbeatIsSentOnlyWhenEnabled() = runTest(timeout = TEST_TIMEOUT) {
         withContext(Dispatchers.Default) {
@@ -317,7 +322,7 @@ class A2AServerJsonRpcTransportIntegrationTest {
             }
             serverTransport.stop()
 
-            startServer(Netty, inputRequiredScripts(), heartbeatPeriod = null)
+            startServer(Netty, inputRequiredScripts(), defaultHeartbeat = true)
             client.sendMessage(SendMessageRequest(userMessage("ask")))
             openSubscription().use { stream ->
                 stream.socket.soTimeout = (heartbeatPeriod * 20).inWholeMilliseconds.toInt()

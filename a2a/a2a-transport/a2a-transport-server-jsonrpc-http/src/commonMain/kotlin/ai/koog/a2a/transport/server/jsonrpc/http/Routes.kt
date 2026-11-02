@@ -24,7 +24,6 @@ import io.ktor.server.sse.heartbeat
 import io.ktor.sse.ServerSentEvent
 import io.ktor.util.toMap
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Route for handling JSON-RPC HTTP requests.
@@ -81,12 +80,13 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @param path JSON-RPC endpoint path that will be mounted under the base route.
  * @param transport The JSON-RPC server transport to handle requests.
- * @param heartbeatPeriod Period of the SSE comment lines (`: heartbeat`) sent on streaming responses. A server only
- * notices that a client has gone away when a write to it fails, so on an idle stream (e.g. a subscription to a task
- * waiting for input) the heartbeat is what lets the stream be released. This is best-effort and engine-dependent:
- * detection takes a few periods, and with Ktor 3.3.3 on Netty a client that closes with unread data (TCP reset) may
- * not be detected, so its stream then ends with the task or on shutdown.
- * `null` disables heartbeats. Defaults to 15 seconds.
+ * @param heartbeatPeriod Period of the SSE comment lines (`: heartbeat`) sent on streaming responses, `null` (the
+ * default) sends none. A server only notices that a client has gone away when a write to it fails, so with a
+ * heartbeat an idle stream (e.g. a subscription to a task waiting for input) is released after the client is gone.
+ * This is best-effort and engine-dependent: detection takes a few periods, and with Ktor 3.3.3 on Netty a client
+ * that closes with unread data (TCP reset) may not be detected, so its stream then ends with the task or on shutdown.
+ * The heartbeat also keeps idle streams alive for clients that rely on a read or inactivity timeout, so without it
+ * a stream that stays silent may time out on their side.
  * @param customizeCallContext Called for every parsed JSON-RPC request with the current [ApplicationCall] as the
  * receiver and the default context built from the request headers; the returned context is passed to the
  * [transport]. It runs before the requested version is checked. An [ai.koog.a2a.exceptions.A2AException] thrown
@@ -96,7 +96,7 @@ import kotlin.time.Duration.Companion.seconds
 public fun Route.a2aJsonRpcTransportRoute(
     path: String,
     transport: JSONRPCServerTransport,
-    heartbeatPeriod: Duration? = 15.seconds,
+    heartbeatPeriod: Duration? = null,
     customizeCallContext: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { it },
 ): Route = route(path) {
     // Check SSE plugin is installed

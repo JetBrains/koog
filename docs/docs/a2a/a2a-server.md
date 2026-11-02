@@ -346,9 +346,10 @@ The key type and the stored value must match, otherwise `getFromState` and `getF
 
 A server can only tell that a streaming client has gone away when a write to it fails, so a stream that stays idle
 (for example, a subscription to a task waiting for input) would otherwise be held until the task ends or the server
-stops. Both `a2aJsonRpcTransportRoute` and `HttpJSONRPCServerTransport.start` therefore send an SSE comment line
-(`: heartbeat`) every `heartbeatPeriod`, 15 seconds by default, so that the stream is released after the connection
-is closed. Pass a shorter period for faster cleanup, or `null` to disable heartbeats:
+stops. The SSE heartbeat is opt-in: pass `heartbeatPeriod` to `a2aJsonRpcTransportRoute` or
+`HttpJSONRPCServerTransport.start`, and the server writes an SSE comment line (`: heartbeat`) every period, so that
+the stream is released after the connection is closed. A shorter period gives faster cleanup. By default
+(`heartbeatPeriod = null`) no heartbeat is sent.
 
 ```kotlin
 transport.start(
@@ -358,6 +359,9 @@ transport.start(
     heartbeatPeriod = 5.seconds
 )
 ```
+
+The heartbeat also keeps idle streams alive for clients that rely on a read or inactivity timeout. Without it, a stream
+that stays silent, such as a subscription that never ends, may time out on the client side.
 
 Detection is best-effort and depends on the engine: it needs a failing write and takes a few periods. With Ktor 3.3.3
 on Netty, a client that closes with unread data (a TCP reset) may not be detected, and its stream then ends with the
