@@ -10,7 +10,7 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Loads and configures the environment-specific settings for Koog agents based on the provided
  * application configuration.
- * This includes setup for OpenAI, Anthropic, Google, MistralAI, OpenRouter, DeepSeek,
+ * This includes setup for OpenAI, Anthropic, Google, MistralAI, OpenRouter, DeepSeek, Requesty,
  * Ollama, as well as default and fallback LLM (Large Language Model) configurations.
  *
  * @return A populated instance of [KoogAgentsConfig] with the environment-specific settings applied.
@@ -23,6 +23,7 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
         .mistral(config)
         .openrouter(config)
         .deepSeek(config)
+        .requesty(config)
 
     if (config.propertyOrNull("koog.ollama.enable") != null) {
         koogConfig.ollama(config)
@@ -40,6 +41,7 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
             "openrouter" -> LLMProvider.OpenRouter
             "ollama" -> LLMProvider.Ollama
             "deepseek" -> LLMProvider.DeepSeek
+            "requesty" -> LLMProvider.Requesty
             else -> throw IllegalArgumentException("Unsupported LLM provider: $fallbackProviderStr")
         }
 
@@ -97,6 +99,14 @@ private fun KoogAgentsConfig.deepSeek(envConfig: ApplicationConfig) =
         deepSeek(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
             timeouts { configure("koog.deepseek.timeout", envConfig) }
+        }
+    }
+
+private fun KoogAgentsConfig.requesty(envConfig: ApplicationConfig) =
+    config(envConfig, "koog.requesty") { apiKey, baseUrlOrNull ->
+        requesty(apiKey) {
+            baseUrlOrNull?.let { baseUrl = it }
+            timeouts { configure("koog.requesty.timeout", envConfig) }
         }
     }
 

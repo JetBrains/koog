@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.executor.clients.requesty.RequestyModels
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import io.ktor.util.logging.KtorSimpleLogger
@@ -40,6 +41,8 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
         "openrouter" -> openrouter(parts, identifier)
 
         "deepseek" -> deepSeek(parts, identifier)
+
+        "requesty" -> requesty(parts, identifier)
 
         "ollama" -> ollama(parts, identifier)
 
@@ -121,6 +124,27 @@ private fun deepSeek(parts: List<String>, identifier: String): LLModel? {
     val model = deepSeekModels[normalizedModelName]
     if (model == null) {
         logger.info("Model '$modelName' not found in DeepSeekModels")
+        return null
+    }
+
+    return model
+}
+
+private fun requesty(parts: List<String>, identifier: String): LLModel? {
+    if (parts.size < 2) {
+        logger.debug("Requesty model identifier must be in format 'requesty.model', got: $identifier")
+        return null
+    }
+
+    val modelName = parts[1].lowercase()
+
+    // Map for Requesty models by name
+    val requestyModels = REQUESTY_MODELS_MAP
+
+    val normalizedModelName = modelName.replace("-", "").replace("_", "").lowercase()
+    val model = requestyModels[normalizedModelName]
+    if (model == null) {
+        logger.info("Model '$modelName' not found in RequestyModels")
         return null
     }
 
@@ -319,6 +343,21 @@ private val OPENROUTER_MODELS_MAP = mapOf(
 private val DEEPSEEK_MODELS_MAP = mapOf(
     "deepseek-v4-flash" to DeepSeekModels.DeepSeekV4Flash,
     "deepseek-v4-pro" to DeepSeekModels.DeepSeekV4Pro,
+)
+
+private val REQUESTY_MODELS_MAP = mapOf(
+    "gpt4omini" to RequestyModels.GPT4oMini,
+    "gpt4o" to RequestyModels.GPT4o,
+    "gpt41" to RequestyModels.GPT4_1,
+    "gpt41mini" to RequestyModels.GPT4_1Mini,
+    "gpt5" to RequestyModels.GPT5,
+    "gpt5mini" to RequestyModels.GPT5Mini,
+    "claudesonnet45" to RequestyModels.ClaudeSonnet4_5,
+    "claudeopus45" to RequestyModels.ClaudeOpus4_5,
+    "claudehaiku45" to RequestyModels.ClaudeHaiku4_5,
+    "gemini25flash" to RequestyModels.Gemini2_5Flash,
+    "gemini25pro" to RequestyModels.Gemini2_5Pro,
+    "deepseekchat" to RequestyModels.DeepSeekChat,
 )
 
 private val OLLAMA_GROQ_MODELS_MAP = mapOf(

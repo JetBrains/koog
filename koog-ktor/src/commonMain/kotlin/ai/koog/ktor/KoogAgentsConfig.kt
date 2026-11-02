@@ -26,6 +26,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.requesty.RequestyClientSettings
+import ai.koog.prompt.executor.clients.requesty.RequestyLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
@@ -162,7 +164,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     /**
      * Configuration class for managing various Language Learning Model (LLM) providers and their settings.
      * This class allows integration with different LLM services such as OpenAI,
-     * Anthropic, Google, MistralAI, OpenRouter, DeepSeek, and Ollama.
+     * Anthropic, Google, MistralAI, OpenRouter, DeepSeek, Requesty, and Ollama.
      * Users can also define fallback configurations and custom LLM clients.
      */
     public inner class LLMConfig {
@@ -225,6 +227,16 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          */
         public fun deepSeek(apiKey: String, configure: DeepSeekConfig.() -> Unit = {}) {
             this@KoogAgentsConfig.deepSeek(apiKey, configure)
+        }
+
+        /**
+         * Configures and initializes the Requesty API with the provided API key and optional configuration.
+         *
+         * @param apiKey The API key used to authenticate with the Requesty API.
+         * @param configure An optional lambda function used to customize the Requesty configuration.
+         */
+        public fun requesty(apiKey: String, configure: RequestyConfig.() -> Unit = {}) {
+            this@KoogAgentsConfig.requesty(apiKey, configure)
         }
 
         /**
@@ -864,6 +876,59 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     }
 
     /**
+     * RequestyConfig is a configuration class for setting up the Requesty client.
+     * It manages essential parameters such as API key, base URL, connection timeout settings,
+     * and the HTTP client used for requests.
+     */
+    public class RequestyConfig {
+        /**
+         * Defines the base URL used for configuring the target endpoint of the Requesty API.
+         * This property allows customization of the API's base endpoint, for example to use
+         * a regional router such as `https://router.eu.requesty.ai`.
+         *
+         * The default value is `[RequestyClientSettings.baseUrl]`.
+         */
+        public var baseUrl: String? = null
+
+        /**
+         * Represents the configuration for connection timeouts used in network requests.
+         * This configuration specifies the timeout durations in milliseconds for requests,
+         * connection establishment, and socket operations.
+         *
+         * By default, it is initialized with the default timeout values provided by the
+         * `ConnectionTimeoutConfig` class. It can be modified using the `timeouts` function
+         * in the containing [RequestyConfig] class, or directly assigned with a new instance
+         * of [ConnectionTimeoutConfig].
+         */
+        public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+
+        /**
+         * Represents the HTTP client used to handle network requests within the configuration.
+         * This client can be customized or replaced to adapt to specific use cases, such as
+         * modifying headers, interceptors, or other client-level configurations.
+         *
+         * By default, it is initialized with a standard instance of `HttpClient`.
+         */
+        public var httpClient: HttpClient = HttpClient()
+
+        /**
+         * Configures timeout settings to be applied to the client.
+         *
+         * @param configure A lambda receiver that configures an instance of TimeoutConfiguration.
+         */
+        public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
+            timeoutConfig = with(TimeoutConfiguration()) {
+                configure()
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
+            }
+        }
+    }
+
+    /**
      * OllamaConfig is a configuration class for managing the settings required to connect
      * and interact with an Ollama-based language model server. It includes properties for setting
      * the server's base URL, connection timeouts, and an HTTP client for underlying network communication.
@@ -1062,6 +1127,29 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
             )
         }
         addLLMClient(LLMProvider.DeepSeek, client)
+    }
+
+    /**
+     * Configures and integrates a Requesty client into the system using the provided API key and configuration.
+     *
+     * @param apiKey The API key for authenticating with the Requesty service.
+     * @param configure A lambda to set up additional configurations for the Requesty client.
+     */
+    internal fun requesty(apiKey: String, configure: RequestyConfig.() -> Unit) {
+        val client = with(RequestyConfig()) {
+            configure()
+            val defaults = RequestyClientSettings()
+
+            RequestyLLMClient(
+                apiKey = apiKey,
+                settings = RequestyClientSettings(
+                    baseUrl = baseUrl ?: defaults.baseUrl,
+                    timeoutConfig = timeoutConfig
+                ),
+                httpClientFactory = KtorKoogHttpClient.Factory(httpClient)
+            )
+        }
+        addLLMClient(LLMProvider.Requesty, client)
     }
 
     /**

@@ -83,6 +83,13 @@ class ConfigurationLoadingTest {
     }
 
     @Test
+    fun testRequesty() = testApplication {
+        environment { config = buildRequestyConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
     fun testInvalid() {
         val message = assertFailsWith<IllegalArgumentException> {
             testApplication {
@@ -119,6 +126,9 @@ class ConfigurationLoadingTest {
 
         // Verify DeepSeek configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+
+        // Verify Requesty configuration
+        assertNotNull(koogConfig.llmConnections[LLMProvider.Requesty])
 
         // Verify Ollama configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Ollama])
@@ -269,6 +279,25 @@ class ConfigurationLoadingTest {
     }
 
     @Test
+    fun testLoadRequestyConfiguration() = runTest {
+        val koogConfig = applicationEnvironment {
+            config = buildRequestyConfig()
+        }.loadAgentsConfig(GlobalScope)
+
+        // Verify Requesty configuration
+        assertNotNull(koogConfig.llmConnections[LLMProvider.Requesty])
+
+        // Verify no other providers
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
+        assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+        assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
+        assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
+    }
+
+    @Test
     fun testLoadOllamaConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = buildOllamaConfig()
@@ -313,6 +342,7 @@ class ConfigurationLoadingTest {
             .mergeWith(buildMistralConfig())
             .mergeWith(buildOpenRouterConfig())
             .mergeWith(buildDeepSeekConfig())
+            .mergeWith(buildRequestyConfig())
             .mergeWith(buildOllamaConfig())
             .mergeWith(buildFallbackConfig())
             .mergeWith(MapApplicationConfig("koog.llm.default" to "openai.chat.gpt4o"))
@@ -370,6 +400,14 @@ class ConfigurationLoadingTest {
         "koog.deepseek.timeout.socketTimeoutMillis" to "60000"
     )
 
+    private fun buildRequestyConfig() = MapApplicationConfig(
+        "koog.requesty.apikey" to "test-requesty-api-key",
+        "koog.requesty.baseUrl" to "https://router.requesty.ai",
+        "koog.requesty.timeout.requestTimeoutMillis" to "60000",
+        "koog.requesty.timeout.connectTimeoutMillis" to "30000",
+        "koog.requesty.timeout.socketTimeoutMillis" to "60000"
+    )
+
     private fun buildOllamaConfig() = MapApplicationConfig(
         "koog.ollama.enable" to "true",
         "koog.ollama.baseUrl" to "http://localhost:11434",
@@ -415,6 +453,10 @@ class ConfigurationLoadingTest {
         "koog.deepseek.timeout.requestTimeoutMillis" to "900000",
         "koog.deepseek.timeout.connectTimeoutMillis" to "60000",
         "koog.deepseek.timeout.socketTimeoutMillis" to "900000",
+        "koog.requesty.apikey" to "test-requesty-api-key",
+        "koog.requesty.timeout.requestTimeoutMillis" to "900000",
+        "koog.requesty.timeout.connectTimeoutMillis" to "60000",
+        "koog.requesty.timeout.socketTimeoutMillis" to "900000",
         "koog.ollama.enable" to "true",
         "koog.ollama.timeout.requestTimeoutMillis" to "900000",
         "koog.ollama.timeout.connectTimeoutMillis" to "60000",

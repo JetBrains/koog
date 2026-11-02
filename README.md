@@ -53,6 +53,7 @@ The LLM providers and platforms whose LLMs you can use to power your agent capab
 - Anthropic
 - DeepSeek
 - OpenRouter
+- Requesty
 - Ollama
 - Bedrock
 

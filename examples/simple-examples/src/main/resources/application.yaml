@@ -28,6 +28,12 @@ koog:
       requestTimeoutMillis: 900000
       connectTimeoutMillis: 60000
       socketTimeoutMillis: 900000
+  requesty:
+    apikey: "your-requesty-api-key"
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000
   ollama:
     enable: true
     timeout:

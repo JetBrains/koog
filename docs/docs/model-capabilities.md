@@ -495,6 +495,24 @@ In the tables below:
     | Gemini2_5Flash      | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
     | Gemini2_5Pro        | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
 
+??? "Requesty models"
+    #### Requesty models
+
+    | Model           | Temperature | JSON Schema | Completion | Speculation | Tools | Tool Choice | Vision (Image) |
+    |-----------------|-------------|-------------|------------|-------------|-------|-------------|----------------|
+    | GPT4oMini       | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
+    | GPT4o           | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
+    | GPT4_1          | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
+    | GPT4_1Mini      | ✓           | Full        | ✓          | ✓           | ✓     | ✓           | ✓              |
+    | GPT5            | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | GPT5Mini        | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | ClaudeSonnet4_5 | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | ClaudeOpus4_5   | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | ClaudeHaiku4_5  | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | Gemini2_5Flash  | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | Gemini2_5Pro    | ✓           | Full        | ✓          | -           | ✓     | ✓           | ✓              |
+    | DeepSeekChat    | ✓           | Simple      | ✓          | -           | ✓     | ✓           | -              |
+
 ??? "Bedrock models"
     #### Bedrock models
 
