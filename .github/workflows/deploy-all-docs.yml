@@ -21,10 +21,10 @@ jobs:
       BRANCH_KOOG_IS_RELEASING_FROM: ${{ github.ref_name }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -61,11 +61,11 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version-file: "./docs/.python-version"
 
