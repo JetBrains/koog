@@ -8,7 +8,7 @@ Status snapshot: Koog `89f7eb928` (branch `eugenethedev/a2a-1.0`), 2026-10-22. P
 |------------|------------------------------------------------------------------------------------------------------|
 | A2A spec   | `v1.0.1` (`3303592`), released 2026-05-28. `main` `65dadbd` has no normative changes relevant to us. |
 | Python SDK | `v1.1.0` (pinned by `test-python-a2a-server`) and `main` (~`v1.2.1`)                                 |
-| TCK        | `263b9cf` (pinned in `test-tck/setup_tck.sh`, which is the current TCK `main`; targets v1.0.x)       |
+| TCK        | `d4d6fae` (pinned in `test-tck/setup_tck.sh`, which is the current TCK `main`; targets v1.0.x)       |
 
 **Research notes:** everything below cites these reports in `.agents/research/`. They have full `file:line` citations.
 

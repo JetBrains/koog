@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="${SCRIPT_DIR}/a2a-tck"
 REPO_URL="https://github.com/a2aproject/a2a-tck.git"
-COMMIT_HASH="263b9cfaf16a554bdfb166a7ba5b67716e946349" # A2A version 1.0.x
+COMMIT_HASH="d4d6fae7887f88ef607fb461c13e3b0e1802f19b" # A2A version 1.0.x
 
 checkout_pinned_commit() {
   git -C "${REPO_DIR}" config advice.detachedHead false
