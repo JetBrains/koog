@@ -41,7 +41,7 @@ import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmOverloads
@@ -159,7 +159,7 @@ public class KtorKoogHttpClient internal constructor(
         processStreamingChunk: (R) -> O?,
         parameters: Map<String, String>,
         headers: Map<String, String>,
-    ): Flow<O> = flow {
+    ): Flow<O> = channelFlow {
         logger.debug { "Opening sse connection for $clientName" }
 
         @Suppress("TooGenericExceptionCaught")
@@ -195,7 +195,7 @@ public class KtorKoogHttpClient internal constructor(
                         ?.data?.trim()
                         ?.let(decodeStreamingResponse)
                         ?.let(processStreamingChunk)
-                        ?.let { emit(it) }
+                        ?.let { send(it) }
                 }
             }
         } catch (e: SSEClientException) {
@@ -229,7 +229,7 @@ public class KtorKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         parameters: Map<String, String>,
         headers: Map<String, String>,
-    ): Flow<String> = flow {
+    ): Flow<String> = channelFlow {
         logger.debug { "Opening lines flow for $clientName" }
 
         try {
@@ -257,7 +257,7 @@ public class KtorKoogHttpClient internal constructor(
                 while (!channel.isClosedForRead) {
                     val line = channel.readUTF8Line() ?: break
                     if (line.isBlank()) continue
-                    emit(line)
+                    send(line)
                 }
             }
         } catch (e: KoogHttpClientException) {
