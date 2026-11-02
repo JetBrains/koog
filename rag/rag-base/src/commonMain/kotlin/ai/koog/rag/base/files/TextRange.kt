@@ -171,7 +171,7 @@ internal data class TextRange(val start: Int, val endExclusive: Int) {
             if (previous == null || previous.endExclusive != value.start) {
                 result.add(value)
             } else {
-                result.removeLast()
+                result.removeAt(result.lastIndex)
                 result.add(TextRange(previous.start, value.endExclusive))
             }
         }

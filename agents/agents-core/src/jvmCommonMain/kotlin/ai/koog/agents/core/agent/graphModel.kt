@@ -92,7 +92,7 @@ private fun collectGraphLevel(
     queue.add(start)
 
     while (queue.isNotEmpty()) {
-        val current = queue.removeFirst()
+        val current = queue.removeAt(0)
         if (current.id in visited) continue
         visited.add(current.id)
 
