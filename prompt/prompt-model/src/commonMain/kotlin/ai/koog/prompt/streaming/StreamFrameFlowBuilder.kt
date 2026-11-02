@@ -156,19 +156,33 @@ public class StreamFrameFlowBuilder(
     /**
      * Emits a [StreamFrame.ReasoningDelta] with the given [text].
      */
-    public suspend fun emitReasoningDelta(id: String? = null, text: String? = null, summary: String? = null, index: Int? = null) {
+    public suspend fun emitReasoningDelta(
+        id: String? = null,
+        text: String? = null,
+        summary: String? = null,
+        encrypted: String? = null,
+        index: Int? = null
+    ) {
         tryEmitPendingToolCall()
         tryEmitPendingText()
         val previous: PendingReasoning? = pendingReasoningRef.load()
         if (previous == null) {
-            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
+            pendingReasoningRef.store(
+                PendingReasoning(id = id, textDelta = text, summaryDelta = summary, encryptedDelta = encrypted, index = index)
+            )
         } else if (id != previous.id) {
             tryEmitPendingReasoning()
-            pendingReasoningRef.store(PendingReasoning(id = id, textDelta = text, summaryDelta = summary, index = index))
+            pendingReasoningRef.store(
+                PendingReasoning(id = id, textDelta = text, summaryDelta = summary, encryptedDelta = encrypted, index = index)
+            )
         } else {
-            pendingReasoningRef.store(previous.appendDelta(id, text, summary, index))
+            pendingReasoningRef.store(previous.appendDelta(id, text, summary, encrypted, index))
         }
-        flowCollector.emitReasoningDelta(id, text, summary, index)
+        // Signature-only updates (e.g. Anthropic `signature_delta`) carry no content;
+        // emitting an empty delta frame would only surprise downstream collectors.
+        if (text != null || summary != null || encrypted == null) {
+            flowCollector.emitReasoningDelta(id, text, summary, index)
+        }
     }
 
     /**
@@ -245,6 +259,7 @@ public class StreamFrameFlowBuilder(
                 id = pendingReasoning.id,
                 text = pendingReasoning.textDelta?.let { listOf(pendingReasoning.textDelta) } ?: emptyList(),
                 summary = pendingReasoning.summaryDelta?.let { listOf(pendingReasoning.summaryDelta) },
+                encrypted = pendingReasoning.encryptedDelta,
                 index = pendingReasoning.index
             )
         }
@@ -294,14 +309,22 @@ public class StreamFrameFlowBuilder(
         val id: String?,
         val textDelta: String?,
         val summaryDelta: String?,
+        val encryptedDelta: String? = null,
         val index: Int?
     ) {
-        fun appendDelta(id: String?, textDelta: String?, summaryDelta: String?, index: Int?): PendingReasoning {
+        fun appendDelta(
+            id: String?,
+            textDelta: String?,
+            summaryDelta: String?,
+            encryptedDelta: String? = null,
+            index: Int?
+        ): PendingReasoning {
             require(this.index == index)
             require(this.id == id)
             val newTextDelta = if (textDelta == null) this.textDelta else (this.textDelta ?: "") + textDelta
             val newSummaryDelta = if (summaryDelta == null) this.summaryDelta else (this.summaryDelta ?: "") + summaryDelta
-            return copy(textDelta = newTextDelta, summaryDelta = newSummaryDelta)
+            val newEncryptedDelta = encryptedDelta ?: this.encryptedDelta
+            return copy(textDelta = newTextDelta, summaryDelta = newSummaryDelta, encryptedDelta = newEncryptedDelta)
         }
     }
 }

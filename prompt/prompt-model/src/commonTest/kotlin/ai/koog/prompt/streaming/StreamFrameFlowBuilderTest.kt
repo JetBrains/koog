@@ -472,4 +472,42 @@ class StreamFrameFlowBuilderTest {
             frames
         )
     }
+
+    @Test
+    fun testEncryptedReasoningDeltaIsCarriedIntoReasoningComplete() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(text = "Thinking...", index = 0)
+            // Signature-only update (e.g. Anthropic signature_delta): no delta frame of its own.
+            emitReasoningDelta(encrypted = "signature", index = 0)
+            tryEmitPendingReasoning()
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(text = "Thinking...", index = 0),
+                StreamFrame.ReasoningComplete(id = null, content = listOf("Thinking..."), encrypted = "signature", index = 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
+
+    @Test
+    fun testEncryptedReasoningIsFlushedAtEnd() = runTest {
+        val frames = buildStreamFrameFlow {
+            emitReasoningDelta(text = "Deep thought", index = 0)
+            emitReasoningDelta(encrypted = "signature", index = 0)
+            emitEnd()
+        }.toList()
+
+        assertContentEquals(
+            listOf(
+                StreamFrame.ReasoningDelta(text = "Deep thought", index = 0),
+                StreamFrame.ReasoningComplete(id = null, content = listOf("Deep thought"), encrypted = "signature", index = 0),
+                StreamFrame.End(null, ResponseMetaInfo.Empty)
+            ),
+            frames
+        )
+    }
 }
