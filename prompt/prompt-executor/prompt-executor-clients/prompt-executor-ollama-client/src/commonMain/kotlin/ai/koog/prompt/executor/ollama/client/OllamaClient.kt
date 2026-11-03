@@ -245,15 +245,8 @@ public class OllamaClient @JvmOverloads constructor(
         return parseResponse(ollamaJson.decodeFromString<OllamaChatResponseDTO>(responseBody))
     }
 
-    private fun parseResponse(response: OllamaChatResponseDTO): Message.Assistant {
-        val message = response.message
-            ?: throw LLMClientException(clientName = clientName, message = "Missing message in Ollama response")
-
-        // Get token counts from the response, or use null if not available
-        val promptTokenCount = response.promptEvalCount
-        val responseTokenCount = response.evalCount
-
-        // Calculate total tokens (prompt + response) if both are available
+    private fun responseMetaInfo(promptTokenCount: Int?, responseTokenCount: Int?): ResponseMetaInfo {
+        // Calculate total tokens (prompt + response) if either is available
         val totalTokensCount = when {
             promptTokenCount != null && responseTokenCount != null -> promptTokenCount + responseTokenCount
             promptTokenCount != null -> promptTokenCount
@@ -261,12 +254,19 @@ public class OllamaClient @JvmOverloads constructor(
             else -> null
         }
 
-        val responseMetadata = ResponseMetaInfo.create(
+        return ResponseMetaInfo.create(
             clock,
             totalTokensCount = totalTokensCount,
             inputTokensCount = promptTokenCount,
             outputTokensCount = responseTokenCount,
         )
+    }
+
+    private fun parseResponse(response: OllamaChatResponseDTO): Message.Assistant {
+        val message = response.message
+            ?: throw LLMClientException(clientName = clientName, message = "Missing message in Ollama response")
+
+        val responseMetadata = responseMetaInfo(response.promptEvalCount, response.evalCount)
 
         return Message.Assistant(
             parts = buildList {
@@ -335,6 +335,12 @@ public class OllamaClient @JvmOverloads constructor(
                         )
                         tryEmitPendingToolCall()
                     }
+                }
+                if (chunk.done) {
+                    emitEnd(
+                        finishReason = chunk.doneReason,
+                        metaInfo = responseMetaInfo(chunk.promptEvalCount, chunk.evalCount)
+                    )
                 }
             } catch (_: Exception) {
                 // Skip malformed JSON lines
