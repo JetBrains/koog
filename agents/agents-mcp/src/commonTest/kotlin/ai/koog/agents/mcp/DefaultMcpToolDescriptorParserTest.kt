@@ -1236,6 +1236,273 @@ class DefaultMcpToolDescriptorParserTest {
         }
     }
 
+    // ====== oneOf tests ======
+
+    @Test
+    fun `test parsing simple oneOf parameter type`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with oneOf parameter",
+            properties = buildJsonObject {
+                putJsonObject("oneOfParam") {
+                    put("description", "String or number parameter")
+                    putJsonArray("oneOf") {
+                        addJsonObject {
+                            put("type", "string")
+                            put("description", "String option")
+                        }
+                        addJsonObject {
+                            put("type", "number")
+                            put("description", "Number option")
+                        }
+                    }
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+
+        val expectedToolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool with oneOf parameter",
+            requiredParameters = emptyList(),
+            optionalParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "oneOfParam",
+                    description = "String or number parameter",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "String option",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "Number option",
+                                type = ToolParameterType.Float
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        assertEquals(expectedToolDescriptor, toolDescriptor)
+    }
+
+    @Test
+    fun `test parsing oneOf with refs`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with oneOf ${'$'}ref parameter",
+            properties = buildJsonObject {
+                putJsonObject("shape") {
+                    putJsonArray("oneOf") {
+                        addJsonObject {
+                            put("\$ref", "#/\$defs/Circle")
+                        }
+                        addJsonObject {
+                            put("\$ref", "#/\$defs/Square")
+                        }
+                    }
+                }
+            },
+            required = listOf("shape"),
+            defs = buildJsonObject {
+                putJsonObject("Circle") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("radius") {
+                            put("type", "number")
+                            put("description", "Circle radius")
+                        }
+                    }
+                }
+                putJsonObject("Square") {
+                    put("type", "object")
+                    putJsonObject("properties") {
+                        putJsonObject("side") {
+                            put("type", "number")
+                            put("description", "Square side length")
+                        }
+                    }
+                }
+            }
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+
+        assertEquals(1, toolDescriptor.requiredParameters.size)
+        val param = toolDescriptor.requiredParameters.single()
+        assertEquals("shape", param.name)
+        assertTrue(param.type is ToolParameterType.AnyOf)
+        val anyOf = param.type as ToolParameterType.AnyOf
+        assertEquals(2, anyOf.types.size)
+
+        val circleType = anyOf.types[0].type as ToolParameterType.Object
+        assertEquals(1, circleType.properties.size)
+        assertEquals("radius", circleType.properties[0].name)
+        assertEquals(ToolParameterType.Float, circleType.properties[0].type)
+
+        val squareType = anyOf.types[1].type as ToolParameterType.Object
+        assertEquals(1, squareType.properties.size)
+        assertEquals("side", squareType.properties[0].name)
+        assertEquals(ToolParameterType.Float, squareType.properties[0].type)
+    }
+
+    @Test
+    fun `test parsing oneOf nested in array items`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with array of oneOf items",
+            properties = buildJsonObject {
+                putJsonObject("values") {
+                    put("type", "array")
+                    put("description", "Array of string or integer values")
+                    putJsonObject("items") {
+                        putJsonArray("oneOf") {
+                            addJsonObject {
+                                put("type", "string")
+                            }
+                            addJsonObject {
+                                put("type", "integer")
+                            }
+                        }
+                    }
+                }
+            },
+            required = listOf("values")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+
+        val param = toolDescriptor.requiredParameters.single()
+        assertEquals("values", param.name)
+        assertTrue(param.type is ToolParameterType.List)
+        val listType = param.type as ToolParameterType.List
+        assertTrue(listType.itemsType is ToolParameterType.AnyOf)
+        val anyOf = listType.itemsType as ToolParameterType.AnyOf
+        assertEquals(2, anyOf.types.size)
+        assertEquals(ToolParameterType.String, anyOf.types[0].type)
+        assertEquals(ToolParameterType.Integer, anyOf.types[1].type)
+    }
+
+    @Test
+    fun `test parsing const as singleton enum`() {
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with const parameters",
+            properties = buildJsonObject {
+                putJsonObject("kindString") {
+                    put("const", "path")
+                }
+                putJsonObject("kindNumber") {
+                    put("const", 42)
+                }
+                putJsonObject("kindNull") {
+                    put("const", JsonNull)
+                }
+            },
+            required = listOf("kindString", "kindNumber", "kindNull")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+
+        assertEquals(3, toolDescriptor.requiredParameters.size)
+
+        val stringConst = toolDescriptor.requiredParameters[0].type as ToolParameterType.Enum
+        assertEquals(listOf("path"), stringConst.entries.toList())
+
+        val numberConst = toolDescriptor.requiredParameters[1].type as ToolParameterType.Enum
+        assertEquals(listOf("42"), numberConst.entries.toList())
+
+        val nullConst = toolDescriptor.requiredParameters[2].type as ToolParameterType.Enum
+        assertEquals(listOf("null"), nullConst.entries.toList())
+    }
+
+    @Test
+    fun `test parsing oneOf of objects with const discriminator like issue 2017`() {
+        // Reproduces the obsidian_write_note.target schema from issue #2017.
+        // Previously threw IllegalArgumentException("Parameter  must have type property")
+        // at the {const: "path"|"active"|"periodic"} properties inside the oneOf candidates.
+        val sdkTool = createSdkTool(
+            name = "obsidian_write_note",
+            description = "Write a note to Obsidian",
+            properties = buildJsonObject {
+                putJsonObject("target") {
+                    put("description", "Where the note lives.")
+                    putJsonArray("oneOf") {
+                        addJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {
+                                putJsonObject("type") {
+                                    put("const", "path")
+                                }
+                                putJsonObject("path") {
+                                    put("type", "string")
+                                    put("description", "Vault-relative path to the note")
+                                }
+                            }
+                            putJsonArray("required") {
+                                add("type")
+                                add("path")
+                            }
+                        }
+                        addJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {
+                                putJsonObject("type") {
+                                    put("const", "active")
+                                }
+                            }
+                            putJsonArray("required") {
+                                add("type")
+                            }
+                        }
+                        addJsonObject {
+                            put("type", "object")
+                            putJsonObject("properties") {
+                                putJsonObject("type") {
+                                    put("const", "periodic")
+                                }
+                                putJsonObject("period") {
+                                    put("type", "string")
+                                    put("description", "Period identifier")
+                                }
+                            }
+                            putJsonArray("required") {
+                                add("type")
+                            }
+                        }
+                    }
+                }
+            },
+            required = listOf("target")
+        )
+
+        val toolDescriptor = parser.parse(sdkTool)
+
+        val param = toolDescriptor.requiredParameters.single()
+        assertEquals("target", param.name)
+        assertTrue(param.type is ToolParameterType.AnyOf)
+        val anyOf = param.type as ToolParameterType.AnyOf
+        assertEquals(3, anyOf.types.size)
+
+        // Each candidate is an object whose "type" property is a singleton Enum (const discriminator)
+        val pathObj = anyOf.types[0].type as ToolParameterType.Object
+        val pathTypeProp = pathObj.properties.first { it.name == "type" }
+        assertEquals(ToolParameterType.Enum(arrayOf("path")), pathTypeProp.type)
+
+        val activeObj = anyOf.types[1].type as ToolParameterType.Object
+        val activeTypeProp = activeObj.properties.first { it.name == "type" }
+        assertEquals(ToolParameterType.Enum(arrayOf("active")), activeTypeProp.type)
+
+        val periodicObj = anyOf.types[2].type as ToolParameterType.Object
+        val periodicTypeProp = periodicObj.properties.first { it.name == "type" }
+        assertEquals(ToolParameterType.Enum(arrayOf("periodic")), periodicTypeProp.type)
+    }
+
     // Helper function to create an SDK Tool for testing
     private fun createSdkTool(
         name: String,
