@@ -29,6 +29,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
+import ai.koog.a2a.transport.jsonrpc.serialization.SnakeCaseKeyNormalizer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
@@ -87,10 +88,12 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     /**
      * Convert [JSONRPCResponse] to generic response.
      * You can override this method to customize response conversion, e.g., error handling.
+     * snake_case keys in the `result` are accepted as well, see [SnakeCaseKeyNormalizer].
      *
      * @param response Response to convert.
      * @param serializer Serializer for the generic response.
      * @throws A2AException if server returned an error, i.e., [JSONRPCErrorResponse]
+     * @throws SerializationException if the `result` cannot be decoded to [T]
      */
     protected open fun <T> toResponse(
         response: JSONRPCResponse,
@@ -98,7 +101,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     ): T {
         return when (response) {
             is JSONRPCSuccessResponse ->
-                JSONRPCJson.decodeFromJsonElement(serializer, response.result)
+                JSONRPCJson.decodeFromJsonElement(serializer, SnakeCaseKeyNormalizer.normalize(response.result))
 
             is JSONRPCErrorResponse -> response.error.let {
                 throw A2AException.create(it.message, it.code, toErrorDetails(it.data))

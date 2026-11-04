@@ -1059,4 +1059,34 @@ class HttpJSONRPCServerTransportTest {
 
         assertEquals(mapOf<StateKey<*>, Any>(userKey to "bob"), seen?.state)
     }
+
+    private val v1Headers = mapOf(A2AHeaders.A2A_VERSION to A2AVersions.VERSION_1_0)
+
+    @Test
+    fun testSnakeCaseParamsAreHonored() = runTest {
+        var seen: GetTaskRequest? = null
+        val handler = object : RequestHandler by MockRequestHandler {
+            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
+                seen = request
+                return MockRequestHandler.taskGet
+            }
+        }
+
+        //language=JSON
+        val params = json.parseToJsonElement("""{"id": "task-1", "history_length": 2}""")
+        val response = postRaw(A2AMethod.GetTask, params, headers = v1Headers, handler = handler)
+
+        assertEquals(MockRequestHandler.taskGet, decodeTask(response))
+        assertEquals(GetTaskRequest(id = "task-1", historyLength = 2), seen)
+    }
+
+    @Test
+    fun testParamSentInTwoSpellingsIsInvalidParams() = runTest {
+        //language=JSON
+        val params = json.parseToJsonElement("""{"id": "task-1", "historyLength": 1, "history_length": 2}""")
+        val response = postRaw(A2AMethod.GetTask, params, headers = v1Headers)
+
+        val error = json.decodeFromString<JSONRPCErrorResponse>(response.body).error
+        assertEquals(A2AErrorCodes.INVALID_PARAMS, error.code)
+    }
 }

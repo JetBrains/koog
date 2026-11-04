@@ -7,6 +7,8 @@ import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.exceptions.GenericErrorData
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskState
+import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
@@ -155,5 +157,28 @@ class JSONRPCClientTransportTest {
             .jsonObject.getValue("data")
             .jsonArray.single() as JsonObject
         assertEquals(listOf(GenericErrorData(raw = rawEntry, type = ErrorInfo.TYPE)), exception.details)
+    }
+
+    @Test
+    fun testSnakeCaseResultIsDecoded() {
+        //language=JSON
+        val responseJson = """
+            {
+              "jsonrpc": "2.0",
+              "id": "1",
+              "result": {
+                "id": "task-1",
+                "context_id": "ctx-1",
+                "status": {"state": "TASK_STATE_COMPLETED"}
+              }
+            }
+        """.trimIndent()
+
+        val expected = Task(
+            id = "task-1",
+            contextId = "ctx-1",
+            status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED),
+        )
+        assertEquals(expected, transport.decodeResponse(responseJson))
     }
 }

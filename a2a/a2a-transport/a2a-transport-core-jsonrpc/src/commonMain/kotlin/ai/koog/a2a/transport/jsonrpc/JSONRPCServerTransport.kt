@@ -23,6 +23,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import ai.koog.a2a.transport.jsonrpc.model.RequestId
 import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
+import ai.koog.a2a.transport.jsonrpc.serialization.SnakeCaseKeyNormalizer
 import ai.koog.a2a.validation.requireSupportedVersion
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
@@ -281,6 +282,7 @@ public open class JSONRPCServerTransport(
      * Convert [JSONRPCRequest] params to request [T].
      * Missing params are treated as an empty object, so requests without required fields
      * (e.g. [ai.koog.a2a.model.GetExtendedAgentCardRequest]) can omit them.
+     * snake_case keys are accepted as well, see [SnakeCaseKeyNormalizer].
      *
      * @param request Request to convert.
      * @param serializer Serializer for the request parameters.
@@ -294,7 +296,7 @@ public open class JSONRPCServerTransport(
         val params = request.params.takeIf { it !is JsonNull } ?: JsonObject(emptyMap())
 
         return try {
-            JSONRPCJson.decodeFromJsonElement(serializer, params)
+            JSONRPCJson.decodeFromJsonElement(serializer, SnakeCaseKeyNormalizer.normalize(params))
         } catch (e: SerializationException) {
             throw A2AInvalidParamsException("Cannot parse request params:\n${e.message}")
         }
