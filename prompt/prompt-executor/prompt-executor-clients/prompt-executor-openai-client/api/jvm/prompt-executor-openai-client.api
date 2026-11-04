@@ -167,7 +167,6 @@ public final class ai/koog/prompt/executor/clients/openai/azure/AzureKt {
 
 public final class ai/koog/prompt/executor/clients/openai/azure/AzureOpenAIServiceVersion {
 	public static final field Companion Lai/koog/prompt/executor/clients/openai/azure/AzureOpenAIServiceVersion$Companion;
-	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public static final fun fromString (Ljava/lang/String;)Lai/koog/prompt/executor/clients/openai/azure/AzureOpenAIServiceVersion;
 	public static final fun getV2022_12_01 ()Lai/koog/prompt/executor/clients/openai/azure/AzureOpenAIServiceVersion;

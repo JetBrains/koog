@@ -39,7 +39,6 @@ public abstract class ai/koog/prompt/cache/model/PromptCache$Factory$Named : ai/
 
 public final class ai/koog/prompt/cache/model/PromptCache$Request {
 	public static final field Companion Lai/koog/prompt/cache/model/PromptCache$Request$Companion;
-	public synthetic fun <init> (Lai/koog/prompt/Prompt;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getAsCacheKey ()Ljava/lang/String;
 	public final fun getPrompt ()Lai/koog/prompt/Prompt;
 	public final fun getToolJsons ()Ljava/util/List;
