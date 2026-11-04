@@ -611,6 +611,7 @@ If the LLM does not use your tools correctly or misunderstands their purpose, tr
 - Use primitive parameter types when possible (`String`, `Boolean`, `Int` in Kotlin, or `String`, `boolean`, `int` in Java).
 - Clearly describe the expected format in the parameter description.
 - For complex types, consider using `String` parameters with a specific format and parse them in your tool.
+- For free-form objects whose keys are not known in advance (for example, arguments you forward to another API or MCP tool), use a `kotlinx.serialization.json.JsonObject` parameter. It is described to the LLM as an object that accepts any properties, and the arguments are passed to your tool as raw JSON. `JsonElement` and `JsonArray` parameters (any JSON value) are not supported yet.
 - Include examples of valid inputs in your parameter descriptions.
 - Note that Java doesn't support default parameters. Use method overloading instead.
 
