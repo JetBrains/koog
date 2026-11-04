@@ -12,8 +12,11 @@ import ai.koog.serialization.TypeToken
 import ai.koog.serialization.annotations.InternalKoogSerializationApi
 import kotlinx.schema.generator.json.FunctionCallingSchemaConfig
 import kotlinx.schema.generator.json.JsonSchemaConfig
-import kotlinx.schema.generator.json.ReflectionClassJsonSchemaGenerator
-import kotlinx.schema.generator.json.ReflectionFunctionCallingSchemaGenerator
+import kotlinx.schema.generator.json.TypeGraphToFunctionCallingSchemaTransformer
+import kotlinx.schema.generator.json.TypeGraphToJsonSchemaTransformer
+import kotlinx.schema.generator.reflect.ReflectionClassIntrospector
+import kotlinx.schema.generator.reflect.ReflectionFunctionIntrospector
+import kotlinx.schema.json.FunctionCallingSchema
 import kotlinx.schema.json.JsonSchema
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -24,28 +27,42 @@ import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 
-private fun createReflectionClassGenerator(
-    jsonSchemaConfig: JsonSchemaConfig,
-) = ReflectionClassJsonSchemaGenerator(
-    // FIXME don't require Json
-    json = Json.Default,
-    config = jsonSchemaConfig,
-)
+/*
+ The reflection generators are assembled from kotlinx-schema's introspector and transformer, instead of using
+ ReflectionClassJsonSchemaGenerator / ReflectionFunctionCallingSchemaGenerator directly, to fix up
+ kotlinx.serialization.json built-in types in the type graph in between (see JsonBuiltinTypes.jvmCommon.kt).
+ */
 
-private fun createReflectionFunctionGenerator(
+private fun generateReflectionClassSchema(
+    klass: KClass<*>,
     jsonSchemaConfig: JsonSchemaConfig,
-) = ReflectionFunctionCallingSchemaGenerator(
-    // FIXME don't require Json
-    json = Json.Default,
-    // FIXME provide convenience constructor FunctionCallingSchemaConfig(jsonSchemaConfig)
-    config = FunctionCallingSchemaConfig(
-        respectDefaultPresence = jsonSchemaConfig.respectDefaultPresence,
-        requireNullableFields = jsonSchemaConfig.requireNullableFields,
-        useUnionTypes = jsonSchemaConfig.useUnionTypes,
-        useNullableField = jsonSchemaConfig.useNullableField,
-        includePolymorphicDiscriminator = jsonSchemaConfig.includePolymorphicDiscriminator,
-    ),
-)
+): JsonSchema {
+    val graph = ReflectionClassIntrospector.introspect(klass).withSchemaFriendlyJsonTypes(klass)
+
+    return TypeGraphToJsonSchemaTransformer(
+        config = jsonSchemaConfig,
+        // FIXME don't require Json
+        json = Json.Default,
+    ).transform(graph, rootName = klass.qualifiedName ?: klass.simpleName ?: "Anonymous")
+}
+
+private fun generateReflectionFunctionSchema(
+    callable: KCallable<*>,
+    jsonSchemaConfig: JsonSchemaConfig,
+): FunctionCallingSchema {
+    val graph = ReflectionFunctionIntrospector.introspect(callable).withSchemaFriendlyJsonTypes(callable)
+
+    return TypeGraphToFunctionCallingSchemaTransformer(
+        // FIXME provide convenience constructor FunctionCallingSchemaConfig(jsonSchemaConfig)
+        config = FunctionCallingSchemaConfig(
+            respectDefaultPresence = jsonSchemaConfig.respectDefaultPresence,
+            requireNullableFields = jsonSchemaConfig.requireNullableFields,
+            useUnionTypes = jsonSchemaConfig.useUnionTypes,
+            useNullableField = jsonSchemaConfig.useNullableField,
+            includePolymorphicDiscriminator = jsonSchemaConfig.includePolymorphicDiscriminator,
+        ),
+    ).transform(graph, rootName = callable.name)
+}
 
 @OptIn(InternalKoogSerializationApi::class)
 public actual fun getJsonSchema(
@@ -57,7 +74,7 @@ public actual fun getJsonSchema(
 
     return if (kSerializer != null) {
         createSerializationGenerator(jsonSchemaConfig)
-            .generateSchema(kSerializer.descriptor)
+            .generateSchema(kSerializer.descriptor.withSchemaFriendlyJsonTypes())
     } else {
         // Fallback to reflection
         val klass = when (typeToken) {
@@ -92,8 +109,7 @@ public actual fun getJsonSchema(
                 throw IllegalStateException("Should not be possible, KSerializer is always present for this type token")
         }
 
-        createReflectionClassGenerator(jsonSchemaConfig)
-            .generateSchema(klass)
+        generateReflectionClassSchema(klass, jsonSchemaConfig)
     }
 }
 
@@ -113,8 +129,7 @@ public fun getToolDescriptor(
     toolDescription: String? = null,
     jsonSchemaConfig: JsonSchemaConfig = defaultJsonSchemaConfig,
 ): ToolDescriptor {
-    val schema = createReflectionFunctionGenerator(jsonSchemaConfig)
-        .generateSchema(callable)
+    val schema = generateReflectionFunctionSchema(callable, jsonSchemaConfig)
 
     // All parameters for function calling are considered required
     val requiredParameters = schema.parameters.properties

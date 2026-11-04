@@ -25,7 +25,7 @@ public actual fun getJsonSchema(
         )
 
     return createSerializationGenerator(jsonSchemaConfig)
-        .generateSchema(kSerializer.descriptor)
+        .generateSchema(kSerializer.descriptor.withSchemaFriendlyJsonTypes())
 }
 
 @InternalKoogSerializationApi

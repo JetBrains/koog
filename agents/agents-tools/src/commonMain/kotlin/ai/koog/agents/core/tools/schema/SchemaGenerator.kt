@@ -117,7 +117,14 @@ public fun PropertyDefinition.toToolParameter(
     is ValuePropertyDefinition<*> -> {
         val type = this.type
             ?.takeIf { it.isNotEmpty() }
-            ?: throw IllegalArgumentException("Value property definition is missing the 'type' (either null or empty)")
+            ?: throw IllegalArgumentException(
+                if (isAnyJsonValue()) {
+                    "Tool parameters that accept any JSON value (empty schema {}, e.g. JsonElement, JsonArray items or Any) " +
+                        "are not supported yet. Use JsonObject for free-form objects, or a concrete type."
+                } else {
+                    "Value property definition is missing the 'type' (either null or empty)"
+                }
+            )
 
         val isNullableType = JsonSchemaConstants.Types.NULL in type || nullable == true
 
@@ -174,7 +181,9 @@ public fun PropertyDefinition.toToolParameter(
                         is AllowAdditionalProperties, is AdditionalPropertiesSchema -> true
                         is DenyAdditionalProperties, null -> false
                     },
+                    // "additionalProperties": {} (e.g. JsonObject) allows any value, so there is no value type to report
                     additionalPropertiesType = (additionalProperties as? AdditionalPropertiesSchema)?.schema
+                        ?.takeUnless { it.isAnyJsonValue() }
                         ?.toToolParameter(defs)?.type,
                 )
             }
