@@ -1170,7 +1170,6 @@ public final class ai/koog/agents/features/opentelemetry/feature/OpenTelemetry$F
 }
 
 public final class ai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfig : ai/koog/agents/core/feature/config/FeatureConfig, ai/koog/agents/features/opentelemetry/feature/OpenTelemetryConfigAPI {
-	public fun <init> ()V
 	public final fun addDatadogExporter ()V
 	public final fun addDatadogExporter (Ljava/lang/String;)V
 	public final fun addDatadogExporter (Ljava/lang/String;Ljava/lang/String;)V
@@ -1270,7 +1269,6 @@ public final class ai/koog/agents/features/opentelemetry/integration/langfuse/La
 }
 
 public final class ai/koog/agents/features/opentelemetry/integration/otlp/OtlpJsonSpanExporter : io/opentelemetry/kotlin/tracing/export/SpanExporter {
-	public static final field OTLP_JSON_USER_AGENT Ljava/lang/String;
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lkotlin/time/Duration;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Map;Lkotlin/time/Duration;Lio/ktor/client/HttpClient;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun export (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
