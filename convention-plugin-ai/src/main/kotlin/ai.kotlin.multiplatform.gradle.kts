@@ -23,10 +23,8 @@ val isWasmJsIncluded = (findProperty("koog.target.wasmJs") as? String)?.toBoolea
 kotlin {
     @OptIn(ExperimentalAbiValidation::class)
     abiValidation {
-        enabled = true
-
         filters {
-            excluded {
+            exclude {
                 annotatedWith.add("ai.koog.agents.core.annotation.InternalAgentsApi")
                 annotatedWith.add("ai.koog.prompt.annotations.InternalPromptAPI")
                 annotatedWith.add("ai.koog.agents.core.tools.annotations.InternalAgentToolsApi")

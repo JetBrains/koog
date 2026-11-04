@@ -9,8 +9,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 val libs = the<LibrariesForLibs>()
 
 /*
-  For KMP there's no support for languageLevel, and your Kotlin Gradle Plugin version determines your language level.
-  So keep these the same as KGP version.
+  Kept one minor version below KGP on purpose, so JVM users on older Kotlin can still use Koog.
+  Non-JVM targets ignore these settings (KT-66755): their klibs require the KGP minor version.
 
   See: https://youtrack.jetbrains.com/issue/KT-66755/Native-non-JVM-targets-add-support-for-languageVersion
  */
@@ -63,7 +63,6 @@ tasks.withType<KotlinJvmCompile>().configureEach {
         freeCompilerArgs.addAll(
             listOf(
                 "-Xexpect-actual-classes",
-                "-Xmulti-dollar-interpolation",
             )
         )
     }
@@ -75,7 +74,7 @@ tasks.withType<JavaCompile>().configureEach {
     targetCompatibility = JavaVersion.VERSION_17.toString()
 }
 
-configurations.all {
+configurations.matching { !it.name.startsWith("ktlint") }.configureEach {
     resolutionStrategy {
         eachDependency {
             /*

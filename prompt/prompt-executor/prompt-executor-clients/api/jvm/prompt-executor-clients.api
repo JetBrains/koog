@@ -122,6 +122,7 @@ public final class ai/koog/prompt/executor/clients/retry/RetryConfig {
 	public static final field DEFAULT_PATTERNS Ljava/util/List;
 	public static final field DISABLED Lai/koog/prompt/executor/clients/retry/RetryConfig;
 	public static final field PRODUCTION Lai/koog/prompt/executor/clients/retry/RetryConfig;
+	public fun <init> ()V
 	public synthetic fun <init> (IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (IJJDDLjava/util/List;Lai/koog/prompt/executor/clients/retry/RetryAfterExtractor;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
