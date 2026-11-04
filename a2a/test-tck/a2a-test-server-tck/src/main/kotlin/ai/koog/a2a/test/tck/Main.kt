@@ -7,8 +7,12 @@ import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.server.A2AServer
+import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
+import ai.koog.a2a.server.notifications.SimplePushNotificationSender
 import ai.koog.a2a.transport.server.jsonrpc.http.HttpJSONRPCServerTransport
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
 import io.ktor.server.netty.Netty
 
 private val logger = KotlinLogging.logger {}
@@ -32,7 +36,7 @@ suspend fun main() {
         ),
         capabilities = AgentCapabilities(
             streaming = true,
-            pushNotifications = false,
+            pushNotifications = true,
             extendedAgentCard = true,
         ),
         defaultInputModes = listOf("text"),
@@ -52,18 +56,27 @@ suspend fun main() {
         description = "The extended agent card of the TCK A2A agent",
     )
 
+    // The server answers the push RPCs with -32003 unless it has both a config storage and a sender.
+    val pushSender = SimplePushNotificationSender(HttpClient(CIO))
+
     val a2aServer = A2AServer(
         agentExecutor = TckAgentExecutor(),
         agentCard = agentCard,
         agentCardExtended = agentCardExtended,
+        pushConfigStorage = InMemoryPushNotificationConfigStorage(),
+        pushSender = pushSender,
     )
 
-    HttpJSONRPCServerTransport(a2aServer).start(
-        engineFactory = Netty,
-        port = PORT,
-        path = "/",
-        wait = true,
-        agentCard = agentCard,
-        agentCardPath = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
-    )
+    try {
+        HttpJSONRPCServerTransport(a2aServer).start(
+            engineFactory = Netty,
+            port = PORT,
+            path = "/",
+            wait = true,
+            agentCard = agentCard,
+            agentCardPath = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
+        )
+    } finally {
+        pushSender.close()
+    }
 }

@@ -33,7 +33,8 @@ official [A2A protocol specification](https://a2a-protocol.org/latest/specificat
 The TCK fetches the agent card from `{sut-host}/.well-known/agent-card.json` and tests every transport declared in its
 `supportedInterfaces`. The Koog test server declares only JSON-RPC, served at the root `http://localhost:9999` (the TCK
 posts to the base URL with a trailing slash, so the route is mounted at `/`). It declares streaming and an extended agent
-card, and no push notifications. Heartbeats are off, so every stream must end by itself.
+card, and push notifications (an in-memory config storage and a `SimplePushNotificationSender`). Heartbeats are off, so
+every stream must end by itself.
 
 The TCK drives the agent through the prefix of the `messageId` (`tck-<scenario>-<session>`); the prefixes are handled in
 `TckAgentExecutor`. An unknown prefix completes the task.

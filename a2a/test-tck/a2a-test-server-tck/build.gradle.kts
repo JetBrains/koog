@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
 
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.client.cio)
     implementation(libs.oshai.kotlin.logging)
     runtimeOnly(libs.logback.classic)
 }
