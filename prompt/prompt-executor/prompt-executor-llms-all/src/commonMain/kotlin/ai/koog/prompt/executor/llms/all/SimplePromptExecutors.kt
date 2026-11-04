@@ -5,6 +5,7 @@ package ai.koog.prompt.executor.llms.all
 
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -137,3 +138,16 @@ public fun simpleOllamaAIExecutor(
  */
 public fun simpleMistralAIExecutor(apiKey: String, httpClientFactory: KoogHttpClient.Factory): MultiLLMPromptExecutor =
     MultiLLMPromptExecutor(LLMProvider.MistralAI to MistralAILLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory))
+
+/**
+ * Creates an instance of `MultiLLMPromptExecutor` with a `DeepSeekLLMClient`.
+ *
+ * @param apiKey The API token used for authentication with the DeepSeek API.
+ * @param httpClientFactory Factory used to create the underlying HTTP client.
+ */
+public fun simpleDeepSeekExecutor(
+    apiKey: String,
+    httpClientFactory: KoogHttpClient.Factory,
+): MultiLLMPromptExecutor = MultiLLMPromptExecutor(
+    LLMProvider.DeepSeek to DeepSeekLLMClient(apiKey = apiKey, httpClientFactory = httpClientFactory)
+)
