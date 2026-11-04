@@ -6,12 +6,13 @@ You are an orchestrator.
 - Otherwise follow the agent descriptions, and keep each subagent's work as granular as possible.
 - After each milestone, rewrite state.md and prompt.md, so that you can be stopped and restarted with a clear context and continue the work.
 - Don't guess API or behavior decisions: ask me.
+- Breaking public API in `a2a/` is fine in this implementation work (unreleased v1 migration). Prefer the cleanest API over additive overloads or compatibility shims, and tell subagents so.
 
 # Current goal
-Phase 3 of `../plan.md` is complete. We are implementing the decisions from the brainstorm of the code-quality review (`.agents/research/phase3-code-quality-review.md`), as granular slices. Done so far: B4, B3, B1, B2, W5, W1, B5, W2, W3, W4. Next: A1 (+S4, S1, lock-order KDoc, (d), W3 getTask→data), then the small cleanup slice (H1, S3, S7, C1 TODO), S5, H7, the `.dockerignore`, plan.md update, tests T1–T4. C2 (shutdown) waits for the user.
+D-5 back-pressure redesign (configurable `StreamDeliveryConfig` on A2AServer). All design decisions are recorded in state.md → "D-5 back-pressure redesign". D5 DONE and pushed (`44c45cb95` = origin). NOW: plan.md Phase 4. Done: 4.1 SUT, snake_case normalizer (736e938f3), transport test layering (741091c10). Remaining: agent-card caching headers decision (CARD-CACHE hard-fails the full run), 4.2 push in the SUT (user said YES), 4.3 CI, 4.4 gate. Researcher running → `.agents/research/phase4-tck-sut.md`; 4.2 asked to the user.
 
 # Restart notes
-- **Read `.agents/state.md` → "RESUME HERE" first.** It has the brainstorm agenda (sections A–E), the open questions, the test counts at HEAD and the known breakage.
+- **Read `.agents/state.md` → "RESUME HERE" first.** It has the next steps, the test counts at HEAD, and below it the brainstorm decisions (✅ = done), the agenda (sections A–E), the open questions and the known breakage.
 - Everything under "Decisions recorded" and in the other decision sections of state.md is FINAL: don't re-ask.
 - Only start slices whose decisions are recorded in state.md ("Brainstorm decisions").
 - Before presenting an item, re-read it in the report. When the user asks "why", answer from the code or reports: verify with a researcher or a quick read, not from memory. Two earlier review claims turned out wrong on verification: the F1 `emitAllImpl` claim, and the F1 root cause in the final review.
@@ -22,3 +23,7 @@ Phase 3 of `../plan.md` is complete. We are implementing the decisions from the 
   - explicit verification commands (`../gradlew :a2a:a2a-server:jvmTest ... --no-build-cache --rerun-tasks`, builds with `-x jsBrowserTest -x wasmJsBrowserTest -x wasmJsNodeTest`, ktlintCheck);
   - the git rule: never stage `a2a/.agents/`, and commit with explicit paths.
 - Code uses the Turn naming (package `ai.koog.a2a.server.turn`: `Turn`, `TurnManager`, `TurnEventProcessor`). Older research reports still use the Session names.
+- Tell programmers/researchers that the intellij-index MCP tools (`mcp__intellij-index__ide_*`, schemas via ToolSearch, project_path=/Users/eugene/Documents/JetBrains/projects/koog) are available; they don't use them otherwise.
+- Docker (OrbStack) is available: the a2a-client integration tests run.
+- Don't add attribution lines to commit messages.
+- PUSH every commit as it is created (user, 2026-11-02): `git push` on `eugenethedev/a2a-1.0` (tracks origin). Tell programmers to push after each commit.
