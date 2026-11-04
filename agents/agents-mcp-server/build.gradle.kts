@@ -14,6 +14,7 @@ kotlin {
                 api(libs.mcp.server)
                 implementation(libs.ktor.server.core)
                 implementation(libs.ktor.server.sse)
+                implementation(libs.ktor.client.engine.defaults)
 
                 api(project(":agents:agents-tools"))
             }
@@ -25,7 +26,6 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-mcp"))
                 implementation(project(":agents:agents-test"))
-                runtimeOnly(libs.ktor.client.cio)
                 runtimeOnly(libs.slf4j.simple)
             }
         }

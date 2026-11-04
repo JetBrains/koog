@@ -22,11 +22,11 @@ kotlinx-serialization = "1.10.0" # check with IJ
 kotlinx-schema = "0.4.4"
 kover = "0.9.8"
 ktlint = "14.2.0"
-ktor3 = "3.3.3"
+ktor3 = "3.6.1"
 lettuce = "7.2.1.RELEASE"
 litertlm = "0.11.0"
 logback = "1.5.13"
-mcp = "0.11.1"
+mcp = "0.14.0"
 mockito = "5.21.0"
 mockk = "1.14.7"
 mokksy = "0.5.1"
@@ -68,11 +68,7 @@ kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.re
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-schema-generator-json = { module = "org.jetbrains.kotlinx:kotlinx-schema-generator-json", version.ref = "kotlinx-schema"  }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
-ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
-ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor3" }
-ktor-client-apache5 = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor3" }
-ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor3" }
+ktor-client-engine-defaults = { module = "io.ktor:ktor-client-engine-defaults", version.ref = "ktor3" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
