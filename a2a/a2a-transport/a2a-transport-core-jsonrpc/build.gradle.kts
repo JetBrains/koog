@@ -23,12 +23,19 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                runtimeOnly(libs.logback.classic)
+            }
+        }
+
+        androidUnitTest {
+            dependencies {
                 runtimeOnly(libs.logback.classic)
             }
         }

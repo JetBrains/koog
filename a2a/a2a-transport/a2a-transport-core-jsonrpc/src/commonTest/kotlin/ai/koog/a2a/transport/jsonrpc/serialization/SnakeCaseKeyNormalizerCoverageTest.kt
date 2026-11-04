@@ -1,3 +1,6 @@
+// Deprecated OAuth flows are still on the wire, so they are covered too
+@file:Suppress("DEPRECATION")
+
 package ai.koog.a2a.transport.jsonrpc.serialization
 
 import ai.koog.a2a.model.APIKeySecurityScheme
@@ -51,8 +54,6 @@ import kotlin.test.assertEquals
  * free-form property not covered by [SnakeCaseKeyNormalizer] fails the build instead of having its user keys
  * rewritten.
  */
-// Deprecated OAuth flows are still on the wire, so they are covered too
-@Suppress("DEPRECATION")
 class SnakeCaseKeyNormalizerCoverageTest {
     private val roots: List<KSerializer<*>> = listOf(
         // params

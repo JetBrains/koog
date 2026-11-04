@@ -4,15 +4,10 @@ import ai.koog.a2a.consts.A2AHeaders
 import ai.koog.a2a.consts.A2AVersions
 import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.exceptions.A2AErrorReasons
-import ai.koog.a2a.exceptions.A2AInternalErrorException
-import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.exceptions.ErrorInfo
-import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.AgentInterface
-import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
@@ -26,16 +21,13 @@ import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.ResponseEvent
 import ai.koog.a2a.model.Role
-import ai.koog.a2a.model.SecurityRequirement
 import ai.koog.a2a.model.SendMessageRequest
-import ai.koog.a2a.model.StringList
 import ai.koog.a2a.model.SubscribeToTaskRequest
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
@@ -44,7 +36,6 @@ import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
-import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import ai.koog.a2a.transport.jsonrpc.model.RequestId
@@ -69,55 +60,29 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import java.net.ServerSocket
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.plugins.sse.SSE as SSEClient
 
+/**
+ * Tests what the HTTP layer adds to [JSONRPCServerTransport]: headers to [ServerCallContext], the plain JSON and SSE
+ * responses and the standalone server. Protocol behavior is covered by `JSONRPCServerTransportTest`.
+ */
 class HttpJSONRPCServerTransportTest {
-    private object MockRequestHandler : RequestHandler {
-        val agentCard = AgentCard(
-            name = "Test Agent",
-            description = "A test agent",
-            supportedInterfaces = listOf(
-                AgentInterface(
-                    url = "https://api.example.com/a2a",
-                    protocolBinding = TransportProtocol.JSONRPC,
-                    protocolVersion = "1.0",
-                )
-            ),
-            version = "1.0.0",
-            capabilities = AgentCapabilities(),
-            defaultInputModes = listOf("text/plain"),
-            defaultOutputModes = listOf("text/plain"),
-            securityRequirements = listOf(
-                SecurityRequirement(mapOf("oauth" to StringList(listOf("read")))),
-                SecurityRequirement(mapOf("api-key" to StringList(listOf("mtls")))),
-            ),
-            skills = listOf(
-                AgentSkill(
-                    id = "test-skill",
-                    name = "Test Skill",
-                    description = "A test skill",
-                    tags = listOf("test")
-                )
-            )
+    /** Answers the fixtures the tests below need; any other method is not expected to be called. */
+    private object StubRequestHandler : RequestHandler {
+        val task = Task(
+            id = "task-1",
+            contextId = "test-context-1",
+            status = TaskStatus(state = TaskState.TASK_STATE_WORKING)
         )
 
-        val responseEvent: ResponseEvent = Message(
-            messageId = "message-1",
-            role = Role.ROLE_AGENT,
-            parts = listOf(TextPart("Response message.")),
-            taskId = "task-1"
-        )
-
-        val updateEvents: List<Event> = listOf(
+        val events: List<Event> = listOf(
             Message(
                 messageId = "message-stream-1",
                 role = Role.ROLE_AGENT,
@@ -132,493 +97,82 @@ class HttpJSONRPCServerTransportTest {
             )
         )
 
-        val taskGet = Task(
-            id = "task-1",
-            contextId = "test-context-1",
-            status = TaskStatus(
-                state = TaskState.TASK_STATE_WORKING
-            )
-        )
+        override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task = task
 
-        val taskCancel = Task(
-            id = "task-1",
-            contextId = "test-context-1",
-            status = TaskStatus(
-                state = TaskState.TASK_STATE_CANCELED
-            )
-        )
+        override fun onSendMessageStreaming(request: SendMessageRequest, ctx: ServerCallContext): Flow<Event> =
+            events.asFlow()
 
-        val listTasksResponse = ListTasksResponse(
-            tasks = listOf(taskGet),
-            nextPageToken = "",
-            pageSize = 50,
-            totalSize = 1,
-        )
-
-        val taskPushNotificationConfig = TaskPushNotificationConfig(
-            taskId = "task-1",
-            id = "notification-config-1",
-            url = "https://webhook.example.com",
-            token = "webhook-token-123"
-        )
-
-        val listConfigsResponse = ListTaskPushNotificationConfigsResponse(
-            configs = listOf(taskPushNotificationConfig),
-            nextPageToken = "",
-        )
+        override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> =
+            events.asFlow()
 
         override suspend fun onGetExtendedAgentCard(
             request: GetExtendedAgentCardRequest,
             ctx: ServerCallContext
-        ): AgentCard = agentCard
+        ): AgentCard = error("Not used")
 
-        override suspend fun onSendMessage(
-            request: SendMessageRequest,
-            ctx: ServerCallContext
-        ): ResponseEvent = responseEvent
+        override suspend fun onSendMessage(request: SendMessageRequest, ctx: ServerCallContext): ResponseEvent =
+            error("Not used")
 
-        override fun onSendMessageStreaming(
-            request: SendMessageRequest,
-            ctx: ServerCallContext
-        ): Flow<Event> = updateEvents.asFlow()
+        override suspend fun onListTasks(request: ListTasksRequest, ctx: ServerCallContext): ListTasksResponse =
+            error("Not used")
 
-        override suspend fun onGetTask(
-            request: GetTaskRequest,
-            ctx: ServerCallContext
-        ): Task = taskGet
-
-        override suspend fun onListTasks(
-            request: ListTasksRequest,
-            ctx: ServerCallContext
-        ): ListTasksResponse = listTasksResponse
-
-        override suspend fun onCancelTask(
-            request: CancelTaskRequest,
-            ctx: ServerCallContext
-        ): Task = taskCancel
-
-        override fun onSubscribeToTask(
-            request: SubscribeToTaskRequest,
-            ctx: ServerCallContext
-        ): Flow<Event> = updateEvents.asFlow()
+        override suspend fun onCancelTask(request: CancelTaskRequest, ctx: ServerCallContext): Task = error("Not used")
 
         override suspend fun onCreateTaskPushNotificationConfig(
             request: TaskPushNotificationConfig,
             ctx: ServerCallContext
-        ): TaskPushNotificationConfig = request
+        ): TaskPushNotificationConfig = error("Not used")
 
         override suspend fun onGetTaskPushNotificationConfig(
             request: GetTaskPushNotificationConfigRequest,
             ctx: ServerCallContext
-        ): TaskPushNotificationConfig = taskPushNotificationConfig
+        ): TaskPushNotificationConfig = error("Not used")
 
         override suspend fun onListTaskPushNotificationConfigs(
             request: ListTaskPushNotificationConfigsRequest,
             ctx: ServerCallContext
-        ): ListTaskPushNotificationConfigsResponse = listConfigsResponse
+        ): ListTaskPushNotificationConfigsResponse = error("Not used")
 
         override suspend fun onDeleteTaskPushNotificationConfig(
             request: DeleteTaskPushNotificationConfigRequest,
             ctx: ServerCallContext
-        ) {}
+        ) = error("Not used")
     }
 
     private val json = JSONRPCJson
 
-    private inline fun <reified TRequest, reified TResponse> testServerMethod(
-        method: A2AMethod,
-        requestId: RequestId,
-        request: TRequest,
-        expectedResponse: TResponse,
-    ) {
+    private fun rawRequest(method: A2AMethod, params: JsonElement, id: String): String =
+        json.encodeToString(
+            JSONRPCRequest(id = RequestId.StringId(id), method = method.value, params = params, jsonrpc = JSONRPC_VERSION)
+        )
+
+    @Test
+    fun testUnaryRequestEndToEnd() = runTest {
         testApplication {
             install(SSE)
 
-            val transport = JSONRPCServerTransport(MockRequestHandler)
-
             routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
-            }
-
-            val jsonRpcRequest = JSONRPCRequest(
-                id = requestId,
-                method = method.value,
-                params = json.encodeToJsonElement(request),
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            val response = client.post("/a2a") {
-                contentType(ContentType.Application.Json)
-                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                setBody(json.encodeToString(jsonRpcRequest))
-            }
-
-            assertEquals(HttpStatusCode.OK, response.status)
-
-            val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(response.bodyAsText())
-
-            assertEquals(requestId, jsonRpcResponse.id)
-            assertEquals(expectedResponse, json.decodeFromJsonElement<TResponse>(jsonRpcResponse.result))
-        }
-    }
-
-    private inline fun <reified TRequest, reified TResponse> testServerMethodStreaming(
-        method: A2AMethod,
-        requestId: RequestId,
-        request: TRequest,
-        expectedResponses: List<TResponse>,
-    ) {
-        testApplication {
-            install(SSE)
-
-            val client = createClient {
-                install(SSEClient)
-            }
-
-            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
-
-            routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
-            }
-
-            val jsonRpcRequest = JSONRPCRequest(
-                id = requestId,
-                method = method.value,
-                params = json.encodeToJsonElement(request),
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            val jsonrpcResponses = buildList {
-                client.sse(
-                    urlString = "/a2a",
-                    request = {
-                        this.method = HttpMethod.Post
-
-                        contentType(ContentType.Application.Json)
-                        header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                        setBody(json.encodeToString(jsonRpcRequest))
-                    },
-                ) {
-                    assertEquals(HttpStatusCode.OK, call.response.status)
-
-                    incoming
-                        .map { event -> JSONRPCJson.decodeFromString<JSONRPCSuccessResponse>(event.data!!) }
-                        .collect { add(it) }
-                }
-            }
-
-            assertEquals(expectedResponses.size, jsonrpcResponses.size)
-            assertEquals(List(jsonrpcResponses.size) { requestId }, jsonrpcResponses.map { it.id })
-            assertEquals(
-                expectedResponses,
-                jsonrpcResponses.map { json.decodeFromJsonElement<TResponse>(it.result) }
-            )
-        }
-    }
-
-    @Test
-    fun testGetExtendedAgentCard() = runTest {
-        testServerMethod(
-            method = A2AMethod.GetExtendedAgentCard,
-            requestId = RequestId.StringId("test-1"),
-            request = GetExtendedAgentCardRequest(),
-            expectedResponse = MockRequestHandler.agentCard,
-        )
-    }
-
-    @Test
-    fun testSendMessage() = runTest {
-        val request = SendMessageRequest(
-            message = Message(
-                messageId = "msg-1",
-                role = Role.ROLE_USER,
-                parts = listOf(TextPart("Hello, agent!")),
-                taskId = "task-1"
-            )
-        )
-
-        testServerMethod(
-            method = A2AMethod.SendMessage,
-            requestId = RequestId.StringId("test-2"),
-            request = request,
-            expectedResponse = MockRequestHandler.responseEvent,
-        )
-    }
-
-    @Test
-    fun testSendMessageStreaming() = runTest {
-        val request = SendMessageRequest(
-            message = Message(
-                messageId = "msg-1",
-                role = Role.ROLE_USER,
-                parts = listOf(TextPart("Hello, agent!")),
-                taskId = "task-1"
-            )
-        )
-
-        testServerMethodStreaming(
-            method = A2AMethod.SendMessageStreaming,
-            requestId = RequestId.StringId("test-2"),
-            request = request,
-            expectedResponses = MockRequestHandler.updateEvents,
-        )
-    }
-
-    @Test
-    fun testGetTask() = runTest {
-        testServerMethod(
-            method = A2AMethod.GetTask,
-            requestId = RequestId.StringId("test-3"),
-            request = GetTaskRequest(id = "task-1"),
-            expectedResponse = MockRequestHandler.taskGet,
-        )
-    }
-
-    @Test
-    fun testListTasks() = runTest {
-        testServerMethod(
-            method = A2AMethod.ListTasks,
-            requestId = RequestId.StringId("test-list-tasks"),
-            request = ListTasksRequest(contextId = "test-context-1", status = TaskState.TASK_STATE_WORKING),
-            expectedResponse = MockRequestHandler.listTasksResponse,
-        )
-    }
-
-    @Test
-    fun testCancelTask() = runTest {
-        testServerMethod(
-            method = A2AMethod.CancelTask,
-            requestId = RequestId.StringId("test-4"),
-            request = CancelTaskRequest(id = "task-1"),
-            expectedResponse = MockRequestHandler.taskCancel,
-        )
-    }
-
-    @Test
-    fun testSubscribeToTask() = runTest {
-        testServerMethodStreaming(
-            method = A2AMethod.SubscribeToTask,
-            requestId = RequestId.StringId("test-7"),
-            request = SubscribeToTaskRequest(id = "task-1"),
-            expectedResponses = MockRequestHandler.updateEvents,
-        )
-    }
-
-    @Test
-    fun testCreateTaskPushNotificationConfig() = runTest {
-        val config = TaskPushNotificationConfig(
-            taskId = "task-123",
-            id = "notification-config-1",
-            url = "https://webhook.example.com/notifications",
-            token = "webhook-token-123"
-        )
-
-        testServerMethod(
-            method = A2AMethod.CreateTaskPushNotificationConfig,
-            requestId = RequestId.StringId("test-5"),
-            request = config,
-            expectedResponse = config,
-        )
-    }
-
-    @Test
-    fun testGetTaskPushNotificationConfig() = runTest {
-        testServerMethod(
-            method = A2AMethod.GetTaskPushNotificationConfig,
-            requestId = RequestId.StringId("test-6"),
-            request = GetTaskPushNotificationConfigRequest(
-                taskId = "task-1",
-                id = "notification-config-1"
-            ),
-            expectedResponse = MockRequestHandler.taskPushNotificationConfig,
-        )
-    }
-
-    @Test
-    fun testListTaskPushNotificationConfigs() = runTest {
-        testServerMethod(
-            method = A2AMethod.ListTaskPushNotificationConfigs,
-            requestId = RequestId.StringId("test-7"),
-            request = ListTaskPushNotificationConfigsRequest(taskId = "task-1"),
-            expectedResponse = MockRequestHandler.listConfigsResponse,
-        )
-    }
-
-    @Test
-    fun testDeleteTaskPushNotificationConfig() = runTest {
-        testServerMethod<DeleteTaskPushNotificationConfigRequest, Unit>(
-            method = A2AMethod.DeleteTaskPushNotificationConfig,
-            requestId = RequestId.StringId("test-8"),
-            request = DeleteTaskPushNotificationConfigRequest(
-                taskId = "task-1",
-                id = "notification-config-1"
-            ),
-            expectedResponse = Unit,
-        )
-    }
-
-    @Test
-    fun testMethodNotFound() = runTest {
-        testApplication {
-            install(SSE)
-
-            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
-
-            routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
-            }
-
-            val requestId = RequestId.StringId("test-9")
-            val jsonRpcRequest = JSONRPCRequest(
-                id = requestId,
-                method = "unknown.method",
-                params = JsonNull,
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            val response = client.post("/a2a") {
-                contentType(ContentType.Application.Json)
-                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                setBody(json.encodeToString(jsonRpcRequest))
-            }
-
-            assertEquals(HttpStatusCode.OK, response.status)
-
-            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
-            assertEquals(requestId, jsonRpcResponse.id)
-            assertEquals(A2AErrorCodes.METHOD_NOT_FOUND, jsonRpcResponse.error.code)
-        }
-    }
-
-    @Test
-    fun testInvalidJsonRequest() = runTest {
-        testApplication {
-            install(SSE)
-
-            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
-
-            routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
+                a2aJsonRpcTransportRoute("/a2a", HttpJSONRPCServerTransport(StubRequestHandler))
             }
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
                 header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                setBody("invalid json")
-            }
-
-            assertEquals(HttpStatusCode.OK, response.status)
-
-            val responseBody = response.bodyAsText()
-
-            // JSON-RPC 2.0 requires an explicit null id when the request id cannot be determined
-            assertEquals(JsonNull, json.decodeFromString<JsonObject>(responseBody)["id"])
-
-            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(responseBody)
-            assertNull(jsonRpcResponse.id)
-            assertEquals(A2AErrorCodes.PARSE_ERROR, jsonRpcResponse.error.code)
-        }
-    }
-
-    @Test
-    fun testA2AErrorIncludesErrorInfo() = runTest {
-        val failingRequestHandler = object : RequestHandler by MockRequestHandler {
-            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task =
-                throw A2ATaskNotFoundException("Task not found: ${request.id}")
-        }
-
-        testApplication {
-            install(SSE)
-
-            val transport = HttpJSONRPCServerTransport(failingRequestHandler)
-
-            routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
-            }
-
-            val requestId = RequestId.StringId("test-error-info")
-            val jsonRpcRequest = JSONRPCRequest(
-                id = requestId,
-                method = A2AMethod.GetTask.value,
-                params = json.encodeToJsonElement(GetTaskRequest(id = "task-1")),
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            val response = client.post("/a2a") {
-                contentType(ContentType.Application.Json)
-                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                setBody(json.encodeToString(jsonRpcRequest))
-            }
-
-            assertEquals(HttpStatusCode.OK, response.status)
-
-            val expectedResponse = JSONRPCErrorResponse(
-                id = requestId,
-                error = JSONRPCError(
-                    code = A2AErrorCodes.TASK_NOT_FOUND,
-                    message = "Task not found: task-1",
-                    data = json.encodeToJsonElement<List<ErrorData>>(
-                        listOf(ErrorInfo(reason = A2AErrorReasons.TASK_NOT_FOUND))
-                    ),
-                ),
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            assertEquals(expectedResponse, json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText()))
-        }
-    }
-
-    @Test
-    fun testStreamingErrorBeforeFirstEventIsPlainJson() = runTest {
-        val failingRequestHandler = object : RequestHandler by MockRequestHandler {
-            override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> =
-                flow { throw A2AUnsupportedOperationException("Task is in a terminal state: ${request.id}") }
-        }
-
-        testApplication {
-            install(SSE)
-
-            val transport = HttpJSONRPCServerTransport(failingRequestHandler)
-
-            routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
-            }
-
-            val requestId = RequestId.StringId("test-pre-stream-error")
-            val jsonRpcRequest = JSONRPCRequest(
-                id = requestId,
-                method = A2AMethod.SubscribeToTask.value,
-                params = json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1")),
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            val response = client.post("/a2a") {
-                contentType(ContentType.Application.Json)
-                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                accept(ContentType.Text.EventStream)
-                setBody(json.encodeToString(jsonRpcRequest))
+                setBody(rawRequest(A2AMethod.GetTask, json.encodeToJsonElement(GetTaskRequest(id = "task-1")), "unary-1"))
             }
 
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
 
-            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
+            val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(response.bodyAsText())
 
-            assertEquals(requestId, jsonRpcResponse.id)
-            assertEquals(A2AErrorCodes.UNSUPPORTED_OPERATION, jsonRpcResponse.error.code)
+            assertEquals(RequestId.StringId("unary-1"), jsonRpcResponse.id)
+            assertEquals(StubRequestHandler.task, json.decodeFromJsonElement<Task>(jsonRpcResponse.result))
         }
     }
 
     @Test
-    fun testStreamingErrorAfterFirstEventIsStreamEvent() = runTest {
-        val failingRequestHandler = object : RequestHandler by MockRequestHandler {
-            override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> =
-                flow {
-                    emit(MockRequestHandler.taskGet)
-                    throw A2AInternalErrorException("Agent failed")
-                }
-        }
-
+    fun testStreamingRequestEndToEnd() = runTest {
         testApplication {
             install(SSE)
 
@@ -626,19 +180,9 @@ class HttpJSONRPCServerTransportTest {
                 install(SSEClient)
             }
 
-            val transport = HttpJSONRPCServerTransport(failingRequestHandler)
-
             routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
+                a2aJsonRpcTransportRoute("/a2a", HttpJSONRPCServerTransport(StubRequestHandler))
             }
-
-            val requestId = RequestId.StringId("test-mid-stream-error")
-            val jsonRpcRequest = JSONRPCRequest(
-                id = requestId,
-                method = A2AMethod.SubscribeToTask.value,
-                params = json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1")),
-                jsonrpc = JSONRPC_VERSION,
-            )
 
             val jsonRpcResponses = buildList {
                 client.sse(
@@ -648,51 +192,69 @@ class HttpJSONRPCServerTransportTest {
 
                         contentType(ContentType.Application.Json)
                         header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                        setBody(json.encodeToString(jsonRpcRequest))
+                        setBody(
+                            rawRequest(
+                                A2AMethod.SendMessageStreaming,
+                                json.encodeToJsonElement(
+                                    SendMessageRequest(
+                                        Message(messageId = "msg-1", role = Role.ROLE_USER, parts = listOf(TextPart("Hi")))
+                                    )
+                                ),
+                                "stream-1"
+                            )
+                        )
                     },
                 ) {
+                    assertEquals(HttpStatusCode.OK, call.response.status)
+
                     incoming
-                        .map { event -> json.decodeFromString<JSONRPCResponse>(event.data!!) }
+                        .map { event -> json.decodeFromString<JSONRPCSuccessResponse>(event.data!!) }
                         .collect { add(it) }
                 }
             }
 
-            assertEquals(2, jsonRpcResponses.size)
-
-            val (first, second) = jsonRpcResponses
-
+            assertEquals(List(2) { RequestId.StringId("stream-1") }, jsonRpcResponses.map { it.id })
             assertEquals(
-                MockRequestHandler.taskGet,
-                json.decodeFromJsonElement<Event>((first as JSONRPCSuccessResponse).result)
+                StubRequestHandler.events,
+                jsonRpcResponses.map { json.decodeFromJsonElement<Event>(it.result) }
             )
-            assertEquals(A2AErrorCodes.INTERNAL_ERROR, (second as JSONRPCErrorResponse).error.code)
         }
     }
 
     @Test
-    fun testRequestWithoutParams() = runTest {
+    fun testStreamingErrorBeforeFirstEventIsPlainJson() = runTest {
+        val failingRequestHandler = object : RequestHandler by StubRequestHandler {
+            override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> =
+                flow { throw A2AUnsupportedOperationException("Task is in a terminal state: ${request.id}") }
+        }
+
         testApplication {
             install(SSE)
 
-            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
-
             routing {
-                a2aJsonRpcTransportRoute("/a2a", transport)
+                a2aJsonRpcTransportRoute("/a2a", HttpJSONRPCServerTransport(failingRequestHandler))
             }
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
                 header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                //language=JSON
-                setBody("""{"jsonrpc":"2.0","id":"test-no-params","method":"${A2AMethod.GetExtendedAgentCard.value}"}""")
+                accept(ContentType.Text.EventStream)
+                setBody(
+                    rawRequest(
+                        A2AMethod.SubscribeToTask,
+                        json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1")),
+                        "test-pre-stream-error"
+                    )
+                )
             }
 
             assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
 
-            val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(response.bodyAsText())
+            val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
 
-            assertEquals(RequestId.StringId("test-no-params"), jsonRpcResponse.id)
-            assertEquals(MockRequestHandler.agentCard, json.decodeFromJsonElement<AgentCard>(jsonRpcResponse.result))
+            assertEquals(RequestId.StringId("test-pre-stream-error"), jsonRpcResponse.id)
+            assertEquals(A2AErrorCodes.UNSUPPORTED_OPERATION, jsonRpcResponse.error.code)
         }
     }
 
@@ -704,12 +266,11 @@ class HttpJSONRPCServerTransportTest {
      */
     private suspend fun postRaw(
         method: A2AMethod,
-        params: kotlinx.serialization.json.JsonElement,
+        params: JsonElement,
         headers: Map<String, String>,
         streaming: Boolean = false,
-        handler: RequestHandler = MockRequestHandler,
-        transportFactory: (RequestHandler) -> JSONRPCServerTransport = { JSONRPCServerTransport(it) },
-        customizeCallContext: (suspend ApplicationCall.(ServerCallContext) -> ServerCallContext)? = null,
+        handler: RequestHandler = StubRequestHandler,
+        customizeCallContext: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { it },
     ): RawResponse {
         var result: RawResponse? = null
 
@@ -717,27 +278,18 @@ class HttpJSONRPCServerTransportTest {
             install(SSE)
 
             routing {
-                if (customizeCallContext == null) {
-                    a2aJsonRpcTransportRoute("/a2a", transportFactory(handler))
-                } else {
-                    a2aJsonRpcTransportRoute("/a2a", transportFactory(handler), customizeCallContext = customizeCallContext)
-                }
+                a2aJsonRpcTransportRoute(
+                    "/a2a",
+                    HttpJSONRPCServerTransport(handler),
+                    customizeCallContext = customizeCallContext
+                )
             }
 
             val response = client.post("/a2a") {
                 contentType(ContentType.Application.Json)
                 headers.forEach { (name, value) -> header(name, value) }
                 if (streaming) accept(ContentType.Text.EventStream)
-                setBody(
-                    json.encodeToString(
-                        JSONRPCRequest(
-                            id = RequestId.StringId("version-test"),
-                            method = method.value,
-                            params = params,
-                            jsonrpc = JSONRPC_VERSION,
-                        )
-                    )
-                )
+                setBody(rawRequest(method, params, "version-test"))
             }
 
             result = RawResponse(response.status, response.contentType()?.withoutParameters(), response.bodyAsText())
@@ -746,11 +298,11 @@ class HttpJSONRPCServerTransportTest {
         return result!!
     }
 
-    private fun versionNotSupportedError(requested: String, supported: String = "1.0") = JSONRPCErrorResponse(
+    private val versionNotSupportedError = JSONRPCErrorResponse(
         id = RequestId.StringId("version-test"),
         error = JSONRPCError(
             code = A2AErrorCodes.VERSION_NOT_SUPPORTED,
-            message = "A2A version '$requested' is not supported; supported: $supported",
+            message = "A2A version '0.3' is not supported; supported: 1.0",
             data = json.encodeToJsonElement<List<ErrorData>>(
                 listOf(ErrorInfo(reason = A2AErrorReasons.VERSION_NOT_SUPPORTED))
             ),
@@ -765,16 +317,6 @@ class HttpJSONRPCServerTransportTest {
     private val subscribeParams = json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1"))
 
     @Test
-    fun testMissingOrEmptyVersionHeaderIsVersionNotSupported() = runTest {
-        listOf(emptyMap(), mapOf(A2AHeaders.A2A_VERSION to "")).forEach { headers ->
-            val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = headers)
-
-            assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(versionNotSupportedError("0.3"), json.decodeFromString<JSONRPCErrorResponse>(response.body))
-        }
-    }
-
-    @Test
     fun testMissingVersionHeaderOnStreamingMethodsIsPlainJsonError() = runTest {
         listOf(
             A2AMethod.SendMessageStreaming to json.encodeToJsonElement(
@@ -787,7 +329,7 @@ class HttpJSONRPCServerTransportTest {
             assertEquals(HttpStatusCode.OK, response.status, method.value)
             assertEquals(ContentType.Application.Json, response.contentType, method.value)
             assertEquals(
-                versionNotSupportedError("0.3"),
+                versionNotSupportedError,
                 json.decodeFromString<JSONRPCErrorResponse>(response.body),
                 method.value
             )
@@ -795,87 +337,17 @@ class HttpJSONRPCServerTransportTest {
     }
 
     @Test
-    fun testVersionIsCheckedForEveryMethod() = runTest {
-        A2AMethod.entries.forEach { method ->
-            val response = postRaw(method, JsonNull, headers = mapOf(A2AHeaders.A2A_VERSION to "0.3"), streaming = method.streaming)
+    fun testVersionHeaderNameIsCaseInsensitive() = runTest {
+        listOf("a2a-version", "A2A-VERSION").forEach { name ->
+            val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(name to "1.0"))
 
-            assertEquals(
-                A2AErrorCodes.VERSION_NOT_SUPPORTED,
-                json.decodeFromString<JSONRPCErrorResponse>(response.body).error.code,
-                method.value
-            )
+            assertEquals(StubRequestHandler.task, decodeTask(response), name)
         }
-    }
-
-    @Test
-    fun testUnsupportedVersionIsRejected() = runTest {
-        listOf("0.3", "2.0", "99.0", "1.1").forEach { version ->
-            val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(A2AHeaders.A2A_VERSION to version))
-
-            assertEquals(
-                versionNotSupportedError(version),
-                json.decodeFromString<JSONRPCErrorResponse>(response.body),
-                version
-            )
-        }
-    }
-
-    @Test
-    fun testPatchVersionAndHeaderNameCaseAreIgnored() = runTest {
-        listOf(
-            A2AHeaders.A2A_VERSION to "1.0.5",
-            "a2a-version" to "1.0",
-            "A2A-VERSION" to "1.0",
-        ).forEach { header ->
-            val response = postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(header))
-
-            assertEquals(MockRequestHandler.taskGet, decodeTask(response), header.toString())
-        }
-    }
-
-    @Test
-    fun testCustomSupportedVersions() = runTest {
-        val factory = { handler: RequestHandler ->
-            HttpJSONRPCServerTransport(handler, supportedVersions = setOf("1.1", "0.3"))
-        }
-        suspend fun get(headers: Map<String, String>) =
-            postRaw(A2AMethod.GetTask, getTaskParams, headers = headers, transportFactory = factory)
-
-        // Missing header stands for 0.3, which is supported here
-        assertEquals(MockRequestHandler.taskGet, decodeTask(get(emptyMap())))
-        assertEquals(MockRequestHandler.taskGet, decodeTask(get(mapOf(A2AHeaders.A2A_VERSION to "1.1.2"))))
-
-        // 1.0 is not in the custom set
-        assertEquals(
-            versionNotSupportedError("1.0", supported = "1.1, 0.3"),
-            json.decodeFromString<JSONRPCErrorResponse>(get(mapOf(A2AHeaders.A2A_VERSION to "1.0")).body)
-        )
-    }
-
-    @Test
-    fun testUnsupportedVersionDoesNotReachRequestHandler() = runTest {
-        var called = false
-        val handler = object : RequestHandler by MockRequestHandler {
-            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
-                called = true
-                return MockRequestHandler.taskGet
-            }
-        }
-
-        postRaw(A2AMethod.GetTask, getTaskParams, headers = mapOf(A2AHeaders.A2A_VERSION to "0.3"), handler = handler)
-
-        assertEquals(false, called)
     }
 
     @Test
     fun testRequestedVersionAndExtensionsReachRequestHandler() = runTest {
         var seen: ServerCallContext? = null
-        val handler = object : RequestHandler by MockRequestHandler {
-            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
-                seen = ctx
-                return MockRequestHandler.taskGet
-            }
-        }
 
         postRaw(
             A2AMethod.GetTask,
@@ -884,7 +356,7 @@ class HttpJSONRPCServerTransportTest {
                 "a2a-version" to "1.0.2",
                 "a2a-extensions" to "urn:a, urn:b,,urn:c",
             ),
-            handler = handler
+            handler = recordingHandler { seen = it }
         )
 
         assertEquals("1.0", seen?.requestedVersion)
@@ -901,15 +373,15 @@ class HttpJSONRPCServerTransportTest {
         ctx.copy(state = ctx.state + (userKey to request.headers["X-User"]!!))
     }
 
-    private fun recordingHandler(onCall: (ServerCallContext) -> Unit) = object : RequestHandler by MockRequestHandler {
+    private fun recordingHandler(onCall: (ServerCallContext) -> Unit) = object : RequestHandler by StubRequestHandler {
         override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
             onCall(ctx)
-            return MockRequestHandler.taskGet
+            return StubRequestHandler.task
         }
     }
 
     @Test
-    fun testCustomizedCallContextReachesRequestHandler() = runTest {
+    fun testCallContextCustomizerReceivesApplicationCall() = runTest {
         var seen: ServerCallContext? = null
 
         val response = postRaw(
@@ -920,109 +392,11 @@ class HttpJSONRPCServerTransportTest {
             customizeCallContext = putUserIntoState,
         )
 
-        assertEquals(MockRequestHandler.taskGet, decodeTask(response))
+        assertEquals(StubRequestHandler.task, decodeTask(response))
         assertEquals(mapOf<StateKey<*>, Any>(userKey to "alice"), seen?.state)
         // The default context the customizer starts from is the one built from the headers
         assertEquals("1.0", seen?.requestedVersion)
         assertEquals(listOf("alice"), seen?.headers?.get("x-user"))
-    }
-
-    @Test
-    fun testVersionIsCheckedOnCustomizedCallContext() = runTest {
-        // No A2A-Version header: only the customized context carries a supported version
-        val response = postRaw(
-            A2AMethod.GetTask,
-            getTaskParams,
-            headers = mapOf("X-Version" to "1.0"),
-            customizeCallContext = { ctx ->
-                ctx.copy(headers = ctx.headers + (A2AHeaders.A2A_VERSION to listOf(request.headers["X-Version"]!!)))
-            },
-        )
-
-        assertEquals(MockRequestHandler.taskGet, decodeTask(response))
-    }
-
-    @Test
-    fun testA2AExceptionInCallContextCustomizerIsJsonRpcError() = runTest {
-        listOf(
-            A2AMethod.GetTask to getTaskParams,
-            A2AMethod.SubscribeToTask to subscribeParams,
-        ).forEach { (method, params) ->
-            var handlerCalled = false
-            val handler = object : RequestHandler by recordingHandler({ handlerCalled = true }) {
-                override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext): Flow<Event> {
-                    handlerCalled = true
-                    return MockRequestHandler.updateEvents.asFlow()
-                }
-            }
-
-            val response = postRaw(
-                method,
-                params,
-                headers = mapOf(A2AHeaders.A2A_VERSION to "1.0"),
-                streaming = method.streaming,
-                handler = handler,
-                customizeCallContext = { throw A2AUnsupportedOperationException("Tenant is not allowed") },
-            )
-
-            val expectedResponse = JSONRPCErrorResponse(
-                id = RequestId.StringId("version-test"),
-                error = JSONRPCError(
-                    code = A2AErrorCodes.UNSUPPORTED_OPERATION,
-                    message = "Tenant is not allowed",
-                    data = json.encodeToJsonElement<List<ErrorData>>(
-                        listOf(ErrorInfo(reason = A2AErrorReasons.UNSUPPORTED_OPERATION))
-                    ),
-                ),
-                jsonrpc = JSONRPC_VERSION,
-            )
-
-            assertEquals(HttpStatusCode.OK, response.status, method.value)
-            assertEquals(ContentType.Application.Json, response.contentType, method.value)
-            assertEquals(expectedResponse, json.decodeFromString<JSONRPCErrorResponse>(response.body), method.value)
-            assertEquals(false, handlerCalled, method.value)
-        }
-    }
-
-    @Test
-    fun testNonA2AExceptionInCallContextCustomizerIsInternalError() = runTest {
-        val response = postRaw(
-            A2AMethod.GetTask,
-            getTaskParams,
-            headers = mapOf(A2AHeaders.A2A_VERSION to "1.0"),
-            customizeCallContext = { error("Principal lookup failed") },
-        )
-
-        val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.body)
-
-        assertEquals(RequestId.StringId("version-test"), jsonRpcResponse.id)
-        assertEquals(A2AErrorCodes.INTERNAL_ERROR, jsonRpcResponse.error.code)
-    }
-
-    @Test
-    fun testCallContextCustomizerIsNotCalledForUnparsableRequest() = runTest {
-        var customizerCalled = false
-
-        testApplication {
-            install(SSE)
-
-            routing {
-                a2aJsonRpcTransportRoute("/a2a", JSONRPCServerTransport(MockRequestHandler)) { ctx ->
-                    customizerCalled = true
-                    ctx
-                }
-            }
-
-            val response = client.post("/a2a") {
-                contentType(ContentType.Application.Json)
-                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
-                setBody("invalid json")
-            }
-
-            assertEquals(A2AErrorCodes.PARSE_ERROR, json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText()).error.code)
-        }
-
-        assertEquals(false, customizerCalled)
     }
 
     @Test
@@ -1039,16 +413,7 @@ class HttpJSONRPCServerTransportTest {
                     contentType(ContentType.Application.Json)
                     header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
                     header("X-User", "bob")
-                    setBody(
-                        json.encodeToString(
-                            JSONRPCRequest(
-                                id = RequestId.StringId("standalone"),
-                                method = A2AMethod.GetTask.value,
-                                params = getTaskParams,
-                                jsonrpc = JSONRPC_VERSION,
-                            )
-                        )
-                    )
+                    setBody(rawRequest(A2AMethod.GetTask, getTaskParams, "standalone"))
                 }
 
                 assertEquals(HttpStatusCode.OK, response.status)
@@ -1058,35 +423,5 @@ class HttpJSONRPCServerTransportTest {
         }
 
         assertEquals(mapOf<StateKey<*>, Any>(userKey to "bob"), seen?.state)
-    }
-
-    private val v1Headers = mapOf(A2AHeaders.A2A_VERSION to A2AVersions.VERSION_1_0)
-
-    @Test
-    fun testSnakeCaseParamsAreHonored() = runTest {
-        var seen: GetTaskRequest? = null
-        val handler = object : RequestHandler by MockRequestHandler {
-            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext): Task {
-                seen = request
-                return MockRequestHandler.taskGet
-            }
-        }
-
-        //language=JSON
-        val params = json.parseToJsonElement("""{"id": "task-1", "history_length": 2}""")
-        val response = postRaw(A2AMethod.GetTask, params, headers = v1Headers, handler = handler)
-
-        assertEquals(MockRequestHandler.taskGet, decodeTask(response))
-        assertEquals(GetTaskRequest(id = "task-1", historyLength = 2), seen)
-    }
-
-    @Test
-    fun testParamSentInTwoSpellingsIsInvalidParams() = runTest {
-        //language=JSON
-        val params = json.parseToJsonElement("""{"id": "task-1", "historyLength": 1, "history_length": 2}""")
-        val response = postRaw(A2AMethod.GetTask, params, headers = v1Headers)
-
-        val error = json.decodeFromString<JSONRPCErrorResponse>(response.body).error
-        assertEquals(A2AErrorCodes.INVALID_PARAMS, error.code)
     }
 }
