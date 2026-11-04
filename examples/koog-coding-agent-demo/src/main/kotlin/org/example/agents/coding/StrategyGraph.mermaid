@@ -1,0 +1,19 @@
+flowchart TD
+    Start([nodeStart])
+    Code[code]
+    Test[test]
+    Decide[decide]
+    Compress[compressHistory]
+    Fix[fix]
+    Finish([nodeFinish: Done!])
+
+    Start --> Code
+    Code --> Test
+
+    Test -->|history too long = false| Decide
+    Test -->|history too long = true| Compress
+    Compress --> Decide
+
+    Decide -->|problems not empty| Fix
+    Fix --> Test
+    Decide -->|no problems| Finish
