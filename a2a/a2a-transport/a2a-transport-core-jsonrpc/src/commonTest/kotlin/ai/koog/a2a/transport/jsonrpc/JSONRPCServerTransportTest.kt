@@ -93,9 +93,11 @@ class JSONRPCServerTransportTest {
         params: JsonElement = JsonNull,
         ctx: ServerCallContext = v1Ctx,
         handler: RequestHandler = MockRequestHandler,
-        transport: JSONRPCServerTransport = JSONRPCServerTransport(handler),
         customizeCallContext: suspend (ServerCallContext) -> ServerCallContext = { it },
-    ): Outcome = transport.handle(rawRequest(method.value, params), ctx, customizeCallContext)
+    ): Outcome {
+        val transport = JSONRPCServerTransport(handler)
+        return transport.handle(rawRequest(method.value, params), ctx, customizeCallContext)
+    }
 
     private fun Outcome.singleError(): JSONRPCErrorResponse {
         assertNull(streamed)
