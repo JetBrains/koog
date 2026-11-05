@@ -7,9 +7,10 @@ import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import ai.koog.a2a.transport.withCaseInsensitiveNames
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.fromHttpToGmtDate
+import io.ktor.http.toHttpDate
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -22,8 +23,14 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.sse.SSEServerContent
 import io.ktor.server.sse.heartbeat
 import io.ktor.sse.ServerSentEvent
+import io.ktor.util.date.GMTDate
+import io.ktor.util.hex
+import io.ktor.util.sha1
 import io.ktor.util.toMap
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 /**
  * Route for handling JSON-RPC HTTP requests.
@@ -66,6 +73,8 @@ import kotlin.time.Duration
  * }.startSuspend(wait = true)
  * ```
  *
+ * The route does not install `ContentNegotiation`, so it can be mounted into an application that installs it.
+ *
  * [customizeCallContext] can enrich the [ServerCallContext] built from the request headers, e.g. with the
  * authenticated principal:
  * ```kotlin
@@ -101,10 +110,6 @@ public fun Route.a2aJsonRpcTransportRoute(
 ): Route = route(path) {
     // Check SSE plugin is installed
     plugin(SSE)
-
-    install(ContentNegotiation) {
-        json(JSONRPCJson)
-    }
 
     // Handle incoming JSON-RPC requests, both regular and streaming
     post {
@@ -145,17 +150,63 @@ public fun Route.a2aJsonRpcTransportRoute(
 }
 
 /**
- * Route for serving an [ai.koog.a2a.model.AgentCard] at the specified path.
+ * Route serving [agentCard] at [path] with HTTP caching headers.
+ *
+ * The card is serialized once, so the weak `ETag` always matches the body. The route installs no Ktor plugin, so it
+ * can be mounted into an application that installs `ContentNegotiation`.
+ *
+ * Responses carry the `ETag`, `Cache-Control: max-age` and `Last-Modified`. `public` is not set, as the route may be
+ * behind authentication. A matching `If-None-Match`, or without it an `If-Modified-Since` not earlier than
+ * [lastModified], gets `304 Not Modified` with no body.
+ *
+ * @param path The path at which the card is served.
+ * @param agentCard The card to serve.
+ * @param cacheMaxAge `max-age` of `Cache-Control`; `null` omits the header.
+ * @param lastModified `Last-Modified` of the card. Defaults to when the route is built; pass a fixed value to keep it
+ * stable across restarts and replicas. `null` omits the header.
+ * @throws IllegalArgumentException if [cacheMaxAge] is negative.
  */
 public fun Route.a2aAgentCardRoute(
     path: String,
     agentCard: AgentCard,
-): Route = route(path) {
-    install(ContentNegotiation) {
-        json(JSONRPCJson)
-    }
+    cacheMaxAge: Duration? = 1.hours,
+    lastModified: Instant? = Clock.System.now(),
+): Route {
+    require(cacheMaxAge == null || !cacheMaxAge.isNegative()) { "cacheMaxAge must not be negative: $cacheMaxAge" }
 
-    get {
-        call.respond(agentCard)
+    val body = JSONRPCJson.encodeToString(AgentCard.serializer(), agentCard)
+    val opaqueTag = "\"${hex(sha1(body.encodeToByteArray()))}\""
+    val etag = "W/$opaqueTag"
+    val cacheControl = cacheMaxAge?.let { "max-age=${it.inWholeSeconds}" }
+    val lastModifiedSeconds = lastModified?.epochSeconds
+    val lastModifiedHeader = lastModifiedSeconds?.let { GMTDate(it * 1000).toHttpDate() }
+
+    return route(path) {
+        get {
+            call.response.header(HttpHeaders.ETag, etag)
+            cacheControl?.let { call.response.header(HttpHeaders.CacheControl, it) }
+            lastModifiedHeader?.let { call.response.header(HttpHeaders.LastModified, it) }
+
+            val notModified = call.request.headers[HttpHeaders.IfNoneMatch]
+                ?.let { ifNoneMatchMatches(it, opaqueTag) }
+                ?: ifModifiedSinceMatches(call.request.headers[HttpHeaders.IfModifiedSince], lastModifiedSeconds)
+
+            if (notModified) {
+                call.respond(HttpStatusCode.NotModified)
+            } else {
+                call.respondText(body, ContentType.Application.Json)
+            }
+        }
     }
+}
+
+/** Weak comparison of an `If-None-Match` header value (`*` or a comma-separated list of tags) with [opaqueTag]. */
+private fun ifNoneMatchMatches(header: String, opaqueTag: String): Boolean =
+    header.split(',').map { it.trim() }.any { it == "*" || it.removePrefix("W/") == opaqueTag }
+
+/** Whether an `If-Modified-Since` header value is a valid date not earlier than [lastModifiedSeconds]. */
+private fun ifModifiedSinceMatches(header: String?, lastModifiedSeconds: Long?): Boolean {
+    if (header == null || lastModifiedSeconds == null) return false
+    val since = runCatching { header.fromHttpToGmtDate() }.getOrNull() ?: return false
+    return lastModifiedSeconds <= Instant.fromEpochMilliseconds(since.timestamp).epochSeconds
 }

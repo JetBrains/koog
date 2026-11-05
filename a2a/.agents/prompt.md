@@ -27,3 +27,4 @@ D-5 back-pressure redesign (configurable `StreamDeliveryConfig` on A2AServer). A
 - Docker (OrbStack) is available: the a2a-client integration tests run.
 - Don't add attribution lines to commit messages.
 - PUSH every commit as it is created (user, 2026-11-02): `git push` on `eugenethedev/a2a-1.0` (tracks origin). Tell programmers to push after each commit.
+- Don't touch `docs/` in code slices (user, 2026-11-05): docs are overhauled at the end as plan.md 7.1. Tell programmers so.

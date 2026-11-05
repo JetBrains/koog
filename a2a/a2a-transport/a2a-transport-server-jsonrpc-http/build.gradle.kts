@@ -15,8 +15,6 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.server.core)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.server.content.negotiation)
                 implementation(libs.ktor.server.sse)
                 implementation(libs.ktor.server.cors)
             }
@@ -33,6 +31,8 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.ktor.server.test.host)
                 implementation(libs.ktor.server.cio)
+                implementation(libs.ktor.server.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
 

@@ -7,7 +7,9 @@ import ai.koog.a2a.exceptions.A2AErrorReasons
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.exceptions.ErrorInfo
+import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
+import ai.koog.a2a.model.AgentInterface
 import ai.koog.a2a.model.CancelTaskRequest
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.Event
@@ -28,6 +30,7 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.model.TransportProtocol
 import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
@@ -43,6 +46,7 @@ import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -51,8 +55,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.cio.CIO
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.sse.SSE
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.flow.Flow
@@ -167,6 +173,47 @@ class HttpJSONRPCServerTransportTest {
             val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(response.bodyAsText())
 
             assertEquals(RequestId.StringId("unary-1"), jsonRpcResponse.id)
+            assertEquals(StubRequestHandler.task, json.decodeFromJsonElement<Task>(jsonRpcResponse.result))
+        }
+    }
+
+    @Test
+    fun testRoutesCoexistWithApplicationLevelContentNegotiation() = runTest {
+        val agentCard = AgentCard(
+            name = "Test agent",
+            description = "An agent for tests",
+            supportedInterfaces = listOf(
+                AgentInterface(url = "http://localhost/a2a", protocolBinding = TransportProtocol.JSONRPC, protocolVersion = "1.0")
+            ),
+            version = "1.0.0",
+            defaultInputModes = listOf("text"),
+            defaultOutputModes = listOf("text"),
+            skills = emptyList(),
+            capabilities = AgentCapabilities(),
+        )
+
+        testApplication {
+            install(SSE)
+            install(ContentNegotiation) {
+                json(JSONRPCJson)
+            }
+
+            routing {
+                a2aJsonRpcTransportRoute("/a2a", HttpJSONRPCServerTransport(StubRequestHandler))
+                a2aAgentCardRoute("/card", agentCard)
+            }
+
+            val cardResponse = client.get("/card")
+            assertEquals(HttpStatusCode.OK, cardResponse.status)
+            assertEquals(agentCard, json.decodeFromString<AgentCard>(cardResponse.bodyAsText()))
+
+            val rpcResponse = client.post("/a2a") {
+                contentType(ContentType.Application.Json)
+                header(A2AHeaders.A2A_VERSION, A2AVersions.VERSION_1_0)
+                setBody(rawRequest(A2AMethod.GetTask, json.encodeToJsonElement(GetTaskRequest(id = "task-1")), "unary-1"))
+            }
+            assertEquals(HttpStatusCode.OK, rpcResponse.status)
+            val jsonRpcResponse = json.decodeFromString<JSONRPCSuccessResponse>(rpcResponse.bodyAsText())
             assertEquals(StubRequestHandler.task, json.decodeFromJsonElement<Task>(jsonRpcResponse.result))
         }
     }

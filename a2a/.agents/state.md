@@ -5,6 +5,8 @@ Last updated: 2026-10-30. HEAD = `44c45cb95` (D5 done) on `eugenethedev/a2a-1.0`
 Source plan: `a2a/plan.md` §3 Phase 3. **Phase 3 is complete and `plan.md` is updated** (3.1–3.20 ✅, 3.21 ⏭).
 
 ## RESUME HERE (2026-10-22, code-quality round COMPLETE)
+**2026-11-05:** user: don't touch `docs/` in code slices; docs overhaul is the last plan item (plan.md Phase 7, row 7.1, open). The caching slice's `a2a-server.md` section was reverted (uncommitted slice now: Routes.kt, HttpJSONRPCServerTransport.kt, build.gradle.kts, the 2 tests, plan.md). Caching slice still UNDER USER REVIEW, not committed. Review fixes applied (uncommitted): AgentCardRouteTest 14→8 tests (module 17), short `a2aAgentCardRoute` KDoc. User: plan rows 4.2/4.3 updated to the passing run; regression-test proof SKIPPED; row 5.5 folded into 7.1. Three `.agents/` files found staged (not by the orchestrator) — flagged to the user; unstage before any commit unless the user says otherwise.
+
 Phase 3 is done, and so is the whole code-quality round (brainstorm decisions on `.agents/research/phase3-code-quality-review.md`, incl. A4 heartbeat, test slices Ta/Tb/Tc, C2 shutdown a–d). HEAD = `9c7a104fb`. Nothing pushed. No subagent is running. Breaking public API in a2a/ is fine (see prompt.md).
 
 Test counts at HEAD:

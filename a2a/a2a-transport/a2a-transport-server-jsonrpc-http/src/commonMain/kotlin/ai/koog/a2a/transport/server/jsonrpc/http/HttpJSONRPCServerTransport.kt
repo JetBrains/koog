@@ -7,21 +7,21 @@ import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
-import ai.koog.a2a.transport.jsonrpc.serialization.JSONRPCJson
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 /**
  * Standalone Ktor server implementing A2A JSON-RPC server transport.
@@ -68,6 +68,10 @@ public class HttpJSONRPCServerTransport(
      * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
      * @param agentCardPath The path at which the [agentCard] will be served, if specified.
      * Defaults to [A2APaths.AGENT_CARD_WELL_KNOWN_PATH].
+     * @param agentCardCacheMaxAge `Cache-Control` `max-age` of the served [agentCard], `null` omits the header.
+     * Defaults to 1 hour, see [a2aAgentCardRoute].
+     * @param agentCardLastModified `Last-Modified` of the served [agentCard], `null` omits the header.
+     * Defaults to the time the server is started, see [a2aAgentCardRoute].
      * @param heartbeatPeriod Period of the opt-in SSE heartbeats that detect disconnected streaming clients and keep
      * idle streams alive, see [a2aJsonRpcTransportRoute]. Defaults to `null`, no heartbeat.
      * @param customizeCallContext Customizes the [ServerCallContext] of every request, see [a2aJsonRpcTransportRoute].
@@ -82,6 +86,8 @@ public class HttpJSONRPCServerTransport(
         wait: Boolean = false,
         agentCard: AgentCard? = null,
         agentCardPath: String = A2APaths.AGENT_CARD_WELL_KNOWN_PATH,
+        agentCardCacheMaxAge: Duration? = 1.hours,
+        agentCardLastModified: Instant? = Clock.System.now(),
         heartbeatPeriod: Duration? = null,
         customizeCallContext: suspend ApplicationCall.(ServerCallContext) -> ServerCallContext = { it },
     ): Unit = serverMutex.withLock {
@@ -91,10 +97,6 @@ public class HttpJSONRPCServerTransport(
             install(SSE)
 
             routing {
-                install(ContentNegotiation) {
-                    json(JSONRPCJson)
-                }
-
                 install(CORS) {
                     anyHost()
                     allowNonSimpleContentTypes = true
@@ -103,7 +105,7 @@ public class HttpJSONRPCServerTransport(
                 a2aJsonRpcTransportRoute(path, this@HttpJSONRPCServerTransport, heartbeatPeriod, customizeCallContext)
 
                 if (agentCard != null) {
-                    a2aAgentCardRoute(agentCardPath, agentCard)
+                    a2aAgentCardRoute(agentCardPath, agentCard, agentCardCacheMaxAge, agentCardLastModified)
                 }
             }
         }.startSuspend(wait = wait)
