@@ -115,6 +115,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    env:
+      JAVA_OPTS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g"
 
     strategy:
       fail-fast: false
@@ -145,7 +148,7 @@ jobs:
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
         run: |-
-          ./gradlew jvmTest :koverBinaryReport --continue
+          ./gradlew jvmTest :koverBinaryReport --continue --max-workers=3 "-Pkotlin.daemon.jvmargs=-Xmx3g"
 
       - name: Check Split Packages
         if: matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
@@ -154,11 +157,15 @@ jobs:
 
       - name: JvmTest with Gradle Wrapper
         if: matrix.os != 'ubuntu-latest'
-        run: ./gradlew jvmTest --continue
+        run: ./gradlew jvmTest --continue --max-workers=${{ matrix.os == 'macos-latest' && 2 || 3 }} "-Pkotlin.daemon.jvmargs=-Xmx3g"
 
       - name: iosSimulatorArm64Test with Gradle Wrapper
         if: matrix.os == 'macos-latest' && github.event.pull_request.draft == false && github.repository == 'jetbrains/koog'
-        run: ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096M"
+        run: |
+          ./gradlew --stop
+          ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
 
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'
@@ -244,5 +251,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
       - name: Generate API docs
+        env:
+          JAVA_OPTS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
         run: |
-          ./gradlew dokkaGenerate
+          ./gradlew dokkaGenerate --max-workers=2 -Pkotlin.daemon.jvmargs=-Xmx4g

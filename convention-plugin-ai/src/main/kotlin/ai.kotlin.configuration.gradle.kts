@@ -63,7 +63,6 @@ tasks.withType<KotlinJvmCompile>().configureEach {
         freeCompilerArgs.addAll(
             listOf(
                 "-Xexpect-actual-classes",
-                "-Xmulti-dollar-interpolation",
             )
         )
     }
@@ -75,7 +74,7 @@ tasks.withType<JavaCompile>().configureEach {
     targetCompatibility = JavaVersion.VERSION_17.toString()
 }
 
-configurations.all {
+configurations.matching { !it.name.startsWith("ktlint") }.configureEach {
     resolutionStrategy {
         eachDependency {
             /*
