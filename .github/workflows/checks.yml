@@ -244,5 +244,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
       - name: Generate API docs
+        env:
+          JAVA_OPTS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
         run: |
-          ./gradlew dokkaGenerate
+          ./gradlew dokkaGenerate --max-workers=2 -Pkotlin.daemon.jvmargs=-Xmx4g

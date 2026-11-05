@@ -35,7 +35,7 @@ kotlin {
             }
         }
 
-        androidUnitTest {
+        getByName("androidHostTest") {
             dependencies {
                 implementation(libs.ktor.client.cio)
             }

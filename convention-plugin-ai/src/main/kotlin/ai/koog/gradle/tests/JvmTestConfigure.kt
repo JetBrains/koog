@@ -1,9 +1,13 @@
 package ai.koog.gradle.tests
 
 import org.gradle.api.Project
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.the
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
@@ -46,13 +50,29 @@ fun KotlinJvmTarget.configureTests(maxHeap: String? = null) {
 }
 
 /**
- * For pure JVM projects
+ * For pure JVM projects.
+ *
+ * The built-in `test` task runs the default tests and `jvmTest` is an alias for it, so the same
+ * command works for both KMP and pure JVM modules. Since Gradle 9, custom [Test] tasks no longer
+ * inherit the `test` source set by convention, so the extra test tasks are wired to it explicitly.
  */
 fun Project.configureJvmTests(maxHeap: String? = null) {
-    for (testType in TestType.values()) {
-        val shortName = if (testType != TestType.DEFAULT) testType.shortName.uppercaseFirstChar() else ""
+    val testSourceSet = the<SourceSetContainer>()["test"]
 
-        tasks.register<Test>("jvm" + shortName + "Test") {
+    tasks.named<Test>("test") {
+        configureCommonTestSettings(TestType.DEFAULT, maxHeap)
+    }
+
+    tasks.register("jvmTest") {
+        group = "verification"
+        description = "Runs the default JVM tests (alias for 'test')."
+        dependsOn("test")
+    }
+
+    for (testType in TestType.testTypesWithoutMain) {
+        tasks.register<Test>("jvm" + testType.shortName.uppercaseFirstChar() + "Test") {
+            testClassesDirs = testSourceSet.output.classesDirs
+            classpath = testSourceSet.runtimeClasspath
             configureCommonTestSettings(testType, maxHeap)
         }
     }
