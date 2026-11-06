@@ -28,13 +28,19 @@ import ai.koog.a2a.transport.StateKey
 /** The owner of a call, read by the owner-scoped storages. */
 internal val OWNER_KEY = StateKey<String>("owner")
 
-/** A new call context of [owner]: each call returns a distinct context, as for separate requests. */
-internal fun ownerContext(owner: String): ServerCallContext = ServerCallContext(state = mapOf(OWNER_KEY to owner))
+/** Tells apart the calls of the same owner, e.g. two requests of one user. */
+private val CALL_KEY = StateKey<String>("call")
+
+/** A call context of [owner]; contexts with different [call]s are different requests of that owner. */
+internal fun ownerContext(owner: String, call: String = owner): ServerCallContext =
+    ServerCallContext(state = mapOf(OWNER_KEY to owner, CALL_KEY to call))
 
 private val ServerCallContext.owner: String? get() = getFromStateOrNull(OWNER_KEY)
 
 /** A call made to an owner-scoped storage: what was done, and with which context. */
-internal data class StorageCall(val operation: String, val callContext: ServerCallContext)
+internal data class StorageCall(val operation: String, val callContext: ServerCallContext) {
+    override fun toString(): String = "StorageCall($operation, ${callContext.getFromStateOrNull(CALL_KEY)})"
+}
 
 /** A [TaskStorage] in which a task is visible only to the owner of the context that created it. */
 internal class OwnerScopedTaskStorage : TaskStorage {
@@ -71,12 +77,13 @@ internal class OwnerScopedTaskStorage : TaskStorage {
         if (isVisible(taskId, callContext)) delegate.appendHistory(taskId, message, callContext)
     }
 
-    override suspend fun delete(taskId: String, callContext: ServerCallContext) {
-        calls += StorageCall("delete $taskId", callContext)
-        if (isVisible(taskId, callContext)) {
-            delegate.delete(taskId, callContext)
-            owners -= taskId
-        }
+    /** Unscoped, like the in-memory storage: a service method. */
+    override suspend fun getAll(taskIds: List<String>): List<Task> = delegate.getAll(taskIds)
+
+    /** Unscoped, like the in-memory storage: a service method. */
+    override suspend fun deleteAll(taskIds: List<String>) {
+        delegate.deleteAll(taskIds)
+        owners -= taskIds.toSet()
     }
 
     /** The writes among [calls]. */

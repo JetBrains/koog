@@ -3,6 +3,7 @@ package ai.koog.a2a.transport
 import ai.koog.a2a.consts.A2AHeaders
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
 class ServerCallContextTest {
@@ -72,6 +73,33 @@ class ServerCallContextTest {
                 ServerCallContext().tenant,
             )
         )
+    }
+
+    data class User(val name: String)
+
+    @Test
+    fun testEqualityComparesAllProperties() {
+        val key = StateKey<User>("user")
+        val ctx = ServerCallContext(
+            headers = mapOf(A2AHeaders.A2A_VERSION to listOf("1.0")),
+            state = mapOf(key to User("alice")),
+            tenant = "tenant-a",
+        )
+        val same = ServerCallContext(
+            headers = mapOf(A2AHeaders.A2A_VERSION to listOf("1.0")).withCaseInsensitiveNames(),
+            state = mapOf(key to User("alice")),
+            tenant = "tenant-a",
+        )
+
+        assertEquals(ctx, same)
+        assertEquals(ctx.hashCode(), same.hashCode())
+        listOf(
+            ctx.copy(headers = emptyMap()),
+            ctx.copy(state = mapOf(key to User("bob"))),
+            ctx.copy(requestedVersion = "2.0"),
+            ctx.copy(requestedExtensions = setOf("urn:a")),
+            ctx.copy(tenant = null),
+        ).forEach { assertNotEquals(ctx, it) }
     }
 
     @Test

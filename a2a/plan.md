@@ -261,6 +261,7 @@ fixes. Public API breaks in `a2a/` were accepted for them.
 | 3.40 | Shutdown, part 2: `cancel()` ends the streams and is bounded                                                                             | ✅      | `53ca0e0e6`. Open streams end first (normally if the task is terminal, else with -32603 as the last event), then the agents are cancelled; tasks keep their last persisted state and pending pushes are dropped. Unbounded only for non-cancellable storage I/O and a running `AgentExecutor.cancel` that holds the task's gate. | |
 | 3.41 | Shutdown, part 3: graceful `suspend fun shutdown(gracePeriod: Duration = ZERO)`                                                          | ✅      | `89f7eb928`. During the grace period SendMessage, SendStreamingMessage and new SubscribeToTask fail with -32603 "Server is shutting down"; the server waits for admitted turns, then for the push queue. Open subscriptions stay open and end at the end of the drain or the deadline. The earliest deadline wins across concurrent calls; a cancelled caller forces the shutdown at once. Returns when the server is shut down. | |
 | 3.42 | Configurable stream delivery: bounded queues with eviction by default                                                                    | ✅      | `81b0f3283`. `A2AServer(streamDelivery: StreamDeliveryConfig = Evict())`. `Evict(capacity = 64, timeout = 30.seconds)`: a full queue is waited for at most the timeout, shared by all streams of an event, then the stream is closed with -32603 and `ErrorInfo(SLOW_CONSUMER, {taskId})` after its queued events; the task and the other streams go on, and a failed turn no longer waits for a stalled requester. `Suspend(capacity = 0)` is the previous back-pressure. Applies to SubscribeToTask and SendStreamingMessage; the blocking SendMessage always suspends. Shutdown errors carry `ErrorInfo(SERVER_SHUTDOWN)`; a completed drain closes streams after their queued events, the forced phase drops them. | |
+| 3.43 | Storage API shape (decision 12): `callContext` on every storage method, scoped server reads, `ServerCallContext.tenant`, `referencedTasks`, `ContextTaskStorage` removed | ⏳ | Implemented, uncommitted, under review. | |
 
 ### Phase 4: TCK SUT and CI
 
@@ -331,9 +332,25 @@ Per `a2a/CLAUDE.md`, these are architecture and API decisions that need your con
 11. ~~**Graceful shutdown**~~ Decided and done (3.39–3.41): a shutdown state with -32603 "Server is shut down"; `shutdown(gracePeriod)`
     rejects new Send/Stream/Subscribe, waits for admitted turns and then the push queue, and ends the subscribers at the
     drain or the deadline; `cancel()` is the immediate form. The SSE disconnect part is done with heartbeats (3.36).
-12. **Storage API shape.** Open. Whether to keep both method styles (request DTO with `ServerCallContext` vs plain internal
-    methods) or move to one; whether reads of `ContextTaskStorage` should be owner-scoped (an agent can read a task of
-    another owner through a referenced task id); and the wording of the `TaskStorage.update` contract.
+12. **Storage API shape.** Decided (2026-11-05, 3.43; research: `.agents/research/storage-api-shape.md`, `storage-api-shape-2.md`):
+    - Every storage method takes a required `callContext: ServerCallContext` as its last parameter. RPC-facing methods
+      take the protocol DTO (`get(GetTaskRequest)`, `list(ListTasksRequest)`, the push CRUD DTOs); the others take plain
+      required arguments, without optional parameters, and return full data. Koog's own parameter types, if ever needed,
+      are nested and have no protocol-like suffix (`*Request`, `*Params`, `*Query`).
+    - `TaskStorage`: `get(GetTaskRequest, callContext)`, `list`, `update(event, callContext)`,
+      `appendHistory(taskId, message, callContext)` (kept), idempotent `delete(taskId, callContext)`. The internal
+      `get(taskId, …)`, `getAll`, `getByContext` and `deleteAll` are removed. All server reads are scoped with the
+      turn's or the cancel caller's context; a task stays visible to the context that created or updated it for the
+      rest of that turn or cancel. Relaxed `update` contract: retention/redaction allowed if id, contextId, status state
+      and kept `messageId`s are preserved.
+    - Push: `getAll(taskId)` stays the one callerless read (dispatch); `deleteAll(taskId, callContext)`.
+    - `MessageStorage` gains `callContext`; `ContextMessageStorage(contextId, callContext, messageStorage)` stays.
+    - Agents get no task storage: `ContextTaskStorage` and `RequestContext.taskStorage` are removed. Referenced tasks:
+      `A2AServer(loadReferencedTasks = false)` and `RequestContext.referencedTasks: List<Task>?` (`null` when not
+      loaded), read with the scoped get before the turn starts, deduplicated, in order, invisible ones dropped.
+    - `ServerCallContext.tenant`, set by the transport from the request, so storages see the tenant on every call.
+    - Phase 5 / examples follow later: `nodeA2ATaskGet`/`nodeA2ATaskGetAll` are dropped in 5.3;
+      `JokeWriterAgentExecutor` reads `context.task` in 5.4.
 13. ~~**Back-pressure**~~ Decided and done (3.42): `A2AServer(streamDelivery = ...)`. `StreamDeliveryConfig.Evict`
     (default: 64 queued events per stream, 30 s) evicts a stream that stays full for the timeout with -32603
     `SLOW_CONSUMER` after its queued events, one deadline per event for all streams; `Suspend` keeps back-pressure. The

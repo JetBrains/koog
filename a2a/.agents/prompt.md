@@ -9,7 +9,7 @@ You are an orchestrator.
 - Breaking public API in `a2a/` is fine in this implementation work (unreleased v1 migration). Prefer the cleanest API over additive overloads or compatibility shims, and tell subagents so.
 
 # Current goal
-D-5 back-pressure redesign (configurable `StreamDeliveryConfig` on A2AServer). All design decisions are recorded in state.md → "D-5 back-pressure redesign". D5 DONE and pushed (`44c45cb95` = origin). NOW: plan.md Phase 4. Done: 4.1 SUT, snake_case normalizer (736e938f3), transport test layering (741091c10). Remaining: agent-card caching headers decision (CARD-CACHE hard-fails the full run), 4.2 push in the SUT (user said YES), 4.3 CI, 4.4 gate. Researcher running → `.agents/research/phase4-tck-sut.md`; 4.2 asked to the user.
+Phases 1–4 of plan.md are done and pushed (HEAD `808e95f7a` "agent card caching" = origin; the user committed it). The only Phase 4 leftover is 4.3 (`if: false` in the TCK workflow), kept disabled on purpose until 1.0 is done. NEXT: ask the user which open item to start; proposed order is in state.md → "RESUME HERE (2026-11-05)". Recommended next: open decision 12 (storage API shape) via a researcher, then Phase 5.
 
 # Restart notes
 - **Read `.agents/state.md` → "RESUME HERE" first.** It has the next steps, the test counts at HEAD, and below it the brainstorm decisions (✅ = done), the agenda (sections A–E), the open questions and the known breakage.

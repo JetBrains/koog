@@ -814,7 +814,7 @@ class A2AServerSendMessageTest {
         val storage = RequesterReadRecorder(taskStorage)
         val server = createServer(mapOf("ask" to askScript, "finish" to finishScript), storage)
         server.onSendMessage(request("ask"), ctx)
-        val callerCtx = ServerCallContext()
+        val callerCtx = ServerCallContext(tenant = "tenant-1")
         val followUp = request("finish", TASK_ID, historyLength = 0).copy(tenant = "tenant-1")
 
         val events = withContext(REQUEST_CALL) { server.onSendMessageStreaming(followUp, callerCtx).toList() }
@@ -829,7 +829,7 @@ class A2AServerSendMessageTest {
     fun testBlockingResultIsReadForCaller() = runTest(timeout = TEST_TIMEOUT) {
         val storage = RequesterReadRecorder(taskStorage)
         val server = createServer(mapOf("ask" to askScript, "finish" to finishScript), storage)
-        val callerCtx = ServerCallContext()
+        val callerCtx = ServerCallContext(tenant = "tenant-1")
 
         withContext(REQUEST_CALL) {
             server.onSendMessage(request("ask", historyLength = 1).copy(tenant = "tenant-1"), callerCtx)

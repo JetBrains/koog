@@ -141,8 +141,12 @@ public class InMemoryTaskStorage : TaskStorage {
             tasks[taskId] = updatedTask
         }
 
-    override suspend fun delete(taskId: String, callContext: ServerCallContext): Unit = rwLock.withWriteLock {
-        tasks.remove(taskId)
+    override suspend fun getAll(taskIds: List<String>): List<Task> = rwLock.withReadLock {
+        taskIds.mapNotNull { tasks[it] }
+    }
+
+    override suspend fun deleteAll(taskIds: List<String>): Unit = rwLock.withWriteLock {
+        tasks -= taskIds.toSet()
     }
 
     /**

@@ -10,8 +10,10 @@ public sealed interface Response
 /**
  * Result object for `ListTasks` method.
  *
- * @property tasks Array of tasks matching the specified criteria.
- * @property nextPageToken A token to retrieve the next page of results, or empty if there are no more results in the list.
+ * @property tasks Array of tasks matching the specified criteria, sorted by status timestamp in descending order (most
+ * recently updated first).
+ * @property nextPageToken A token to retrieve the next page of results, or empty if there are no more results in the
+ * list. Always present on the wire.
  * @property pageSize The page size used for this response.
  * @property totalSize Total number of tasks available (before pagination).
  */

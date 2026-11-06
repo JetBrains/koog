@@ -51,8 +51,9 @@ public data class SendMessageConfiguration(
  *
  * @property id The resource ID of the task to retrieve.
  * @property historyLength The maximum number of most recent messages from the task's history to retrieve.
- * An unset value means the client does not impose any limit. A value of zero requests that no messages are included.
- * The server must not return more messages than the provided value, but may apply a lower limit.
+ * An unset value means the client does not impose any limit. A value of zero requests that no messages are included,
+ * and the `history` field is then omitted. The server must not return more messages than the provided value, but may
+ * apply a lower limit.
  */
 @Serializable
 public data class GetTaskRequest(
@@ -62,16 +63,21 @@ public data class GetTaskRequest(
 ) : Request
 
 /**
- * Represents a request for the `ListTasks` method.
+ * Represents a request for the `ListTasks` method. A task is returned only if it matches every filter that is set.
  *
  * @property contextId Filter tasks by context ID to get tasks from a specific conversation or session.
- * @property status Filter tasks by their current status state.
+ * @property status Filter tasks by their current status state. `null` and [TaskState.TASK_STATE_UNSPECIFIED] mean no
+ * filter.
  * @property pageSize The maximum number of tasks to return. The service may return fewer than this value.
  * If unspecified, at most 50 tasks will be returned. The minimum value is 1, and the maximum value is 100.
- * @property pageToken A page token received from a previous `ListTasks` call. Provide this to retrieve the subsequent page.
- * @property historyLength The maximum number of messages to include in each task's history.
- * @property statusTimestampAfter Filter tasks whose status was updated at or after the provided timestamp.
- * @property includeArtifacts Whether to include artifacts in the returned tasks. Defaults to false to reduce payload size.
+ * @property pageToken A page token received from a previous `ListTasks` call as [ListTasksResponse.nextPageToken]; its
+ * format is server-defined. Provide this to retrieve the subsequent page.
+ * @property historyLength The maximum number of messages to include in each task's history, as in
+ * [GetTaskRequest.historyLength].
+ * @property statusTimestampAfter Filter tasks whose status was updated at or after the provided timestamp: only tasks
+ * with a status timestamp greater than or equal to it are returned, so tasks without one never match.
+ * @property includeArtifacts Whether to include artifacts in the returned tasks. Defaults to false to reduce payload
+ * size; the `artifacts` field is then omitted.
  */
 @Serializable
 public data class ListTasksRequest(
@@ -139,8 +145,10 @@ public data class SubscribeToTaskRequest(
  * Represents a request for the `ListTaskPushNotificationConfigs` method.
  *
  * @property taskId The parent task resource ID.
- * @property pageSize The maximum number of configurations to return.
- * @property pageToken A page token received from a previous `ListTaskPushNotificationConfigs` call.
+ * @property pageSize The maximum number of configurations to return. Pagination is optional for the server, which may
+ * ignore it and return all configurations.
+ * @property pageToken A page token received from a previous `ListTaskPushNotificationConfigs` call as
+ * [ListTaskPushNotificationConfigsResponse.nextPageToken]; its format is server-defined.
  */
 @Serializable
 public data class ListTaskPushNotificationConfigsRequest(

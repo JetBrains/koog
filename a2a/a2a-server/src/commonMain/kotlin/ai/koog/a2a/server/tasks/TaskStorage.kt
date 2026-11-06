@@ -15,8 +15,9 @@ import ai.koog.a2a.transport.ServerCallContext
 /**
  * Storage interface for managing tasks and their lifecycle events.
  *
- * Every method takes, as its last parameter, the [ServerCallContext] of the call it is made for. Methods serving an
- * RPC take its request; the others take plain arguments and return full data (callers trim it with [project]).
+ * Every method but the service methods [getAll] and [deleteAll] takes, as its last parameter, the [ServerCallContext]
+ * of the call it is made for. Methods serving an RPC take its request; the others take plain arguments and return
+ * full data (callers trim it with [project]).
  *
  * Scoping: multi-tenant or authorization-aware storages may scope every method by the call context, e.g. by an owner
  * the server's subclass puts into [ServerCallContext.state], and by [ServerCallContext.tenant], which the transport
@@ -31,54 +32,37 @@ import ai.koog.a2a.transport.ServerCallContext
  */
 public interface TaskStorage {
     /**
-     * Serves the `GetTask` RPC: retrieves a task by [GetTaskRequest.id]. The server also uses it for its own reads of
-     * a task made for a caller (follow-ups, cancellation, failure handling, referenced tasks).
+     * Serves the `GetTask` RPC, and the server's own reads of a task made for a caller (follow-ups, cancellation,
+     * failure handling, referenced tasks).
      *
-     * Contract:
-     * - The returned task always includes [Task.artifacts].
-     * - [GetTaskRequest.historyLength] must be honoured with the rules of [project]: `null` returns the whole history,
-     *   `0` returns `history = null` (not an empty list), `N` returns at most the `N` most recent messages.
-     *   [ai.koog.a2a.server.A2AServer] validates that the value is not negative before calling this method.
-     * - The lookup may be scoped by [callContext], see [TaskStorage]: a task that is not visible to the caller is
-     *   reported as not found.
+     * Returns the task with all [Task.artifacts] and with [GetTaskRequest.historyLength] applied with [project];
+     * [ai.koog.a2a.server.A2AServer] has checked that it isn't negative.
      *
      * @param request the `GetTask` request
-     * @param callContext the context of the call
-     * @return the task, or `null` if it is not found (or not visible to the caller)
+     * @param callContext the context of the call, see [TaskStorage]
+     * @return the task, or `null` if it doesn't exist or isn't visible to [callContext]
      */
     public suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task?
 
     /**
-     * Serves the `ListTasks` RPC: returns a page of tasks matching [request].
+     * Serves the `ListTasks` RPC: returns the page of tasks matching [request], as [ListTasksRequest] and
+     * [ListTasksResponse] describe.
      *
-     * Fields of [ListTasksRequest] that the storage must honour:
-     * - [ListTasksRequest.contextId]: when set, only tasks of this context are returned.
-     * - [ListTasksRequest.status]: when set and not [ai.koog.a2a.model.TaskState.TASK_STATE_UNSPECIFIED], only tasks
-     *   whose current status state equals it are returned. `null` and `TASK_STATE_UNSPECIFIED` mean no filtering.
-     * - [ListTasksRequest.statusTimestampAfter]: when set, only tasks whose status timestamp is at or after it
-     *   are returned. Tasks without a status timestamp never match.
-     * - All filters are combined with logical AND.
-     * - Ordering: by status timestamp, newest first. The ordering must be deterministic and stable across pages, so
-     *   implementations must define a tie-breaker (see [InMemoryTaskStorage] for the reference ordering).
-     * - [ListTasksRequest.pageToken]: an opaque token from [ListTasksResponse.nextPageToken], in a storage-defined
-     *   format. An invalid token must be reported with [A2AInvalidParamsException].
-     * - [ListTasksRequest.pageSize]: `null` means the default of 50. The effective page size must be echoed in
-     *   [ListTasksResponse.pageSize].
-     * - [ListTasksRequest.historyLength] and [ListTasksRequest.includeArtifacts]: apply them to every returned task
-     *   with [project]. `includeArtifacts = null` is treated as `false` (artifacts are omitted), `historyLength = null`
-     *   returns the whole history, `0` returns `history = null`.
-     * - The result may be scoped by [callContext], see [TaskStorage], including [ListTasksResponse.totalSize] and
-     *   paging.
+     * The storage applies itself:
+     * - the filters, the ordering and the paging; a `null` [ListTasksRequest.pageSize] means 50, and the size used is
+     *   returned in [ListTasksResponse.pageSize];
+     * - [ListTasksRequest.historyLength] and [ListTasksRequest.includeArtifacts] (`null` is `false`) to every task,
+     *   with [project];
+     * - the scoping by [callContext] (see [TaskStorage]), [ListTasksResponse.totalSize] and the paging included.
      *
-     * Response requirements: [ListTasksResponse.totalSize] is the number of tasks matching the filters before
-     * pagination, and [ListTasksResponse.nextPageToken] must be the empty string on the last page (the field is
-     * always present on the wire).
+     * The ordering needs a deterministic tie-breaker, so that pages are stable (see [InMemoryTaskStorage]). Page tokens
+     * are opaque and storage-defined.
      *
-     * [ai.koog.a2a.server.A2AServer] validates [ListTasksRequest.pageSize] (`1..100`) and
-     * [ListTasksRequest.historyLength] (not negative) beforehand; storages needn't repeat these checks.
+     * [ai.koog.a2a.server.A2AServer] has validated [ListTasksRequest.pageSize] (`1..100`) and
+     * [ListTasksRequest.historyLength] (not negative).
      *
      * @param request the `ListTasks` request
-     * @param callContext the context of the call
+     * @param callContext the context of the call, see [TaskStorage]
      * @return the requested page of tasks
      * @throws A2AInvalidParamsException if the page token is invalid
      */
@@ -133,14 +117,25 @@ public interface TaskStorage {
     }
 
     /**
-     * Deletes the task with [taskId]. Idempotent: deleting a task that doesn't exist is a no-op and never an error.
+     * Returns the tasks with [taskIds] in full (whole history, all artifacts), in the order of [taskIds]; ids of tasks
+     * that don't exist are skipped.
      *
-     * The server never calls it; it is for the application, e.g. a retention job. An authorization-aware storage may
-     * delete only within the scope of [callContext]; the in-memory implementation ignores it.
+     * For servicing the storage (e.g. migration, inspection), not for callers: it is not scoped by any call context,
+     * and the server never calls it.
      *
-     * @param taskId the task identifier
-     * @param callContext the call the task is deleted for
-     * @throws TaskOperationException if the task exists but can't be deleted
+     * @param taskIds the task identifiers
+     * @return the tasks that exist
      */
-    public suspend fun delete(taskId: String, callContext: ServerCallContext)
+    public suspend fun getAll(taskIds: List<String>): List<Task>
+
+    /**
+     * Deletes the tasks with [taskIds]. Idempotent: ids of tasks that don't exist are ignored.
+     *
+     * For servicing the storage (e.g. retention), not for callers: it is not scoped by any call context, and the
+     * server never calls it.
+     *
+     * @param taskIds the task identifiers
+     * @throws TaskOperationException if some existing tasks can't be deleted
+     */
+    public suspend fun deleteAll(taskIds: List<String>)
 }

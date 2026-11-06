@@ -177,7 +177,7 @@ class InMemoryTaskStorageListTest {
         tasks.forEach { storage.update(it, ctx) }
 
         val first = storage.list(ListTasksRequest(pageSize = 2), ctx)
-        storage.delete(first.tasks.last().id, ctx)
+        storage.deleteAll(listOf(first.tasks.last().id))
         val second = storage.list(ListTasksRequest(pageSize = 2, pageToken = first.nextPageToken), ctx)
 
         assertEquals(listOf(tasks[1], tasks[0]), second.tasks)

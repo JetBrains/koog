@@ -256,6 +256,25 @@ public class ServerCallContext(
             if (headers === this.headers) this.requestedExtensions else requestedExtensionsFrom(headers),
         tenant: String? = this.tenant,
     ): ServerCallContext = ServerCallContext(headers, state, requestedVersion, requestedExtensions, tenant)
+
+    /** Contexts are equal if all their properties are. */
+    override fun equals(other: Any?): Boolean =
+        this === other ||
+            other is ServerCallContext &&
+            headers == other.headers &&
+            state == other.state &&
+            requestedVersion == other.requestedVersion &&
+            requestedExtensions == other.requestedExtensions &&
+            tenant == other.tenant
+
+    override fun hashCode(): Int {
+        var result = headers.hashCode()
+        result = 31 * result + state.hashCode()
+        result = 31 * result + requestedVersion.hashCode()
+        result = 31 * result + requestedExtensions.hashCode()
+        result = 31 * result + (tenant?.hashCode() ?: 0)
+        return result
+    }
 }
 
 private fun requestedVersionFrom(headers: Map<String, List<String>>): String =

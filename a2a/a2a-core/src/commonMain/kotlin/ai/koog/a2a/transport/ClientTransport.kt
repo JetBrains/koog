@@ -228,6 +228,12 @@ public class ClientCallContext(
         state: Map<StateKey<*>, Any> = this.state,
     ): ClientCallContext = ClientCallContext(headers, state)
 
+    /** Contexts are equal if their [headers] and [state] are. */
+    override fun equals(other: Any?): Boolean =
+        this === other || other is ClientCallContext && headers == other.headers && state == other.state
+
+    override fun hashCode(): Int = 31 * headers.hashCode() + state.hashCode()
+
     @Suppress("MissingKDocForPublicAPI")
     public companion object {
         public val Default: ClientCallContext = ClientCallContext()

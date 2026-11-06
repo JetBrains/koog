@@ -155,8 +155,8 @@ class A2AServerStorageContextTest {
 
     @Test
     fun testTurnPersistsEventsHistoryAndFailureWithItsOwnContext() = runTest(timeout = TEST_TIMEOUT) {
-        val firstTurn = ownerContext("alice")
-        val secondTurn = ownerContext("alice")
+        val firstTurn = ownerContext("alice", call = "first turn")
+        val secondTurn = ownerContext("alice", call = "second turn")
         val server = createServer()
         server.onSendMessage(request("ask"), firstTurn)
 
@@ -179,8 +179,8 @@ class A2AServerStorageContextTest {
 
     @Test
     fun testForcedCancellationIsPersistedWithContextOfCancelCaller() = runTest(timeout = TEST_TIMEOUT) {
-        val turn = ownerContext("alice")
-        val cancelCaller = ownerContext("alice")
+        val turn = ownerContext("alice", call = "turn")
+        val cancelCaller = ownerContext("alice", call = "cancel")
         val server = createServer()
         server.onSendMessage(request("ask"), turn)
 
@@ -191,7 +191,7 @@ class A2AServerStorageContextTest {
         // The cancellation's reads are made with the caller's context too.
         assertEquals(
             listOf("get $TASK_ID", "update status TASK_STATE_CANCELED"),
-            taskStorage.calls.filter { it.callContext === cancelCaller }.map { it.operation }.distinct(),
+            taskStorage.calls.filter { it.callContext == cancelCaller }.map { it.operation }.distinct(),
         )
     }
 

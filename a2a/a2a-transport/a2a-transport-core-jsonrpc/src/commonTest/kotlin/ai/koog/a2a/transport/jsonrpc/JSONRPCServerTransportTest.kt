@@ -497,11 +497,7 @@ class JSONRPCServerTransportTest {
 
         handle(A2AMethod.GetTask, getTaskParams, ctx = ctx, handler = handlerRecording { seen = it })
 
-        val handlerCtx = assertNotNull(seen)
-        assertEquals(
-            listOf(ctx.headers, ctx.state, ctx.requestedVersion, ctx.requestedExtensions, null),
-            with(handlerCtx) { listOf(headers, state, requestedVersion, requestedExtensions, tenant) },
-        )
+        assertEquals(ctx, seen)
     }
 
     @Test

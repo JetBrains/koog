@@ -49,27 +49,31 @@ class InMemoryTaskStorageTest {
     }
 
     @Test
-    fun testDeleteTask() = runTest {
-        val task = createTask(id = "task-1", contextId = "context-1")
-        storage.update(task, ctx)
+    fun testGetAllReturnsFullTasksInOrderOfIdsSkippingMissingOnes() = runTest {
+        val first = createTask(
+            id = "task-1",
+            contextId = "context-1",
+            history = listOf(createUserMessage("user-1", "context-1", "Hello")),
+            artifacts = listOf(Artifact(artifactId = "artifact-1", parts = listOf(TextPart("content")))),
+        )
+        val second = createTask(id = "task-2", contextId = "context-2")
+        storage.update(first, ctx)
+        storage.update(second, ctx)
 
-        storage.delete("task-1", ctx)
-
-        val retrieved = storage.read("task-1")
-        assertNull(retrieved)
+        assertEquals(listOf(second, first), storage.getAll(listOf("task-2", "missing", "task-1")))
     }
 
     @Test
-    fun testDeleteIsIdempotent() = runTest {
-        val other = createTask(id = "task-2", contextId = "context-1")
+    fun testDeleteAllIsIdempotent() = runTest {
+        val kept = createTask(id = "task-3", contextId = "context-1")
         storage.update(createTask(id = "task-1", contextId = "context-1"), ctx)
-        storage.update(other, ctx)
+        storage.update(createTask(id = "task-2", contextId = "context-1"), ctx)
+        storage.update(kept, ctx)
 
-        storage.delete("task-1", ctx)
-        storage.delete("task-1", ctx)
-        storage.delete("non-existent-id", ctx)
+        storage.deleteAll(listOf("task-1", "task-2", "missing"))
+        storage.deleteAll(listOf("task-1"))
 
-        assertEquals(listOf(null, other), listOf(storage.read("task-1"), storage.read("task-2")))
+        assertEquals(listOf(kept), storage.getAll(listOf("task-1", "task-2", "task-3")))
     }
 
     @Test

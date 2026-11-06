@@ -10,8 +10,8 @@ import kotlinx.serialization.Serializable
  * Required when creating a configuration with `CreateTaskPushNotificationConfig`. Should be omitted when the
  * configuration is sent inline in [SendMessageConfiguration.taskPushNotificationConfig], because the task may not exist
  * yet: the server associates the configuration with the task it creates or continues.
- * @property id A unique identifier (e.g. UUID) for the push notification configuration, to support multiple notification callbacks per task.
- * May be set by the client; assigned by the server if absent.
+ * @property id A unique identifier (e.g. UUID) for the push notification configuration, to support multiple
+ * notification callbacks per task. May be set by the client; the server assigns one when it is absent.
  * @property token A unique token for this task or session to validate incoming push notifications.
  * @property authentication Authentication details for the agent to use when calling the notification URL.
  * @property tenant Optional. Opaque routing identifier. Must match the [AgentInterface.tenant] value from
