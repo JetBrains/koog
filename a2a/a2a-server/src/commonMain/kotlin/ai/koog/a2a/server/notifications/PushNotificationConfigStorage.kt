@@ -11,11 +11,9 @@ import ai.koog.a2a.transport.ServerCallContext
 /**
  * Interface for managing the storage of push notification configurations associated with task updates.
  *
- * Every method but [getAll] takes the [ServerCallContext] of the call it is made for, last, so multi-tenant or
- * authorization-aware storages can scope the data (e.g. by an owner in [ServerCallContext.state], and by
- * [ServerCallContext.tenant]). The first four methods serve the push notification config RPCs; [deleteAll] is internal
- * cleanup. [getAll] is the one read without a caller: the server dispatches notifications with it, after the configs
- * were authorized when they were saved.
+ * Scoping: multi-tenant or authorization-aware storages may scope methods by the call context, e.g. by an owner
+ * the server's subclass puts into [ServerCallContext.state], and by [ServerCallContext.tenant], which the transport
+ * sets from the request . A task that is not visible to the caller must be reported as not found.
  *
  * [ai.koog.a2a.server.A2AServer] checks that the task exists and is visible to the caller, and maps a missing config
  * to `TaskNotFound`. Storages only report absence (`null`, empty list, no-op).

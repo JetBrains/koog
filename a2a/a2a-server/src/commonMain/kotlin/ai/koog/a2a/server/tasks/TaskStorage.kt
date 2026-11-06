@@ -15,14 +15,9 @@ import ai.koog.a2a.transport.ServerCallContext
 /**
  * Storage interface for managing tasks and their lifecycle events.
  *
- * Every method but the service methods [getAll] and [deleteAll] takes, as its last parameter, the [ServerCallContext]
- * of the call it is made for. Methods serving an RPC take its request; the others take plain arguments and return
- * full data (callers trim it with [project]).
- *
- * Scoping: multi-tenant or authorization-aware storages may scope every method by the call context, e.g. by an owner
+ * Scoping: multi-tenant or authorization-aware storages may scope methods by the call context, e.g. by an owner
  * the server's subclass puts into [ServerCallContext.state], and by [ServerCallContext.tenant], which the transport
- * sets from the request (the requests' own `tenant` fields are wire fields; prefer the context's). A task that is not
- * visible to the caller must be reported as not found.
+ * sets from the request . A task that is not visible to the caller must be reported as not found.
  *
  * Visibility: a task stays visible to the call context that created or updated it, at least for the rest of that
  * turn or cancellation. [ai.koog.a2a.server.A2AServer] reads the task back with that context, e.g. to apply a
