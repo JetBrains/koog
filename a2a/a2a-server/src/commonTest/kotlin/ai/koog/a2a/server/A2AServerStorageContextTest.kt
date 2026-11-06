@@ -207,11 +207,35 @@ class A2AServerStorageContextTest {
         createServer(pushConfigStorage = pushStorage).onSendMessage(request, turn)
         runCurrent()
 
+        // The turn's bookkeeping read of whether its task was created.
+        assertEquals(listOf(StorageCall("get $TASK_ID status", turn)), taskStorage.calls)
+
         assertEquals(
             listOf(StorageCall("save $TASK_ID/$TASK_ID", turn), StorageCall("deleteAll $TASK_ID", turn)),
             pushStorage.calls,
         )
         assertEquals(emptyList(), pushStorage.getAll(TASK_ID))
+    }
+
+    @Test
+    fun testBookkeepingReadsReadOnlyTheStatusWithContextOfCall() = runTest(timeout = TEST_TIMEOUT) {
+        val firstTurn = ownerContext("alice", call = "first turn")
+        val secondTurn = ownerContext("alice", call = "second turn")
+        val configCall = ownerContext("alice", call = "config")
+        val server = createServer(pushConfigStorage = OwnerScopedPushConfigStorage())
+
+        // Checks that the agent's Task is new, marks the follow-up failed, and checks that the config's task exists.
+        server.onSendMessage(request("ask"), firstTurn)
+        server.onSendMessage(request("fail", TASK_ID), secondTurn)
+        server.onCreateTaskPushNotificationConfig(
+            TaskPushNotificationConfig(url = "https://example.com/webhook", taskId = TASK_ID),
+            configCall,
+        )
+
+        assertEquals(
+            listOf(firstTurn, secondTurn, configCall).map { StorageCall("get $TASK_ID status", it) },
+            taskStorage.calls.filter { it.operation.endsWith(" status") },
+        )
     }
 
     @Test

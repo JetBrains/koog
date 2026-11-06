@@ -5,49 +5,49 @@ import ai.koog.a2a.server.exceptions.MessageOperationException
 import ai.koog.a2a.transport.ServerCallContext
 
 /**
- * Storage interface for messages associated with a particular context.
- * Can be used to keep track of a conversation history.
+ * Storage of the messages of a context, e.g. an agent's conversation memory. Agents use it through
+ * [ContextMessageStorage].
  *
- * Every method takes the [ServerCallContext] of the call the agent acts for, last. A client can send any context id,
- * so an owner-aware storage partitions the messages by it (e.g. by an owner in [ServerCallContext.state], and by
- * [ServerCallContext.tenant]). The in-memory implementation ignores it.
+ * Scoping: a client can send any context id, so storages may partition the messages by the [ServerCallContext] of
+ * the call the agent acts for, e.g. by an owner in [ServerCallContext.state] and by [ServerCallContext.tenant].
  *
  * Implementations must ensure concurrency safety.
  */
 public interface MessageStorage {
     /**
-     * Saves a message to the storage.
+     * Saves [message] to its context.
      *
      * @param message the message to save
      * @param callContext the call the agent acts for
-     * @throws MessageOperationException if the message cannot be saved
+     * @throws MessageOperationException if the message can't be saved, e.g. it has no context id
      */
     public suspend fun save(message: Message, callContext: ServerCallContext)
 
     /**
-     * Retrieves all messages associated with the given context.
-     context*
-     * @param contextId the context identifier
+     * Reads the messages of a context.
+     *
+     * @param contextId the context ID
      * @param callContext the call the agent acts for
+     * @return the messages of [contextId] visible to [callContext], in the order they were saved
      */
     public suspend fun getByContext(contextId: String, callContext: ServerCallContext): List<Message>
 
     /**
-     * Deletes all messages associated with the given context.
+     * Deletes the messages of [contextId] visible to [callContext].
      *
-     * @param contextId the context identifier
+     * @param contextId the context ID
      * @param callContext the call the agent acts for
-     * @throws MessageOperationException if some messages cannot be deleted
+     * @throws MessageOperationException if the messages can't be deleted
      */
     public suspend fun deleteByContext(contextId: String, callContext: ServerCallContext)
 
     /**
-     * Replaces all messages associated with the given context.
+     * Replaces the messages of [contextId] visible to [callContext] with [messages].
      *
-     * @param contextId the context identifier
-     * @param messages the messages to store instead
+     * @param contextId the context ID
+     * @param messages the new messages
      * @param callContext the call the agent acts for
-     * @throws MessageOperationException if context cannot be replaced
+     * @throws MessageOperationException if the messages can't be replaced, e.g. one has another context id
      */
     public suspend fun replaceByContext(contextId: String, messages: List<Message>, callContext: ServerCallContext)
 }
@@ -83,6 +83,7 @@ public class ContextMessageStorage(
     /**
      * Retrieves all messages associated with the current context.
      *
+     * @return the messages, in the order they were saved
      * @see [MessageStorage.getByContext]
      */
     public suspend fun getAll(): List<Message> {

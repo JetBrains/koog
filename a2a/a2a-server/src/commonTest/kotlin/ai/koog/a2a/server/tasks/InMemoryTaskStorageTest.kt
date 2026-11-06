@@ -49,6 +49,30 @@ class InMemoryTaskStorageTest {
     }
 
     @Test
+    fun testGetWithProjectionTrimsTask() = runTest {
+        val history = listOf(
+            createUserMessage("user-1", "context-1", "Hello"),
+            createUserMessage("user-2", "context-1", "Again"),
+        )
+        val task = createTask(
+            id = "task-1",
+            contextId = "context-1",
+            history = history,
+            artifacts = listOf(Artifact(artifactId = "artifact-1", parts = listOf(TextPart("content")))),
+        )
+        storage.update(task, ctx)
+
+        assertEquals(
+            listOf(task, task.copy(history = history.takeLast(1), artifacts = null), null),
+            listOf(
+                storage.get("task-1", TaskProjection(), ctx),
+                storage.get("task-1", TaskProjection(historyLength = 1, includeArtifacts = false), ctx),
+                storage.get("missing", TaskProjection(), ctx),
+            ),
+        )
+    }
+
+    @Test
     fun testGetAllReturnsFullTasksInOrderOfIdsSkippingMissingOnes() = runTest {
         val first = createTask(
             id = "task-1",

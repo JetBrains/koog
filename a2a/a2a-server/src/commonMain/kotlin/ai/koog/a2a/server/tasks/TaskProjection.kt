@@ -3,35 +3,40 @@ package ai.koog.a2a.server.tasks
 import ai.koog.a2a.model.Task
 
 /**
- * Returns a copy of this task trimmed to the representation requested by a client.
+ * Which parts of a task to return. The defaults give the full task.
  *
- * Reference implementation of the `historyLength` / `includeArtifacts` rules of `GetTask` and `ListTasks`. Custom
- * [TaskStorage] implementations should use it (or reproduce it exactly) in [TaskStorage.get] and [TaskStorage.list].
- *
- * - [historyLength]
- *   - `null`: no limit, [Task.history] is returned unchanged.
- *   - `0`: no history is requested, [Task.history] is set to `null` (the field is omitted on the wire, it is **not**
- *     an empty list).
- *   - `N > 0`: [Task.history] holds at most the `N` most recent messages. A `null` history stays `null`.
- * - [includeArtifacts]
- *   - `true`: [Task.artifacts] is returned unchanged.
- *   - `false`: [Task.artifacts] is set to `null` (the field is omitted on the wire).
- *
- * All other properties are unchanged; the original task is never modified.
- *
- * @param historyLength the maximum number of most recent history messages to keep, `null` for no limit
- * @param includeArtifacts whether to keep the task artifacts
- * @throws IllegalArgumentException if [historyLength] is negative ([ai.koog.a2a.server.A2AServer] validates it first).
+ * @property historyLength `null` keeps all history, `0` drops it (`history = null`), `N` keeps the `N` most recent
+ * messages.
+ * @property includeArtifacts `false` drops the artifacts (`artifacts = null`).
+ * @throws IllegalArgumentException if [historyLength] is negative.
  */
-public fun Task.project(historyLength: Int?, includeArtifacts: Boolean): Task {
-    require(historyLength == null || historyLength >= 0) { "historyLength must be non-negative, but was $historyLength" }
+public data class TaskProjection(
+    public val historyLength: Int? = null,
+    public val includeArtifacts: Boolean = true,
+) {
+    init {
+        require(historyLength == null || historyLength >= 0) {
+            "historyLength must be non-negative, but was $historyLength"
+        }
+    }
+}
 
-    val projectedHistory = when {
-        historyLength == null -> history
-        historyLength == 0 -> null
+/** Only the task's id, contextId, status and metadata: for the server's bookkeeping reads. */
+internal val STATUS_ONLY: TaskProjection = TaskProjection(historyLength = 0, includeArtifacts = false)
+
+/**
+ * Trims this task.
+ *
+ * @param projection the parts of the task to keep
+ * @return this task trimmed as [projection] says, or `this` if nothing changes
+ */
+public fun Task.project(projection: TaskProjection): Task {
+    val projectedHistory = when (val historyLength = projection.historyLength) {
+        null -> history
+        0 -> null
         else -> history?.takeLast(historyLength)
     }
-    val projectedArtifacts = if (includeArtifacts) artifacts else null
+    val projectedArtifacts = if (projection.includeArtifacts) artifacts else null
 
     return if (projectedHistory == history && projectedArtifacts == artifacts) {
         this

@@ -9,31 +9,26 @@ import ai.koog.a2a.server.exceptions.PushNotificationException
 import ai.koog.a2a.transport.ServerCallContext
 
 /**
- * Interface for managing the storage of push notification configurations associated with task updates.
+ * Storage of push notification configs.
  *
- * Scoping: multi-tenant or authorization-aware storages may scope methods by the call context, e.g. by an owner
- * the server's subclass puts into [ServerCallContext.state], and by [ServerCallContext.tenant], which the transport
- * sets from the request . A task that is not visible to the caller must be reported as not found.
- *
- * [ai.koog.a2a.server.A2AServer] checks that the task exists and is visible to the caller, and maps a missing config
- * to `TaskNotFound`. Storages only report absence (`null`, empty list, no-op).
+ * - Scoping: storages may scope every method that takes a [ServerCallContext] by it, e.g. by an owner in
+ *   [ServerCallContext.state] and by [ServerCallContext.tenant]. A config not visible to the caller is reported as
+ *   absent.
+ * - [getAll] is not scoped: notifications are dispatched with it to the configs of every caller.
+ * - [ai.koog.a2a.server.A2AServer] checks the task before the RPC methods and reports absence as `TaskNotFound`, so
+ *   storages only report absence (`null`, empty list, no-op).
  *
  * Implementations must ensure concurrency safety.
  */
 public interface PushNotificationConfigStorage {
     /**
-     * Serves the `CreateTaskPushNotificationConfig` RPC, and saves the config sent inline in SendMessage: creates
-     * the config, or replaces the one with the same [TaskPushNotificationConfig.taskId] and
-     * [TaskPushNotificationConfig.id].
-     *
-     * [ai.koog.a2a.server.A2AServer] has set both to non-blank values, assigning the id if the client didn't. The
-     * config is stored as given, [TaskPushNotificationConfig.tenant] included, so that [get] and [list] return it
-     * unchanged.
+     * Serves `CreateTaskPushNotificationConfig`, and saves the config sent inline in SendMessage when its turn starts.
+     * Creates the config, or replaces the task's config with the same id; the server has set the task id and the id.
      *
      * @param config the config to save
-     * @param callContext the context of the call, see [PushNotificationConfigStorage]
-     * @return the config as it was stored
-     * @throws PushNotificationException if the configuration cannot be saved
+     * @param callContext the context of the call
+     * @return the config as stored, which [get] and [list] return unchanged
+     * @throws PushNotificationException if the config can't be saved
      */
     public suspend fun save(
         config: TaskPushNotificationConfig,
@@ -41,10 +36,10 @@ public interface PushNotificationConfigStorage {
     ): TaskPushNotificationConfig
 
     /**
-     * Serves the `GetTaskPushNotificationConfig` RPC.
+     * Serves `GetTaskPushNotificationConfig`.
      *
-     * @param request the `GetTaskPushNotificationConfig` request
-     * @param callContext the context of the call, see [PushNotificationConfigStorage]
+     * @param request the config to read
+     * @param callContext the context of the call
      * @return the config, or `null` if it doesn't exist or isn't visible to [callContext]
      */
     public suspend fun get(
@@ -53,16 +48,11 @@ public interface PushNotificationConfigStorage {
     ): TaskPushNotificationConfig?
 
     /**
-     * Serves the `ListTaskPushNotificationConfigs` RPC: returns the configs of the task visible to [callContext].
+     * Serves `ListTaskPushNotificationConfigs`.
      *
-     * Paging is up to the storage. Without it, ignore [ListTaskPushNotificationConfigsRequest.pageSize] and
-     * [ListTaskPushNotificationConfigsRequest.pageToken], and return all configs with an empty
-     * [ListTaskPushNotificationConfigsResponse.nextPageToken]. With it, page tokens are opaque and storage-defined, and
-     * `nextPageToken` is non-empty if and only if more results exist.
-     *
-     * @param request the `ListTaskPushNotificationConfigs` request
-     * @param callContext the context of the call, see [PushNotificationConfigStorage]
-     * @return the configs of the task (an empty list if there are none)
+     * @param request the task and the page of its configs
+     * @param callContext the context of the call
+     * @return the configs of the task visible to [callContext]
      */
     public suspend fun list(
         request: ListTaskPushNotificationConfigsRequest,
@@ -70,34 +60,29 @@ public interface PushNotificationConfigStorage {
     ): ListTaskPushNotificationConfigsResponse
 
     /**
-     * Serves the `DeleteTaskPushNotificationConfig` RPC. Idempotent: deleting a config that doesn't exist is a no-op.
+     * Serves `DeleteTaskPushNotificationConfig`. A missing config is a no-op.
      *
-     * @param request the `DeleteTaskPushNotificationConfig` request
-     * @param callContext the context of the call, see [PushNotificationConfigStorage]
-     * @throws PushNotificationException if the configuration cannot be deleted
+     * @param request the config to delete
+     * @param callContext the context of the call
+     * @throws PushNotificationException if the config can't be deleted
      */
     public suspend fun delete(request: DeleteTaskPushNotificationConfigRequest, callContext: ServerCallContext)
 
     /**
-     * Retrieves all push notification configurations of the given task ID, for internal use when notifications are
-     * dispatched. The one read without a caller context: it returns the configs of every caller, since one task's
-     * notifications carry the events of every turn and caller.
+     * The dispatch read, not scoped.
      *
-     * @param taskId Task ID for which to retrieve the configurations.
-     * @return all configs of the task (an empty list if there are none)
+     * @param taskId the task ID
+     * @return the configs of [taskId] saved by every caller
      */
     public suspend fun getAll(taskId: String): List<TaskPushNotificationConfig>
 
     /**
-     * Deletes all push notification configurations of the given task ID, for internal cleanup. A no-op if there are
-     * none.
+     * Deletes the configs of [taskId] when a turn that saved one inline ends without creating its task. A no-op if
+     * there are none.
      *
-     * The server calls it with the context of the turn that saved the configs inline, when the turn ends without
-     * creating its task; an authorization-aware storage may delete only the configs saved with that context.
-     *
-     * @param taskId Task ID for which to delete the configurations.
-     * @param callContext the context of the call the configurations are deleted for
-     * @throws PushNotificationException if the configurations cannot be deleted.
+     * @param taskId the task ID
+     * @param callContext the context of that turn; an owner-aware storage may delete only the configs saved with it
+     * @throws PushNotificationException if the configs can't be deleted
      */
     public suspend fun deleteAll(taskId: String, callContext: ServerCallContext)
 }

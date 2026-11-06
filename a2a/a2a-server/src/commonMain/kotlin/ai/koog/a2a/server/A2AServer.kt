@@ -41,6 +41,7 @@ import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.tasks.STATUS_ONLY
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.turn.IdGenerator
@@ -905,7 +906,7 @@ public open class A2AServer(
             ?: throw A2AInvalidParamsException("Task id is required to create a push notification config")
         checkPushUrl(request)
 
-        checkTaskExists(taskId, request.tenant, ctx)
+        checkTaskExists(taskId, ctx)
 
         // The id may be set by the client; the server assigns one if it's absent.
         val config = if (request.id.isNullOrBlank()) {
@@ -926,7 +927,7 @@ public open class A2AServer(
         checkAccepting(A2AMethod.GetTaskPushNotificationConfig, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
-        checkTaskExists(request.taskId, request.tenant, ctx)
+        checkTaskExists(request.taskId, ctx)
 
         return pushStorage.get(request, ctx)
             ?: throw A2ATaskNotFoundException(
@@ -941,7 +942,7 @@ public open class A2AServer(
         checkAccepting(A2AMethod.ListTaskPushNotificationConfigs, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
-        checkTaskExists(request.taskId, request.tenant, ctx)
+        checkTaskExists(request.taskId, ctx)
 
         return pushStorage.list(request, ctx)
     }
@@ -953,7 +954,7 @@ public open class A2AServer(
         checkAccepting(A2AMethod.DeleteTaskPushNotificationConfig, ctx)
 
         val pushStorage = storageIfPushNotificationSupported()
-        checkTaskExists(request.taskId, request.tenant, ctx)
+        checkTaskExists(request.taskId, ctx)
 
         pushStorage.delete(request, ctx)
     }
@@ -1013,10 +1014,9 @@ public open class A2AServer(
         }
     }
 
-    /** Checks that the task is visible to the caller, with the same owner-scoped lookup as GetTask. */
-    private suspend fun checkTaskExists(taskId: String, tenant: String?, ctx: ServerCallContext) {
-        taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = tenant), ctx)
-            ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+    /** Checks that the task is visible to the caller, with the owner-scoped bookkeeping read. */
+    private suspend fun checkTaskExists(taskId: String, ctx: ServerCallContext) {
+        taskStorage.get(taskId, STATUS_ONLY, ctx) ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
     }
 
     /**

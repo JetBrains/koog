@@ -18,6 +18,8 @@ import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationDispatcher
 import ai.koog.a2a.server.notifications.PushNotificationSender
+import ai.koog.a2a.server.tasks.STATUS_ONLY
+import ai.koog.a2a.server.tasks.TaskProjection
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.tasks.project
@@ -461,7 +463,9 @@ public class TurnManager(
                             view = channel,
                             viewShutdownHandle = viewShutdownHandle,
                             monitor = monitor,
-                            taskSnapshot = task?.project(request.configuration?.historyLength, includeArtifacts = true),
+                            taskSnapshot = task?.project(
+                                TaskProjection(historyLength = request.configuration?.historyLength)
+                            ),
                             outcome = outcomeRecorder.outcome,
                         )
 
@@ -626,7 +630,7 @@ public class TurnManager(
         val pushStorage = pushConfigStorage ?: return
 
         try {
-            if (taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = ctx.tenant), ctx) == null) {
+            if (taskStorage.get(taskId, STATUS_ONLY, ctx) == null) {
                 pushStorage.deleteAll(taskId, ctx)
             }
         } catch (e: Exception) {

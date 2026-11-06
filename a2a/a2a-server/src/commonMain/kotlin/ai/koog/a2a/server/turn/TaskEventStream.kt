@@ -5,7 +5,6 @@ import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.Event
-import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
@@ -15,6 +14,7 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.StreamDeliveryConfig
+import ai.koog.a2a.server.tasks.STATUS_ONLY
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.tasks.plusIfAbsent
@@ -290,9 +290,8 @@ internal class TaskEventStream(
         true
     }
 
-    /** Reads the task without history, scoped to [callContext]. */
-    private suspend fun read(callContext: ServerCallContext): Task? =
-        taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = callContext.tenant), callContext)
+    /** Reads the task's status, scoped to [callContext]. */
+    private suspend fun read(callContext: ServerCallContext): Task? = taskStorage.get(taskId, STATUS_ONLY, callContext)
 
     private suspend fun persistAndDeliver(event: TaskEvent, callContext: ServerCallContext) {
         persist(event, callContext)

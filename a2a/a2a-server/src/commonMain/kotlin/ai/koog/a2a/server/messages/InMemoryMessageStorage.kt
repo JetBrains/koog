@@ -9,8 +9,7 @@ import ai.koog.agents.lock.RWLock
 /**
  * In-memory implementation of [MessageStorage] using a thread-safe map.
  *
- * This implementation stores messages in memory grouped by context ID and provides
- * concurrency safety through mutex locks. The [ServerCallContext] is ignored: all messages are visible to every caller.
+ * The [ServerCallContext] is ignored: all messages are visible to every caller.
  */
 @OptIn(InternalA2AApi::class)
 public class InMemoryMessageStorage : MessageStorage {

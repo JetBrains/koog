@@ -18,6 +18,8 @@ import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
+import ai.koog.a2a.server.tasks.STATUS_ONLY
+import ai.koog.a2a.server.tasks.TaskProjection
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.StateKey
@@ -56,6 +58,12 @@ internal class OwnerScopedTaskStorage : TaskStorage {
     override suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task? {
         calls += StorageCall("get ${request.id}", callContext)
         return if (isVisible(request.id, callContext)) delegate.get(request, callContext) else null
+    }
+
+    /** Recorded as `get <id> status` for [STATUS_ONLY], the projection of the server's bookkeeping reads. */
+    override suspend fun get(taskId: String, projection: TaskProjection, callContext: ServerCallContext): Task? {
+        calls += StorageCall("get $taskId ${if (projection == STATUS_ONLY) "status" else "$projection"}", callContext)
+        return if (isVisible(taskId, callContext)) delegate.get(taskId, projection, callContext) else null
     }
 
     /** Filters the page of the in-memory storage, so paging isn't owner-scoped; enough for the tests. */

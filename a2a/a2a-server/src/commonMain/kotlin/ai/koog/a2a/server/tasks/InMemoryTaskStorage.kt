@@ -23,8 +23,7 @@ import kotlin.time.Instant
 /**
  * In-memory implementation of [TaskStorage] using a thread-safe map.
  *
- * Stores tasks in memory, indexed by ID, with concurrency safety through a read-write lock. Every method ignores the
- * [ServerCallContext] and the requests' tenant: all tasks are visible to every caller.
+ * The [ServerCallContext] and the requests' tenant are ignored: all tasks are visible to every caller.
  *
  * [list] ordering: by status timestamp, newest first; tasks without one go last; ties are broken by task id in
  * descending order (compared as strings), so the order is total. The page token holds the sort key of the last task
@@ -37,7 +36,7 @@ public class InMemoryTaskStorage : TaskStorage {
     private val rwLock = RWLock()
 
     override suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task? = rwLock.withReadLock {
-        tasks[request.id]?.project(request.historyLength, includeArtifacts = true)
+        tasks[request.id]?.project(TaskProjection(historyLength = request.historyLength))
     }
 
     override suspend fun list(request: ListTasksRequest, callContext: ServerCallContext): ListTasksResponse =
@@ -46,6 +45,7 @@ public class InMemoryTaskStorage : TaskStorage {
             if (pageSize < 1) {
                 throw A2AInvalidParamsException("pageSize must be positive, but was $pageSize")
             }
+            val projection = TaskProjection(request.historyLength, includeArtifacts = request.includeArtifacts ?: false)
             val cursor = request.pageToken?.takeIf { it.isNotEmpty() }?.let(::decodePageToken)
 
             val contextFilter = request.contextId
@@ -68,7 +68,7 @@ public class InMemoryTaskStorage : TaskStorage {
             val nextPageToken = if (remaining.size > page.size) encodePageToken(page.last()) else ""
 
             ListTasksResponse(
-                tasks = page.map { it.project(request.historyLength, request.includeArtifacts ?: false) },
+                tasks = page.map { it.project(projection) },
                 nextPageToken = nextPageToken,
                 pageSize = pageSize,
                 totalSize = matching.size
