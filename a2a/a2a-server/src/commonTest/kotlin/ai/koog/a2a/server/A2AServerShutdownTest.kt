@@ -153,14 +153,14 @@ class A2AServerShutdownTest {
 
     /** Starts a turn of [agent] (registered as "hold") on another task, keeping a graceful shutdown draining. */
     private suspend fun holdDrain(server: A2AServer, agent: GatedAgent) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED, taskId = OTHER_TASK_ID))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED, taskId = OTHER_TASK_ID), ctx)
         server.onSendMessage(request("hold", OTHER_TASK_ID, returnImmediately = true), ctx)
         agent.started.await()
     }
 
     @Test
     fun testEveryOperationFailsAfterCancel() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         val server = createServer()
 
         server.cancel()
@@ -184,7 +184,7 @@ class A2AServerShutdownTest {
 
     @Test
     fun testExternallyCancelledScopeShutsServerDown() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         val userScope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
         val server = createServer(scope = userScope)
 
@@ -217,7 +217,7 @@ class A2AServerShutdownTest {
         assertEquals(shutDown, followUp.await().exceptionOrNull()?.let { it::class to it.message })
         assertEquals(false, followUpRan)
         assertEquals(emptyList(), pushConfigStorage.getAll(TASK_ID))
-        assertEquals(runningTask(), taskStorage.get(TASK_ID))
+        assertEquals(runningTask(), taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -235,7 +235,7 @@ class A2AServerShutdownTest {
         assertEquals(shutDown to listOf<Event>(runningTask()), requester.await().described())
         assertEquals(shutDown to listOf<Event>(runningTask()), subscriber.await().described())
         // The task keeps its last state, and the server holds nothing.
-        assertEquals(runningTask(), taskStorage.get(TASK_ID))
+        assertEquals(runningTask(), taskStorage.read(TASK_ID))
         runCurrent()
         assertEquals(0 to 0, server.held())
     }
@@ -251,12 +251,12 @@ class A2AServerShutdownTest {
         running.interrupted.await()
 
         assertEquals(shutDown, response.await().exceptionOrNull()?.let { it::class to it.message })
-        assertEquals(runningTask(), taskStorage.get(TASK_ID))
+        assertEquals(runningTask(), taskStorage.read(TASK_ID))
     }
 
     @Test
     fun testCancelEndsSubscriptionThatGotTerminalEventNormally() = runTest(timeout = TEST_TIMEOUT) {
-        val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED).also { taskStorage.update(it) }
+        val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED).also { taskStorage.update(it, ctx) }
         val events = listOf(
             statusUpdate(TaskState.TASK_STATE_WORKING),
             artifactChunk("result"),
@@ -318,8 +318,8 @@ class A2AServerShutdownTest {
 
     @Test
     fun testExternallyCancelledScopeEndsOpenSubscriptionWithShutdownError() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
         val userScope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
         val server = createServer(scope = userScope)
         val subscriber = subscribeExpectingFailure(server)
@@ -332,7 +332,7 @@ class A2AServerShutdownTest {
 
     @Test
     fun testGracefulShutdownWaitsForRunningTurn() = runTest(timeout = TEST_TIMEOUT) {
-        val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED).also { taskStorage.update(it) }
+        val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED).also { taskStorage.update(it, ctx) }
         val agent = GatedAgent()
         val server = createServer(mapOf("work" to agent.script))
         val subscriber = async { server.onSubscribeToTask(SubscribeToTaskRequest(TASK_ID), ctx).toList() }
@@ -356,7 +356,7 @@ class A2AServerShutdownTest {
 
     @Test
     fun testDrainingRejectsOnlyNewTurnsAndSubscriptions() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         val hold = GatedAgent()
         val server = createServer(mapOf("hold" to hold.script))
         holdDrain(server, hold)
@@ -374,7 +374,7 @@ class A2AServerShutdownTest {
             rejected,
         )
         // The CancelTask has canceled the task.
-        assertEquals(TaskState.TASK_STATE_CANCELED, taskStorage.get(TASK_ID)?.status?.state)
+        assertEquals(TaskState.TASK_STATE_CANCELED, taskStorage.read(TASK_ID)?.status?.state)
         assertEquals(false, shutdown.isCompleted)
 
         hold.release.complete(Unit)
@@ -383,7 +383,7 @@ class A2AServerShutdownTest {
 
     @Test
     fun testFollowUpWaitingForRunningTurnIsRejectedWhileDraining() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         val work = GatedAgent(finalState = TaskState.TASK_STATE_INPUT_REQUIRED)
         val hold = GatedAgent()
         var followUpRan = false
@@ -456,13 +456,13 @@ class A2AServerShutdownTest {
         assertEquals(10.seconds.inWholeMilliseconds, currentTime)
         running.interrupted.await()
         assertEquals(shutDown to listOf<Event>(runningTask()), requester.await().described())
-        assertEquals(runningTask(), taskStorage.get(TASK_ID))
+        assertEquals(runningTask(), taskStorage.read(TASK_ID))
     }
 
     @Test
     fun testSubscriptionOfIdleTaskStaysOpenUntilDrainEnds() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
         val hold = GatedAgent()
         val server = createServer(mapOf("hold" to hold.script))
         val subscriber = subscribeExpectingFailure(server)
@@ -480,7 +480,7 @@ class A2AServerShutdownTest {
 
     /** Lets the agent complete [TASK_ID] while every push to the config "hook" is blocked. */
     private suspend fun TestScope.completeWithBlockedPushes(): Pair<ObservedServer, GatedPushNotificationSender> {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         pushConfigStorage.save(pushConfig(TASK_ID, "hook"), ctx)
         val sender = GatedPushNotificationSender().apply { block("hook") }
         val server = createServer(mapOf("finish" to finishScript), pushSender = sender)
@@ -572,7 +572,7 @@ class A2AServerShutdownTest {
 
     @Test
     fun testExternallyCancelledScopeEndsWaitingShutdown() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         val storage = HangingTaskStorage(taskStorage)
         val agent = GatedAgent()
         val userScope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext.job))
@@ -601,10 +601,13 @@ class A2AServerShutdownTest {
         val saving = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
 
-        override suspend fun save(config: TaskPushNotificationConfig, context: ServerCallContext): TaskPushNotificationConfig {
+        override suspend fun save(
+            config: TaskPushNotificationConfig,
+            callContext: ServerCallContext,
+        ): TaskPushNotificationConfig {
             saving.complete(Unit)
             release.await()
-            return delegate.save(config, context)
+            return delegate.save(config, callContext)
         }
     }
 
@@ -617,9 +620,9 @@ class A2AServerShutdownTest {
             hangs = true
         }
 
-        override suspend fun update(event: TaskEvent) {
+        override suspend fun update(event: TaskEvent, callContext: ServerCallContext) {
             if (hangs) release.await()
-            delegate.update(event)
+            delegate.update(event, callContext)
         }
     }
 

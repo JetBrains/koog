@@ -25,7 +25,7 @@ public class InMemoryPushNotificationConfigStorage : PushNotificationConfigStora
 
     override suspend fun save(
         config: TaskPushNotificationConfig,
-        context: ServerCallContext
+        callContext: ServerCallContext
     ): TaskPushNotificationConfig = rwLock.withWriteLock {
         val taskId = requireNotNull(config.taskId) { "Task id is required to save a push notification config" }
         val configId = requireNotNull(config.id) { "Config id is required to save a push notification config" }
@@ -36,21 +36,21 @@ public class InMemoryPushNotificationConfigStorage : PushNotificationConfigStora
 
     override suspend fun get(
         request: GetTaskPushNotificationConfigRequest,
-        context: ServerCallContext
+        callContext: ServerCallContext
     ): TaskPushNotificationConfig? = rwLock.withReadLock {
         configs[Key(request.taskId, request.id)]
     }
 
     override suspend fun list(
         request: ListTaskPushNotificationConfigsRequest,
-        context: ServerCallContext
+        callContext: ServerCallContext
     ): ListTaskPushNotificationConfigsResponse = ListTaskPushNotificationConfigsResponse(
         configs = getAll(request.taskId)
     )
 
     override suspend fun delete(
         request: DeleteTaskPushNotificationConfigRequest,
-        context: ServerCallContext
+        callContext: ServerCallContext
     ) {
         rwLock.withWriteLock {
             configs.remove(Key(request.taskId, request.id))
@@ -61,7 +61,7 @@ public class InMemoryPushNotificationConfigStorage : PushNotificationConfigStora
         configs.filterKeys { it.taskId == taskId }.values.toList()
     }
 
-    override suspend fun deleteAll(taskId: String) {
+    override suspend fun deleteAll(taskId: String, callContext: ServerCallContext) {
         rwLock.withWriteLock {
             configs.keys.removeAll { it.taskId == taskId }
         }

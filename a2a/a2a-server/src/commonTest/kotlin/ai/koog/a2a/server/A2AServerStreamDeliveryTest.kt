@@ -88,7 +88,7 @@ class A2AServerStreamDeliveryTest {
     }
 
     private suspend fun storeIdleTask(): Task =
-        task(TaskState.TASK_STATE_INPUT_REQUIRED).also { taskStorage.update(it) }
+        task(TaskState.TASK_STATE_INPUT_REQUIRED).also { taskStorage.update(it, ctx) }
 
     private fun Throwable.described() = Triple(this::class, message, (this as? A2AException)?.details)
 
@@ -129,7 +129,7 @@ class A2AServerStreamDeliveryTest {
         runCurrent()
 
         // The turn has gone on without the requester.
-        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
 
         release.complete(Unit)
         val (failure, received) = requester.await()
@@ -154,7 +154,7 @@ class A2AServerStreamDeliveryTest {
         val start = currentTime
         server.shutdown(1.hours)
         assertEquals(5.seconds.inWholeMilliseconds, currentTime - start)
-        assertEquals(TaskState.TASK_STATE_FAILED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_FAILED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
 
         release.complete(Unit)
         val (failure, received) = requester.await()
@@ -173,7 +173,7 @@ class A2AServerStreamDeliveryTest {
 
         val response = server.onSendMessage(request("many", TASK_ID), ctx)
 
-        assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response)
+        assertEquals(assertNotNull(taskStorage.read(TASK_ID)), response)
         assertEquals(TaskState.TASK_STATE_COMPLETED, (response as Task).status.state)
 
         // The same slow collector is evicted from a streaming response: it takes the snapshot and the first update.

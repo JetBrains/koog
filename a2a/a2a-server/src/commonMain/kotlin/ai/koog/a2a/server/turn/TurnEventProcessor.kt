@@ -7,6 +7,7 @@ import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.tasks.isTerminal
+import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -37,6 +38,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * @property contextId The context id of this turn: the incoming request's or a generated one.
  * @property taskId The task id of this turn: the incoming request's or a generated one for a new task. The task might
  * not exist yet; this id is what all [TaskEvent]s of the turn are validated against.
+ * @param callContext The context the events are persisted for: that of the turn's request, or of the CancelTask a
+ * processor not bound to a turn is created for.
  * @param taskExists Whether the task [taskId] already exists when the processor is created, i.e. the processor starts
  * in task mode and rejects [Message] events.
  * @param userMessage The message of the request that starts the turn, added to the task history with this turn's task
@@ -50,6 +53,7 @@ public class TurnEventProcessor internal constructor(
     public val contextId: String,
     public val taskId: String,
     private val stream: TaskEventStream,
+    private val callContext: ServerCallContext,
     private val taskExists: Boolean = false,
     userMessage: Message? = null,
     private val onRejected: (Exception) -> Unit = {},
@@ -110,7 +114,7 @@ public class TurnEventProcessor internal constructor(
                 throw reject(InvalidEventException(INVALID_CONTEXT_ID))
             }
 
-            stream.publish(message)
+            stream.publish(message, callContext)
             onPublished()
             isOpen.store(false)
         } else {
@@ -150,7 +154,12 @@ public class TurnEventProcessor internal constructor(
         val followUpMessage = pendingFollowUpMessage.takeIf { event !is Task }
 
         val isApplied = try {
-            stream.publish(event, userMessage = storedUserMessage.takeUnless { taskExists }, followUpMessage)
+            stream.publish(
+                event,
+                callContext,
+                userMessage = storedUserMessage.takeUnless { taskExists },
+                followUpMessage = followUpMessage,
+            )
         } catch (e: Exception) {
             onPublished()
             throw if (e is TaskOperationException) reject(e) else e

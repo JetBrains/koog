@@ -112,7 +112,7 @@ class A2AServerFailureMessageTest {
 
     /** The FAILED status the server stored, with [message]; the timestamp is taken from the storage. */
     private suspend fun storedFailedStatus(message: Message): TaskStatus {
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
         return TaskStatus(state = TaskState.TASK_STATE_FAILED, message = message, timestamp = stored.status.timestamp)
     }
 
@@ -123,7 +123,7 @@ class A2AServerFailureMessageTest {
         val events = server.onSendMessageStreaming(request("crash"), ctx).toList()
 
         val failedStatus = storedFailedStatus(expectedCustom)
-        assertEquals(failedStatus, assertNotNull(taskStorage.get(TASK_ID)).status)
+        assertEquals(failedStatus, assertNotNull(taskStorage.read(TASK_ID)).status)
         assertEquals(
             listOf<Event>(
                 workingTask.copy(history = listOf(request("crash").message.copy(taskId = TASK_ID))),
@@ -143,7 +143,7 @@ class A2AServerFailureMessageTest {
 
         val response = server.onSendMessage(request("crash"), ctx)
 
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
         assertEquals(storedFailedStatus(generic), stored.status)
         assertEquals(stored, response)
         assertEquals(1, server.calls.size)
@@ -164,7 +164,7 @@ class A2AServerFailureMessageTest {
 
         assertFailsWith<A2AInvalidAgentResponseException> { server.onSendMessage(request("invalid"), ctx) }
 
-        assertEquals(storedFailedStatus(expectedCustom), assertNotNull(taskStorage.get(TASK_ID)).status)
+        assertEquals(storedFailedStatus(expectedCustom), assertNotNull(taskStorage.read(TASK_ID)).status)
         assertIs<InvalidEventException>(server.calls.single().error)
     }
 
@@ -174,7 +174,7 @@ class A2AServerFailureMessageTest {
 
         server.onSendMessage(request("timeout"), ctx)
 
-        assertEquals(storedFailedStatus(expectedCustom), assertNotNull(taskStorage.get(TASK_ID)).status)
+        assertEquals(storedFailedStatus(expectedCustom), assertNotNull(taskStorage.read(TASK_ID)).status)
         assertIs<CancellationException>(server.calls.single().error)
     }
 
@@ -210,7 +210,7 @@ class A2AServerFailureMessageTest {
         turn.join()
 
         // The shutdown ends the requester's view before the turn marks the task failed.
-        assertEquals(storedFailedStatus(generic), assertNotNull(taskStorage.get(TASK_ID)).status)
+        assertEquals(storedFailedStatus(generic), assertNotNull(taskStorage.read(TASK_ID)).status)
         assertEquals(
             A2AInternalErrorException::class to "Server is shut down",
             response.await().exceptionOrNull()?.let { it::class to it.message },
@@ -236,7 +236,7 @@ class A2AServerFailureMessageTest {
         turn.join()
 
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
         assertEquals(canceled.copy(history = stored.history), stored)
         assertEquals(stored, response.await())
     }

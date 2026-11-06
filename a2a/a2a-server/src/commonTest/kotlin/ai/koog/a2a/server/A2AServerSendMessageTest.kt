@@ -108,7 +108,7 @@ class A2AServerSendMessageTest {
 
     /**
      * Records the reads made in [REQUEST_CALL] coroutines, i.e. on the requester's path, not by the agent, the turn's
-     * end, or push notifications: owner-scoped reads as the request and the call context, other reads by name.
+     * end, or push notifications, as the request and the call context.
      */
     private class RequesterReadRecorder(private val delegate: TaskStorage) : TaskStorage by delegate {
         val reads = mutableListOf<Any>()
@@ -117,17 +117,8 @@ class A2AServerSendMessageTest {
             if (currentCoroutineContext()[CoroutineName] == REQUEST_CALL) reads += read
         }
 
-        override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? =
-            delegate.get(request, context).also { record(request to context) }
-
-        override suspend fun get(taskId: String, historyLength: Int?, includeArtifacts: Boolean): Task? =
-            delegate.get(taskId, historyLength, includeArtifacts).also { record("get $taskId") }
-
-        override suspend fun getAll(taskIds: List<String>, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
-            delegate.getAll(taskIds, historyLength, includeArtifacts).also { record("getAll $taskIds") }
-
-        override suspend fun getByContext(contextId: String, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
-            delegate.getByContext(contextId, historyLength, includeArtifacts).also { record("getByContext $contextId") }
+        override suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task? =
+            delegate.get(request, callContext).also { record(request to callContext) }
     }
 
     /** A standalone reply of the agent: a [Message] instead of a task. */
@@ -251,7 +242,7 @@ class A2AServerSendMessageTest {
 
         gate.complete(Unit)
         agentFinished.await()
-        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
     }
 
     @Test
@@ -270,7 +261,7 @@ class A2AServerSendMessageTest {
         assertFailsWith<IllegalStateException> {
             server.onSendMessage(request("crash"), ctx)
         }
-        assertEquals(null, taskStorage.get(TASK_ID))
+        assertEquals(null, taskStorage.read(TASK_ID))
     }
 
     /** How the requester sees an error: its type, message, and A2A error code. */
@@ -287,7 +278,7 @@ class A2AServerSendMessageTest {
         assertEquals(error.asError(), blockingFailure.asError())
         assertEquals(error.asError(), streamingFailure.asError())
         assertEquals(emptyList(), received)
-        assertEquals(null, taskStorage.get(TASK_ID))
+        assertEquals(null, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -305,7 +296,7 @@ class A2AServerSendMessageTest {
                 runCurrent()
 
                 assertEquals(error.asError(), failure.asError())
-                assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+                assertEquals(inputRequiredTask, taskStorage.read(TASK_ID))
                 // The subscriber gets nothing and keeps waiting.
                 assertEquals(listOf<Event>(inputRequiredTask), subscription.events)
                 assertTrue(subscription.job.isActive)
@@ -338,7 +329,7 @@ class A2AServerSendMessageTest {
 
         assertEquals(error.asError(), failure.asError())
         assertEquals(emptyList(), received)
-        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+        assertEquals(inputRequiredTask, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -378,7 +369,7 @@ class A2AServerSendMessageTest {
 
             val response = server.onSendMessage(request("fail", TASK_ID), ctx)
 
-            val stored = taskStorage.get(TASK_ID)
+            val stored = taskStorage.read(TASK_ID)
             assertEquals(failedTask(stored, history), stored, "case $index")
             assertEquals<Any?>(stored, response, "case $index")
         }
@@ -397,7 +388,7 @@ class A2AServerSendMessageTest {
                     }
                 )
             )
-            return server.onSendMessage(request("work"), ctx) to taskStorage.get(TASK_ID)
+            return server.onSendMessage(request("work"), ctx) to taskStorage.read(TASK_ID)
         }
 
         /** The FAILED task the server stores; the message id and timestamp are taken from [stored]. */
@@ -444,7 +435,7 @@ class A2AServerSendMessageTest {
 
         assertEquals(crash.message, cancel.message)
         assertIs<CancellationException>(cancel.cause)
-        assertEquals(null, taskStorage.get(TASK_ID))
+        assertEquals(null, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -481,7 +472,7 @@ class A2AServerSendMessageTest {
         )
 
         val failedResponse = server.onSendMessage(request("crash"), ctx)
-        val failedTask = assertNotNull(taskStorage.get("task-user-crash"))
+        val failedTask = assertNotNull(taskStorage.read("task-user-crash"))
         val failedStatus = TaskStatus(
             state = TaskState.TASK_STATE_FAILED,
             message = Message(
@@ -590,7 +581,7 @@ class A2AServerSendMessageTest {
                     agentMessage(TaskState.TASK_STATE_WORKING.name),
                 ),
             ),
-            taskStorage.get(TASK_ID)
+            taskStorage.read(TASK_ID)
         )
     }
 
@@ -606,7 +597,7 @@ class A2AServerSendMessageTest {
 
         // The ignored Task is not a status or artifact update: the user message is not persisted.
         assertEquals(listOf<Event>(inputRequiredTask), events)
-        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+        assertEquals(inputRequiredTask, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -617,7 +608,7 @@ class A2AServerSendMessageTest {
         val response = server.onSendMessage(request("silent", TASK_ID), ctx)
 
         assertEquals(inputRequiredTask, response)
-        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+        assertEquals(inputRequiredTask, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -664,7 +655,7 @@ class A2AServerSendMessageTest {
         assertEquals(TaskOperationException::class, agentFailure.await()::class)
         assertEquals(A2AInvalidAgentResponseException::class, failure::class)
         assertEquals(emptyList(), received)
-        assertEquals(null, taskStorage.get(TASK_ID))
+        assertEquals(null, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -690,7 +681,7 @@ class A2AServerSendMessageTest {
 
         assertEquals(A2AInvalidAgentResponseException::class, failure::class)
         assertEquals(emptyList(), received)
-        assertEquals(null, taskStorage.get(TASK_ID))
+        assertEquals(null, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -701,7 +692,7 @@ class A2AServerSendMessageTest {
         assertFailsWith<A2AInvalidAgentResponseException> {
             server.onSendMessage(request("reply", TASK_ID), ctx)
         }
-        assertEquals(TaskState.TASK_STATE_FAILED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_FAILED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
     }
 
     @Test
@@ -724,8 +715,8 @@ class A2AServerSendMessageTest {
         // cancellation is first observed after the turn has started, before the requester collects the view.
         val pushStorage = InMemoryPushNotificationConfigStorage()
         val cancellingPushStorage = object : PushNotificationConfigStorage by pushStorage {
-            override suspend fun save(config: TaskPushNotificationConfig, context: ServerCallContext) =
-                pushStorage.save(config, context).also { requester.cancel() }
+            override suspend fun save(config: TaskPushNotificationConfig, callContext: ServerCallContext) =
+                pushStorage.save(config, callContext).also { requester.cancel() }
         }
         val server = createServer(
             mapOf("ask" to askScript, "finish" to gated(finishScript)),
@@ -746,7 +737,7 @@ class A2AServerSendMessageTest {
         assertTrue(requester.isCancelled)
         // Nobody collects the requester's view: the agent's events must not wait for it.
         assertTrue(agentFinished.isCompleted, "The agent must not be blocked by the abandoned turn view")
-        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
     }
 
     // Messages referencing a task
@@ -764,7 +755,7 @@ class A2AServerSendMessageTest {
     @Test
     fun testMessageToTerminalTaskFailsWithUnsupportedOperation() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(mapOf("finish" to finishScript))
-        taskStorage.update(task(TaskState.TASK_STATE_COMPLETED, "ask"))
+        taskStorage.update(task(TaskState.TASK_STATE_COMPLETED, "ask"), ctx)
 
         assertFailsWith<A2AUnsupportedOperationException> {
             server.onSendMessage(request("finish", TASK_ID), ctx)
@@ -815,7 +806,7 @@ class A2AServerSendMessageTest {
         }
 
         assertEquals(1, executed.size)
-        assertEquals(inputRequiredTask, taskStorage.get(TASK_ID))
+        assertEquals(inputRequiredTask, taskStorage.read(TASK_ID))
     }
 
     @Test

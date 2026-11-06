@@ -9,8 +9,10 @@ import ai.koog.a2a.server.CONTEXT_ID
 import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.TASK_ID
 import ai.koog.a2a.server.TEST_TIMEOUT
+import ai.koog.a2a.server.ctx
 import ai.koog.a2a.server.exceptions.InvalidEventException
 import ai.koog.a2a.server.exceptions.TurnNotActiveException
+import ai.koog.a2a.server.read
 import ai.koog.a2a.server.statusUpdate
 import ai.koog.a2a.server.task
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
@@ -48,6 +50,7 @@ class TurnEventProcessorTest {
         taskId = taskId,
         stream = stream,
         taskExists = taskExists,
+        callContext = ctx,
     )
 
     /**
@@ -60,7 +63,7 @@ class TurnEventProcessorTest {
      * Ends the turn and returns all events its view received.
      */
     private suspend fun Deferred<List<Event>>.endTurnAndCollect(): List<Event> {
-        stream.endTurn(contextId, outcome = TurnOutcome.Completed(rejection = null))
+        stream.endTurn(contextId, outcome = TurnOutcome.Completed(rejection = null), callContext = ctx)
         return await()
     }
 
@@ -105,7 +108,7 @@ class TurnEventProcessorTest {
         processor.sendTaskEvent(task)
 
         // Verify task was stored and delivered
-        assertEquals(task, taskStorage.get(taskId))
+        assertEquals(task, taskStorage.read(taskId))
         assertEquals(listOf(task), turnView.endTurnAndCollect())
     }
 
@@ -113,7 +116,7 @@ class TurnEventProcessorTest {
     fun testSendTaskEventWithExistingTask() = runTest(timeout = TEST_TIMEOUT) {
         // Store a task first
         val existingTask = task()
-        taskStorage.update(existingTask)
+        taskStorage.update(existingTask, ctx)
 
         // Create processor with existing task
         val processor = createProcessor(contextId, taskId)
@@ -124,13 +127,13 @@ class TurnEventProcessorTest {
         processor.close()
 
         // Verify event was processed
-        assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.get(taskId))
+        assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.read(taskId))
     }
 
     @Test
     fun testMessageRejectedWhenTaskExists() = runTest(timeout = TEST_TIMEOUT) {
         val existingTask = task(TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(existingTask)
+        taskStorage.update(existingTask, ctx)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
         val turnView = collect(stream.openTurnViewChannel())
@@ -144,13 +147,13 @@ class TurnEventProcessorTest {
         processor.sendTaskEvent(statusUpdate)
 
         assertEquals(listOf(statusUpdate), turnView.endTurnAndCollect())
-        assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.get(taskId))
+        assertEquals(existingTask.copy(status = statusUpdate.status), taskStorage.read(taskId))
     }
 
     @Test
     fun testTaskEventForExistingTaskIsIgnored() = runTest(timeout = TEST_TIMEOUT) {
         val existingTask = task(TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(existingTask)
+        taskStorage.update(existingTask, ctx)
 
         val processor = createProcessor(contextId, taskId, taskExists = true)
         val turnView = collect(stream.openTurnViewChannel())
@@ -158,7 +161,7 @@ class TurnEventProcessorTest {
         // Even a terminal Task is not applied, and doesn't close the processor.
         processor.sendTaskEvent(task(TaskState.TASK_STATE_COMPLETED))
 
-        assertEquals(existingTask, taskStorage.get(taskId))
+        assertEquals(existingTask, taskStorage.read(taskId))
 
         val statusUpdate = statusUpdate(TaskState.TASK_STATE_WORKING)
         processor.sendTaskEvent(statusUpdate)
@@ -174,13 +177,14 @@ class TurnEventProcessorTest {
             taskId = taskId,
             stream = stream,
             userMessage = userMessage,
+            callContext = ctx,
         )
         val turnView = collect(stream.openTurnViewChannel())
 
         processor.sendTaskEvent(task())
 
         val expected = task().copy(history = listOf(userMessage.copy(taskId = taskId)))
-        assertEquals(expected, taskStorage.get(taskId))
+        assertEquals(expected, taskStorage.read(taskId))
         assertEquals(listOf(expected), turnView.endTurnAndCollect())
     }
 
@@ -254,7 +258,7 @@ class TurnEventProcessorTest {
         processor.close()
 
         // Verify final state
-        val finalTask = taskStorage.get(taskId, includeArtifacts = true)
+        val finalTask = taskStorage.read(taskId)
         assertEquals(TaskState.TASK_STATE_COMPLETED, finalTask?.status?.state)
         assertEquals(listOf(artifact), finalTask?.artifacts)
     }
@@ -263,12 +267,12 @@ class TurnEventProcessorTest {
 
     @Test
     fun testMessageIsDeliveredOnlyToTurnView() = runTest(timeout = TEST_TIMEOUT) {
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
         val processor = createProcessor(contextId, taskId)
         val message = userMessage("Hello", messageId = "msg-1")
 
         val turnView = collect(stream.openTurnViewChannel())
-        val taskSubscriber = stream.subscribe(StreamDeliveryConfig.Suspend()) { taskStorage.get(taskId) }.second.events
+        val taskSubscriber = stream.subscribe(StreamDeliveryConfig.Suspend()) { taskStorage.read(taskId) }.second.events
 
         processor.sendMessage(message)
 
@@ -318,6 +322,6 @@ class TurnEventProcessorTest {
         }
 
         assertEquals(listOf(task), turnView.endTurnAndCollect(), "Only the first event should be delivered")
-        assertEquals(task, taskStorage.get(taskId))
+        assertEquals(task, taskStorage.read(taskId))
     }
 }

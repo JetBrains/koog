@@ -52,7 +52,8 @@ class A2AServerRequiredExtensionsTest {
 
         val taskStorage = InMemoryTaskStorage()
         taskStorage.update(
-            Task(id = "task-1", contextId = "context-1", status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED))
+            Task(id = "task-1", contextId = "context-1", status = TaskStatus(state = TaskState.TASK_STATE_COMPLETED)),
+            ctx
         )
 
         server = A2AServer(

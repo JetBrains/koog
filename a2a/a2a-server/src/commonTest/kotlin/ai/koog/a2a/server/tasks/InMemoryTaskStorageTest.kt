@@ -9,7 +9,10 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.ctx
 import ai.koog.a2a.server.exceptions.TaskOperationException
+import ai.koog.a2a.server.read
+import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -20,7 +23,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 class InMemoryTaskStorageTest {
@@ -33,7 +35,7 @@ class InMemoryTaskStorageTest {
 
     @Test
     fun testGetNonExistentTask() = runTest {
-        val result = storage.get("non-existent-id")
+        val result = storage.read("non-existent-id")
         assertNull(result)
     }
 
@@ -41,42 +43,33 @@ class InMemoryTaskStorageTest {
     fun testStoreAndRetrieveTask() = runTest {
         val task = createTask(id = "task-1", contextId = "context-1")
 
-        storage.update(task)
+        storage.update(task, ctx)
 
-        val retrieved = storage.get("task-1")
-
-        assertNotNull(retrieved)
-        assertEquals(task.id, retrieved.id)
-        assertEquals(task.contextId, retrieved.contextId)
+        assertEquals(task, storage.read("task-1"))
     }
 
     @Test
     fun testDeleteTask() = runTest {
         val task = createTask(id = "task-1", contextId = "context-1")
-        storage.update(task)
+        storage.update(task, ctx)
 
-        storage.delete("task-1")
+        storage.delete("task-1", ctx)
 
-        val retrieved = storage.get("task-1")
+        val retrieved = storage.read("task-1")
         assertNull(retrieved)
     }
 
     @Test
-    fun testGetByContext() = runTest {
-        val task1 = createTask(id = "task-1", contextId = "context-1")
-        val task2 = createTask(id = "task-2", contextId = "context-1")
-        val task3 = createTask(id = "task-3", contextId = "context-2")
+    fun testDeleteIsIdempotent() = runTest {
+        val other = createTask(id = "task-2", contextId = "context-1")
+        storage.update(createTask(id = "task-1", contextId = "context-1"), ctx)
+        storage.update(other, ctx)
 
-        storage.update(task1)
-        storage.update(task2)
-        storage.update(task3)
+        storage.delete("task-1", ctx)
+        storage.delete("task-1", ctx)
+        storage.delete("non-existent-id", ctx)
 
-        val result = storage.getByContext("context-1")
-
-        assertEquals(2, result.size)
-        assertTrue(result.all { it.contextId == "context-1" })
-        assertTrue(result.any { it.id == "task-1" })
-        assertTrue(result.any { it.id == "task-2" })
+        assertEquals(listOf(null, other), listOf(storage.read("task-1"), storage.read("task-2")))
     }
 
     @Test
@@ -87,7 +80,7 @@ class InMemoryTaskStorageTest {
             put("sharedKey", JsonPrimitive("originalValue"))
         }
         val task = createTask(id = "task-1", contextId = "context-1", metadata = initialMetadata)
-        storage.update(task)
+        storage.update(task, ctx)
 
         // Create a status update event with additional metadata
         val updateMetadata = buildJsonObject {
@@ -108,10 +101,10 @@ class InMemoryTaskStorageTest {
         )
 
         // Update task status
-        storage.update(statusUpdateEvent)
+        storage.update(statusUpdateEvent, ctx)
 
         // Verify the status was updated and metadata was merged
-        val retrieved = storage.get("task-1")
+        val retrieved = storage.read("task-1")
         assertEquals(newStatus, retrieved?.status)
 
         // Verify metadata merging: original + new with updates overriding
@@ -132,7 +125,7 @@ class InMemoryTaskStorageTest {
         )
 
         assertFailsWith<TaskOperationException> {
-            storage.update(statusUpdateEvent)
+            storage.update(statusUpdateEvent, ctx)
         }
     }
 
@@ -140,7 +133,7 @@ class InMemoryTaskStorageTest {
     fun testTaskArtifactUpdateEventNewArtifact() = runTest {
         // Create and store initial task
         val task = createTask(id = "task-1", contextId = "context-1")
-        storage.update(task)
+        storage.update(task, ctx)
 
         // Create artifact update event with new artifact
         val artifact = Artifact(
@@ -155,10 +148,10 @@ class InMemoryTaskStorageTest {
         )
 
         // Update task with artifact
-        storage.update(artifactUpdateEvent)
+        storage.update(artifactUpdateEvent, ctx)
 
         // Verify the artifact was added
-        val retrieved = storage.get("task-1", includeArtifacts = true)
+        val retrieved = storage.read("task-1")
         assertEquals(listOf(artifact), retrieved?.artifacts)
     }
 
@@ -170,7 +163,7 @@ class InMemoryTaskStorageTest {
             parts = listOf(TextPart("Initial content"))
         )
         val task = createTask(id = "task-1", contextId = "context-1", artifacts = listOf(initialArtifact))
-        storage.update(task)
+        storage.update(task, ctx)
 
         // Create artifact update event to replace existing artifact
         val newArtifact = Artifact(
@@ -185,10 +178,10 @@ class InMemoryTaskStorageTest {
         )
 
         // Update task with new artifact
-        storage.update(artifactUpdateEvent)
+        storage.update(artifactUpdateEvent, ctx)
 
         // Verify the artifact was replaced
-        val retrieved = storage.get("task-1", includeArtifacts = true)
+        val retrieved = storage.read("task-1")
         assertEquals(listOf(newArtifact), retrieved?.artifacts)
     }
 
@@ -200,7 +193,7 @@ class InMemoryTaskStorageTest {
             parts = listOf(TextPart("Initial content"))
         )
         val task = createTask(id = "task-1", contextId = "context-1", artifacts = listOf(initialArtifact))
-        storage.update(task)
+        storage.update(task, ctx)
 
         // Create artifact update event to append to existing artifact
         val appendArtifact = Artifact(
@@ -217,10 +210,10 @@ class InMemoryTaskStorageTest {
         val resultingArtifact = initialArtifact.copy(parts = initialArtifact.parts + appendArtifact.parts)
 
         // Update task with appended artifact
-        storage.update(artifactUpdateEvent)
+        storage.update(artifactUpdateEvent, ctx)
 
         // Verify the content was appended
-        val retrieved = storage.get("task-1", includeArtifacts = true)
+        val retrieved = storage.read("task-1")
         assertEquals(listOf(resultingArtifact), retrieved?.artifacts)
     }
 
@@ -238,7 +231,7 @@ class InMemoryTaskStorageTest {
         )
 
         assertFailsWith<TaskOperationException> {
-            storage.update(artifactUpdateEvent)
+            storage.update(artifactUpdateEvent, ctx)
         }
     }
 
@@ -249,10 +242,10 @@ class InMemoryTaskStorageTest {
             id = "task-1",
             contextId = "context-1"
         )
-        storage.update(initialTask)
+        storage.update(initialTask, ctx)
 
         // Verify initial task - should have the initial status message but no history yet
-        val initialTaskFromStorage = storage.get("task-1", historyLength = null)
+        val initialTaskFromStorage = storage.read("task-1")
         assertNotNull(initialTaskFromStorage)
         assertNull(initialTaskFromStorage.history)
 
@@ -269,9 +262,9 @@ class InMemoryTaskStorageTest {
             status = firstUpdateStatus
         )
 
-        storage.update(firstUpdate)
+        storage.update(firstUpdate, ctx)
 
-        val afterFirstUpdate = storage.get("task-1", historyLength = null) // Get full history
+        val afterFirstUpdate = storage.read("task-1")
         assertNotNull(afterFirstUpdate)
         assertEquals(firstUpdateStatus, afterFirstUpdate.status)
         assertNull(afterFirstUpdate.history)
@@ -288,10 +281,10 @@ class InMemoryTaskStorageTest {
             contextId = "context-1",
             status = secondUpdateStatus
         )
-        storage.update(secondUpdate)
+        storage.update(secondUpdate, ctx)
 
         // Verify second update
-        val afterSecondUpdate = storage.get("task-1", historyLength = null)
+        val afterSecondUpdate = storage.read("task-1")
         assertNotNull(afterSecondUpdate)
         assertEquals(secondUpdateStatus, afterSecondUpdate.status)
         assertEquals(listOf(firstUpdateMessage), afterSecondUpdate.history)
@@ -308,10 +301,10 @@ class InMemoryTaskStorageTest {
             contextId = "context-1",
             status = completionStatus
         )
-        storage.update(completionUpdate)
+        storage.update(completionUpdate, ctx)
 
         // Verify final update
-        val finalTask = storage.get("task-1", historyLength = null)
+        val finalTask = storage.read("task-1")
         assertNotNull(finalTask)
         assertEquals(completionStatus, finalTask.status)
         assertEquals(listOf(firstUpdateMessage, secondUpdateMessage), finalTask.history)
@@ -319,8 +312,8 @@ class InMemoryTaskStorageTest {
 
     /** Delegates everything but [appendHistory], so it runs the default implementation of [TaskStorage]. */
     private class DefaultAppendHistoryStorage(delegate: TaskStorage) : TaskStorage by delegate {
-        override suspend fun appendHistory(taskId: String, message: Message) =
-            super<TaskStorage>.appendHistory(taskId, message)
+        override suspend fun appendHistory(taskId: String, message: Message, callContext: ServerCallContext) =
+            super<TaskStorage>.appendHistory(taskId, message, callContext)
     }
 
     /** The in-memory override and the default implementation must behave the same. */
@@ -351,16 +344,16 @@ class InMemoryTaskStorageTest {
     fun testAppendHistoryMovesStatusMessageIntoHistoryAndAppendsMessage() = runTest {
         appendHistoryStorages().forEach { storage ->
             val task = inputRequiredTask()
-            storage.update(task)
+            storage.update(task, ctx)
             val followUp = createUserMessage("user-2", "context-1", "README.md")
 
-            storage.appendHistory("task-1", followUp)
+            storage.appendHistory("task-1", followUp, ctx)
 
             val expected = task.copy(
                 status = task.status.copy(message = null),
                 history = task.history.orEmpty() + agentPrompt + followUp,
             )
-            assertEquals(expected, storage.get("task-1"))
+            assertEquals(expected, storage.read("task-1"))
         }
     }
 
@@ -368,16 +361,16 @@ class InMemoryTaskStorageTest {
     fun testAppendHistoryDoesNotDuplicateStatusMessageAlreadyInHistory() = runTest {
         appendHistoryStorages().forEach { storage ->
             val task = inputRequiredTask().let { it.copy(history = it.history.orEmpty() + agentPrompt) }
-            storage.update(task)
+            storage.update(task, ctx)
             val followUp = createUserMessage("user-2", "context-1", "README.md")
 
-            storage.appendHistory("task-1", followUp)
+            storage.appendHistory("task-1", followUp, ctx)
 
             val expected = task.copy(
                 status = task.status.copy(message = null),
                 history = task.history.orEmpty() + followUp,
             )
-            assertEquals(expected, storage.get("task-1"))
+            assertEquals(expected, storage.read("task-1"))
         }
     }
 
@@ -385,20 +378,20 @@ class InMemoryTaskStorageTest {
     fun testAppendHistoryLeavesTaskUnchangedWhenMessageIsAlreadyInHistory() = runTest {
         appendHistoryStorages().forEach { storage ->
             val task = inputRequiredTask()
-            storage.update(task)
+            storage.update(task, ctx)
 
-            storage.appendHistory("task-1", task.history.orEmpty().single())
+            storage.appendHistory("task-1", task.history.orEmpty().single(), ctx)
 
-            assertEquals(task, storage.get("task-1"))
+            assertEquals(task, storage.read("task-1"))
         }
     }
 
     @Test
     fun testAppendHistoryForNonExistentTaskDoesNothing() = runTest {
         appendHistoryStorages().forEach { storage ->
-            storage.appendHistory("non-existent-id", createUserMessage("user-1", "context-1", "Hello"))
+            storage.appendHistory("non-existent-id", createUserMessage("user-1", "context-1", "Hello"), ctx)
 
-            assertNull(storage.get("non-existent-id"))
+            assertNull(storage.read("non-existent-id"))
         }
     }
 

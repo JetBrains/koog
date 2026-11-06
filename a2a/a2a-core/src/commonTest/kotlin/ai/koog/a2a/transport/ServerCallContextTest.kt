@@ -60,6 +60,21 @@ class ServerCallContextTest {
     }
 
     @Test
+    fun testCopyKeepsTenantUnlessReplaced() {
+        val ctx = ServerCallContext(tenant = "tenant-a")
+
+        assertEquals(
+            listOf("tenant-a", "tenant-a", "tenant-b", null),
+            listOf(
+                ctx.tenant,
+                ctx.copy(headers = mapOf("a2a-version" to listOf("1.0"))).tenant,
+                ctx.copy(tenant = "tenant-b").tenant,
+                ServerCallContext().tenant,
+            )
+        )
+    }
+
+    @Test
     fun testCaseInsensitiveHeadersLookup() {
         val headers = mapOf("a2a-version" to listOf("1.0"), "X-Other" to listOf("a"), "x-other" to listOf("b"))
             .withCaseInsensitiveNames()

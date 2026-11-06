@@ -42,7 +42,7 @@ class A2AServerTasksTest {
     @BeforeTest
     fun setUp() = runTest {
         storage = InMemoryTaskStorage()
-        storage.update(task)
+        storage.update(task, ctx)
         server = A2AServer(
             agentExecutor = UnusedAgentExecutor,
             agentCard = testAgentCard(),

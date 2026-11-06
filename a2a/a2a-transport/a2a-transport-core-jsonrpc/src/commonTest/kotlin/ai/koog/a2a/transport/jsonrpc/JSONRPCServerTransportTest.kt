@@ -497,7 +497,99 @@ class JSONRPCServerTransportTest {
 
         handle(A2AMethod.GetTask, getTaskParams, ctx = ctx, handler = handlerRecording { seen = it })
 
-        assertEquals(ctx, seen)
+        val handlerCtx = assertNotNull(seen)
+        assertEquals(
+            listOf(ctx.headers, ctx.state, ctx.requestedVersion, ctx.requestedExtensions, null),
+            with(handlerCtx) { listOf(headers, state, requestedVersion, requestedExtensions, tenant) },
+        )
+    }
+
+    @Test
+    fun testCallContextTenantIsSetFromTheRequestOfEveryMethod() = runTest {
+        val tenants = mutableMapOf<A2AMethod, String?>()
+        fun ServerCallContext.seenBy(method: A2AMethod) = also { tenants[method] = tenant }
+
+        val handler = object : RequestHandler by MockRequestHandler {
+            override suspend fun onGetExtendedAgentCard(request: GetExtendedAgentCardRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onGetExtendedAgentCard(request, ctx.seenBy(A2AMethod.GetExtendedAgentCard))
+
+            override suspend fun onSendMessage(request: SendMessageRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onSendMessage(request, ctx.seenBy(A2AMethod.SendMessage))
+
+            override fun onSendMessageStreaming(request: SendMessageRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onSendMessageStreaming(request, ctx.seenBy(A2AMethod.SendMessageStreaming))
+
+            override suspend fun onGetTask(request: GetTaskRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onGetTask(request, ctx.seenBy(A2AMethod.GetTask))
+
+            override suspend fun onListTasks(request: ListTasksRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onListTasks(request, ctx.seenBy(A2AMethod.ListTasks))
+
+            override suspend fun onCancelTask(request: CancelTaskRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onCancelTask(request, ctx.seenBy(A2AMethod.CancelTask))
+
+            override fun onSubscribeToTask(request: SubscribeToTaskRequest, ctx: ServerCallContext) =
+                MockRequestHandler.onSubscribeToTask(request, ctx.seenBy(A2AMethod.SubscribeToTask))
+
+            override suspend fun onCreateTaskPushNotificationConfig(
+                request: TaskPushNotificationConfig,
+                ctx: ServerCallContext,
+            ) = MockRequestHandler.onCreateTaskPushNotificationConfig(
+                request,
+                ctx.seenBy(A2AMethod.CreateTaskPushNotificationConfig),
+            )
+
+            override suspend fun onGetTaskPushNotificationConfig(
+                request: GetTaskPushNotificationConfigRequest,
+                ctx: ServerCallContext,
+            ) = MockRequestHandler.onGetTaskPushNotificationConfig(
+                request,
+                ctx.seenBy(A2AMethod.GetTaskPushNotificationConfig),
+            )
+
+            override suspend fun onListTaskPushNotificationConfigs(
+                request: ListTaskPushNotificationConfigsRequest,
+                ctx: ServerCallContext,
+            ) = MockRequestHandler.onListTaskPushNotificationConfigs(
+                request,
+                ctx.seenBy(A2AMethod.ListTaskPushNotificationConfigs),
+            )
+
+            override suspend fun onDeleteTaskPushNotificationConfig(
+                request: DeleteTaskPushNotificationConfigRequest,
+                ctx: ServerCallContext,
+            ) = MockRequestHandler.onDeleteTaskPushNotificationConfig(
+                request,
+                ctx.seenBy(A2AMethod.DeleteTaskPushNotificationConfig),
+            )
+        }
+        val message = Message(messageId = "msg-1", role = Role.ROLE_USER, parts = listOf(TextPart("Hi")))
+        val requests = mapOf(
+            A2AMethod.GetExtendedAgentCard to json.encodeToJsonElement(GetExtendedAgentCardRequest(tenant = "t")),
+            A2AMethod.SendMessage to json.encodeToJsonElement(SendMessageRequest(message = message, tenant = "t")),
+            A2AMethod.SendMessageStreaming to
+                json.encodeToJsonElement(SendMessageRequest(message = message, tenant = "t")),
+            A2AMethod.GetTask to json.encodeToJsonElement(GetTaskRequest(id = "task-1", tenant = "t")),
+            A2AMethod.ListTasks to json.encodeToJsonElement(ListTasksRequest(tenant = "t")),
+            A2AMethod.CancelTask to json.encodeToJsonElement(CancelTaskRequest(id = "task-1", tenant = "t")),
+            A2AMethod.SubscribeToTask to json.encodeToJsonElement(SubscribeToTaskRequest(id = "task-1", tenant = "t")),
+            A2AMethod.CreateTaskPushNotificationConfig to json.encodeToJsonElement(
+                TaskPushNotificationConfig(url = "https://example.com", taskId = "task-1", tenant = "t")
+            ),
+            A2AMethod.GetTaskPushNotificationConfig to json.encodeToJsonElement(
+                GetTaskPushNotificationConfigRequest(taskId = "task-1", id = "config-1", tenant = "t")
+            ),
+            A2AMethod.ListTaskPushNotificationConfigs to json.encodeToJsonElement(
+                ListTaskPushNotificationConfigsRequest(taskId = "task-1", tenant = "t")
+            ),
+            A2AMethod.DeleteTaskPushNotificationConfig to json.encodeToJsonElement(
+                DeleteTaskPushNotificationConfigRequest(taskId = "task-1", id = "config-1", tenant = "t")
+            ),
+        )
+
+        requests.forEach { (method, params) -> handle(method, params, handler = handler) }
+
+        assertEquals(A2AMethod.entries.associateWith<A2AMethod, String?> { "t" }, tenants)
     }
 
     private val userKey = StateKey<String>("user")

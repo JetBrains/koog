@@ -5,6 +5,7 @@ import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.exceptions.ErrorInfo
 import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.Task
@@ -17,6 +18,7 @@ import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
 import ai.koog.a2a.server.tasks.plusIfAbsent
+import ai.koog.a2a.transport.ServerCallContext
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -44,6 +46,10 @@ import kotlin.time.Clock
  * One instance exists per task while it has a running turn, an active [TurnEventProcessor] (e.g. during
  * cancellation), or a subscriber; [TurnManager] creates it lazily and drops it when none remain. The stream keeps no
  * task state: every read goes to [taskStorage], so a dropped stream can be recreated at any time.
+ *
+ * The stream is shared by every turn and caller of the task, so it has no call context of its own: every storage read
+ * and write is made with the [ServerCallContext] passed to [publish] or [endTurn], that of the turn or the
+ * cancellation it is made for.
  *
  * Every operation runs under [mutex] (the "stream lock"), which guards the storage write, the fan-out, and the
  * subscriber set together. As a result:
@@ -238,6 +244,8 @@ internal class TaskEventStream(
      * "Delivery" above.
      *
      * @param event the event to publish
+     * @param callContext the context of the turn or cancellation the event is published for, passed to every storage
+     * call
      * @param userMessage the message of the request that started the turn, if the task is created by this turn
      * @param followUpMessage the message of the request that started the turn, if it continues the task and hasn't
      * been persisted yet
@@ -245,12 +253,13 @@ internal class TaskEventStream(
      */
     suspend fun publish(
         event: Event,
+        callContext: ServerCallContext,
         userMessage: Message? = null,
         followUpMessage: Message? = null,
     ): Boolean = mutex.withLock {
         when (event) {
             is Task -> {
-                if (taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) != null) {
+                if (read(callContext) != null) {
                     logger.warn {
                         "Ignoring Task event for taskId='$taskId': the task already exists, send status and artifact " +
                             "updates to change it"
@@ -264,15 +273,15 @@ internal class TaskEventStream(
                     event.copy(history = event.history.plusIfAbsent(userMessage))
                 }
 
-                persistAndDeliver(created)
+                persistAndDeliver(created, callContext)
             }
 
             is TaskEvent -> {
                 if (followUpMessage != null) {
-                    taskStorage.appendHistory(taskId, followUpMessage)
+                    taskStorage.appendHistory(taskId, followUpMessage, callContext)
                 }
 
-                persistAndDeliver(event)
+                persistAndDeliver(event, callContext)
             }
 
             else -> fanOut(event) { it.isTurnView }
@@ -281,8 +290,12 @@ internal class TaskEventStream(
         true
     }
 
-    private suspend fun persistAndDeliver(event: TaskEvent) {
-        persist(event)
+    /** Reads the task without history, scoped to [callContext]. */
+    private suspend fun read(callContext: ServerCallContext): Task? =
+        taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = callContext.tenant), callContext)
+
+    private suspend fun persistAndDeliver(event: TaskEvent, callContext: ServerCallContext) {
+        persist(event, callContext)
 
         try {
             fanOut(event) { true }
@@ -299,8 +312,8 @@ internal class TaskEventStream(
      * storage may commit the write and still throw on return to a cancelled publisher, and the stored event must be
      * reported anyway.
      */
-    private suspend fun persist(event: TaskEvent): Unit = withContext(NonCancellable) {
-        taskStorage.update(event)
+    private suspend fun persist(event: TaskEvent, callContext: ServerCallContext): Unit = withContext(NonCancellable) {
+        taskStorage.update(event, callContext)
         onPersisted?.invoke(event)
     }
 
@@ -314,17 +327,23 @@ internal class TaskEventStream(
      *
      * @param contextId the context id of the task, used for the failure status update
      * @param outcome how the turn ended
+     * @param callContext the context of the turn, passed to every storage call
      * @param failureMessage the status message of the failure update, with its task id, context id, and role replaced
      * by the task's and [Role.ROLE_AGENT]; `null` for the generic one, see [genericFailureMessage]
      */
-    suspend fun endTurn(contextId: String, outcome: TurnOutcome, failureMessage: Message? = null): Unit = mutex.withLock {
+    suspend fun endTurn(
+        contextId: String,
+        outcome: TurnOutcome,
+        callContext: ServerCallContext,
+        failureMessage: Message? = null,
+    ): Unit = mutex.withLock {
         try {
             when (outcome) {
                 is TurnOutcome.Completed, is TurnOutcome.RequestError -> Unit
-                is TurnOutcome.Failed -> markFailed(contextId, failureMessage)
+                is TurnOutcome.Failed -> markFailed(contextId, callContext, failureMessage)
                 is TurnOutcome.Rejected -> {
                     closeTurnView()
-                    markFailed(contextId, failureMessage)
+                    markFailed(contextId, callContext, failureMessage)
                 }
             }
         } finally {
@@ -332,8 +351,8 @@ internal class TaskEventStream(
         }
     }
 
-    private suspend fun markFailed(contextId: String, failureMessage: Message?) {
-        val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+    private suspend fun markFailed(contextId: String, callContext: ServerCallContext, failureMessage: Message?) {
+        val task = read(callContext)
 
         if (task != null && !task.status.state.terminal) {
             val taskContextId = task.contextId ?: contextId
@@ -349,7 +368,7 @@ internal class TaskEventStream(
                 ),
             )
 
-            persistAndDeliver(failed)
+            persistAndDeliver(failed, callContext)
         }
     }
 

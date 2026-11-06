@@ -120,8 +120,8 @@ class InMemoryPushNotificationConfigStorageTest {
         storage.save(config2, ctx)
         storage.save(otherTaskConfig, ctx)
 
-        storage.deleteAll("task-1")
-        storage.deleteAll("task-1")
+        storage.deleteAll("task-1", ctx)
+        storage.deleteAll("task-1", ctx)
 
         assertEquals(emptyList(), storage.getAll("task-1"))
         assertEquals(listOf(otherTaskConfig), storage.getAll("task-2"))

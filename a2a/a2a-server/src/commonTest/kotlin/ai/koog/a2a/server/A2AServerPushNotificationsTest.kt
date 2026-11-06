@@ -9,7 +9,6 @@ import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.DeleteTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
-import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.Message
@@ -89,7 +88,7 @@ class A2AServerPushNotificationsTest {
         pushSender = GatedPushNotificationSender()
         configsAtAgentStart.clear()
         validated.clear()
-        taskStorage.update(completedTask)
+        taskStorage.update(completedTask, ctx)
         server = createServer()
     }
 
@@ -174,13 +173,9 @@ class A2AServerPushNotificationsTest {
 
     @Test
     fun testOperationsForTaskInvisibleToCallerFailWithTaskNotFound() = runTest {
-        val owner = ctx
-        val otherCaller = ServerCallContext()
-        // An authorization-aware storage: the owner-scoped lookup hides the task from everyone but its owner.
-        val ownerScopedStorage = object : TaskStorage by taskStorage {
-            override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? =
-                if (context === owner) taskStorage.get(request, context) else null
-        }
+        val owner = ownerContext("alice")
+        val otherCaller = ownerContext("bob")
+        val ownerScopedStorage = OwnerScopedTaskStorage().apply { update(completedTask, owner) }
         val server = createServer(storage = ownerScopedStorage)
         server.onCreateTaskPushNotificationConfig(config, owner)
 
@@ -515,7 +510,7 @@ class A2AServerPushNotificationsTest {
      * the follow-up's turn is rejected.
      */
     private val cancelTask: suspend A2AServer.() -> Unit = {
-        taskStorage.update(statusUpdate(TaskState.TASK_STATE_CANCELED, text = null, taskId = NEW_TASK_ID))
+        taskStorage.update(statusUpdate(TaskState.TASK_STATE_CANCELED, text = null, taskId = NEW_TASK_ID), ctx)
     }
 
     @Test
@@ -530,7 +525,7 @@ class A2AServerPushNotificationsTest {
 
         // Neither a replacement of the existing config nor a new one is saved.
         for (inline in listOf(webhook.copy(token = "new-token"), webhook.copy(id = "new"))) {
-            taskStorage.update(inputRequiredTask)
+            taskStorage.update(inputRequiredTask, ctx)
 
             assertFailsWith<A2AUnsupportedOperationException> {
                 server.onSendMessage(sendRequest("again", taskId = NEW_TASK_ID, pushConfig = inline), ctx)
@@ -538,7 +533,7 @@ class A2AServerPushNotificationsTest {
         }
         runCurrent()
 
-        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(NEW_TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.read(NEW_TASK_ID)).status.state)
         assertEquals(emptyList(), recording.calls)
         assertEquals(listOf(webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)), pushStorage.getAll(NEW_TASK_ID))
         assertEquals(1, executor.executed.size)
@@ -613,7 +608,7 @@ class A2AServerPushNotificationsTest {
         assertEquals(listOf(webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID)), validated)
         assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
         assertEquals(emptyList(), executor.executed)
-        assertEquals(null, taskStorage.get(NEW_TASK_ID))
+        assertEquals(null, taskStorage.read(NEW_TASK_ID))
     }
 
     @Test
@@ -628,7 +623,7 @@ class A2AServerPushNotificationsTest {
         assertEquals(emptyList(), validated)
         assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
         assertEquals(emptyList(), executor.executed)
-        assertEquals(null, taskStorage.get(NEW_TASK_ID))
+        assertEquals(null, taskStorage.read(NEW_TASK_ID))
     }
 
     @Test
@@ -663,14 +658,17 @@ private class RecordingPushConfigStorage(
 ) : PushNotificationConfigStorage by delegate {
     val calls = mutableListOf<String>()
 
-    override suspend fun save(config: TaskPushNotificationConfig, context: ServerCallContext): TaskPushNotificationConfig {
+    override suspend fun save(
+        config: TaskPushNotificationConfig,
+        callContext: ServerCallContext,
+    ): TaskPushNotificationConfig {
         calls += "save ${config.taskId}/${config.id}"
-        return delegate.save(config, context).also { onSave() }
+        return delegate.save(config, callContext).also { onSave() }
     }
 
-    override suspend fun delete(request: DeleteTaskPushNotificationConfigRequest, context: ServerCallContext) {
+    override suspend fun delete(request: DeleteTaskPushNotificationConfigRequest, callContext: ServerCallContext) {
         calls += "delete ${request.taskId}/${request.id}"
-        delegate.delete(request, context)
+        delegate.delete(request, callContext)
     }
 
     override suspend fun getAll(taskId: String): List<TaskPushNotificationConfig> {
@@ -678,8 +676,8 @@ private class RecordingPushConfigStorage(
         return delegate.getAll(taskId)
     }
 
-    override suspend fun deleteAll(taskId: String) {
+    override suspend fun deleteAll(taskId: String, callContext: ServerCallContext) {
         calls += "deleteAll $taskId"
-        delegate.deleteAll(taskId)
+        delegate.deleteAll(taskId, callContext)
     }
 }

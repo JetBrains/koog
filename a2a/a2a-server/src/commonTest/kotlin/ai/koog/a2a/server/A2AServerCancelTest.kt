@@ -65,17 +65,8 @@ class A2AServerCancelTest {
             if (currentCoroutineContext()[CoroutineName] == CANCEL_CALL) reads++
         }
 
-        override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? =
-            counted(delegate.get(request, context))
-
-        override suspend fun get(taskId: String, historyLength: Int?, includeArtifacts: Boolean): Task? =
-            counted(delegate.get(taskId, historyLength, includeArtifacts))
-
-        override suspend fun getAll(taskIds: List<String>, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
-            counted(delegate.getAll(taskIds, historyLength, includeArtifacts))
-
-        override suspend fun getByContext(contextId: String, historyLength: Int?, includeArtifacts: Boolean): List<Task> =
-            counted(delegate.getByContext(contextId, historyLength, includeArtifacts))
+        override suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task? =
+            counted(delegate.get(request, callContext))
     }
 
     private lateinit var taskStorage: InMemoryTaskStorage
@@ -159,7 +150,7 @@ class A2AServerCancelTest {
     /** Runs the `start` script, which leaves the task idle, and subscribes to it. */
     private suspend fun TestScope.idleTaskWithSubscriber(server: A2AServer): Pair<Task, Subscription> {
         server.onSendMessage(request("start"), ctx)
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
         return stored to subscribe(server).also { it.firstEvent.await() }
     }
 
@@ -177,14 +168,14 @@ class A2AServerCancelTest {
             stored.copy(status = forced.status, history = null),
             canceled,
         )
-        assertEquals(canceled, taskStorage.get(TASK_ID, historyLength = 0, includeArtifacts = true))
+        assertEquals(canceled, taskStorage.get(GetTaskRequest(TASK_ID, historyLength = 0), ctx))
     }
 
     @Test
     fun testCancelRequestCancelledDuringForcedCanceledFanOutStillEndsSubscribers() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(mapOf("start" to idleScript), doNothingOnCancel, StreamDeliveryConfig.Suspend())
         server.onSendMessage(request("start"), ctx)
-        val stored = assertNotNull(taskStorage.get(TASK_ID))
+        val stored = assertNotNull(taskStorage.read(TASK_ID))
 
         // The stuck subscriber holds the snapshot and doesn't receive further; it is registered first.
         val stuckGate = CompletableDeferred<Unit>()
@@ -199,7 +190,7 @@ class A2AServerCancelTest {
         cancelRequest.cancelAndJoin()
         advanceUntilIdle()
 
-        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
         assertTrue(other.job.isCompleted)
         assertEquals(listOf<Event>(stored), other.events)
 
@@ -234,7 +225,7 @@ class A2AServerCancelTest {
 
         assertEquals(canceledByExecutor.status, canceled.status)
         // The requester's blocking call ends with the canceled task, not with an exception.
-        assertEquals<Event?>(taskStorage.get(TASK_ID), response.await())
+        assertEquals<Event?>(taskStorage.read(TASK_ID), response.await())
         assertEquals(1, subscription.events.count { it is TaskStatusUpdateEvent && it.status.state == TaskState.TASK_STATE_CANCELED })
     }
 
@@ -250,8 +241,8 @@ class A2AServerCancelTest {
         running.interrupted.await()
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
         assertEquals(null, canceled.status.message)
-        assertEquals<Event?>(taskStorage.get(TASK_ID), response.await())
-        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.get(TASK_ID)).status.state)
+        assertEquals<Event?>(taskStorage.read(TASK_ID), response.await())
+        assertEquals(TaskState.TASK_STATE_CANCELED, assertNotNull(taskStorage.read(TASK_ID)).status.state)
     }
 
     @Test
@@ -264,7 +255,7 @@ class A2AServerCancelTest {
         }
         val server = createServer(mapOf("start" to idleScript, "wait" to waitScript), doNothingOnCancel)
         server.onSendMessage(request("start"), ctx)
-        val idle = assertNotNull(taskStorage.get(TASK_ID))
+        val idle = assertNotNull(taskStorage.read(TASK_ID))
 
         val followUpRequest = request("wait").let { it.copy(message = it.message.copy(taskId = TASK_ID)) }
         val response = async { server.onSendMessage(followUpRequest, ctx) }
@@ -274,7 +265,7 @@ class A2AServerCancelTest {
 
         // The requester of the follow-up still gets the canceled task.
         assertEquals(TaskState.TASK_STATE_CANCELED, assertIs<Task>(response.await()).status.state)
-        assertEquals(idle.copy(status = canceled.status), taskStorage.get(TASK_ID))
+        assertEquals(idle.copy(status = canceled.status), taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -341,7 +332,7 @@ class A2AServerCancelTest {
 
         assertIs<A2ATaskNotCancelableException>(result.exceptionOrNull())
         assertEquals(TaskState.TASK_STATE_COMPLETED, assertIs<Task>(response).status.state)
-        assertEquals(response, taskStorage.get(TASK_ID))
+        assertEquals(response, taskStorage.read(TASK_ID))
         // The task before the executor runs, and its state after the executor's send failed on the closed processor.
         assertEquals(2, cancelReads.reads)
     }
@@ -390,7 +381,7 @@ class A2AServerCancelTest {
         val (canceled, response) = cancelAfterRejectedEvent(executorCancels = true)
 
         assertEquals(canceledByExecutor.status, canceled.status)
-        assertEquals<Event?>(taskStorage.get(TASK_ID), response)
+        assertEquals<Event?>(taskStorage.read(TASK_ID), response)
     }
 
     @Test
@@ -398,7 +389,7 @@ class A2AServerCancelTest {
         val (canceled, response) = cancelAfterRejectedEvent(executorCancels = false)
 
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
-        assertEquals<Event?>(taskStorage.get(TASK_ID), response)
+        assertEquals<Event?>(taskStorage.read(TASK_ID), response)
     }
 
     @Test
@@ -425,7 +416,7 @@ class A2AServerCancelTest {
 
         // The forced CANCELED reaches the requester before the turn ends, so it wins over the agent's error.
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
-        assertEquals<Event?>(taskStorage.get(TASK_ID), response.await())
+        assertEquals<Event?>(taskStorage.read(TASK_ID), response.await())
     }
 
     @Test
@@ -433,7 +424,7 @@ class A2AServerCancelTest {
         val server = createServer(emptyMap(), cancelingExecutor)
         // An idle task: no turn is running.
         val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(idle)
+        taskStorage.update(idle, ctx)
 
         val canceled = server.cancelCountingReads()
 
@@ -460,7 +451,7 @@ class A2AServerCancelTest {
     fun testForcedCancelOfIdleTaskReadsTaskThreeTimes() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(emptyMap(), doNothingOnCancel)
         // An idle task: no turn is running.
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
 
         val canceled = server.cancelCountingReads()
 
@@ -488,11 +479,11 @@ class A2AServerCancelTest {
     fun testCancelTerminalOrUnknownTaskFails() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(emptyMap(), cancelingExecutor)
         val completed = task(TaskState.TASK_STATE_COMPLETED)
-        taskStorage.update(completed)
+        taskStorage.update(completed, ctx)
 
         assertFailsWith<A2ATaskNotCancelableException> { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) }
         assertFailsWith<A2ATaskNotFoundException> { server.onCancelTask(CancelTaskRequest("unknown"), ctx) }
-        assertEquals(completed, taskStorage.get(TASK_ID))
+        assertEquals(completed, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -506,7 +497,7 @@ class A2AServerCancelTest {
         var followUpRan = false
         val server = createServer(mapOf("finish" to AgentScript { _, _ -> followUpRan = true }), gatedCancel)
         // An idle task: no turn is running.
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
 
         // The cancellation of the idle task is in progress when the follow-up arrives: it waits for the cancellation
         // to finish to validate the task and start its turn.
@@ -523,7 +514,7 @@ class A2AServerCancelTest {
         assertIs<A2AUnsupportedOperationException>(followUp.await().exceptionOrNull())
         assertEquals(false, followUpRan)
         assertEquals(TaskState.TASK_STATE_CANCELED, canceled.status.state)
-        assertEquals(canceled, taskStorage.get(TASK_ID, historyLength = 0, includeArtifacts = true))
+        assertEquals(canceled, taskStorage.get(GetTaskRequest(TASK_ID, historyLength = 0), ctx))
     }
 
     @Test
@@ -558,7 +549,7 @@ class A2AServerCancelTest {
         )
         // Neither the follow-up's agent ran, nor its user message or inline config were saved.
         val stored = canceled.copy(history = listOf(request("run").message.copy(taskId = TASK_ID)))
-        assertEquals(stored, taskStorage.get(TASK_ID))
+        assertEquals(stored, taskStorage.read(TASK_ID))
         assertEquals<Event?>(stored, response.await())
         assertEquals(false, followUpRan)
         assertEquals(emptyList(), pushConfigStorage.getAll(TASK_ID))
@@ -576,7 +567,7 @@ class A2AServerCancelTest {
         val server = createServer(emptyMap(), leakingCancel)
         // An idle task: the executor gets a standalone processor.
         val idle = task(TaskState.TASK_STATE_INPUT_REQUIRED)
-        taskStorage.update(idle)
+        taskStorage.update(idle, ctx)
 
         assertFailsWith<IllegalStateException> {
             server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
@@ -586,7 +577,7 @@ class A2AServerCancelTest {
         assertFailsWith<TurnNotActiveException> {
             processor.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING, text = null))
         }
-        assertEquals(idle, taskStorage.get(TASK_ID))
+        assertEquals(idle, taskStorage.read(TASK_ID))
     }
 
     @Test
@@ -598,7 +589,7 @@ class A2AServerCancelTest {
         }
         val server = createServer(emptyMap(), messagingCancel)
         // An idle task: the executor gets a standalone processor.
-        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED))
+        taskStorage.update(task(TaskState.TASK_STATE_INPUT_REQUIRED), ctx)
 
         val canceled = server.onCancelTask(CancelTaskRequest(TASK_ID), ctx)
 
@@ -631,7 +622,7 @@ class A2AServerCancelTest {
                     async { runCatching { server.onCancelTask(CancelTaskRequest(TASK_ID), ctx) } },
                 ).map { it.await() }
 
-                val finalState = assertNotNull(storage.get(TASK_ID)).status.state
+                val finalState = assertNotNull(storage.read(TASK_ID)).status.state
                 assertEquals(true, finalState.terminal, "attempt : ")
                 // The cancellation succeeds only if the task ended up canceled.
                 val cancelResult = results[1]

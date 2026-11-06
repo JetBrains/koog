@@ -204,12 +204,17 @@ public interface RequestHandler {
  * @property requestedExtensions URIs of the extensions the client requested to activate. Defaults to the URIs from
  * all `A2A-Extensions` header values (looked up case-insensitively): comma-separated, trimmed, with empty entries
  * ignored.
+ * @property tenant The tenant of the call. The JSON-RPC server transport sets it from the `tenant` field of the
+ * decoded request, for every method; `null` if the request has none. Server storages scope their data by this value
+ * rather than by the requests' own `tenant` fields, which are kept only as wire fields, so that the tenant is known on
+ * every storage call, including those that receive no request.
  */
 public class ServerCallContext(
     public val headers: Map<String, List<String>> = emptyMap(),
     public val state: Map<StateKey<*>, Any> = emptyMap(),
     public val requestedVersion: String = requestedVersionFrom(headers),
     public val requestedExtensions: Set<String> = requestedExtensionsFrom(headers),
+    public val tenant: String? = null,
 ) {
     /**
      * Retrieves a value of type [T] associated with the specified [key] from the [state] map.
@@ -249,7 +254,8 @@ public class ServerCallContext(
         requestedVersion: String = if (headers === this.headers) this.requestedVersion else requestedVersionFrom(headers),
         requestedExtensions: Set<String> =
             if (headers === this.headers) this.requestedExtensions else requestedExtensionsFrom(headers),
-    ): ServerCallContext = ServerCallContext(headers, state, requestedVersion, requestedExtensions)
+        tenant: String? = this.tenant,
+    ): ServerCallContext = ServerCallContext(headers, state, requestedVersion, requestedExtensions, tenant)
 }
 
 private fun requestedVersionFrom(headers: Map<String, List<String>>): String =

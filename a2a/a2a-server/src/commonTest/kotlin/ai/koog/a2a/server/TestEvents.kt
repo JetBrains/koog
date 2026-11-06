@@ -1,6 +1,7 @@
 package ai.koog.a2a.server
 
 import ai.koog.a2a.model.Artifact
+import ai.koog.a2a.model.GetTaskRequest
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
@@ -11,6 +12,7 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
+import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.transport.ServerCallContext
 import kotlin.time.Instant
 
@@ -18,6 +20,9 @@ import kotlin.time.Instant
 // the fixtures, message ids are derived from the text, so equal arguments give equal objects.
 
 internal val ctx = ServerCallContext()
+
+/** Reads the task [taskId] with the whole history and all artifacts, with [ctx]. */
+internal suspend fun TaskStorage.read(taskId: String): Task? = get(GetTaskRequest(id = taskId), ctx)
 
 internal fun userMessage(
     text: String,

@@ -120,7 +120,9 @@ class InMemoryTaskStorageListTest {
 
     @Test
     fun testDefaultPageSizeIsFifty() = runTest {
-        (1..60).forEach { storage.update(task("task-${pad(it)}", timestamp = "2024-01-${pad(it.coerceAtMost(28))}T00:00:00Z")) }
+        (1..60).forEach {
+            storage.update(task("task-${pad(it)}", timestamp = "2024-01-${pad(it.coerceAtMost(28))}T00:00:00Z"), ctx)
+        }
 
         val response = storage.list(ListTasksRequest(), ctx)
 
@@ -137,7 +139,7 @@ class InMemoryTaskStorageListTest {
             val timestamp = if (index % 5 == 0) null else "2024-01-${pad(index / 3 + 1)}T00:00:00Z"
             task("task-${pad(index)}", timestamp = timestamp)
         }
-        tasks.forEach { storage.update(it) }
+        tasks.forEach { storage.update(it, ctx) }
         val expectedOrder = storage.list(ListTasksRequest(pageSize = 100), ctx).tasks
         assertEquals(20, expectedOrder.size)
 
@@ -159,7 +161,7 @@ class InMemoryTaskStorageListTest {
     @Test
     fun testExactMultipleOfPageSizeEndsWithEmptyToken() = runTest {
         val tasks = (1..4).map { task("t$it", timestamp = "2024-01-0${it}T00:00:00Z") }
-        tasks.forEach { storage.update(it) }
+        tasks.forEach { storage.update(it, ctx) }
 
         val first = storage.list(ListTasksRequest(pageSize = 2), ctx)
         val second = storage.list(ListTasksRequest(pageSize = 2, pageToken = first.nextPageToken), ctx)
@@ -172,10 +174,10 @@ class InMemoryTaskStorageListTest {
     @Test
     fun testPageTokenSurvivesDeletionOfTheLastReturnedTask() = runTest {
         val tasks = (1..4).map { task("t$it", timestamp = "2024-01-0${it}T00:00:00Z") }
-        tasks.forEach { storage.update(it) }
+        tasks.forEach { storage.update(it, ctx) }
 
         val first = storage.list(ListTasksRequest(pageSize = 2), ctx)
-        storage.delete(first.tasks.last().id)
+        storage.delete(first.tasks.last().id, ctx)
         val second = storage.list(ListTasksRequest(pageSize = 2, pageToken = first.nextPageToken), ctx)
 
         assertEquals(listOf(tasks[1], tasks[0]), second.tasks)
@@ -184,8 +186,8 @@ class InMemoryTaskStorageListTest {
 
     @Test
     fun testTotalSizeIsFilteredCountBeforePagination() = runTest {
-        (1..5).forEach { storage.update(task("c1-$it", contextId = "c1", timestamp = "2024-01-0${it}T00:00:00Z")) }
-        (1..3).forEach { storage.update(task("c2-$it", contextId = "c2", timestamp = "2024-02-0${it}T00:00:00Z")) }
+        (1..5).forEach { storage.update(task("c1-$it", contextId = "c1", timestamp = "2024-01-0${it}T00:00:00Z"), ctx) }
+        (1..3).forEach { storage.update(task("c2-$it", contextId = "c2", timestamp = "2024-02-0${it}T00:00:00Z"), ctx) }
 
         val response = storage.list(ListTasksRequest(contextId = "c1", pageSize = 2), ctx)
 
@@ -197,7 +199,7 @@ class InMemoryTaskStorageListTest {
     @OptIn(ExperimentalEncodingApi::class)
     @Test
     fun testInvalidPageTokenOrPageSizeIsInvalidParams() = runTest {
-        storage.update(task("t1", timestamp = "2024-01-01T00:00:00Z"))
+        storage.update(task("t1", timestamp = "2024-01-01T00:00:00Z"), ctx)
 
         listOf(
             ListTasksRequest(pageSize = 0),
@@ -212,7 +214,7 @@ class InMemoryTaskStorageListTest {
     @Test
     fun testArtifactsAreOmittedUnlessRequested() = runTest {
         val withArtifacts = task("t1", timestamp = "2024-01-01T00:00:00Z", artifacts = listOf(artifact()))
-        storage.update(withArtifacts)
+        storage.update(withArtifacts, ctx)
 
         val withoutArtifacts = response(listOf(withArtifacts.copy(artifacts = null)))
 
@@ -225,7 +227,7 @@ class InMemoryTaskStorageListTest {
     fun testHistoryLengthProjection() = runTest {
         val messages = (1..3).map { message("m$it") }
         val withHistory = task("t1", timestamp = "2024-01-01T00:00:00Z", history = messages)
-        storage.update(withHistory)
+        storage.update(withHistory, ctx)
 
         fun expected(history: List<Message>?) = response(listOf(withHistory.copy(history = history)))
 
@@ -238,7 +240,7 @@ class InMemoryTaskStorageListTest {
     fun testGetByRequestIncludesArtifactsAndAppliesHistoryLength() = runTest {
         val messages = (1..3).map { message("m$it") }
         val stored = task("t1", timestamp = "2024-01-01T00:00:00Z", history = messages, artifacts = listOf(artifact()))
-        storage.update(stored)
+        storage.update(stored, ctx)
 
         assertEquals(stored, storage.get(GetTaskRequest(id = "t1"), ctx))
         assertEquals(stored.copy(history = null), storage.get(GetTaskRequest(id = "t1", historyLength = 0), ctx))
@@ -249,26 +251,10 @@ class InMemoryTaskStorageListTest {
         assertNull(storage.get(GetTaskRequest(id = "unknown"), ctx))
     }
 
-    @Test
-    fun testInternalGetDefaultsReturnFullTask() = runTest {
-        val stored = task(
-            "t1",
-            timestamp = "2024-01-01T00:00:00Z",
-            history = listOf(message("m1")),
-            artifacts = listOf(artifact())
-        )
-        storage.update(stored)
-
-        assertEquals(stored, storage.get("t1"))
-        assertEquals(listOf(stored), storage.getAll(listOf("t1")))
-        assertEquals(listOf(stored), storage.getByContext("context-1"))
-        assertEquals(stored.copy(history = null, artifacts = null), storage.get("t1", historyLength = 0, includeArtifacts = false))
-    }
-
     private fun response(tasks: List<Task>, pageSize: Int = 50, totalSize: Int = tasks.size) =
         ListTasksResponse(tasks, nextPageToken = "", pageSize = pageSize, totalSize = totalSize)
 
-    private suspend fun store(vararg tasks: Task) = tasks.forEach { storage.update(it) }
+    private suspend fun store(vararg tasks: Task) = tasks.forEach { storage.update(it, ctx) }
 
     private fun task(
         id: String,

@@ -11,6 +11,7 @@ import ai.koog.a2a.exceptions.A2AParseException
 import ai.koog.a2a.exceptions.A2AVersionNotSupportedException
 import ai.koog.a2a.exceptions.ErrorData
 import ai.koog.a2a.exceptions.ErrorInfo
+import ai.koog.a2a.model.Request
 import ai.koog.a2a.transport.A2AMethod
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
@@ -74,7 +75,9 @@ public open class JSONRPCServerTransport(
      *
      * Parses the incoming JSON and resolves the A2A method, according to A2A spec, applies [customizeCallContext],
      * checks the requested protocol version with [checkVersion], then dispatches either to
-     * [onRequest] for non-streaming methods or [onRequestStreaming] for streaming methods.
+     * [onRequest] for non-streaming methods or [onRequestStreaming] for streaming methods. The [requestHandler] gets
+     * the context with [ServerCallContext.tenant] set to the `tenant` of the decoded request params (`null` if absent),
+     * replacing any tenant set by [customizeCallContext].
      *
      * @param requestRaw Raw request body
      * @param ctx Server call context associated with this request
@@ -256,24 +259,32 @@ public open class JSONRPCServerTransport(
             }
     }
 
-    protected suspend inline fun <reified TRequest, reified TResponse> onRequest(
+    /**
+     * Decodes the params of [request] and passes them to [action] with [ctx], its [ServerCallContext.tenant] set to
+     * the decoded request's [Request.tenant].
+     */
+    protected suspend inline fun <reified TRequest : Request, reified TResponse> onRequest(
         request: JSONRPCRequest,
         ctx: ServerCallContext,
         action: suspend (TRequest, ServerCallContext) -> TResponse,
     ): JSONRPCSuccessResponse {
         val deserializedRequest = toRequest(request, serializer<TRequest>())
-        val response = action(deserializedRequest, ctx)
+        val response = action(deserializedRequest, ctx.copy(tenant = deserializedRequest.tenant))
 
         return toJSONRPCSuccessResponse(response, serializer<TResponse>(), request.id)
     }
 
-    protected inline fun <reified TRequest, reified TResponse> onRequestStreaming(
+    /**
+     * Decodes the params of [request] and passes them to [action] with [ctx], its [ServerCallContext.tenant] set to
+     * the decoded request's [Request.tenant].
+     */
+    protected inline fun <reified TRequest : Request, reified TResponse> onRequestStreaming(
         request: JSONRPCRequest,
         ctx: ServerCallContext,
         action: (TRequest, ServerCallContext) -> Flow<TResponse>,
     ): Flow<JSONRPCSuccessResponse> {
         val deserializedRequest = toRequest(request, serializer<TRequest>())
-        val response = action(deserializedRequest, ctx)
+        val response = action(deserializedRequest, ctx.copy(tenant = deserializedRequest.tenant))
 
         return response.map { toJSONRPCSuccessResponse(it, serializer<TResponse>(), request.id) }
     }

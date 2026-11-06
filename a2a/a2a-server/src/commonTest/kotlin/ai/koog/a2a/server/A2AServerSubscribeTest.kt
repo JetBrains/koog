@@ -86,7 +86,7 @@ class A2AServerSubscribeTest {
     /** Runs the `start` script: the task is created and waits for input. */
     private suspend fun A2AServer.startIdleTask(): Task {
         onSendMessage(request("start"), ctx)
-        return assertNotNull(taskStorage.get(TASK_ID))
+        return assertNotNull(taskStorage.read(TASK_ID))
     }
 
     /** Subscribes and waits for the snapshot. */
@@ -167,7 +167,7 @@ class A2AServerSubscribeTest {
     @Test
     fun testSubscribeToTerminalOrUnknownTaskFailsBeforeFirstEvent() = runTest(timeout = TEST_TIMEOUT) {
         val server = createServer(emptyMap())
-        taskStorage.update(task(TaskState.TASK_STATE_COMPLETED, "start"))
+        taskStorage.update(task(TaskState.TASK_STATE_COMPLETED, "start"), ctx)
 
         listOf(
             TASK_ID to A2AUnsupportedOperationException::class,
@@ -217,15 +217,15 @@ class A2AServerSubscribeTest {
                 allSubscribed.complete(Unit)
                 subscriptions.forEach { it.job.join() }
 
-                val finalTask = assertNotNull(taskStorage.get(TASK_ID))
+                val finalTask = assertNotNull(taskStorage.read(TASK_ID))
                 assertEquals(TaskState.TASK_STATE_COMPLETED, finalTask.status.state)
 
                 // Replaying each subscription (snapshot + events) must give exactly the final stored task:
                 // a missed or duplicated event would change the history or the appended artifact parts.
                 subscriptions.forEach { subscription ->
                     val replay = InMemoryTaskStorage()
-                    subscription.events.forEach { replay.update(it as TaskEvent) }
-                    assertEquals(finalTask, replay.get(TASK_ID))
+                    subscription.events.forEach { replay.update(it as TaskEvent, ctx) }
+                    assertEquals(finalTask, replay.read(TASK_ID))
                 }
             } finally {
                 serverScope.cancel()
@@ -250,7 +250,7 @@ class A2AServerSubscribeTest {
         // The subscriber sees FAILED, then its stream completes.
         subscription.job.join()
 
-        val failed = assertNotNull(taskStorage.get(TASK_ID))
+        val failed = assertNotNull(taskStorage.read(TASK_ID))
         assertNotNull(failed.status.timestamp)
 
         // The message is generic: it doesn't expose the exception.
@@ -312,7 +312,7 @@ class A2AServerSubscribeTest {
         slow.job.join()
         fast.job.join()
 
-        assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response.await())
+        assertEquals(assertNotNull(taskStorage.read(TASK_ID)), response.await())
         assertEquals(listOf<Event>(stored) + updates + completed, slow.events)
         assertEquals(listOf<Event>(stored) + updates + completed, fast.events)
     }
@@ -333,7 +333,7 @@ class A2AServerSubscribeTest {
         val response = server.onSendMessage(request("many", TASK_ID), ctx)
         subscription.job.join()
 
-        assertEquals(assertNotNull(taskStorage.get(TASK_ID)), response)
+        assertEquals(assertNotNull(taskStorage.read(TASK_ID)), response)
         assertEquals(listOf<Event>(stored) + updates + statusUpdate(TaskState.TASK_STATE_COMPLETED), subscription.events)
     }
 }

@@ -23,8 +23,8 @@ import kotlin.time.Instant
 /**
  * In-memory implementation of [TaskStorage] using a thread-safe map.
  *
- * Stores tasks in memory, indexed by ID and context ID, with concurrency safety through a read-write lock.
- * [get] with a [GetTaskRequest] and [list] ignore the request's tenant and the [ServerCallContext].
+ * Stores tasks in memory, indexed by ID, with concurrency safety through a read-write lock. Every method ignores the
+ * [ServerCallContext] and the requests' tenant: all tasks are visible to every caller.
  *
  * [list] ordering: by status timestamp, newest first; tasks without one go last; ties are broken by task id in
  * descending order (compared as strings), so the order is total. The page token holds the sort key of the last task
@@ -34,14 +34,13 @@ import kotlin.time.Instant
 @OptIn(InternalA2AApi::class)
 public class InMemoryTaskStorage : TaskStorage {
     private val tasks = mutableMapOf<String, Task>()
-    private val tasksByContext = mutableMapOf<String, MutableSet<String>>()
     private val rwLock = RWLock()
 
-    override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? = rwLock.withReadLock {
+    override suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task? = rwLock.withReadLock {
         tasks[request.id]?.project(request.historyLength, includeArtifacts = true)
     }
 
-    override suspend fun list(request: ListTasksRequest, context: ServerCallContext): ListTasksResponse =
+    override suspend fun list(request: ListTasksRequest, callContext: ServerCallContext): ListTasksResponse =
         rwLock.withReadLock {
             val pageSize = request.pageSize ?: DEFAULT_PAGE_SIZE
             if (pageSize < 1) {
@@ -76,36 +75,7 @@ public class InMemoryTaskStorage : TaskStorage {
             )
         }
 
-    override suspend fun get(
-        taskId: String,
-        historyLength: Int?,
-        includeArtifacts: Boolean
-    ): Task? = rwLock.withReadLock {
-        tasks[taskId]?.project(historyLength, includeArtifacts)
-    }
-
-    override suspend fun getAll(
-        taskIds: List<String>,
-        historyLength: Int?,
-        includeArtifacts: Boolean
-    ): List<Task> = rwLock.withReadLock {
-        taskIds.mapNotNull { taskId ->
-            get(taskId, historyLength, includeArtifacts)
-        }
-    }
-
-    override suspend fun getByContext(
-        contextId: String,
-        historyLength: Int?,
-        includeArtifacts: Boolean
-    ): List<Task> = rwLock.withReadLock {
-        val contextTaskIds = tasksByContext[contextId] ?: emptySet()
-        contextTaskIds.mapNotNull { taskId ->
-            get(taskId, historyLength, includeArtifacts)
-        }
-    }
-
-    override suspend fun update(event: TaskEvent): Unit = rwLock.withWriteLock {
+    override suspend fun update(event: TaskEvent, callContext: ServerCallContext): Unit = rwLock.withWriteLock {
         when (event) {
             is Task -> {
                 val oldTask = tasks[event.id]
@@ -115,10 +85,6 @@ public class InMemoryTaskStorage : TaskStorage {
                 }
 
                 tasks[event.id] = event
-
-                event.contextId?.let { contextId ->
-                    tasksByContext.getOrPut(contextId) { mutableSetOf() }.add(event.id)
-                }
             }
 
             is TaskStatusUpdateEvent -> {
@@ -169,23 +135,14 @@ public class InMemoryTaskStorage : TaskStorage {
         }
     }
 
-    override suspend fun appendHistory(taskId: String, message: Message): Unit = rwLock.withWriteLock {
-        val updatedTask = tasks[taskId]?.withAppendedHistory(message) ?: return@withWriteLock
-        tasks[taskId] = updatedTask
-    }
-
-    override suspend fun delete(taskId: String): Unit = rwLock.withWriteLock {
-        tasks.remove(taskId)?.let { task ->
-            removeFromContextIndex(task)
+    override suspend fun appendHistory(taskId: String, message: Message, callContext: ServerCallContext): Unit =
+        rwLock.withWriteLock {
+            val updatedTask = tasks[taskId]?.withAppendedHistory(message) ?: return@withWriteLock
+            tasks[taskId] = updatedTask
         }
-    }
 
-    override suspend fun deleteAll(taskIds: List<String>): Unit = rwLock.withWriteLock {
-        taskIds.forEach { taskId ->
-            tasks.remove(taskId)?.let { task ->
-                removeFromContextIndex(task)
-            }
-        }
+    override suspend fun delete(taskId: String, callContext: ServerCallContext): Unit = rwLock.withWriteLock {
+        tasks.remove(taskId)
     }
 
     /**
@@ -208,14 +165,6 @@ public class InMemoryTaskStorage : TaskStorage {
             return Task(id = id, status = TaskStatus(state = TaskState.TASK_STATE_UNSPECIFIED, timestamp = timestamp))
         } catch (e: Exception) {
             throw A2AInvalidParamsException("Invalid page token: '$token'")
-        }
-    }
-
-    private fun removeFromContextIndex(task: Task) {
-        val contextId = task.contextId ?: return
-        tasksByContext[contextId]?.remove(task.id)
-        if (tasksByContext[contextId]?.isEmpty() == true) {
-            tasksByContext.remove(contextId)
         }
     }
 

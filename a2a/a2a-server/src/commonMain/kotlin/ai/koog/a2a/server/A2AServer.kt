@@ -40,7 +40,6 @@ import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
-import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.tasks.isTerminal
@@ -154,10 +153,11 @@ import kotlin.time.Duration
  *     ): Task {
  *         val user = authenticateAndAuthorize(ctx, requiredPermission = "read_task")
  *
- *         // Optionally validate task ownership
- *         val task = taskStorage.get(request.id, historyLength = 0, includeArtifacts = false)
- *         if (task?.metadata?.get("owner_id") != user.id) {
- *             throw A2AUnsupportedOperationException("Access denied to task ${request.id}")
+ *         // Optionally validate task ownership, with the same caller-scoped read as GetTask
+ *         val task = taskStorage.get(GetTaskRequest(id = request.id, historyLength = 0, tenant = request.tenant), ctx)
+ *         if (task == null || !authService.canRead(user, task)) {
+ *             // Reported as not found, so that the task's existence isn't revealed
+ *             throw A2ATaskNotFoundException("Task '${request.id}' not found")
  *         }
  *
  *         val enrichedCtx = ctx.copy(
@@ -168,6 +168,9 @@ import kotlin.time.Duration
  *     }
  * }
  * ```
+ *
+ * Alternatively, scope the [TaskStorage] itself by the user in the context state: every storage call receives the
+ * [ServerCallContext] of the call it is made for, see [TaskStorage].
  *
  * ## Accessing user data in AgentExecutor
  *
@@ -331,6 +334,10 @@ import kotlin.time.Duration
  * @param streamDelivery How task events are delivered to SubscribeToTask and SendStreamingMessage streams whose readers
  * fall behind (defaults to [StreamDeliveryConfig.Evict]: up to 64 queued events per stream, then a stream still full
  * after 30 seconds is ended with an error). A blocking SendMessage always waits for its in-process collector instead.
+ * @param loadReferencedTasks Whether SendMessage reads the tasks of the message's
+ * [referenceTaskIds][Message.referenceTaskIds] for the agent, see [RequestContext.referencedTasks] (defaults to
+ * `false`). Each is read like GetTask, with the caller's context and the request's tenant, before the turn starts;
+ * tasks that are not found (or not visible to the caller) are left out without an error.
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -350,6 +357,7 @@ public open class A2AServer(
     protected val idGenerator: IdGenerator = UuidIdGenerator,
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
     protected val streamDelivery: StreamDeliveryConfig = StreamDeliveryConfig.Evict(),
+    protected val loadReferencedTasks: Boolean = false,
 ) : RequestHandler {
     private companion object {
         private const val MIN_LIST_TASKS_PAGE_SIZE = 1
@@ -416,7 +424,9 @@ public open class A2AServer(
      * - [A2AUnsupportedOperationException] if the referenced task is in a terminal state.
      *
      * The turn's context id is the referenced task's, else [Message.contextId], else a generated one. For a
-     * referenced task, the agent can only send task events, see [TurnEventProcessor].
+     * referenced task, the agent can only send task events, see [TurnEventProcessor]. Every storage call of the turn
+     * is made with [ctx]. If [loadReferencedTasks] is set, the tasks of [Message.referenceTaskIds] are read with [ctx]
+     * after the validation and before the turn waits for the previous one, see [RequestContext.referencedTasks].
      *
      * The inline [taskPushNotificationConfig][ai.koog.a2a.model.SendMessageConfiguration.taskPushNotificationConfig]
      * is saved for the turn's task when the turn starts, before the agent does, so the turn's first task event is
@@ -479,13 +489,22 @@ public open class A2AServer(
 
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
         val inlinePushConfig = resolveInlinePushConfig(request, taskId, ctx)
+        // Read before the turn waits for its slot, so they hold up no other turn.
+        val referencedTasks = if (loadReferencedTasks) readReferencedTasks(request, ctx) else null
 
         /*
          Waits for the previous turn of the task, then validates a referenced task, saves the inline config, registers
          the event view, and starts the agent, so no event is missed. The agent gets the referenced task as read then.
          */
         val turn = turnManager.startTurn(request, ctx, taskId, inlinePushConfig, viewDelivery) { task, eventProcessor ->
-            val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
+            val requestContext = newRequestContext(
+                ctx = ctx,
+                params = request,
+                contextId = eventProcessor.contextId,
+                taskId = eventProcessor.taskId,
+                task = task,
+                referencedTasks = referencedTasks,
+            )
             agentExecutor.execute(requestContext, eventProcessor)
         }
 
@@ -589,20 +608,31 @@ public open class A2AServer(
         return config
     }
 
+    /**
+     * Reads the tasks of the message's [referenceTaskIds][Message.referenceTaskIds] for the agent, see
+     * [loadReferencedTasks]: in the order of the references, without duplicates and without the tasks that are not
+     * visible to the caller.
+     */
+    private suspend fun readReferencedTasks(request: SendMessageRequest, ctx: ServerCallContext): List<Task> =
+        request.message.referenceTaskIds.orEmpty().distinct().mapNotNull { id ->
+            taskStorage.get(GetTaskRequest(id = id, tenant = request.tenant), ctx)
+        }
+
     private fun <T> newRequestContext(
         ctx: ServerCallContext,
         params: T,
         contextId: String,
         taskId: String,
         task: Task?,
+        referencedTasks: List<Task>?,
     ): RequestContext<T> = RequestContext(
         callContext = ctx,
         params = params,
-        taskStorage = ContextTaskStorage(contextId, taskStorage),
-        messageStorage = ContextMessageStorage(contextId, messageStorage),
+        messageStorage = ContextMessageStorage(contextId, ctx, messageStorage),
         contextId = contextId,
         taskId = taskId,
         task = task,
+        referencedTasks = referencedTasks,
     )
 
     /**
@@ -741,6 +771,9 @@ public open class A2AServer(
      *   (with no status message). It is pushed (if push notifications are configured) and delivered to every stream
      *   of the task, closing them. It doesn't add the user message of a cancelled follow-up turn to the history.
      *
+     * The task is read and the forced cancellation persisted with [ctx]; events the executor sends through a running
+     * turn's processor are persisted with that turn's context.
+     *
      * The task is returned as stored (with artifacts, without history). [CancelTaskRequest] has no history limit.
      *
      * @throws A2ATaskNotCancelableException if the task is terminal, or ends up in a terminal state other than
@@ -761,16 +794,22 @@ public open class A2AServer(
          start until we're done, and a turn that is waiting to start is rejected if the task ends up canceled. Unlike
          startTurn, this doesn't wait for the previous turn to end: it may be the very turn being cancelled.
          */
-        return turnManager.withTaskProcessor(
-            // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
-            GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant),
-            ctx,
-        ) { task, eventProcessor, agentJob, publish ->
+        // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
+        val lookup = GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant)
+
+        return turnManager.withTaskProcessor(lookup, ctx) { task, eventProcessor, agentJob, publish ->
             if (task.status.state.terminal) {
                 throw A2ATaskNotCancelableException("Task '$taskId' is already in terminal state ${task.status.state}")
             }
 
-            val requestContext = newRequestContext(ctx, request, eventProcessor.contextId, eventProcessor.taskId, task)
+            val requestContext = newRequestContext(
+                ctx = ctx,
+                params = request,
+                contextId = eventProcessor.contextId,
+                taskId = eventProcessor.taskId,
+                task = task,
+                referencedTasks = null,
+            )
 
             // A running agent may end the task after it was read, closing the turn's processor: report that state below.
             val processorClosed = try {
@@ -780,7 +819,7 @@ public open class A2AServer(
                 e
             }
 
-            var current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+            var current = taskStorage.get(lookup, ctx)
 
             if (processorClosed != null && (current == null || !current.status.state.terminal)) throw processorClosed
             if (current == null) throw A2ATaskNotFoundException("Task '$taskId' not found")
@@ -792,7 +831,7 @@ public open class A2AServer(
                     // Nothing may publish for the task after the forced cancellation.
                     agentJob.cancelAndJoin()
                     // The agent may have ended the task before it stopped.
-                    current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                    current = taskStorage.get(lookup, ctx)
                         ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
                 }
 
@@ -810,7 +849,7 @@ public open class A2AServer(
                     )
 
                     // Read back rather than built: the result is the task as stored.
-                    current = taskStorage.get(taskId, historyLength = 0, includeArtifacts = true)
+                    current = taskStorage.get(lookup, ctx)
                         ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
                 }
             }

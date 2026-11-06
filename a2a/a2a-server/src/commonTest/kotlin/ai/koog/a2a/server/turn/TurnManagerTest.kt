@@ -21,6 +21,8 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.CONTEXT_ID
+import ai.koog.a2a.server.OwnerScopedTaskStorage
+import ai.koog.a2a.server.StorageCall
 import ai.koog.a2a.server.StreamDeliveryConfig
 import ai.koog.a2a.server.TASK_ID
 import ai.koog.a2a.server.TEST_TIMEOUT
@@ -30,12 +32,12 @@ import ai.koog.a2a.server.exceptions.TurnNotActiveException
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.pushConfig
+import ai.koog.a2a.server.ownerContext
+import ai.koog.a2a.server.read
 import ai.koog.a2a.server.statusUpdate
 import ai.koog.a2a.server.task
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
-import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.server.userMessage
-import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -129,7 +131,7 @@ class TurnManagerTest {
         taskId: String = this.taskId,
         contextId: String = this.contextId,
         state: TaskState = TaskState.TASK_STATE_INPUT_REQUIRED,
-    ): Task = task(state, taskId = taskId, contextId = contextId).also { taskStorage.update(it) }
+    ): Task = task(state, taskId = taskId, contextId = contextId).also { taskStorage.update(it, ctx) }
 
     @Test
     fun testMessageTurn() = runTest(timeout = TEST_TIMEOUT) {
@@ -165,7 +167,7 @@ class TurnManagerTest {
         assertEquals(listOf(task.withUserMessage(), completed), turn.events.toList())
         turn.join()
 
-        assertEquals(task.withUserMessage().copy(status = completed.status), taskStorage.get(taskId))
+        assertEquals(task.withUserMessage().copy(status = completed.status), taskStorage.read(taskId))
     }
 
     @Test
@@ -299,7 +301,7 @@ class TurnManagerTest {
         turn.join()
         subscriber.join()
 
-        val stored = assertNotNull(taskStorage.get(taskId))
+        val stored = assertNotNull(taskStorage.read(taskId))
         val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
         val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
         assertEquals(failedStatus, stored.status)
@@ -326,7 +328,7 @@ class TurnManagerTest {
 
         assertFailsWith<CancellationException> { turn.agentJob.await() }
         assertEquals(listOf<Event>(working.withUserMessage()), events.await())
-        assertEquals(working.withUserMessage(), taskStorage.get(taskId))
+        assertEquals(working.withUserMessage(), taskStorage.read(taskId))
     }
 
     /** A scope with a plain, non-supervisor job, like `CoroutineScope(Dispatchers.IO)`. */
@@ -356,7 +358,7 @@ class TurnManagerTest {
         runCurrent()
 
         assertTrue(scope.isActive)
-        val stored = assertNotNull(taskStorage.get(taskId))
+        val stored = assertNotNull(taskStorage.read(taskId))
         val failed = TaskStatusUpdateEvent(
             taskId = taskId,
             contextId = contextId,
@@ -455,7 +457,7 @@ class TurnManagerTest {
         assertFailsWith<TurnNotActiveException> {
             leaked.sendTaskEvent(statusUpdate(TaskState.TASK_STATE_WORKING))
         }
-        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(inputRequired, taskStorage.read(taskId))
     }
 
     @Test
@@ -468,7 +470,7 @@ class TurnManagerTest {
         val first = launch {
             turnManager.withTaskProcessor(GetTaskRequest(taskId), ctx) { _, _, _, _ ->
                 releaseFirst.await()
-                taskStorage.update(working)
+                taskStorage.update(working, ctx)
             }
         }
         runCurrent()
@@ -500,28 +502,26 @@ class TurnManagerTest {
 
     @Test
     fun testWithTaskProcessorReadsTaskWithLookupAndCallContext() = runTest(timeout = TEST_TIMEOUT) {
-        val inputRequired = storeTask()
-        val owner = ServerCallContext()
-        val lookups = mutableListOf<Pair<GetTaskRequest, ServerCallContext>>()
-        // An authorization-aware storage: the task is visible only to its owner.
-        val ownerScopedStorage = object : TaskStorage by taskStorage {
-            override suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task? {
-                lookups += request to context
-                return if (context === owner) taskStorage.get(request, context) else null
-            }
-        }
+        val owner = ownerContext("alice")
+        val otherCaller = ownerContext("bob")
+        val ownerScopedStorage = OwnerScopedTaskStorage()
+        val inputRequired = task(TaskState.TASK_STATE_INPUT_REQUIRED, taskId = taskId, contextId = contextId)
+            .also { ownerScopedStorage.update(it, owner) }
         val turnManager = TurnManager(coroutineScope = backgroundScope, taskStorage = ownerScopedStorage)
         val lookup = GetTaskRequest(taskId, historyLength = 0, tenant = "tenant-1")
         var blockRan = false
 
         assertFailsWith<A2ATaskNotFoundException> {
-            turnManager.withTaskProcessor(lookup, ctx) { _, _, _, _ -> blockRan = true }
+            turnManager.withTaskProcessor(lookup, otherCaller) { _, _, _, _ -> blockRan = true }
         }
         val task = turnManager.withTaskProcessor(lookup, owner) { task, _, _, _ -> task }
 
         assertEquals(false, blockRan)
         assertEquals(inputRequired, task)
-        assertEquals(listOf(lookup to ctx, lookup to owner), lookups)
+        assertEquals(
+            listOf(StorageCall("get $taskId", otherCaller), StorageCall("get $taskId", owner)),
+            ownerScopedStorage.calls.filter { it.operation.startsWith("get ") },
+        )
     }
 
     @Test
@@ -541,7 +541,7 @@ class TurnManagerTest {
             assertNotNull(leaked).sendTaskEvent(statusUpdate(TaskState.TASK_STATE_COMPLETED))
         }
         assertEquals(listOf<Event>(task.withUserMessage()), events.await())
-        assertEquals(task.withUserMessage(), taskStorage.get(taskId))
+        assertEquals(task.withUserMessage(), taskStorage.read(taskId))
     }
 
     @Test
@@ -646,7 +646,7 @@ class TurnManagerTest {
         assertEquals(listOf<Pair<String, Event>>("c1" to canceled), pushSender.sent)
         assertEquals(
             inputRequired.copy(status = canceled.status, history = listOf(followUpPrompt())),
-            taskStorage.get(taskId)
+            taskStorage.read(taskId)
         )
     }
 
@@ -660,7 +660,7 @@ class TurnManagerTest {
         assertFailsWith<IllegalStateException> {
             leaked(statusUpdate(TaskState.TASK_STATE_CANCELED))
         }
-        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(inputRequired, taskStorage.read(taskId))
     }
 
     private fun followUpPrompt() = Message(
@@ -674,7 +674,7 @@ class TurnManagerTest {
     private suspend fun storeInputRequiredTask(): Task =
         task(TaskState.TASK_STATE_INPUT_REQUIRED).let {
             it.copy(status = it.status.copy(message = followUpPrompt()))
-        }.also { taskStorage.update(it) }
+        }.also { taskStorage.update(it, ctx) }
 
     @Test
     fun testFollowUpTurnPersistsUserMessageOnFirstTaskEvent() = runTest(timeout = TEST_TIMEOUT) {
@@ -685,7 +685,7 @@ class TurnManagerTest {
         val working = statusUpdate(TaskState.TASK_STATE_WORKING)
 
         val turn = turnManager.start(taskId, contextId, followUp = true) {
-            storedWhenAgentStarted = taskStorage.get(taskId)
+            storedWhenAgentStarted = taskStorage.read(taskId)
             it.sendTaskEvent(working)
         }
         drain(turn)
@@ -698,7 +698,7 @@ class TurnManagerTest {
                 status = working.status,
                 history = listOf(followUpPrompt(), userMessage),
             ),
-            taskStorage.get(taskId)
+            taskStorage.read(taskId)
         )
     }
 
@@ -711,7 +711,7 @@ class TurnManagerTest {
         drain(turn)
         turn.join()
 
-        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(inputRequired, taskStorage.read(taskId))
     }
 
     /** Asserts that a follow-up turn fails with [expected] without running the agent, and leaves the task usable. */
@@ -720,7 +720,7 @@ class TurnManagerTest {
         turnManager: TurnManager,
         startFollowUp: suspend TurnManager.(agent: suspend (TurnEventProcessor) -> Unit) -> Turn,
     ) {
-        val stored = taskStorage.get(taskId)
+        val stored = taskStorage.read(taskId)
         var agentStarted = false
 
         val failure = assertFailsWith<A2AException> { turnManager.startFollowUp { agentStarted = true } }
@@ -729,7 +729,7 @@ class TurnManagerTest {
         assertEquals(expected::class to expected.message, failure::class to failure.message)
         assertEquals(false, agentStarted)
         assertNull(turnManager.getTurn(taskId))
-        assertEquals(stored, taskStorage.get(taskId))
+        assertEquals(stored, taskStorage.read(taskId))
     }
 
     @Test
@@ -777,7 +777,7 @@ class TurnManagerTest {
         val turnManager = createManager()
         val history = listOf(userMessage("Hi", messageId = "user-0"), followUpPrompt())
         val stored = task(TaskState.TASK_STATE_INPUT_REQUIRED).copy(history = history)
-        taskStorage.update(stored)
+        taskStorage.update(stored, ctx)
         var agentTask: Task? = null
         var processorContextId: String? = null
 
@@ -866,7 +866,7 @@ class TurnManagerTest {
         runCurrent()
 
         // Neither the user message nor a failed status is persisted, delivered, or pushed.
-        assertEquals(inputRequired, taskStorage.get(taskId))
+        assertEquals(inputRequired, taskStorage.read(taskId))
         assertEquals(listOf<Event>(inputRequired), received)
         assertTrue(subscriber.isActive)
         assertEquals(emptyList(), pushSender.started)
@@ -915,7 +915,7 @@ class TurnManagerTest {
             turn.join()
 
             // The user message is not persisted, the status message moves into the history.
-            val stored = assertNotNull(taskStorage.get(taskId))
+            val stored = assertNotNull(taskStorage.read(taskId))
             val failedStatus = failedStatus(taskId, contextId, stored.status.timestamp)
             val failedEvent = TaskStatusUpdateEvent(taskId = taskId, contextId = contextId, status = failedStatus)
             assertEquals(listOf<Event>(failedEvent), events, error.toString())
@@ -1018,7 +1018,7 @@ class TurnManagerTest {
         turn.join()
 
         assertEquals(task(TaskState.TASK_STATE_WORKING).withUserMessage(), firstEvent)
-        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskId)?.status?.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.read(taskId)?.status?.state)
     }
 
     /**
@@ -1103,7 +1103,7 @@ class TurnManagerTest {
         turnA.join()
 
         assertEquals(listOf<Event>(completedA), eventsA.await())
-        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.get(taskA)?.status?.state)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, taskStorage.read(taskA)?.status?.state)
     }
 
     @Test

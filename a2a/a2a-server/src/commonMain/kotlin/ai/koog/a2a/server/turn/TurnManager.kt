@@ -417,6 +417,7 @@ public class TurnManager(
                             contextId = contextId,
                             taskId = taskId,
                             stream = stream,
+                            callContext = ctx,
                             taskExists = isFollowUp,
                             userMessage = message,
                             onRejected = outcomeRecorder::onRejected,
@@ -440,6 +441,7 @@ public class TurnManager(
                                     taskId,
                                     contextId,
                                     stream,
+                                    ctx,
                                     viewShutdownHandle,
                                     deletesPushConfigsIfTaskAbsent = savesInlinePushConfig && !isFollowUp,
                                 )
@@ -528,6 +530,7 @@ public class TurnManager(
     /**
      * Waits for the turn's agent job to complete, ends the turn, and cleans up.
      *
+     * @param ctx the context of the turn's request, used for the storage calls that end the turn.
      * @param viewShutdownHandle the registration of the turn's view with [shutdownSignal], disposed once the view is
      * closed.
      * @param deletesPushConfigsIfTaskAbsent whether the turn saved an inline push config for a task it was to create,
@@ -540,6 +543,7 @@ public class TurnManager(
         taskId: String,
         contextId: String,
         stream: TaskEventStream,
+        ctx: ServerCallContext,
         viewShutdownHandle: DisposableHandle,
         deletesPushConfigsIfTaskAbsent: Boolean,
     ) {
@@ -576,7 +580,7 @@ public class TurnManager(
 
                         try {
                             // A FAILED update may wait here for a slow collector, see "Delivery" and "Shutdown" above.
-                            stream.endTurn(contextId, outcomeRecorder.complete(failure), failureMessage)
+                            stream.endTurn(contextId, outcomeRecorder.complete(failure), ctx, failureMessage)
                         } finally {
                             // The view is closed: a shutdown can't change how it ends any more.
                             viewShutdownHandle.dispose()
@@ -586,7 +590,7 @@ public class TurnManager(
                 } finally {
                     try {
                         // After the turn has ended nothing can create the task anymore; Turn.join() still waits for this.
-                        if (deletesPushConfigsIfTaskAbsent) deletePushConfigsIfTaskAbsent(taskId)
+                        if (deletesPushConfigsIfTaskAbsent) deletePushConfigsIfTaskAbsent(taskId, ctx)
                         release(stream)
                     } finally {
                         // The next turn of the task may start from here on.
@@ -614,13 +618,16 @@ public class TurnManager(
         null
     }
 
-    /** Deletes the push notification configs of [taskId] if the task was never stored. Failures are only logged. */
-    private suspend fun deletePushConfigsIfTaskAbsent(taskId: String) {
+    /**
+     * Deletes the push notification configs of [taskId] if the task was never stored, both with the turn's [ctx].
+     * Failures are only logged.
+     */
+    private suspend fun deletePushConfigsIfTaskAbsent(taskId: String, ctx: ServerCallContext) {
         val pushStorage = pushConfigStorage ?: return
 
         try {
-            if (taskStorage.get(taskId, historyLength = 0, includeArtifacts = false) == null) {
-                pushStorage.deleteAll(taskId)
+            if (taskStorage.get(GetTaskRequest(id = taskId, historyLength = 0, tenant = ctx.tenant), ctx) == null) {
+                pushStorage.deleteAll(taskId, ctx)
             }
         } catch (e: Exception) {
             logger.error(e) { "Failed to delete push notification configs of task '$taskId', which was not created" }
@@ -686,11 +693,12 @@ public class TurnManager(
      * until [block] returns, so everything [block] publishes reaches the turn's requester as well. Otherwise, [block]
      * receives a new processor and `null`; the processor is closed when [block] returns (later events are rejected with
      * [ai.koog.a2a.server.exceptions.TurnNotActiveException]). Either way, published events reach every [subscribe]
-     * stream of the task.
+     * stream of the task. The turn's processor persists events with the turn's context, a new one with [ctx].
      *
-     * [block] also receives `publish`, which persists and delivers a [TaskEvent] originated by the server (e.g. the
-     * forced cancellation) straight to the task stream, bypassing the processor: it isn't validated against the turn,
-     * doesn't close the processor, and doesn't persist the running turn's pending user message (see "History" above).
+     * [block] also receives `publish`, which persists (with [ctx]) and delivers a [TaskEvent] originated by the server
+     * (e.g. the forced cancellation) straight to the task stream, bypassing the processor: it isn't validated against
+     * the turn, doesn't close the processor, and doesn't persist the running turn's pending user message (see
+     * "History" above).
      * It must not be called after [block] returns.
      *
      * No turn of the task starts while [block] runs: a starting turn waits, and is rejected if [block] left the task
@@ -701,7 +709,8 @@ public class TurnManager(
      *
      * @param lookup The task to read, with the history and artifacts [block] needs. The task's context id is used for
      * the new processor when no turn is running.
-     * @param ctx The context of the call, passed to [TaskStorage.get] to scope the lookup.
+     * @param ctx The context of the call, passed to [TaskStorage.get] to scope the lookup, and to the storage calls of
+     * `publish` and of a new processor.
      * @param block The action to run.
      * @return The result of [block].
      * @throws A2ATaskNotFoundException if the task doesn't exist (or isn't visible to the caller), before [block] or
@@ -729,6 +738,7 @@ public class TurnManager(
                     contextId = task.contextId.orEmpty(),
                     taskId = taskId,
                     stream = stream,
+                    callContext = ctx,
                     // The task exists: a Message is rejected like in any turn of an existing task.
                     taskExists = true,
                 )
@@ -737,7 +747,7 @@ public class TurnManager(
                 val publish: suspend (TaskEvent) -> Unit = { event ->
                     check(isBlockRunning) { "Can't publish after the withTaskProcessor block has returned" }
                     require(event.taskId == taskId) { "Event of task '${event.taskId}' can't be published to task '$taskId'" }
-                    stream.publish(event)
+                    stream.publish(event, ctx)
                 }
 
                 try {

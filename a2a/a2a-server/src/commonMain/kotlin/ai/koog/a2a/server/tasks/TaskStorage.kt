@@ -6,35 +6,47 @@ import ai.koog.a2a.model.ListTasksRequest
 import ai.koog.a2a.model.ListTasksResponse
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.Task
+import ai.koog.a2a.model.TaskArtifactUpdateEvent
 import ai.koog.a2a.model.TaskEvent
+import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import ai.koog.a2a.transport.ServerCallContext
 
 /**
  * Storage interface for managing tasks and their lifecycle events.
  *
+ * Every method takes, as its last parameter, the [ServerCallContext] of the call it is made for. Methods serving an
+ * RPC take its request; the others take plain arguments and return full data (callers trim it with [project]).
+ *
+ * Scoping: multi-tenant or authorization-aware storages may scope every method by the call context, e.g. by an owner
+ * the server's subclass puts into [ServerCallContext.state], and by [ServerCallContext.tenant], which the transport
+ * sets from the request (the requests' own `tenant` fields are wire fields; prefer the context's). A task that is not
+ * visible to the caller must be reported as not found.
+ *
+ * Visibility: a task stays visible to the call context that created or updated it, at least for the rest of that
+ * turn or cancellation. [ai.koog.a2a.server.A2AServer] reads the task back with that context, e.g. to apply a
+ * follow-up, to mark it failed, to cancel it, or to answer a blocking SendMessage.
+ *
  * Implementations must ensure concurrency safety.
  */
 public interface TaskStorage {
     /**
-     * Serves the `GetTask` RPC: retrieves a task by [GetTaskRequest.id].
+     * Serves the `GetTask` RPC: retrieves a task by [GetTaskRequest.id]. The server also uses it for its own reads of
+     * a task made for a caller (follow-ups, cancellation, failure handling, referenced tasks).
      *
      * Contract:
      * - The returned task always includes [Task.artifacts].
      * - [GetTaskRequest.historyLength] must be honoured with the rules of [project]: `null` returns the whole history,
      *   `0` returns `history = null` (not an empty list), `N` returns at most the `N` most recent messages.
      *   [ai.koog.a2a.server.A2AServer] validates that the value is not negative before calling this method.
-     * - [GetTaskRequest.tenant] and [context] may be used by multi-tenant or authorization-aware storages to scope the
-     *   lookup (a task that is not visible to the caller must be reported as not found). The in-memory implementation
-     *   ignores both.
-     *
-     * For internal reads, use the overload that takes a task ID.
+     * - The lookup may be scoped by [callContext], see [TaskStorage]: a task that is not visible to the caller is
+     *   reported as not found.
      *
      * @param request the `GetTask` request
-     * @param context the context of the call
+     * @param callContext the context of the call
      * @return the task, or `null` if it is not found (or not visible to the caller)
      */
-    public suspend fun get(request: GetTaskRequest, context: ServerCallContext): Task?
+    public suspend fun get(request: GetTaskRequest, callContext: ServerCallContext): Task?
 
     /**
      * Serves the `ListTasks` RPC: returns a page of tasks matching [request].
@@ -55,8 +67,8 @@ public interface TaskStorage {
      * - [ListTasksRequest.historyLength] and [ListTasksRequest.includeArtifacts]: apply them to every returned task
      *   with [project]. `includeArtifacts = null` is treated as `false` (artifacts are omitted), `historyLength = null`
      *   returns the whole history, `0` returns `history = null`.
-     * - [ListTasksRequest.tenant] and [context] may be used by multi-tenant or authorization-aware storages to scope
-     *   the result (including [ListTasksResponse.totalSize] and paging). The in-memory implementation ignores both.
+     * - The result may be scoped by [callContext], see [TaskStorage], including [ListTasksResponse.totalSize] and
+     *   paging.
      *
      * Response requirements: [ListTasksResponse.totalSize] is the number of tasks matching the filters before
      * pagination, and [ListTasksResponse.nextPageToken] must be the empty string on the last page (the field is
@@ -66,76 +78,36 @@ public interface TaskStorage {
      * [ListTasksRequest.historyLength] (not negative) beforehand; storages needn't repeat these checks.
      *
      * @param request the `ListTasks` request
-     * @param context the context of the call
+     * @param callContext the context of the call
      * @return the requested page of tasks
      * @throws A2AInvalidParamsException if the page token is invalid
      */
-    public suspend fun list(request: ListTasksRequest, context: ServerCallContext): ListTasksResponse
+    public suspend fun list(request: ListTasksRequest, callContext: ServerCallContext): ListTasksResponse
 
     /**
-     * Retrieves a task by ID, for internal use (cancellation, turns, push notifications, agents); unlike [get] with a
-     * [GetTaskRequest], it does not serve the `GetTask` RPC.
+     * Applies [event] to the stored task, or creates the task from a [Task] event.
      *
-     * @param taskId the unique task identifier
-     * @param historyLength the maximum number of messages in conversation history to include in the response
-     * Set to `null` to include all messages (default), `0` for no history. See [project].
-     * @param includeArtifacts whether to include artifacts in the response. Default is `true`.
+     * - A [Task] creates the task, or replaces the stored one (status, history, artifacts, metadata). The default
+     *   [appendHistory] relies on the replacement.
+     * - A [TaskStatusUpdateEvent] replaces the status. The replaced status message, if any, is appended to
+     *   [Task.history] unless a message with its [Message.messageId] is there. Metadata is merged.
+     * - A [TaskArtifactUpdateEvent] adds, replaces, or appends to an artifact.
      *
-     * @return the task or null if not found
+     * A storage may apply a retention or redaction policy (e.g. trim history, redact parts, drop artifacts or
+     * metadata), provided later reads still return the task's id, contextId and status state as last written,
+     * and every message kept has its original messageId. The server uses these for follow-ups,
+     * cancellation, failure handling and history deduplication. All reads return the task as kept.
+     *
+     * [callContext] is the call the event is persisted for: the request of the turn that produced it, or the
+     * CancelTask that forced the cancellation. The server has authorized it. An authorization-aware storage may
+     * record the owner from it when the task is created, and the task must then be visible to that caller in [get]
+     * and [list].
+     *
+     * @param event the event to apply
+     * @param callContext the call the event is persisted for
+     * @throws TaskOperationException if the event can't be applied, e.g. a non-[Task] event for a missing task
      */
-    public suspend fun get(
-        taskId: String,
-        historyLength: Int? = null,
-        includeArtifacts: Boolean = true
-    ): Task?
-
-    /**
-     * Retrieves multiple tasks by their IDs.
-     *
-     * @param taskIds list of task identifiers
-     * @param historyLength the maximum number of messages in conversation history to include in the response
-     * Set to `null` to include all messages (default), `0` for no history. See [project].
-     * @param includeArtifacts whether to include artifacts in the response. Default is `true`.
-     * @return list of found tasks (may be fewer than requested)
-     */
-    public suspend fun getAll(
-        taskIds: List<String>,
-        historyLength: Int? = null,
-        includeArtifacts: Boolean = true
-    ): List<Task>
-
-    /**
-     * Retrieves all tasks associated with a specific context ID.
-     *
-     * @param contextId context identifier
-     * @param historyLength the maximum number of messages in conversation history to include in the response
-     * Set to `null` to include all messages (default), `0` for no history. See [project].
-     * @param includeArtifacts whether to include artifacts in the response. Default is `true`.
-     * @return A list of tasks that match the specified context ID.
-     */
-    public suspend fun getByContext(
-        contextId: String,
-        historyLength: Int? = null,
-        includeArtifacts: Boolean = true
-    ): List<Task>
-
-    /**
-     * Updates task state based on an event, or creates the task if it doesn't exist.
-     *
-     * - A [Task] is stored as a new task, or replaces the stored task entirely (status, history, artifacts, and
-     *   metadata). The default [appendHistory] relies on the replacement.
-     * - A [ai.koog.a2a.model.TaskStatusUpdateEvent] replaces the status of the existing task. If the status
-     *   that is replaced has a message, that message is moved into [Task.history] (appended to the end), unless the
-     *   history already contains a message with the same [ai.koog.a2a.model.Message.messageId], in which case it is
-     *   not added again. Metadata is merged.
-     * - A [ai.koog.a2a.model.TaskArtifactUpdateEvent] adds, replaces, or appends to an artifact of the existing task.
-     *
-     * A task must be created with a [Task] event before other events can update it.
-     *
-     * @param event the update event to apply (creation or modification)
-     * @throws TaskOperationException if the task cannot be created or updated, e.g. a non-[Task] event for a non-existing task
-     */
-    public suspend fun update(event: TaskEvent)
+    public suspend fun update(event: TaskEvent, callContext: ServerCallContext)
 
     /**
      * Adds [message] to the history of the task with [taskId], for internal use: the server persists the user message
@@ -144,107 +116,31 @@ public interface TaskStorage {
      * If the history already contains a message with the same [Message.messageId], the task is left unchanged.
      * Otherwise the current [ai.koog.a2a.model.TaskStatus.message], if any, is moved into [Task.history] (unless a
      * message with its id is already there), [message] is appended, and the status message is cleared. Nothing else
-     * changes. If the task doesn't exist, nothing happens.
+     * changes, apart from the storage's own retention policy (see [update]). [callContext] is the request of the turn
+     * whose message it is. If the task doesn't exist (or isn't visible to [callContext]), nothing happens.
      *
      * The server never calls it concurrently with another write to the same task, but storages shared between
-     * processes should apply it atomically. The default implementation reads the whole task and writes it back with
-     * [update]; override it to avoid that cost.
+     * processes should apply it atomically. The default implementation reads the whole task with [get] and writes it
+     * back with [update]; override it to avoid that cost.
      *
      * @param taskId the task identifier
      * @param message the message to add
+     * @param callContext the request of the turn whose message it is
      */
-    public suspend fun appendHistory(taskId: String, message: Message) {
-        val task = get(taskId, historyLength = null, includeArtifacts = true) ?: return
-        task.withAppendedHistory(message)?.let { update(it) }
+    public suspend fun appendHistory(taskId: String, message: Message, callContext: ServerCallContext) {
+        val task = get(GetTaskRequest(id = taskId, tenant = callContext.tenant), callContext) ?: return
+        task.withAppendedHistory(message)?.let { update(it, callContext) }
     }
 
     /**
-     * Deletes a task by ID.
+     * Deletes the task with [taskId]. Idempotent: deleting a task that doesn't exist is a no-op and never an error.
      *
-     * @param taskId the task identifier to delete
-     * @throws TaskOperationException if the task cannot be deleted, e.g. it doesn't exist
-     */
-    public suspend fun delete(taskId: String)
-
-    /**
-     * Deletes multiple tasks by their IDs.
+     * The server never calls it; it is for the application, e.g. a retention job. An authorization-aware storage may
+     * delete only within the scope of [callContext]; the in-memory implementation ignores it.
      *
-     * @param taskIds list of task identifiers to delete
-     * @throws TaskOperationException if some tasks cannot be deleted, e.g. they don't exist
+     * @param taskId the task identifier
+     * @param callContext the call the task is deleted for
+     * @throws TaskOperationException if the task exists but can't be deleted
      */
-    public suspend fun deleteAll(taskIds: List<String>)
-}
-
-/**
- * A specialized wrapper around [TaskStorage] for providing access to the tasks within a specific context.
- *
- * @param contextId the unique identifier for the current context
- * @param taskStorage the underlying task storage implementation
- * @see [TaskStorage]
- */
-public class ContextTaskStorage(
-    private val contextId: String,
-    private val taskStorage: TaskStorage,
-) {
-    /**
-     * Retrieves a task by ID.
-     *
-     * @see [TaskStorage.get]
-     */
-    public suspend fun get(
-        taskId: String,
-        historyLength: Int? = null,
-        includeArtifacts: Boolean = true
-    ): Task? = taskStorage.get(taskId, historyLength, includeArtifacts)
-
-    /**
-     * Retrieves multiple tasks by their IDs.
-     *
-     * @see [TaskStorage.getAll]
-     */
-    public suspend fun getAll(
-        taskIds: List<String>,
-        historyLength: Int? = null,
-        includeArtifacts: Boolean = true
-    ): List<Task> = taskStorage.getAll(taskIds, historyLength, includeArtifacts)
-
-    /**
-     * Retrieves all tasks associated with the current context ID.
-     *
-     * @see [TaskStorage.getByContext]
-     */
-    public suspend fun getByContext(
-        historyLength: Int? = null,
-        includeArtifacts: Boolean = true
-    ): List<Task> = taskStorage.getByContext(contextId, historyLength, includeArtifacts)
-
-    /**
-     * Deletes a task by ID, checking that it belongs to the current context ID.
-     *
-     * @see [TaskStorage.delete]
-     */
-    public suspend fun delete(taskId: String) {
-        get(taskId, historyLength = 0, includeArtifacts = false)?.let { task ->
-            require(task.contextId == contextId) {
-                "contextId of the task requested to be deleted must be same as current contextId"
-            }
-
-            taskStorage.delete(taskId)
-        }
-    }
-
-    /**
-     * Deletes multiple tasks by their IDs, checking that they belong to the current context ID.
-     *
-     * @see [TaskStorage.deleteAll]
-     */
-    public suspend fun deleteAll(taskIds: List<String>) {
-        getAll(taskIds, historyLength = 0, includeArtifacts = false).let { tasks ->
-            require(tasks.all { it.contextId == contextId }) {
-                "contextId of the tasks requested to be deleted must be same as current contextId"
-            }
-
-            taskStorage.deleteAll(taskIds)
-        }
-    }
+    public suspend fun delete(taskId: String, callContext: ServerCallContext)
 }

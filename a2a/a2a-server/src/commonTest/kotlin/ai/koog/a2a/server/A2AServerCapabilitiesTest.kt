@@ -75,7 +75,7 @@ class A2AServerCapabilitiesTest {
         agentCardExtended: AgentCard? = null,
     ): A2AServer {
         val taskStorage = InMemoryTaskStorage()
-        taskStorage.update(workingTask)
+        taskStorage.update(workingTask, ctx)
 
         val pushStorage = InMemoryPushNotificationConfigStorage()
         pushStorage.save(pushConfig, ctx)
