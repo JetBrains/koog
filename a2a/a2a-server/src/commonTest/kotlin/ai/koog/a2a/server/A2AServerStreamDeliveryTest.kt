@@ -15,6 +15,8 @@ import ai.koog.a2a.transport.ServerCallContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
@@ -243,6 +245,38 @@ class A2AServerStreamDeliveryTest {
 
         release.complete(Unit)
         assertEquals(listOf<Event>(stored) + updates + completed, subscriber.await())
+    }
+
+    @Test
+    fun testCancelledStuckSubscriberUnblocksAgent() = runTest(timeout = TEST_TIMEOUT) {
+        val stored = storeIdleTask()
+        var sent = 0
+        val countingScript = AgentScript { _, processor ->
+            (updates + completed).forEach {
+                processor.sendTaskEvent(it)
+                sent++
+            }
+        }
+        val server = createServer(mapOf("count" to countingScript), StreamDeliveryConfig.Suspend(capacity = 2))
+
+        // Never reads past the snapshot, so the agent can publish only what fits into the queue.
+        val stuck = subscribe(server) { if (it is Task) awaitCancellation() }
+        stuck.firstEvent.await()
+        val response = async { server.onSendMessage(request("count", TASK_ID), ctx) }
+        runCurrent()
+
+        assertEquals(2, sent)
+        assertEquals(false, response.isCompleted)
+        assertEquals(TaskState.TASK_STATE_WORKING, assertNotNull(taskStorage.read(TASK_ID)).status.state)
+
+        // The client disconnects.
+        stuck.job.cancelAndJoin()
+
+        val finished = response.await()
+        assertEquals(assertNotNull(taskStorage.read(TASK_ID)), finished)
+        assertEquals(TaskState.TASK_STATE_COMPLETED, (finished as Task).status.state)
+        assertEquals(updates.size + 1, sent)
+        assertEquals(listOf<Event>(stored), stuck.events)
     }
 
     @Test

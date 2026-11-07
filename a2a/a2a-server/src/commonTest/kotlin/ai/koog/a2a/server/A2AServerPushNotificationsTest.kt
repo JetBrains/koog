@@ -12,11 +12,14 @@ import ai.koog.a2a.model.GetTaskPushNotificationConfigRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsRequest
 import ai.koog.a2a.model.ListTaskPushNotificationConfigsResponse
 import ai.koog.a2a.model.Message
+import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.SendMessageConfiguration
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
+import ai.koog.a2a.model.TaskStatusUpdateEvent
+import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.notifications.GatedPushNotificationSender
 import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
@@ -277,6 +280,8 @@ class A2AServerPushNotificationsTest {
 
     private val submittedTask = task(TaskState.TASK_STATE_SUBMITTED, "ask", taskId = NEW_TASK_ID)
 
+    private val crashedTask = task(TaskState.TASK_STATE_SUBMITTED, "crashAfterTask", taskId = NEW_TASK_ID)
+
     private fun inputRequired(text: String) = statusUpdate(TaskState.TASK_STATE_INPUT_REQUIRED, text, taskId = NEW_TASK_ID)
 
     /** The task stored after the "ask" turn. */
@@ -297,6 +302,11 @@ class A2AServerPushNotificationsTest {
             processor.sendMessage(agentMessage("reply", taskId = null))
         },
         "crash" to AgentScript { _, _ ->
+            error("Agent failed")
+        },
+        // Creates the task, then fails.
+        "crashAfterTask" to AgentScript { _, processor ->
+            processor.sendTaskEvent(crashedTask)
             error("Agent failed")
         },
     ).mapValues { (_, script) ->
@@ -464,6 +474,32 @@ class A2AServerPushNotificationsTest {
 
         assertEquals(listOf(listOf(webhook.copy(taskId = NEW_TASK_ID, id = NEW_TASK_ID))), configsAtAgentStart)
         assertEquals(emptyList(), pushStorage.getAll(NEW_TASK_ID))
+    }
+
+    @Test
+    fun testFailedTurnPushesFailedTaskToRegisteredConfig() = runTest(timeout = TEST_TIMEOUT) {
+        val server = createTurnServer()
+
+        val response = server.onSendMessage(sendRequest("crashAfterTask", pushConfig = webhook), ctx)
+        runCurrent()
+
+        val stored = assertNotNull(taskStorage.read(NEW_TASK_ID))
+        // The failure message is generic and has a generated id, so it is taken from the stored status.
+        val failedStatus = TaskStatus(
+            state = TaskState.TASK_STATE_FAILED,
+            message = Message(
+                messageId = assertNotNull(stored.status.message).messageId,
+                role = Role.ROLE_AGENT,
+                parts = listOf(TextPart("Task failed due to an internal error")),
+                contextId = CONTEXT_ID,
+                taskId = NEW_TASK_ID,
+            ),
+            timestamp = assertNotNull(stored.status.timestamp),
+        )
+        val failed = TaskStatusUpdateEvent(taskId = NEW_TASK_ID, contextId = CONTEXT_ID, status = failedStatus)
+        assertEquals(failedStatus, stored.status)
+        assertEquals(stored, response)
+        assertEquals(pushes(NEW_TASK_ID, listOf(crashedTask, failed)), pushSender.sent)
     }
 
     @Test
