@@ -73,11 +73,10 @@ public open class JSONRPCServerTransport(
     /**
      * Entry point for handling a raw JSON-RPC request payload.
      *
-     * Parses the incoming JSON and resolves the A2A method, according to A2A spec, applies [customizeCallContext],
-     * checks the requested protocol version with [checkVersion], then dispatches either to
-     * [onRequest] for non-streaming methods or [onRequestStreaming] for streaming methods. The [requestHandler] gets
-     * the context with [ServerCallContext.tenant] set to the `tenant` of the decoded request params (`null` if absent),
-     * replacing any tenant set by [customizeCallContext].
+     * Parses the incoming JSON and resolves the A2A method, according to A2A spec, sets [ServerCallContext.tenant]
+     * from the request, applies [customizeCallContext], checks the requested protocol version with [checkVersion],
+     * then dispatches either to [onRequest] for non-streaming methods or [onRequestStreaming] for streaming methods.
+     * The tenant is the `tenant` string of the request params; without one, [ctx]'s tenant is kept.
      *
      * @param requestRaw Raw request body
      * @param ctx Server call context associated with this request
@@ -86,8 +85,9 @@ public open class JSONRPCServerTransport(
      * @param respondStreaming Lambda to respond with a streaming response. The flow must be collected, either within
      * the lambda or after it returns: this function returns only once the stream is consumed or its collection is
      * cancelled.
-     * @param customizeCallContext Customizes [ctx] once the request is parsed, before the version is checked; not
-     * called if the request cannot be parsed. An exception thrown here is answered like an error raised by the
+     * @param customizeCallContext Customizes [ctx] once the request is parsed and its tenant is set, before the version
+     * is checked; the returned context, tenant included, is passed to the [requestHandler] as is. Not called if the
+     * request cannot be parsed. An exception thrown here is answered like an error raised by the
      * [requestHandler]: an [A2AException] keeps its error code, any other exception becomes an internal error, and
      * the response carries the request id. Defaults to returning [ctx] unchanged.
      */
@@ -119,7 +119,7 @@ public open class JSONRPCServerTransport(
         }
 
         try {
-            val callCtx = customizeCallContext(ctx)
+            val callCtx = customizeCallContext(ctx.copy(tenant = requestTenant(jsonRpcRequest.request) ?: ctx.tenant))
 
             // Applies to all methods; for streaming ones the error is still a plain response, as no stream is open yet
             checkVersion(callCtx)
@@ -135,6 +135,13 @@ public open class JSONRPCServerTransport(
             respond(toJSONRPCErrorResponse(e, jsonRequest.requestId))
         }
     }
+
+    /**
+     * The `tenant` of [request]'s params, `null` if absent or not a string. It's read before the params are decoded,
+     * so that [handleRequest]'s `customizeCallContext` sees it; a malformed value fails when the params are decoded.
+     */
+    private fun requestTenant(request: JSONRPCRequest): String? =
+        ((request.params as? JsonObject)?.get("tenant") as? JsonPrimitive)?.takeIf { it.isString }?.content
 
     /**
      * Checks that the protocol version requested by the client, [ServerCallContext.requestedVersion], is one of
@@ -260,8 +267,7 @@ public open class JSONRPCServerTransport(
     }
 
     /**
-     * Decodes the params of [request] and passes them to [action] with [ctx], its [ServerCallContext.tenant] set to
-     * the decoded request's [Request.tenant].
+     * Decodes the params of [request] and passes them to [action] with [ctx].
      */
     protected suspend inline fun <reified TRequest : Request, reified TResponse> onRequest(
         request: JSONRPCRequest,
@@ -269,14 +275,13 @@ public open class JSONRPCServerTransport(
         action: suspend (TRequest, ServerCallContext) -> TResponse,
     ): JSONRPCSuccessResponse {
         val deserializedRequest = toRequest(request, serializer<TRequest>())
-        val response = action(deserializedRequest, ctx.copy(tenant = deserializedRequest.tenant))
+        val response = action(deserializedRequest, ctx)
 
         return toJSONRPCSuccessResponse(response, serializer<TResponse>(), request.id)
     }
 
     /**
-     * Decodes the params of [request] and passes them to [action] with [ctx], its [ServerCallContext.tenant] set to
-     * the decoded request's [Request.tenant].
+     * Decodes the params of [request] and passes them to [action] with [ctx].
      */
     protected inline fun <reified TRequest : Request, reified TResponse> onRequestStreaming(
         request: JSONRPCRequest,
@@ -284,7 +289,7 @@ public open class JSONRPCServerTransport(
         action: (TRequest, ServerCallContext) -> Flow<TResponse>,
     ): Flow<JSONRPCSuccessResponse> {
         val deserializedRequest = toRequest(request, serializer<TRequest>())
-        val response = action(deserializedRequest, ctx.copy(tenant = deserializedRequest.tenant))
+        val response = action(deserializedRequest, ctx)
 
         return response.map { toJSONRPCSuccessResponse(it, serializer<TResponse>(), request.id) }
     }

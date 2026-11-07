@@ -155,7 +155,7 @@ import kotlin.time.Duration
  *         val user = authenticateAndAuthorize(ctx, requiredPermission = "read_task")
  *
  *         // Optionally validate task ownership, with the same caller-scoped read as GetTask
- *         val task = taskStorage.get(GetTaskRequest(id = request.id, historyLength = 0, tenant = request.tenant), ctx)
+ *         val task = taskStorage.get(GetTaskRequest(id = request.id, historyLength = 0, tenant = ctx.tenant), ctx)
  *         if (task == null || !authService.canRead(user, task)) {
  *             // Reported as not found, so that the task's existence isn't revealed
  *             throw A2ATaskNotFoundException("Task '${request.id}' not found")
@@ -337,7 +337,7 @@ import kotlin.time.Duration
  * after 30 seconds is ended with an error). A blocking SendMessage always waits for its in-process collector instead.
  * @param loadReferencedTasks Whether SendMessage reads the tasks of the message's
  * [referenceTaskIds][Message.referenceTaskIds] for the agent, see [RequestContext.referencedTasks] (defaults to
- * `false`). Each is read like GetTask, with the caller's context and the request's tenant, before the turn starts;
+ * `false`). Each is read like GetTask, with the caller's context and its tenant, before the turn starts;
  * tasks that are not found (or not visible to the caller) are left out without an error.
  *
  * @see AgentExecutor for implementing agent business logic
@@ -432,7 +432,7 @@ public open class A2AServer(
      * The inline [taskPushNotificationConfig][ai.koog.a2a.model.SendMessageConfiguration.taskPushNotificationConfig]
      * is saved for the turn's task when the turn starts, before the agent does, so the turn's first task event is
      * already pushed to it:
-     * - its `taskId` and `tenant` are set to the turn's task and the request's tenant;
+     * - its `taskId` and `tenant` are set to the turn's task and the caller's tenant ([ServerCallContext.tenant]);
      * - without an id, the task id is used, so re-sending the same config with every message replaces it;
      * - its `url` must not be blank, and it is checked with [validatePushNotificationConfig] (before the referenced
      *   task is); if either fails, nothing is saved, no turn starts, and the request fails with
@@ -602,7 +602,7 @@ public open class A2AServer(
         checkPushUrl(inline)
 
         val id = inline.id?.takeIf { it.isNotBlank() } ?: taskId
-        val config = inline.copy(taskId = taskId, id = id, tenant = request.tenant)
+        val config = inline.copy(taskId = taskId, id = id, tenant = ctx.tenant)
 
         validatePushNotificationConfig(config, ctx)
 
@@ -616,7 +616,7 @@ public open class A2AServer(
      */
     private suspend fun readReferencedTasks(request: SendMessageRequest, ctx: ServerCallContext): List<Task> =
         request.message.referenceTaskIds.orEmpty().distinct().mapNotNull { id ->
-            taskStorage.get(GetTaskRequest(id = id, tenant = request.tenant), ctx)
+            taskStorage.get(GetTaskRequest(id = id, tenant = ctx.tenant), ctx)
         }
 
     private fun <T> newRequestContext(
@@ -647,7 +647,7 @@ public open class A2AServer(
      *   the turn ends, whichever comes first. If the server is shut down before, fails with
      *   [A2AInternalErrorException] "Server is shut down".
      *
-     * A task result is read from [taskStorage] at that point like GetTask (with [ctx] and the request's tenant), with
+     * A task result is read from [taskStorage] at that point like GetTask (with [ctx] and its tenant), with
      * the history limited to [historyLength][ai.koog.a2a.model.SendMessageConfiguration.historyLength] and all
      * artifacts. The agent keeps running in [coroutineScope] after the response is returned.
      *
@@ -686,7 +686,7 @@ public open class A2AServer(
         }
 
         // Read for the caller, like GetTask.
-        val lookup = GetTaskRequest(id = taskId, historyLength = messageConfiguration?.historyLength, tenant = request.tenant)
+        val lookup = GetTaskRequest(id = taskId, historyLength = messageConfiguration?.historyLength, tenant = ctx.tenant)
 
         return taskStorage.get(lookup, ctx)
             ?: throw A2ATaskNotFoundException("Task '$taskId' not found after the agent execution")
@@ -796,7 +796,7 @@ public open class A2AServer(
          startTurn, this doesn't wait for the previous turn to end: it may be the very turn being cancelled.
          */
         // The owner-scoped lookup: a task that is not visible to the caller is reported as not found.
-        val lookup = GetTaskRequest(id = taskId, historyLength = 0, tenant = request.tenant)
+        val lookup = GetTaskRequest(id = taskId, historyLength = 0, tenant = ctx.tenant)
 
         return turnManager.withTaskProcessor(lookup, ctx) { task, eventProcessor, agentJob, publish ->
             if (task.status.state.terminal) {
@@ -887,8 +887,9 @@ public open class A2AServer(
 
     /**
      * Saves a push notification config for an existing task (CreateTaskPushNotificationConfig). Without an id, the
-     * id is generated with [IdGenerator.generatePushNotificationConfigId]. The config's `url` must not be blank, and
-     * the config is checked with [validatePushNotificationConfig] before it is saved.
+     * id is generated with [IdGenerator.generatePushNotificationConfigId]. Its `tenant` is set to the caller's
+     * ([ServerCallContext.tenant]). The config's `url` must not be blank, and the config is checked with
+     * [validatePushNotificationConfig] before it is saved.
      *
      * @throws A2APushNotificationNotSupportedException if push notifications are not supported, see
      * [storageIfPushNotificationSupported].
@@ -909,11 +910,8 @@ public open class A2AServer(
         checkTaskExists(taskId, ctx)
 
         // The id may be set by the client; the server assigns one if it's absent.
-        val config = if (request.id.isNullOrBlank()) {
-            request.copy(id = idGenerator.generatePushNotificationConfigId(request))
-        } else {
-            request
-        }
+        val id = request.id?.takeIf { it.isNotBlank() } ?: idGenerator.generatePushNotificationConfigId(request)
+        val config = request.copy(id = id, tenant = ctx.tenant)
 
         validatePushNotificationConfig(config, ctx)
 

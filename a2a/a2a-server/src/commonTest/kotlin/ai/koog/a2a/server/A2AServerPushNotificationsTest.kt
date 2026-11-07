@@ -96,6 +96,14 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
+    fun testCreateSetsCallerTenant() = runTest {
+        val created = server.onCreateTaskPushNotificationConfig(config.copy(tenant = "wire-tenant"), ctx.copy(tenant = "tenant-1"))
+
+        assertEquals(config.copy(tenant = "tenant-1"), created)
+        assertEquals(listOf(created), pushStorage.getAll("task-1"))
+    }
+
+    @Test
     fun testCreateKeepsClientProvidedIdAndConfigIsRetrievable() = runTest {
         // The task of the fixture is already completed, which doesn't matter.
         assertEquals(config, server.onCreateTaskPushNotificationConfig(config, ctx))
@@ -363,11 +371,11 @@ class A2AServerPushNotificationsTest {
     }
 
     @Test
-    fun testInlineConfigKeepsClientIdAndGetsTaskIdAndTenantOfRequest() = runTest(timeout = TEST_TIMEOUT) {
+    fun testInlineConfigKeepsClientIdAndGetsTaskIdAndCallerTenant() = runTest(timeout = TEST_TIMEOUT) {
         val server = createTurnServer()
         val inline = webhook.copy(id = "client-config", taskId = "other-task", tenant = "other-tenant")
 
-        server.onSendMessage(sendRequest("ask", pushConfig = inline, tenant = "tenant-1"), ctx)
+        server.onSendMessage(sendRequest("ask", pushConfig = inline, tenant = "wire-tenant"), ctx.copy(tenant = "tenant-1"))
         runCurrent()
 
         assertEquals(

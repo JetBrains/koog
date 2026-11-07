@@ -351,7 +351,8 @@ Per `a2a/CLAUDE.md`, these are architecture and API decisions that need your con
     - Agents get no task storage: `ContextTaskStorage` and `RequestContext.taskStorage` are removed. Referenced tasks:
       `A2AServer(loadReferencedTasks = false)` and `RequestContext.referencedTasks: List<Task>?` (`null` when not
       loaded), read with the scoped get before the turn starts, deduplicated, in order, invisible ones dropped.
-    - `ServerCallContext.tenant`, set by the transport from the request, so storages see the tenant on every call.
+    - `ServerCallContext.tenant`, set by the transport from the request's `tenant` (if present) before
+      `customizeCallContext` runs, which may replace it; the server and storages read the tenant only from the context.
     - Phase 5 / examples follow later: `nodeA2ATaskGet`/`nodeA2ATaskGetAll` are dropped in 5.3;
       `JokeWriterAgentExecutor` reads `context.task` in 5.4.
 13. ~~**Back-pressure**~~ Decided and done (3.42): `A2AServer(streamDelivery = ...)`. `StreamDeliveryConfig.Evict`

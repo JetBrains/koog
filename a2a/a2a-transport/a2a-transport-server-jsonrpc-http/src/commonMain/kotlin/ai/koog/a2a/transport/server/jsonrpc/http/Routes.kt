@@ -97,8 +97,8 @@ import kotlin.time.Instant
  * The heartbeat also keeps idle streams alive for clients that rely on a read or inactivity timeout, so without it
  * a stream that stays silent may time out on their side.
  * @param customizeCallContext Called for every parsed JSON-RPC request with the current [ApplicationCall] as the
- * receiver and the default context built from the request headers; the returned context is passed to the
- * [transport]. It runs before the requested version is checked. An [ai.koog.a2a.exceptions.A2AException] thrown
+ * receiver and the default context built from the request headers, its tenant set from the request; the returned
+ * context is passed to the [transport] as is, so it may also set its own tenant. It runs before the requested version is checked. An [ai.koog.a2a.exceptions.A2AException] thrown
  * here is answered as a JSON-RPC error with its code, any other exception as an internal error.
  * Defaults to returning the default context unchanged.
  */

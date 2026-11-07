@@ -313,7 +313,7 @@ public class TurnManager(
      *
      * The returned [Turn.events] is registered before [block] starts, so it receives every event of the turn.
      * If the turn continues an existing task ([request]'s [ai.koog.a2a.model.Message.taskId] is set):
-     * - the task is read with [TaskStorage.get] (with [ctx] and the request's tenant) and checked, under the turn gate,
+     * - the task is read with [TaskStorage.get] (with [ctx] and its tenant) and checked, under the turn gate,
      *   so no event of the task is persisted between that read and the turn's first event;
      * - [block] receives the task as read (full history, all artifacts), and the turn keeps it as its task snapshot,
      *   with the history limited to the request's [ai.koog.a2a.model.SendMessageConfiguration.historyLength];
@@ -499,7 +499,7 @@ public class TurnManager(
      */
     private suspend fun getFollowUpTask(request: SendMessageRequest, ctx: ServerCallContext, taskId: String): Task {
         val messageContextId = request.message.contextId
-        val task = taskStorage.get(GetTaskRequest(id = taskId, tenant = request.tenant), ctx)
+        val task = taskStorage.get(GetTaskRequest(id = taskId, tenant = ctx.tenant), ctx)
             ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
 
         if (messageContextId != null && task.contextId != null && messageContextId != task.contextId) {
@@ -661,7 +661,7 @@ public class TurnManager(
 
         try {
             val (snapshot, subscriber) = stream.subscribe(streamDelivery) {
-                taskStorage.get(GetTaskRequest(id = request.id, tenant = request.tenant), ctx)
+                taskStorage.get(GetTaskRequest(id = request.id, tenant = ctx.tenant), ctx)
             }
             val channel = subscriber.events
             val shutdownHandle = endOnShutdown(subscriber)

@@ -204,10 +204,10 @@ public interface RequestHandler {
  * @property requestedExtensions URIs of the extensions the client requested to activate. Defaults to the URIs from
  * all `A2A-Extensions` header values (looked up case-insensitively): comma-separated, trimmed, with empty entries
  * ignored.
- * @property tenant The tenant of the call. The JSON-RPC server transport sets it from the `tenant` field of the
- * decoded request, for every method; `null` if the request has none. Server storages scope their data by this value
- * rather than by the requests' own `tenant` fields, which are kept only as wire fields, so that the tenant is known on
- * every storage call, including those that receive no request.
+ * @property tenant The tenant of the call. The JSON-RPC server transport sets it from the request's `tenant` field,
+ * if present, for every method, before its call context customizer runs, which may change it. The server and its
+ * storages scope data by this value rather than by the requests' own `tenant` fields, which are kept only as wire
+ * fields, so that the tenant is known on every storage call, including those that receive no request.
  */
 public class ServerCallContext(
     public val headers: Map<String, List<String>> = emptyMap(),

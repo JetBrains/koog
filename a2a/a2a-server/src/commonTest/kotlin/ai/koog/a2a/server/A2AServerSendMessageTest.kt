@@ -815,7 +815,7 @@ class A2AServerSendMessageTest {
         val server = createServer(mapOf("ask" to askScript, "finish" to finishScript), storage)
         server.onSendMessage(request("ask"), ctx)
         val callerCtx = ServerCallContext(tenant = "tenant-1")
-        val followUp = request("finish", TASK_ID, historyLength = 0).copy(tenant = "tenant-1")
+        val followUp = request("finish", TASK_ID, historyLength = 0).copy(tenant = "wire-tenant")
 
         val events = withContext(REQUEST_CALL) { server.onSendMessageStreaming(followUp, callerCtx).toList() }
 
@@ -832,11 +832,11 @@ class A2AServerSendMessageTest {
         val callerCtx = ServerCallContext(tenant = "tenant-1")
 
         withContext(REQUEST_CALL) {
-            server.onSendMessage(request("ask", historyLength = 1).copy(tenant = "tenant-1"), callerCtx)
-            server.onSendMessage(request("finish", TASK_ID, historyLength = 1).copy(tenant = "tenant-1"), callerCtx)
+            server.onSendMessage(request("ask", historyLength = 1).copy(tenant = "wire-tenant"), callerCtx)
+            server.onSendMessage(request("finish", TASK_ID, historyLength = 1).copy(tenant = "wire-tenant"), callerCtx)
         }
 
-        // Like GetTask: with the caller's context and tenant, and the requested history length.
+        // Like GetTask: with the caller's context and its tenant (not the request's), and the requested history length.
         val result = GetTaskRequest(id = TASK_ID, historyLength = 1, tenant = "tenant-1") to callerCtx
         val followUpValidation = GetTaskRequest(id = TASK_ID, tenant = "tenant-1") to callerCtx
         assertEquals(listOf<Any>(result, followUpValidation, result), storage.reads)

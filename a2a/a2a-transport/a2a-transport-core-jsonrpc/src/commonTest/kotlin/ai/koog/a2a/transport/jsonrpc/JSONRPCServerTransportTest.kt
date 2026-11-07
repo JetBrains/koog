@@ -612,6 +612,34 @@ class JSONRPCServerTransportTest {
     }
 
     @Test
+    fun testCustomizerSeesRequestTenantAndMayReplaceIt() = runTest {
+        var customizerTenant: String? = null
+        var seen: ServerCallContext? = null
+
+        handle(
+            A2AMethod.GetTask,
+            json.encodeToJsonElement(GetTaskRequest(id = "task-1", tenant = "t")),
+            handler = handlerRecording { seen = it },
+            customizeCallContext = { ctx ->
+                customizerTenant = ctx.tenant
+                ctx.copy(tenant = "custom")
+            },
+        )
+
+        assertEquals("t", customizerTenant)
+        assertEquals("custom", seen?.tenant)
+    }
+
+    @Test
+    fun testRequestWithoutTenantKeepsCallContextTenant() = runTest {
+        var seen: ServerCallContext? = null
+
+        handle(A2AMethod.GetTask, getTaskParams, ctx = v1Ctx.copy(tenant = "t"), handler = handlerRecording { seen = it })
+
+        assertEquals("t", seen?.tenant)
+    }
+
+    @Test
     fun testVersionIsCheckedOnCustomizedCallContext() = runTest {
         // No A2A-Version header: only the customized context carries a supported version
         val outcome = handle(
