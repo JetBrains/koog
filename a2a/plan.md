@@ -7,7 +7,7 @@ Status snapshot: Koog `89f7eb928` (branch `eugenethedev/a2a-1.0`), 2026-10-22. P
 | Source     | Revision                                                                                             |
 |------------|------------------------------------------------------------------------------------------------------|
 | A2A spec   | `v1.0.1` (`3303592`), released 2026-05-28. `main` `65dadbd` has no normative changes relevant to us. |
-| Python SDK | `v1.1.0` (pinned by `test-python-a2a-server`) and `main` (~`v1.2.1`)                                 |
+| Python SDK | `v1.3.0` (pinned by `test-python-a2a-server`) and `main`                                            |
 | TCK        | `d4d6fae` (pinned in `test-tck/setup_tck.sh`, which is the current TCK `main`; targets v1.0.x)       |
 
 **Research notes:** everything below cites these reports in `.agents/research/`. They have full `file:line` citations.
@@ -290,8 +290,8 @@ These modules block the root `./gradlew build`.
 - Commit `.agents/research/`. `.agents/.gitignore` no longer ignores it, and this plan cites those reports.
 - Optional: track the unreleased upstream comment change on `main` that relaxes the `AgentInterface.url` HTTPS rule for
   gRPC. Don't enforce HTTPS-only checks on non-HTTP bindings.
-- Watch the Python SDK version: `1.1.0` returns InvalidParams for operations on terminal tasks, and `1.2.x` fixes this
-  to UnsupportedOperation. Consider bumping `test-python-a2a-server`.
+- ✅ `test-python-a2a-server` bumped from Python SDK `1.1.0` to `1.3.0` (`1.1.0` returned InvalidParams instead of
+  UnsupportedOperation for operations on terminal tasks). a2a-client jvmTest 12/12.
 
 ### Phase 7: Docs overhaul
 
