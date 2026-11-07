@@ -349,6 +349,7 @@ public class OllamaClient @JvmOverloads constructor(
         return OllamaChatRequestDTO.Options(
             temperature = prompt.params.temperature,
             numCtx = contextWindowStrategy.computeContextLength(prompt, model),
+            numPredict = prompt.params.maxTokens,
         )
     }
 

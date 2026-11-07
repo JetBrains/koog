@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolCallDTO
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.params.LLMParams
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -66,6 +67,28 @@ class OllamaClientTest {
         val toolCallPart = assertIs<MessagePart.Tool.Call>(responses.parts[1])
         assertEquals(toolName, toolCallPart.tool)
         assertTrue(toolCallPart.args.contains("London"))
+    }
+
+    @Test
+    fun testExecuteSendsMaxTokensAsNumPredict() = runTest {
+        val mockServer = MockOllamaChatServer { request ->
+            OllamaChatResponseDTO(
+                model = request.model,
+                message = OllamaChatMessageDTO(role = "assistant", content = "OK"),
+                done = true
+            )
+        }
+
+        val ollamaClient = OllamaClient(
+            httpClientFactory = KtorKoogHttpClient.Factory(HttpClient(mockServer.mockEngine))
+        )
+
+        ollamaClient.execute(
+            prompt = prompt("test", params = LLMParams(maxTokens = 42)) { },
+            model = OllamaModels.Meta.LLAMA_3_2
+        )
+
+        assertEquals(42, mockServer.requestHistory.single().options?.numPredict)
     }
 
     @Test
