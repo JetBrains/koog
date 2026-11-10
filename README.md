@@ -7,6 +7,8 @@
 [![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
 [![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE.txt)
 
+The best way to predict the future is to build it with AI agents.
+
 Build status:
 
 [![Checks](https://github.com/JetBrains/koog/actions/workflows/checks.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/checks.yml?query=branch%3Adevelop)
