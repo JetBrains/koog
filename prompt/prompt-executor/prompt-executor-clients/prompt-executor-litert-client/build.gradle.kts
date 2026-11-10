@@ -31,4 +31,11 @@ kotlin {
     explicitApi()
 }
 
+android {
+    // litertlm-android 0.15.0 and later declare minSdk 24 in their manifest.
+    defaultConfig {
+        minSdk = 24
+    }
+}
+
 publishToMaven()
