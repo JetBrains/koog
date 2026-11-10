@@ -147,3 +147,9 @@ use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG)
 for filing feature requests and bug reports.
 
 
+
+## A Joke
+
+Why did the AI agent refuse to leave the graph?
+
+Because every edge it took led to another node, and it just couldn't find closure. 🤖
