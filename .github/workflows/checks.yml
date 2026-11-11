@@ -32,9 +32,9 @@ jobs:
       koog-src: ${{ steps.filter.outputs.koog-src_any_modified }}
       docs: ${{ steps.filter.outputs.docs_any_modified }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: tj-actions/changed-files@7dee1b0c1557f278e5c7dc244927139d78c0e22a # v47.0.4
+      - uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         name: Check changed files
         id: filter
         with:
@@ -55,9 +55,9 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -87,16 +87,16 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version-file: "./docs/.python-version"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "0.8.15"
           enable-cache: true
@@ -115,6 +115,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    env:
+      JAVA_OPTS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g"
 
     strategy:
       fail-fast: false
@@ -125,9 +128,9 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -145,7 +148,7 @@ jobs:
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
         run: |-
-          ./gradlew jvmTest :koverBinaryReport --continue
+          ./gradlew jvmTest :koverBinaryReport --continue --max-workers=3 "-Pkotlin.daemon.jvmargs=-Xmx3g"
 
       - name: Check Split Packages
         if: matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
@@ -154,11 +157,15 @@ jobs:
 
       - name: JvmTest with Gradle Wrapper
         if: matrix.os != 'ubuntu-latest'
-        run: ./gradlew jvmTest --continue
+        run: ./gradlew jvmTest --continue --max-workers=2 "-Pkotlin.daemon.jvmargs=-Xmx3g"
 
       - name: iosSimulatorArm64Test with Gradle Wrapper
         if: matrix.os == 'macos-latest' && github.event.pull_request.draft == false && github.repository == 'jetbrains/koog'
-        run: ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096M"
+        run: |
+          ./gradlew --stop
+          ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
 
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'
@@ -209,8 +216,8 @@ jobs:
     if: ${{ needs.changes.outputs.koog-src == 'true' || needs.changes.outputs.docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -236,13 +243,89 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.koog-src == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      JAVA_OPTS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g"
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - { name: agents, prefix: ':agents:', exclude: '' }
+          - { name: clients, prefix: ':prompt:prompt-executor:prompt-executor-clients', exclude: '' }
+          - { name: prompt, prefix: ':prompt:', exclude: 'prompt-executor-clients' }
+          - { name: other, prefix: ':', exclude: '^:(agents|prompt):' }
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v5
-      - name: Generate API docs
+      - name: Generate module API docs (${{ matrix.shard.name }})
+        env:
+          SHARD_PREFIX: ${{ matrix.shard.prefix }}
+          SHARD_EXCLUDE: ${{ matrix.shard.exclude }}
+        #language=bash
         run: |
-          ./gradlew dokkaGenerate
+          MODULES=$(grep -oE 'dokka\(project\("[^"]+"\)\)' build.gradle.kts \
+            | sed -E 's/dokka\(project\("([^"]+)"\)\)/\1/' \
+            | grep -F "$SHARD_PREFIX" \
+            | { if [ -n "$SHARD_EXCLUDE" ]; then grep -vE "$SHARD_EXCLUDE"; else cat; fi; })
+          if [ -z "$MODULES" ]; then
+            echo "No modules matched shard"
+            exit 1
+          fi
+          TASKS=$(echo "$MODULES" | sed 's/$/:dokkaGenerateModuleHtml/')
+          echo "$TASKS"
+          ./gradlew $TASKS --max-workers=2 "-Pkotlin.daemon.jvmargs=-Xmx2g"
+
+      - name: Upload Gradle build cache
+        uses: actions/upload-artifact@v7
+        with:
+          name: dokka-build-cache-${{ matrix.shard.name }}
+          path: ~/.gradle/caches/build-cache-1
+          retention-days: 1
+
+  # Aggregates module docs from the `dokka` matrix via the Gradle build cache and reports status for branch protection.
+  dokka-result:
+    needs: [ changes, dokka ]
+    if: ${{ always() && needs.changes.outputs.koog-src == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      JAVA_OPTS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g"
+    steps:
+      - name: Check dokka matrix status
+        if: ${{ needs.dokka.result != 'success' }}
+        run: |
+          echo "Dokka matrix didn't finish successfully: ${{ needs.dokka.result }}"
+          exit 1
+
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Download Gradle build cache
+        uses: actions/download-artifact@v8
+        with:
+          pattern: dokka-build-cache-*
+          path: ${{ runner.temp }}/dokka-caches
+
+      # Shards share cache entries; merging sequentially avoids concurrent writes corrupting the same entry file.
+      - name: Merge Gradle build caches
+        #language=bash
+        run: |
+          mkdir -p ~/.gradle/caches/build-cache-1
+          for dir in "$RUNNER_TEMP"/dokka-caches/*/; do
+            rsync -a --ignore-existing "$dir" ~/.gradle/caches/build-cache-1/
+          done
+
+      - name: Generate API docs
+        run: ./gradlew :dokkaGenerate --max-workers=2 "-Pkotlin.daemon.jvmargs=-Xmx2g"
