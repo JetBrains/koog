@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai.models
 
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
@@ -14,8 +15,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 
 /**
- * Reproduces the snake_case serialization path used by [OpenAILLMClient] to guard the fix
- * for an additional-properties leak in the outbound request body.
+ * Exercises the snake_case request serialization path used by [OpenAILLMClient].
  */
 class OpenAIRequestSnakeCaseSerializationTest {
 
@@ -25,6 +25,47 @@ class OpenAIRequestSnakeCaseSerializationTest {
         encodeDefaults = true
         explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
+    }
+
+    @Test
+    fun testChatCompletionRequestSerializesExtendedReasoningEfforts() {
+        val efforts = mapOf(
+            ReasoningEffort.XHIGH to "xhigh",
+            ReasoningEffort.MAX to "max",
+        )
+
+        efforts.forEach { (effort, wireValue) ->
+            val request = OpenAIChatCompletionRequest(
+                model = "gpt-reasoning-model",
+                messages = emptyList(),
+                reasoningEffort = effort,
+            )
+
+            val encoded = snakeCaseJson.encodeToString(OpenAIChatCompletionRequestSerializer, request)
+            val tree = snakeCaseJson.parseToJsonElement(encoded).jsonObject
+
+            tree["reasoning_effort"]?.jsonPrimitive?.content shouldBe wireValue
+        }
+    }
+
+    @Test
+    fun testResponsesRequestSerializesExtendedReasoningEfforts() {
+        val efforts = mapOf(
+            ReasoningEffort.XHIGH to "xhigh",
+            ReasoningEffort.MAX to "max",
+        )
+
+        efforts.forEach { (effort, wireValue) ->
+            val request = OpenAIResponsesAPIRequest(
+                model = "gpt-reasoning-model",
+                reasoning = ReasoningConfig(effort = effort),
+            )
+
+            val encoded = snakeCaseJson.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
+            val tree = snakeCaseJson.parseToJsonElement(encoded).jsonObject
+
+            tree["reasoning"].shouldNotBeNull().jsonObject["effort"]?.jsonPrimitive?.content shouldBe wireValue
+        }
     }
 
     @Test
