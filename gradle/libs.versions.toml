@@ -14,14 +14,14 @@ jetsign = "45.47"
 junit = "5.8.2"
 knit = "0.5.1"
 kotest = "6.1.11"
-kotlin = "2.3.10"
+kotlin = "2.4.21"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
 kotlinx-io = "0.9.0"
 kotlinx-serialization = "1.10.0" # check with IJ
 kotlinx-schema = "0.4.4"
 kover = "0.9.8"
-ktlint = "14.2.0"
+ktlint = "14.2.0" # TODO remove ktlint matching in convention-plugin-ai/src/main/kotlin/ai.kotlin.configuration.gradle.kts
 ktor3 = "3.3.3"
 lettuce = "7.2.1.RELEASE"
 litertlm = "0.11.0"
@@ -67,7 +67,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-kotlinx-schema-generator-json = { module = "org.jetbrains.kotlinx:kotlinx-schema-generator-json", version.ref = "kotlinx-schema"  }
+kotlinx-schema-generator-json = { module = "org.jetbrains.kotlinx:kotlinx-schema-generator-json", version.ref = "kotlinx-schema" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor3" }
@@ -94,7 +94,7 @@ oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mokksy-a2a = { module = "me.kpavlov.aimocks:ai-mocks-a2a", version.ref = "mokksy" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
-acp = { module = "com.agentclientprotocol:acp", version.ref = "acp"}
+acp = { module = "com.agentclientprotocol:acp", version.ref = "acp" }
 mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
 mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
