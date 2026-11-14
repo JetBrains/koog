@@ -31,6 +31,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(project(":agents:agents-test"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
@@ -39,7 +40,6 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.server.cio)
             }
         }

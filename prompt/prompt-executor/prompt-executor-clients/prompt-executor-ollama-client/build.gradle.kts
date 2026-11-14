@@ -22,30 +22,6 @@ kotlin {
             }
         }
 
-        androidUnitTest {
-            dependencies {
-                implementation(libs.ktor.client.cio)
-            }
-        }
-
-        appleTest {
-            dependencies {
-                implementation(libs.ktor.client.darwin)
-            }
-        }
-
-        jsTest {
-            dependencies {
-                implementation(libs.ktor.client.js)
-            }
-        }
-
-        wasmJsTest {
-            dependencies {
-                implementation(libs.ktor.client.cio)
-            }
-        }
-
         commonTest {
             dependencies {
                 implementation(project(":http-client:http-client-ktor"))
@@ -53,6 +29,7 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.engine.defaults)
                 implementation(libs.ktor.client.mock)
             }
         }
@@ -62,7 +39,6 @@ kotlin {
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation(libs.ktor.client.cio)
             }
         }
     }

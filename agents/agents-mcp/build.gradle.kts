@@ -32,6 +32,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
@@ -39,7 +40,6 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(libs.mcp.server)
-                implementation(libs.ktor.client.cio)
             }
         }
     }
