@@ -65,6 +65,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -445,7 +446,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
                                         clock = clock,
                                         totalTokensCount = usage?.totalTokens,
                                         inputTokensCount = usage?.inputTokens,
-                                        outputTokensCount = usage?.outputTokens
+                                        outputTokensCount = usage?.outputTokens,
+                                        metadata = responsesUsageMetadata(usage),
                                     )
                                 }
                             )
@@ -984,6 +986,18 @@ public open class OpenAILLMClient @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Exposes Responses API token usage details (cached prompt tokens, reasoning tokens) via
+     * [ResponseMetaInfo.metadata] under their OpenAI API field names — the same approach the
+     * Anthropic client uses to expose cache usage, since [ResponseMetaInfo] has no dedicated
+     * fields for these usage details.
+     */
+    private fun responsesUsageMetadata(usage: OpenAIResponsesAPIResponse.Usage?): JsonObject? =
+        buildJsonObject {
+            usage?.inputTokensDetails?.cachedTokens?.let { put("cachedTokens", it) }
+            usage?.outputTokensDetails?.reasoningTokens?.let { put("reasoningTokens", it) }
+        }.takeIf { it.isNotEmpty() }
+
     private fun processResponsesAPIResponse(response: OpenAIResponsesAPIResponse): Message.Assistant {
         require(response.output.isNotEmpty()) { "Empty output in response" }
 
@@ -991,7 +1005,8 @@ public open class OpenAILLMClient @JvmOverloads constructor(
             clock,
             totalTokensCount = response.usage?.totalTokens,
             inputTokensCount = response.usage?.inputTokens,
-            outputTokensCount = response.usage?.outputTokens
+            outputTokensCount = response.usage?.outputTokens,
+            metadata = responsesUsageMetadata(response.usage),
         )
 
         var finishReason: String? = null

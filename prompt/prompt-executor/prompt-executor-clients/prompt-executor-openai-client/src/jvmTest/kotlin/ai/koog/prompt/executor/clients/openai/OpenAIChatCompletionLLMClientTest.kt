@@ -119,6 +119,56 @@ class OpenAIChatCompletionLLMClientTest {
         assertEquals(buildJsonObject { put("city", JsonPrimitive("Boston")) }, toolCall.argsJson)
     }
 
+    //language=json
+    private val usageDetailsBody = """
+        {
+          "id": "chatcmpl-usage",
+          "object": "chat.completion",
+          "created": 1716920005,
+          "model": "gpt-4o",
+          "choices": [
+            {
+              "index": 0,
+              "message": {"role": "assistant", "content": "The weather in Boston is 15C."},
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "total_tokens": 25,
+            "prompt_tokens": 20,
+            "completion_tokens": 5,
+            "prompt_tokens_details": {"cached_tokens": 16},
+            "completion_tokens_details": {"reasoning_tokens": 3}
+          }
+        }
+    """.trimIndent()
+
+    @Test
+    fun testExecuteExposesCachedAndReasoningTokensInMetaInfo() = runTest {
+        val engine = MockEngine.Companion { _ ->
+            respond(
+                content = usageDetailsBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+        val http = HttpClient(engine) {}
+        val client = OpenAILLMClient(httpClientFactory = KtorKoogHttpClient.Factory(http), apiKey = key, clock = FixedClock)
+
+        val prompt = Prompt.build(id = "p-usage-details", clock = FixedClock, params = OpenAIChatParams()) {
+            user("What is the weather in Boston?")
+        }
+
+        val response = client.execute(prompt, OpenAIModels.Chat.GPT4o)
+
+        val metadata = assertNotNull(
+            response.metaInfo.metadata,
+            "Usage details (cached/reasoning tokens) must be exposed via ResponseMetaInfo.metadata",
+        )
+        assertEquals(JsonPrimitive(16), metadata["cachedTokens"], "Cached prompt tokens must be passed through")
+        assertEquals(JsonPrimitive(3), metadata["reasoningTokens"], "Reasoning tokens must be passed through")
+    }
+
     private val streamJson = Json {
         ignoreUnknownKeys = true
         isLenient = true
