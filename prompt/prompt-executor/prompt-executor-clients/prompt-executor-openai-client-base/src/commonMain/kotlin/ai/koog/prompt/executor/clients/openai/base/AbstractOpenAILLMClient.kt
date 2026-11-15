@@ -39,7 +39,9 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
@@ -523,12 +525,20 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Creates ResponseMetaInfo from usage data.
      * Should be used by concrete implementations when processing responses.
      */
-    protected fun createMetaInfo(usage: OpenAIUsage?): ResponseMetaInfo = ResponseMetaInfo.create(
-        clock,
-        totalTokensCount = usage?.totalTokens,
-        inputTokensCount = usage?.promptTokens,
-        outputTokensCount = usage?.completionTokens
-    )
+    protected fun createMetaInfo(usage: OpenAIUsage?): ResponseMetaInfo {
+        val usageDetails = buildJsonObject {
+            usage?.promptTokensDetails?.cachedTokens?.let { put("cachedTokens", it) }
+            usage?.completionTokensDetails?.reasoningTokens?.let { put("reasoningTokens", it) }
+        }.takeIf { it.isNotEmpty() }
+
+        return ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = usage?.totalTokens,
+            inputTokensCount = usage?.promptTokens,
+            outputTokensCount = usage?.completionTokens,
+            metadata = usageDetails,
+        )
+    }
 
     protected open fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
         return schema?.let {
