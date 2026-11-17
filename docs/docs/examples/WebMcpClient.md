@@ -1,7 +1,7 @@
 # Web Scraping with The Web MCP by Bright Data and Koog
 
-[:material-github: Open on GitHub](https://github.com/JetBrains/koog/blob/develop/examples/bright-data-mcp/){ .md-button .md-button--primary }
-[:material-download: Download .kt](https://raw.githubusercontent.com/JetBrains/koog/develop/examples/bright-data-mcp/Main.kt){ .md-button }
+[:material-github: Open on GitHub](https://github.com/JetBrains/koog/blob/develop/examples/src/main/kotlin/ai/koog/agents/example/mcp/WebMcpClient.kt){ .md-button .md-button--primary }
+[:material-download: Download .kt](https://raw.githubusercontent.com/JetBrains/koog/develop/examples/src/main/kotlin/ai/koog/agents/example/mcp/WebMcpClient.kt){ .md-button }
 
 In this tutorial, you'll connect a Koog agent to Bright Data's Web MCP server and let it perform web scraping and data collection tasks. We'll demonstrate how to search for information about Koog.ai using Bright Data's powerful web scraping infrastructure through the Model Context Protocol.
 
