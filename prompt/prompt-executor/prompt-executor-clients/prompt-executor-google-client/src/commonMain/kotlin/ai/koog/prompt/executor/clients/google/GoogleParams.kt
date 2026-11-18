@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleServiceTier
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.JsonElement
 
@@ -33,6 +34,7 @@ internal fun LLMParams.toGoogleParams(): GoogleParams {
  * @property additionalProperties Additional properties that can be used to store custom parameters.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
+ * @property serviceTier Processing tier selection for cost/reliability trade-offs.
  * @property thinkingConfig Controls whether the model should expose its chain-of-thought
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
  */
@@ -48,6 +50,7 @@ public class GoogleParams(
     additionalProperties: Map<String, JsonElement>? = null,
     public val topP: Double? = null,
     public val topK: Int? = null,
+    public val serviceTier: GoogleServiceTier? = null,
     public val thinkingConfig: GoogleThinkingConfig? = null,
 ) : LLMParams(
     temperature,
@@ -91,6 +94,7 @@ public class GoogleParams(
         additionalProperties = additionalProperties,
         topP = topP,
         topK = topK,
+        serviceTier = serviceTier,
         thinkingConfig = thinkingConfig,
     )
 
@@ -108,6 +112,7 @@ public class GoogleParams(
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         topP: Double? = this.topP,
         topK: Int? = this.topK,
+        serviceTier: GoogleServiceTier? = this.serviceTier,
         thinkingConfig: GoogleThinkingConfig? = this.thinkingConfig,
     ): GoogleParams = GoogleParams(
         temperature = temperature,
@@ -120,6 +125,7 @@ public class GoogleParams(
         additionalProperties = additionalProperties,
         topP = topP,
         topK = topK,
+        serviceTier = serviceTier,
         thinkingConfig = thinkingConfig,
     )
 
@@ -137,13 +143,14 @@ public class GoogleParams(
                 additionalProperties == other.additionalProperties &&
                 topP == other.topP &&
                 topK == other.topK &&
+                serviceTier == other.serviceTier &&
                 thinkingConfig == other.thinkingConfig
     }
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice, user,
-        additionalProperties, topP, topK, thinkingConfig
+        additionalProperties, topP, topK, serviceTier, thinkingConfig
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -160,6 +167,7 @@ public class GoogleParams(
         append(", additionalProperties=$additionalProperties")
         append(", topP=$topP")
         append(", topK=$topK")
+        append(", serviceTier=$serviceTier")
         append(", thinkingConfig=$thinkingConfig")
         append(")")
     }
