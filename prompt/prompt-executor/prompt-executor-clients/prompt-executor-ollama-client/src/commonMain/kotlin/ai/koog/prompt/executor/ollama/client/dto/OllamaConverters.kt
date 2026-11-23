@@ -5,6 +5,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.AttachmentSource
+import ai.koog.prompt.message.LogProb
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.params.LLMParams
@@ -12,6 +13,16 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonObject
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Converts an Ollama log-probability entry into the provider-neutral [LogProb] model.
+ */
+internal fun OllamaLogProbDTO.toLogProb(): LogProb = LogProb(
+    token = token,
+    logprob = logprob,
+    bytes = bytes,
+    topLogprobs = topLogprobs?.map { LogProb(token = it.token, logprob = it.logprob, bytes = it.bytes) } ?: emptyList(),
+)
 
 /**
  * Converts a Prompt to a list of ChatMessage objects for the Ollama API.
