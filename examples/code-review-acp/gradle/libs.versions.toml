@@ -1,0 +1,16 @@
+[versions]
+kotlin = "2.3.10"
+koog-agents = "1.0.0-preview"
+koog-agents-ext = "1.0.0-beta-preview"
+logback = "1.5.13"
+
+[libraries]
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog-agents" }
+koog-agents-acp = { module = "ai.koog:agents-features-acp", version.ref = "koog-agents-ext" }
+koog-agents-ext = { module = "ai.koog:agents-ext", version.ref = "koog-agents-ext" }
+koog-ktor = { module = "ai.koog:koog-ktor", version.ref = "koog-agents-ext" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
