@@ -1,14 +1,14 @@
 # Module agents-cli
 
-Provides integration with external CLI-based AI agents (Claude Code, OpenAI Codex) by wrapping their command-line interfaces into the Koog agent framework.
+Provides integration with external CLI-based AI agents (Claude Code, OpenAI Codex, GitHub Copilot) by wrapping their command-line interfaces into the Koog agent framework.
 The main components are:
-- [**CliAIAgent**](src/commonMain/kotlin/ai/koog/agents/cli/CliAIAgent.kt): Factory for creating CLI-backed agents with `claude()` and `codex()` constructors
+- [**CliAIAgent**](src/commonMain/kotlin/ai/koog/agents/cli/CliAIAgent.kt): Factory for creating CLI-backed agents with `claude()`, `codex()`, and `copilot()` constructors
 - [**CliTransport**](src/commonMain/kotlin/ai/koog/agents/cli/transport/CliTransport.kt): Abstraction for executing CLI commands via local process or Docker
 - [**CliAIAgentResponse**](src/commonMain/kotlin/ai/koog/agents/cli/CliAIAgentResponse.kt): Response model containing content, error status, and token usage metadata
 
 ## Overview
 
-The `agents-cli` module allows you to use Claude Code and OpenAI Codex as agents within Koog workflows. Instead of communicating with LLMs through API calls, it invokes their CLI binaries and parses the output. Agents can run locally via `ProcessCliTransport` or inside Docker containers via `DockerCliTransport`.
+The `agents-cli` module allows you to use Claude Code, OpenAI Codex, and GitHub Copilot as agents within Koog workflows. Instead of communicating with LLMs through API calls, it invokes their CLI binaries and parses the output. Agents can run locally via `ProcessCliTransport` or inside Docker containers via `DockerCliTransport`.
 
 CLI agents can also be embedded as nodes in Koog graph-based strategies using `asNode()`, enabling multi-agent orchestration.
 
@@ -38,6 +38,20 @@ val agent = CliAIAgent.codex(
 )
 
 val response = agent.run("echo 'hello'")
+```
+
+### Basic Copilot Agent
+
+```kotlin
+val agent = CliAIAgent.copilot(
+    transport = CliTransport.default(),
+    githubToken = "your-github-token",
+    systemPrompt = "Respond with concise implementation guidance."
+)
+
+val response = agent.run("Generate a function that validates a UUID")
+println(response.content)
+println(response.isError) // false on success
 ```
 
 ### Structured Output
