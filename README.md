@@ -126,6 +126,25 @@ Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.
+
+## Nightly builds
+
+If you need the latest changes before the next stable release, use nightly builds from the `develop` branch.
+
+1. Add the JetBrains Maven repository:
+
+    ```kotlin
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public") }
+    }
+    ```
+
+2. Set dependency versions to a nightly version pattern:
+
+    `[next-major-version]-develop-[date]-[time]` (for example, `1.0.0-develop-20260613-1234`)
+
+3. Browse [available versions](https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/ai/koog/koog-agents/).
 ## Versioning
 
 Koog framework is stable and follows semantic versioning. See [VERSIONING.md](VERSIONING.md) for details.
@@ -145,5 +164,3 @@ Please feel free to ask any questions in our [official Slack
 channel](https://docs.koog.ai/koog-slack-channel/) and to
 use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG)
 for filing feature requests and bug reports.
-
-
