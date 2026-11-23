@@ -36,6 +36,12 @@ import ai.koog.prompt.message.Message
  *     }
  * }
  * ```
+ *
+ * The system prompt is owned by the live agent: when history is loaded it is restored after the
+ * current agent's system messages and any system messages present in the loaded history are
+ * ignored, so the agent's configured system prompt is never lost across turns. Use
+ * [ChatMemoryConfig.dropSystemMessages] if you also want to keep system messages out of stored
+ * history.
  */
 public class ChatMemory {
 
@@ -91,13 +97,23 @@ public class ChatMemory {
         private fun installInternal(config: ChatMemoryConfig, pipeline: AIAgentPipeline) {
             pipeline.interceptStrategyStarting(this) { ctx ->
                 val history = config.chatHistoryProvider.load(ctx.context.runId)
+                val historyMessages = applyPreProcessors(history, config.preprocessors)
 
                 ctx.context.llm.writeSession {
-                    val historyMessages = applyPreProcessors(history, config.preprocessors)
-                    val initialMessages = ctx.context.llm.prompt.messages
-                    prompt = prompt.withMessages {
-                        historyMessages.ifEmpty {
-                            initialMessages + historyMessages
+                    prompt = prompt.withMessages { currentMessages ->
+                        if (historyMessages.isEmpty()) {
+                            // First run (no stored history): keep the initial prompt intact,
+                            // including the system prompt and any setup messages.
+                            currentMessages
+                        } else {
+                            // Subsequent runs: the system prompt is owned by the live agent and
+                            // always takes precedence. Keep the current system messages and drop
+                            // any system messages carried in stored history, then append the rest
+                            // of the conversation. Without this, replacing the prompt with history
+                            // drops the agent's system prompt after the first turn.
+                            val currentSystemMessages = currentMessages.filterIsInstance<Message.System>()
+                            val historyWithoutSystem = historyMessages.filterNot { it is Message.System }
+                            currentSystemMessages + historyWithoutSystem
                         }
                     }
                 }

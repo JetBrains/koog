@@ -2,6 +2,7 @@ package ai.koog.agents.chatMemory
 
 import ai.koog.agents.chatMemory.feature.ChatHistoryProvider
 import ai.koog.agents.chatMemory.feature.ChatMemory
+import ai.koog.agents.chatMemory.feature.DropSystemMessagesPreProcessor
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.functionalStrategy
@@ -1311,5 +1312,149 @@ class ChatMemoryTest {
 
         assertEquals(expectedMessages.size, savedMessages.size)
         assertContentEquals(expectedMessages, savedMessages)
+    }
+
+    // ---- System prompt preservation across turns ----
+
+    /**
+     * Regression test for the bug where `ChatMemory.installInternal` replaced the prompt
+     * with loaded history, dropping the live agent's system prompt on every turn after
+     * the first when the stored history had no system message of its own.
+     */
+    @Test
+    fun testSystemPromptPreservedWhenLoadedHistoryHasNoSystemMessage() = runTest {
+        val sessionId = "system-preserved-session"
+        val historyProvider = InMemoryChatHistoryProvider(
+            history = mutableMapOf(
+                sessionId to listOf(
+                    Message.User("Earlier question", RequestMetaInfo.Empty),
+                    Message.Assistant("Earlier answer", ResponseMetaInfo(Instant.DISTANT_PAST)),
+                )
+            )
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) {
+                mockLLMAnswer("mock reply").asDefaultResponse
+            },
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            strategy = dumpHistoryStrategy,
+            systemPrompt = "You are a helpful geography assistant.",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+            }
+        }
+
+        val seen = agent.run("New question", sessionId)
+
+        val systemMessages = seen.filterIsInstance<Message.System>()
+        assertEquals(
+            1,
+            systemMessages.size,
+            "Agent system prompt must be present in the prompt even when loaded history has none"
+        )
+        assertTrue(
+            systemMessages.single().parts.filterIsInstance<MessagePart.Text>()
+                .joinToString("\n") { it.text }
+                .contains("geography assistant"),
+            "The live agent's system prompt should be the one the model sees"
+        )
+    }
+
+    /**
+     * The live agent's system prompt always wins: a stale system message carried inside the
+     * loaded history is dropped so the model never sees an out-of-date prompt.
+     */
+    @Test
+    fun testCurrentSystemPromptReplacesStaleStoredOne() = runTest {
+        val sessionId = "stale-system-session"
+        val historyProvider = InMemoryChatHistoryProvider(
+            history = mutableMapOf(
+                sessionId to listOf(
+                    Message.System("OUTDATED system prompt", RequestMetaInfo.Empty),
+                    Message.User("Earlier question", RequestMetaInfo.Empty),
+                    Message.Assistant("Earlier answer", ResponseMetaInfo(Instant.DISTANT_PAST)),
+                )
+            )
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) {
+                mockLLMAnswer("mock reply").asDefaultResponse
+            },
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            strategy = dumpHistoryStrategy,
+            systemPrompt = "CURRENT system prompt",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+            }
+        }
+
+        val seen = agent.run("New question", sessionId)
+
+        val systemTexts = seen.filterIsInstance<Message.System>()
+            .map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
+        assertEquals(1, systemTexts.size, "Only the live agent's system prompt should be present")
+        assertTrue(systemTexts.single().contains("CURRENT"), "Live agent's system prompt should win")
+        assertTrue(
+            systemTexts.none { it.contains("OUTDATED") },
+            "Stale stored system prompt should be ignored on load"
+        )
+    }
+
+    // ---- dropSystemMessages opt-in ----
+
+    @Test
+    fun testDropSystemMessagesPreProcessorRemovesSystemMessages() {
+        val processor = DropSystemMessagesPreProcessor()
+        val input = listOf(
+            Message.System("sys", RequestMetaInfo.Empty),
+            Message.User("u", RequestMetaInfo.Empty),
+            Message.Assistant("a", ResponseMetaInfo(Instant.DISTANT_PAST)),
+        )
+        val result = processor.preprocess(input)
+        assertEquals(2, result.size, "System message should be removed")
+        assertTrue(result.none { it is Message.System }, "No system messages should remain")
+        assertIs<Message.User>(result[0])
+        assertIs<Message.Assistant>(result[1])
+    }
+
+    @Test
+    fun testDropSystemMessagesExcludesSystemFromStoredHistory() = runTest {
+        val sessionId = "drop-system-session"
+        val historyProvider = InMemoryChatHistoryProvider()
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor(serializer) {
+                mockLLMAnswer("Paris is the capital of France.") onRequestContains "France"
+                mockLLMAnswer("Berlin is the capital of Germany.") onRequestContains "Germany"
+                mockLLMAnswer("mock reply").asDefaultResponse
+            },
+            llmModel = OpenAIModels.Chat.GPT4oMini,
+            systemPrompt = "You are a helpful geography assistant.",
+            maxIterations = 10,
+        ) {
+            install(ChatMemory) {
+                chatHistoryProvider = historyProvider
+                dropSystemMessages()
+            }
+        }
+
+        agent.run("What is the capital of France?", sessionId)
+        val secondRun = agent.run("What is the capital of Germany?", sessionId)
+
+        // The agent still works across turns — the system prompt comes from the live agent.
+        assertEquals("Berlin is the capital of Germany.", secondRun)
+
+        val saved = historyProvider.history[sessionId]!!
+        assertTrue(saved.none { it is Message.System }, "System messages should be excluded from stored history")
+        assertTrue(saved.isNotEmpty(), "Non-system messages should still be stored")
+        val contents = saved.map { it.parts.filterIsInstance<MessagePart.Text>().joinToString("\n") { p -> p.text } }
+        assertTrue(contents.any { it.contains("France") }, "User/assistant France messages should be persisted")
+        assertTrue(contents.any { it.contains("Germany") }, "User/assistant Germany messages should be persisted")
     }
 }
