@@ -44,8 +44,7 @@ class MockRedisClient(
             val value = secondArg<String>()
             val now = System.currentTimeMillis()
 
-            // Preserve TTL when updating an existing key
-            dataStore[key] = Data(value, now, dataStore[key]?.ttl)
+            dataStore[key] = Data(value, now, null)
             "OK"
         }
 

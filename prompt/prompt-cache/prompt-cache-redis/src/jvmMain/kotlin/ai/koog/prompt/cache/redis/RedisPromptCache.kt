@@ -135,8 +135,7 @@ public class RedisPromptCache(
             }
             logger.info { "Get key '$key' from Redis cache hit" }
 
-            // Update access time by setting the key with the same value but updated TTL
-            commands.set(key, value)
+            commands.setex(key, seconds = ttl.inWholeSeconds, value)
 
             return defaultJson.decodeFromString<CachedElement>(value).response
         } catch (e: Exception) {

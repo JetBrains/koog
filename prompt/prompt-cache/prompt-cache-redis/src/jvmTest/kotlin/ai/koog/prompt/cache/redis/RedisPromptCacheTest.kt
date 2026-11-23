@@ -101,4 +101,21 @@ class RedisPromptCacheTest {
         val cachedResponse2 = cache.get(testPrompt, testTools, testClock)
         assertEquals(testResponse, cachedResponse2)
     }
+
+    @DisabledOnOs(OS.WINDOWS, disabledReason = "Fails on Windows")
+    @Test
+    fun testAccessedEntryStillExpiresAfterItsTtl() = runTest {
+        val cache = createCache(2.seconds)
+        cache.put(testPrompt, testTools, testResponse)
+
+        Thread.sleep(1000)
+
+        val cachedResponse = cache.get(testPrompt, testTools, testClock)
+        assertEquals(testResponse, cachedResponse)
+
+        Thread.sleep(2500)
+
+        val expiredResponse = cache.get(testPrompt, testTools, testClock)
+        assertNull(expiredResponse)
+    }
 }
