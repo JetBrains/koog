@@ -12,6 +12,7 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSimpleStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSingleLLMCallStrategy
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assistantMessage
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.defaultMockExecutor
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getMessagesString
@@ -251,12 +252,9 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                             "gen_ai.response.model" to defaultModel.id,
                             "gen_ai.usage.input_tokens" to 0L,
                             "gen_ai.usage.output_tokens" to 0L,
-                            "gen_ai.output.messages" to getMessagesString(
-                                listOf(
-                                    Message.System(SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
-                                    Message.User(USER_PROMPT_PARIS, RequestMetaInfo(testClock.now()))
-                                )
-                            ),
+                            // agent.run("") does not match the mocked USER_PROMPT_PARIS, so the mock executor
+                            // answers with its default empty assistant message.
+                            "gen_ai.output.messages" to getMessagesString(listOf(assistantMessage(""))),
                             "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,
                             customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,

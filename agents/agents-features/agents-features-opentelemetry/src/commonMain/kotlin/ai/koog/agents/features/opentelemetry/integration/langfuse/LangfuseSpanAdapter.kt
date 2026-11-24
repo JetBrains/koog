@@ -28,12 +28,18 @@ import kotlin.concurrent.atomics.fetchAndIncrement
 /**
  * Internal adapter class for enhancing and modifying spans related to GenAI agent processing.
  * It reshapes inference-span content from the OTel-standard `gen_ai.input.messages` /
- * `gen_ai.output.messages` attributes (which Langfuse does not currently recognize) into the
- * `gen_ai.prompt` / `gen_ai.completion` attributes that Langfuse displays.
+ * `gen_ai.output.messages` attributes into the `gen_ai.prompt` / `gen_ai.completion` attributes.
+ * Langfuse reads those ahead of the semconv message attributes and renders them in the OpenAI message shape.
  *
  * Each of the two attributes holds the whole message list as one JSON array in the OpenAI message shape.
  * One attribute per list keeps a long tool-call history within the span attribute count limit,
  * which is 128 by default. The original attributes remain on the span untouched.
+ *
+ * Langfuse v4 is observations-first: evaluators and filters read each observation on its own, and the
+ * request and response of the whole run belong on the root observation. Koog's trace root is the
+ * `create_agent` span, which carries neither, so the adapter copies the `invoke_agent` input and output
+ * onto that parent as `langfuse.observation.input` / `langfuse.observation.output`, in the same OpenAI
+ * message shape. The parent flushes its attributes only when it ends, which happens after the `invoke_agent` span.
  */
 @OptIn(ExperimentalAtomicApi::class)
 internal class LangfuseSpanAdapter(
@@ -52,6 +58,12 @@ internal class LangfuseSpanAdapter(
 
                 runId?.let { runId ->
                     span.addAttribute(CustomAttribute("langfuse.session.id", runId))
+                }
+
+                // The run input belongs on the trace root observation in Langfuse v4.
+                span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()?.let { attribute ->
+                    val entries = JsonArray(attribute.messages.flatMap(::promptEntries))
+                    span.copyToRootObservation(ROOT_INPUT_KEY, HiddenString(entries.toString()))
                 }
             }
 
@@ -113,11 +125,32 @@ internal class LangfuseSpanAdapter(
                     }
                 }
             }
+
+            SpanType.INVOKE_AGENT -> {
+                // The run output belongs on the trace root observation in Langfuse v4.
+                span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()?.let { attribute ->
+                    val responses = attribute.messages.filterIsInstance<Message.Assistant>()
+                    val entries = JsonArray(responses.map(::completionEntry))
+                    span.copyToRootObservation(ROOT_OUTPUT_KEY, HiddenString(entries.toString()))
+                }
+            }
+
             else -> {}
         }
     }
 
     //region Private Methods
+
+    /**
+     * Writes [value] under [key] on the `create_agent` parent of this span, the trace root. Langfuse v4 reads the
+     * request and response of a run from the root observation, which the `create_agent` span does not carry itself.
+     * Guarded on the parent type, so a change in the span hierarchy degrades to a no-op rather than writing
+     * to the wrong span.
+     */
+    private fun GenAIAgentSpan.copyToRootObservation(key: String, value: Any) {
+        val root = parentSpan?.takeIf { parent -> parent.type == SpanType.CREATE_AGENT } ?: return
+        root.addAttribute(CustomAttribute(key, value))
+    }
 
     private fun promptEntries(message: Message): List<JsonObject> = when (message) {
         is Message.System -> listOf(textEntry(message.role, message.parts.joinToString("\n") { it.text }))
@@ -242,6 +275,8 @@ internal class LangfuseSpanAdapter(
         const val PROMPT_KEY = "gen_ai.prompt"
         const val COMPLETION_KEY = "gen_ai.completion"
         const val USAGE_DETAILS_KEY = "langfuse.observation.usage_details"
+        const val ROOT_INPUT_KEY = "langfuse.observation.input"
+        const val ROOT_OUTPUT_KEY = "langfuse.observation.output"
         const val CACHED_TOKENS_KEY = "cachedContentTokenCount"
         const val REASONING_TOKENS_KEY = "thoughtsTokenCount"
     }

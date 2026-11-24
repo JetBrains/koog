@@ -492,6 +492,10 @@ attributes rather than per-message events:
 - `gen_ai.input.messages`: a JSON array of the messages sent to the model (system / user / assistant / tool roles).
 - `gen_ai.output.messages`: a JSON array of the messages returned by the model.
 
+The `InvokeAgentSpan` carries the same two attributes for the whole run: `gen_ai.input.messages` holds the configured
+prompt the run started with, and `gen_ai.output.messages` holds the assistant responses the run produced. Its
+`gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens` attributes sum the usage of those responses.
+
 Earlier versions of Koog emitted per-message OpenTelemetry events
 (`gen_ai.system.message`, `gen_ai.user.message`, `gen_ai.assistant.message`, `gen_ai.tool.message`, `gen_ai.choice`)
 to capture message content. Those events have been removed from the OpenTelemetry GenAI specification and are no longer

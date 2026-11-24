@@ -298,6 +298,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
                             "gen_ai.provider.name" to "koog",
+                            "gen_ai.conversation.id" to testProcessor.lastRunId,
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
                             "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                             "gen_ai.tool.call.id" to toolCallId,
@@ -385,6 +386,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
                             "gen_ai.provider.name" to "koog",
+                            "gen_ai.conversation.id" to testProcessor.lastRunId,
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
                             "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                             "gen_ai.tool.call.arguments" to "{\"location\":\"Paris\"}",
@@ -399,6 +401,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "execute_tool",
                             "gen_ai.provider.name" to "koog",
+                            "gen_ai.conversation.id" to testProcessor.lastRunId,
                             "gen_ai.tool.name" to TestGetWeatherTool.name,
                             "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
                             "gen_ai.tool.call.arguments" to "{\"location\":\"London\"}",
