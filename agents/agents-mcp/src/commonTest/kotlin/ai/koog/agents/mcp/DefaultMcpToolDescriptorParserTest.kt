@@ -620,22 +620,62 @@ class DefaultMcpToolDescriptorParserTest {
     }
 
     @Test
-    fun `test parameter type is missing`() {
-        val missingTypeToolSdk = createSdkTool(
+    fun `test untyped parameter is accepted as any JSON value`() {
+        // Covers issue #2326: typeless schemas (e.g. FastMCP `payload: Any`)
+        // must be parsed so the tool is not dropped.
+        val untypedToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
             properties = buildJsonObject {
-                putJsonObject("invalidParam") {
-                    put("description", "Invalid parameter")
-                    // Missing type property
+                putJsonObject("payload") {
+                    put("title", "Payload")
+                    put("default", JsonNull)
                 }
             },
             required = emptyList()
         )
 
-        assertFailsWith<IllegalArgumentException>("Should fail when parameter type is missing") {
-            parser.parse(missingTypeToolSdk)
-        }
+        val toolDescriptor = parser.parse(untypedToolSdk)
+        val param = toolDescriptor.optionalParameters.single()
+        assertEquals("payload", param.name)
+        assertTrue(param.type is ToolParameterType.AnyOf)
+        val anyOf = param.type as ToolParameterType.AnyOf
+        assertEquals(
+            listOf(
+                ToolParameterType.String,
+                ToolParameterType.Integer,
+                ToolParameterType.Float,
+                ToolParameterType.Boolean,
+                ToolParameterType.Null,
+            ),
+            anyOf.types.take(5).map { it.type }
+        )
+        val objectType = anyOf.types.last().type as ToolParameterType.Object
+        assertEquals(true, objectType.additionalProperties)
+    }
+
+    @Test
+    fun `test array with untyped items is accepted`() {
+        // Covers issue #2326: FastMCP `list` emits `{ "items": {}, "type": "array" }`.
+        val untypedItemsToolSdk = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("tags") {
+                    put("title", "Tags")
+                    put("type", "array")
+                    putJsonObject("items") { }
+                }
+            },
+            required = emptyList()
+        )
+
+        val toolDescriptor = parser.parse(untypedItemsToolSdk)
+        val param = toolDescriptor.optionalParameters.single()
+        assertEquals("tags", param.name)
+        assertTrue(param.type is ToolParameterType.List)
+        val listType = param.type as ToolParameterType.List
+        assertTrue(listType.itemsType is ToolParameterType.AnyOf)
     }
 
     @Test
