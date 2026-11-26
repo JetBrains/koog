@@ -128,6 +128,16 @@ internal class OpenTelemetryConfigImpl : OpenTelemetryConfigAPI {
             return
         }
 
+        // The Kotlin SDK batch span processor drops its queue on shutdown and closes the exporter before
+        // draining, so the spans that ended right before the agent closed (create_agent, invoke_agent) would
+        // never reach the backend. Flush first, while the exporter is still open.
+        logger.debug { "Flushing the OpenTelemetry SDK before shutdown." }
+        runCatching {
+            telemetryCloseable.forceFlush()
+        }.onFailure { t ->
+            logger.warn(t) { "Failed to flush OpenTelemetry SDK before shutdown." }
+        }
+
         logger.debug { "Cascade shutdown for the OpenTelemetry SDK." }
         runCatching {
             telemetryCloseable.shutdown()

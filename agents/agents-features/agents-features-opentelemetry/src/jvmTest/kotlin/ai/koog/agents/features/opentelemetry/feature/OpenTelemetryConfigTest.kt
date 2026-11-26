@@ -33,6 +33,7 @@ import io.opentelemetry.kotlin.tracing.export.batchSpanProcessor
 import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -266,6 +267,39 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
             )
 
             assertSpans(expectedInvokeAgentSpans, actualInvokeAgentSpans)
+        }
+    }
+
+    /**
+     * The Kotlin SDK batch span processor drops its queue on shutdown and closes the exporter before draining it,
+     * so the feature has to flush before it shuts the SDK down. Without the flush, the spans that end right before
+     * the agent closes (create_agent, invoke_agent) never reach the exporter.
+     *
+     * runBlocking rather than runTest: the flush waits on a real dispatcher, and runTest's virtual clock would
+     * expire the SDK's flush timeout immediately.
+     */
+    @Test
+    fun `test shutdown on agent close flushes the batch span processor`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+            val agent = createAgent(
+                strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                executor = defaultMockExecutor,
+            ) {
+                addSpanProcessor { batchSpanProcessor(mockExporter) }
+                setShutdownOnAgentClose(true)
+            }
+
+            agent.run(USER_PROMPT_PARIS, null)
+            // Close right away, well inside the batch schedule delay: only the flush on close can deliver these spans.
+            agent.close()
+
+            val spanNames = mockExporter.collectedSpans.map { it.name }
+            listOf(OperationNameType.CREATE_AGENT, OperationNameType.INVOKE_AGENT, OperationNameType.CHAT).forEach { operation ->
+                assertTrue(
+                    spanNames.any { it.startsWith(operation.id) },
+                    "The ${operation.id} span should be flushed when the agent closes. Exported spans: $spanNames",
+                )
+            }
         }
     }
 

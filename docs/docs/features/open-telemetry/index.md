@@ -1151,8 +1151,12 @@ Here is the full code sample:
 
 3. **Missing spans or incomplete traces**
     - Verify that the agent execution completes successfully.
-    - Ensure that you're not closing the application too quickly after agent execution.
-    - Add a delay after agent execution to allow time for spans to be exported.
+    - Ensure that you're not closing the application too quickly after agent execution. Exporters registered with
+      `addSpanExporter()` run behind a batch span processor that exports about once a second, so a process that exits
+      right after `agent.run()` loses the last spans, typically the whole top of the trace.
+    - In short-lived processes (scripts, CLI tools, tests), call `setShutdownOnAgentClose(true)` in the feature
+      configuration and close the agent (for example with `agent.use { ... }`). The feature then flushes and shuts
+      down the SDK when the agent closes. Alternatively, keep the process alive for a few seconds after the run.
 
 4. **Excessive number of spans**
     - Consider using a different sampling strategy by configuring the `sampler` property.
