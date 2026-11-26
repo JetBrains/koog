@@ -19,8 +19,14 @@ internal object JsonDocumentConverters {
         is JsonNull -> null
 
         is JsonPrimitive -> run {
+            // Checked first: a quoted "1917" must stay a string, and doubleOrNull also parses "Infinity" and "NaN",
+            // which Document.Number rejects.
+            if (element.isString) {
+                return@run Document.String(element.content)
+            }
+
             // Number
-            val number = element.longOrNull ?: element.doubleOrNull
+            val number = element.longOrNull ?: element.doubleOrNull?.takeIf { it.isFinite() }
             if (number != null) {
                 return@run Document.Number(number)
             }

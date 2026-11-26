@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -66,6 +67,10 @@ internal object BedrockToolSerialization {
                         put(prop.name, buildToolParameterSchema(prop))
                     }
                 }
+                if (type.requiredProperties.isNotEmpty()) {
+                    putJsonArray("required") { type.requiredProperties.forEach { add(it) } }
+                }
+                type.additionalProperties?.let { put("additionalProperties", it) }
             }
         }
     }
