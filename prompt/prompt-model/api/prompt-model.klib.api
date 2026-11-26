@@ -14,7 +14,12 @@ open annotation class ai.koog.prompt.dsl/PromptDSL : kotlin/Annotation { // ai.k
     constructor <init>() // ai.koog.prompt.dsl/PromptDSL.<init>|<init>(){}[0]
 }
 
-abstract interface ai.koog.prompt.message/CacheControl // ai.koog.prompt.message/CacheControl|null[0]
+abstract interface ai.koog.prompt.message/CacheControl { // ai.koog.prompt.message/CacheControl|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.koog.prompt.message/CacheControl.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/CacheControl> // ai.koog.prompt.message/CacheControl.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.koog.prompt.message/CacheControl.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
 
 sealed interface ai.koog.prompt.message/AttachmentContent { // ai.koog.prompt.message/AttachmentContent|null[0]
     sealed interface Binary : ai.koog.prompt.message/AttachmentContent { // ai.koog.prompt.message/AttachmentContent.Binary|null[0]
@@ -538,8 +543,6 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
             }
 
             final object Companion { // ai.koog.prompt.message/MessagePart.Tool.Call.Companion|null[0]
-                final val $childSerializers // ai.koog.prompt.message/MessagePart.Tool.Call.Companion.$childSerializers|{}$childSerializers[0]
-
                 final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Tool.Call> // ai.koog.prompt.message/MessagePart.Tool.Call.Companion.serializer|serializer(){}[0]
             }
         }
@@ -690,8 +693,6 @@ sealed interface ai.koog.prompt.message/MessagePart { // ai.koog.prompt.message/
         }
 
         final object Companion { // ai.koog.prompt.message/MessagePart.Text.Companion|null[0]
-            final val $childSerializers // ai.koog.prompt.message/MessagePart.Text.Companion.$childSerializers|{}$childSerializers[0]
-
             final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/MessagePart.Text> // ai.koog.prompt.message/MessagePart.Text.Companion.serializer|serializer(){}[0]
         }
     }

@@ -650,6 +650,11 @@ public final class ai/koog/prompt/message/AttachmentSource$Video$Companion {
 }
 
 public abstract interface class ai/koog/prompt/message/CacheControl {
+	public static final field Companion Lai/koog/prompt/message/CacheControl$Companion;
+}
+
+public final class ai/koog/prompt/message/CacheControl$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public abstract interface class ai/koog/prompt/message/Message {
