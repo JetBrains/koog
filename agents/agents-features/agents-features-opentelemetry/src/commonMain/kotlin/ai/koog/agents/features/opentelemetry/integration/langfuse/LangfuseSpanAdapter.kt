@@ -40,6 +40,10 @@ import kotlin.concurrent.atomics.fetchAndIncrement
  * `create_agent` span, which carries neither, so the adapter copies the `invoke_agent` input and output
  * onto that parent as `langfuse.observation.input` / `langfuse.observation.output`, in the same OpenAI
  * message shape. The parent flushes its attributes only when it ends, which happens after the `invoke_agent` span.
+ *
+ * Node spans keep their input and output under the Koog-specific `koog.node.input` / `koog.node.output` attributes,
+ * which Langfuse does not read, so the adapter also copies them to `langfuse.observation.input` /
+ * `langfuse.observation.output`. Without the copy, every node observation shows an empty input and output.
  */
 @OptIn(ExperimentalAtomicApi::class)
 internal class LangfuseSpanAdapter(
@@ -63,7 +67,7 @@ internal class LangfuseSpanAdapter(
                 // The run input belongs on the trace root observation in Langfuse v4.
                 span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()?.let { attribute ->
                     val entries = JsonArray(attribute.messages.flatMap(::promptEntries))
-                    span.copyToRootObservation(ROOT_INPUT_KEY, HiddenString(entries.toString()))
+                    span.copyToRootObservation(OBSERVATION_INPUT_KEY, HiddenString(entries.toString()))
                 }
             }
 
@@ -99,6 +103,11 @@ internal class LangfuseSpanAdapter(
                         )
                     )
                 }
+
+                // Langfuse reads the observation input from `langfuse.observation.input`, not from `koog.node.input`.
+                span.attributes.filterIsInstance<KoogAttributes.Koog.Node.Input>().firstOrNull()?.let { attribute ->
+                    span.addAttribute(CustomAttribute(OBSERVATION_INPUT_KEY, attribute.value))
+                }
             }
 
             else -> {}
@@ -131,7 +140,14 @@ internal class LangfuseSpanAdapter(
                 span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()?.let { attribute ->
                     val responses = attribute.messages.filterIsInstance<Message.Assistant>()
                     val entries = JsonArray(responses.map(::completionEntry))
-                    span.copyToRootObservation(ROOT_OUTPUT_KEY, HiddenString(entries.toString()))
+                    span.copyToRootObservation(OBSERVATION_OUTPUT_KEY, HiddenString(entries.toString()))
+                }
+            }
+
+            SpanType.NODE -> {
+                // Langfuse reads the observation output from `langfuse.observation.output`, not from `koog.node.output`.
+                span.attributes.filterIsInstance<KoogAttributes.Koog.Node.Output>().firstOrNull()?.let { attribute ->
+                    span.addAttribute(CustomAttribute(OBSERVATION_OUTPUT_KEY, attribute.value))
                 }
             }
 
@@ -275,8 +291,8 @@ internal class LangfuseSpanAdapter(
         const val PROMPT_KEY = "gen_ai.prompt"
         const val COMPLETION_KEY = "gen_ai.completion"
         const val USAGE_DETAILS_KEY = "langfuse.observation.usage_details"
-        const val ROOT_INPUT_KEY = "langfuse.observation.input"
-        const val ROOT_OUTPUT_KEY = "langfuse.observation.output"
+        const val OBSERVATION_INPUT_KEY = "langfuse.observation.input"
+        const val OBSERVATION_OUTPUT_KEY = "langfuse.observation.output"
         const val CACHED_TOKENS_KEY = "cachedContentTokenCount"
         const val REASONING_TOKENS_KEY = "thoughtsTokenCount"
     }

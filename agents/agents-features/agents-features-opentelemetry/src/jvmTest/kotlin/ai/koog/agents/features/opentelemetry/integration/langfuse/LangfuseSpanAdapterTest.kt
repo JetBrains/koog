@@ -9,6 +9,7 @@ import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.endInvokeAgentSpan
+import ai.koog.agents.features.opentelemetry.span.endNodeExecuteSpan
 import ai.koog.agents.features.opentelemetry.span.startCreateAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
 import ai.koog.agents.features.opentelemetry.span.startInvokeAgentSpan
@@ -656,6 +657,56 @@ class LangfuseSpanAdapterTest {
 
         assertTrue(nodeParentSpan.attributes.none { it.key.startsWith("langfuse.observation.") })
         assertTrue(invokeSpanUnderNode.attributes.none { it.key.startsWith("langfuse.observation.") })
+    }
+
+    @Test
+    fun testNodeInputAndOutputAreCopiedToTheNodeObservation() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val nodeInput = """{"query": "What's the weather in Paris?"}"""
+        val nodeOutput = """{"answer": "Rainy, 14 degrees."}"""
+
+        val nodeSpan = startNodeExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "node-span-id",
+            runId = "run-id",
+            nodeId = "node-id",
+            nodeInput = nodeInput
+        )
+
+        adapter.onBeforeSpanStarted(nodeSpan)
+
+        // The Koog-specific attribute stays in place for other backends; Langfuse reads the copy.
+        assertEquals(HiddenString(nodeInput), nodeSpan.attributes.requireValue("koog.node.input"))
+        assertEquals(HiddenString(nodeInput), nodeSpan.attributes.requireValue("langfuse.observation.input"))
+        assertTrue(nodeSpan.attributes.none { it.key == "langfuse.observation.output" })
+
+        endNodeExecuteSpan(span = nodeSpan, nodeOutput = nodeOutput, spanAdapter = adapter)
+
+        assertEquals(HiddenString(nodeOutput), nodeSpan.attributes.requireValue("koog.node.output"))
+        assertEquals(HiddenString(nodeOutput), nodeSpan.attributes.requireValue("langfuse.observation.output"))
+    }
+
+    @Test
+    fun testNodeObservationCopyIsSkippedWhenTheNodeHasNoInputOrOutput() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val nodeSpan = startNodeExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "node-span-id",
+            runId = "run-id",
+            nodeId = "node-id",
+            nodeInput = null
+        )
+
+        adapter.onBeforeSpanStarted(nodeSpan)
+        endNodeExecuteSpan(span = nodeSpan, nodeOutput = null, spanAdapter = adapter)
+
+        assertTrue(nodeSpan.attributes.none { it.key == "langfuse.observation.input" })
+        assertTrue(nodeSpan.attributes.none { it.key == "langfuse.observation.output" })
     }
 
     private fun createInferenceSpan(
