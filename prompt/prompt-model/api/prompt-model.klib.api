@@ -1182,8 +1182,12 @@ final class ai.koog.prompt.message/RequestMetaInfo : ai.koog.prompt.message/Mess
 }
 
 final class ai.koog.prompt.message/ResponseMetaInfo : ai.koog.prompt.message/MessageMetaInfo { // ai.koog.prompt.message/ResponseMetaInfo|null[0]
-    constructor <init>(kotlin.time/Instant, kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...) // ai.koog.prompt.message/ResponseMetaInfo.<init>|<init>(kotlin.time.Instant;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
+    constructor <init>(kotlin.time/Instant, kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...) // ai.koog.prompt.message/ResponseMetaInfo.<init>|<init>(kotlin.time.Instant;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
 
+    final val cacheReadInputTokensCount // ai.koog.prompt.message/ResponseMetaInfo.cacheReadInputTokensCount|{}cacheReadInputTokensCount[0]
+        final fun <get-cacheReadInputTokensCount>(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.cacheReadInputTokensCount.<get-cacheReadInputTokensCount>|<get-cacheReadInputTokensCount>(){}[0]
+    final val cacheWriteInputTokensCount // ai.koog.prompt.message/ResponseMetaInfo.cacheWriteInputTokensCount|{}cacheWriteInputTokensCount[0]
+        final fun <get-cacheWriteInputTokensCount>(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.cacheWriteInputTokensCount.<get-cacheWriteInputTokensCount>|<get-cacheWriteInputTokensCount>(){}[0]
     final val inputTokensCount // ai.koog.prompt.message/ResponseMetaInfo.inputTokensCount|{}inputTokensCount[0]
         final fun <get-inputTokensCount>(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.inputTokensCount.<get-inputTokensCount>|<get-inputTokensCount>(){}[0]
     final val metadata // ai.koog.prompt.message/ResponseMetaInfo.metadata|{}metadata[0]
@@ -1201,9 +1205,11 @@ final class ai.koog.prompt.message/ResponseMetaInfo : ai.koog.prompt.message/Mes
     final fun component2(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component2|component2(){}[0]
     final fun component3(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component3|component3(){}[0]
     final fun component4(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component4|component4(){}[0]
-    final fun component5(): kotlin/String? // ai.koog.prompt.message/ResponseMetaInfo.component5|component5(){}[0]
-    final fun component6(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/ResponseMetaInfo.component6|component6(){}[0]
-    final fun copy(kotlin.time/Instant = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.copy|copy(kotlin.time.Instant;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
+    final fun component5(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component5|component5(){}[0]
+    final fun component6(): kotlin/Int? // ai.koog.prompt.message/ResponseMetaInfo.component6|component6(){}[0]
+    final fun component7(): kotlin/String? // ai.koog.prompt.message/ResponseMetaInfo.component7|component7(){}[0]
+    final fun component8(): kotlinx.serialization.json/JsonObject? // ai.koog.prompt.message/ResponseMetaInfo.component8|component8(){}[0]
+    final fun copy(kotlin.time/Instant = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.copy|copy(kotlin.time.Instant;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // ai.koog.prompt.message/ResponseMetaInfo.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // ai.koog.prompt.message/ResponseMetaInfo.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // ai.koog.prompt.message/ResponseMetaInfo.toString|toString(){}[0]
@@ -1221,7 +1227,7 @@ final class ai.koog.prompt.message/ResponseMetaInfo : ai.koog.prompt.message/Mes
         final val Empty // ai.koog.prompt.message/ResponseMetaInfo.Companion.Empty|{}Empty[0]
             final fun <get-Empty>(): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.Companion.Empty.<get-Empty>|<get-Empty>(){}[0]
 
-        final fun create(ai.koog.utils.time/KoogClock, kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.Companion.create|create(ai.koog.utils.time.KoogClock;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
+        final fun create(ai.koog.utils.time/KoogClock, kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlinx.serialization.json/JsonObject? = ...): ai.koog.prompt.message/ResponseMetaInfo // ai.koog.prompt.message/ResponseMetaInfo.Companion.create|create(ai.koog.utils.time.KoogClock;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.Int?;kotlin.String?;kotlinx.serialization.json.JsonObject?){}[0]
         final fun serializer(): kotlinx.serialization/KSerializer<ai.koog.prompt.message/ResponseMetaInfo> // ai.koog.prompt.message/ResponseMetaInfo.Companion.serializer|serializer(){}[0]
     }
 }

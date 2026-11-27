@@ -490,6 +490,8 @@ public data class RequestMetaInfo @JvmOverloads constructor(
  * @property totalTokensCount The total number of tokens involved in the response, including both input and output tokens, or null if not available.
  * @property inputTokensCount The number of tokens used in the input, or null if not available.
  * @property outputTokensCount The number of tokens generated in the output, or null if not available.
+ * @property cacheReadInputTokensCount The number of input tokens served from cache (cache read), or null if not available.
+ * @property cacheWriteInputTokensCount The number of input tokens written to cache (cache creation), or null if not available.
  * @property metadata Additional metadata as a JSON object.
  *                    This can be used to store custom metadata that doesn't fit into the standard fields.
  * @property timestamp The timestamp indicating when the response was created.
@@ -504,6 +506,10 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
     public val totalTokensCount: Int? = null,
     public val inputTokensCount: Int? = null,
     public val outputTokensCount: Int? = null,
+    /** The number of input tokens served from cache (cache read), or null if not available. */
+    public val cacheReadInputTokensCount: Int? = null,
+    /** The number of input tokens written to cache (cache creation), or null if not available. */
+    public val cacheWriteInputTokensCount: Int? = null,
     public val modelId: String? = null,
     override val metadata: JsonObject? = null,
 ) : MessageMetaInfo {
@@ -519,6 +525,8 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
          * @param totalTokensCount The total number of tokens involved in the response, including both input and output tokens.
          * @param inputTokensCount The number of tokens used in the input.
          * @param outputTokensCount The number of tokens generated in the output.
+         * @param cacheReadInputTokensCount The number of input tokens served from cache (cache read).
+         * @param cacheWriteInputTokensCount The number of input tokens written to cache (cache creation).
          * @param modelId The ID of the model used for generating the response, or null if not available.
          * @param metadata Additional metadata as a JSON object.
          * @return A new ResponseMetadata instance with the timestamp from the provided clock.
@@ -529,6 +537,8 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
             totalTokensCount: Int? = null,
             inputTokensCount: Int? = null,
             outputTokensCount: Int? = null,
+            cacheReadInputTokensCount: Int? = null,
+            cacheWriteInputTokensCount: Int? = null,
             modelId: String? = null,
             metadata: JsonObject? = null,
         ): ResponseMetaInfo = ResponseMetaInfo(
@@ -536,6 +546,8 @@ public data class ResponseMetaInfo @JvmOverloads constructor(
             totalTokensCount,
             inputTokensCount,
             outputTokensCount,
+            cacheReadInputTokensCount,
+            cacheWriteInputTokensCount,
             modelId,
             metadata
         )
