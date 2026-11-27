@@ -7,6 +7,7 @@ import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -197,7 +198,9 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
 
     override fun processPolymorphic(context: GenerationContext): JsonObject = buildJsonObject {
         val classDiscriminatorMode = context.json.configuration.classDiscriminatorMode
-        val classDiscriminator = context.json.configuration.classDiscriminator
+        val classDiscriminator = context.descriptor.annotations
+            .filterIsInstance<JsonClassDiscriminator>().firstOrNull()?.discriminator
+            ?: context.json.configuration.classDiscriminator
 
         // Provide an array of all possible schemas for polymorphic types
         put(
