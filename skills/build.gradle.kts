@@ -27,6 +27,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation("org.snakeyaml:snakeyaml-engine:3.0.1")
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
                 runtimeOnly(libs.logback.classic)
