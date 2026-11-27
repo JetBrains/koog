@@ -67,6 +67,11 @@ public open class OpenAICompatibleToolDescriptorSchemaGenerator : ToolDescriptor
                         }
                     }
                 }
+                if (type.requiredProperties.isNotEmpty()) {
+                    putJsonArray("required") {
+                        type.requiredProperties.forEach { add(it) }
+                    }
+                }
             }
 
             is ToolParameterType.AnyOf -> {
