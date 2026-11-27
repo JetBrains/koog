@@ -8,6 +8,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.CacheControl
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -16,8 +17,10 @@ import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.utils.time.KoogClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class CachedPromptExecutorTest {
@@ -111,5 +114,73 @@ class CachedPromptExecutorTest {
         assertTrue(executor.executeCalled, "Executor should be called when cache miss")
         assertTrue(cache.putCalled, "Cache put should be called to store the result")
         assertEquals(testResponse, response, "Should return response from executor")
+    }
+
+    @Serializable
+    private sealed interface SampleCacheControl : CacheControl {
+        @Serializable
+        data object Default : SampleCacheControl
+
+        @Serializable
+        data object OneHour : SampleCacheControl
+    }
+
+    @Serializable
+    private sealed interface OtherProviderCacheControl : CacheControl {
+        @Serializable
+        data object Default : OtherProviderCacheControl
+    }
+
+    private fun promptWithCache(cache: CacheControl): Prompt = Prompt(
+        messages = listOf(
+            Message.System("You are a helpful assistant.", RequestMetaInfo.Empty, cache),
+            Message.User("What is 2 + 2?", RequestMetaInfo.Empty),
+        ),
+        id = "repro",
+    )
+
+    @Test
+    fun testExecuteWhenMessageCarriesCacheControl() = runTest {
+        val cache = MockPromptCache()
+        val executor = MockPromptExecutor()
+        val cachedExecutor = CachedPromptExecutor(cache, executor, testClock)
+        val prompt = promptWithCache(SampleCacheControl.Default)
+
+        val response = cachedExecutor.execute(prompt, testModel, testTools)
+
+        assertTrue(cache.getCalled, "Cache get should be called")
+        assertTrue(executor.executeCalled, "Nested executor should run when the cache misses")
+        assertTrue(cache.putCalled, "Cache put should store the response")
+        assertEquals(testResponse, response, "Should return the nested executor response")
+
+        executor.executeCalled = false
+        cache.putCalled = false
+        val cachedResponse = cachedExecutor.execute(prompt, testModel, testTools)
+
+        assertEquals(false, executor.executeCalled, "Second call with the same cache directive should hit the cache")
+        assertEquals(testResponse, cachedResponse, "Should return the cached response")
+    }
+
+    @Test
+    fun testDifferentCacheControlsUseDifferentCacheKeys() = runTest {
+        val defaultKey = PromptCache.Request.create(
+            promptWithCache(SampleCacheControl.Default),
+            testTools
+        ).asCacheKey
+        val oneHourKey = PromptCache.Request.create(
+            promptWithCache(SampleCacheControl.OneHour),
+            testTools
+        ).asCacheKey
+        val otherProviderKey = PromptCache.Request.create(
+            promptWithCache(OtherProviderCacheControl.Default),
+            testTools
+        ).asCacheKey
+
+        assertNotEquals(defaultKey, oneHourKey, "Different directives on the same type must not share a cache entry")
+        assertNotEquals(
+            defaultKey,
+            otherProviderKey,
+            "Directives with the same simple name from different providers must not share a cache entry"
+        )
     }
 }
