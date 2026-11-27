@@ -1,6 +1,7 @@
 package ai.koog.agents.chatMemory.feature
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.MessagePart
 
 /**
  * An interface for pre-processing messages before they are stored or loaded in the chat memory.
@@ -39,12 +40,33 @@ public interface ChatMemoryPreProcessor {
  * }
  * ```
  *
+ * Tool results whose tool call was cut off by the window are dropped as well, so the window never
+ * starts with a result the LLM has no matching call for (providers reject such histories).
+ * As a consequence, the result may contain fewer than [windowSize] messages.
+ *
  * @param windowSize The maximum number of recent messages to keep.
  */
 public class WindowSizePreProcessor(private val windowSize: Int) : ChatMemoryPreProcessor {
     override fun preprocess(messages: List<Message>): List<Message> {
-        return messages.takeLast(windowSize)
+        val toolCalls = mutableSetOf<String>()
+        return messages.takeLast(windowSize).mapNotNull { message ->
+            message.parts.filterIsInstance<MessagePart.Tool.Call>().forEach { toolCalls += it.pairingKey }
+            if (message !is Message.User) return@mapNotNull message
+
+            val parts = message.parts.filterNot { it is MessagePart.Tool.Result && it.pairingKey !in toolCalls }
+            when {
+                parts.size == message.parts.size -> message
+                parts.isEmpty() -> null
+                else -> message.copy(parts = parts)
+            }
+        }
     }
+
+    private val MessagePart.Tool.pairingKey: String
+        get() = when (this) {
+            is MessagePart.Tool.Call -> id
+            is MessagePart.Tool.Result -> id
+        } ?: tool
 }
 
 /**

@@ -141,10 +141,10 @@ They run sequentially in the order you add them to the `ChatMemory` feature conf
 
 ### Built-in preprocessors
 
-| Config method            | Preprocessor class           | Behavior                              |
-|--------------------------|------------------------------|---------------------------------------|
-| `windowSize(n)`          | `WindowSizePreProcessor`     | Keeps only the last `n` messages      |
-| `filterMessages { ... }` | `FilterMessagesPreProcessor` | Keeps messages matching the predicate |
+| Config method            | Preprocessor class           | Behavior                                                                       |
+|--------------------------|------------------------------|--------------------------------------------------------------------------------|
+| `windowSize(n)`          | `WindowSizePreProcessor`     | Keeps only the last `n` messages, dropping tool results whose call was cut off |
+| `filterMessages { ... }` | `FilterMessagesPreProcessor` | Keeps messages matching the predicate                                          |
 
 ### Order of preprocessors
 
