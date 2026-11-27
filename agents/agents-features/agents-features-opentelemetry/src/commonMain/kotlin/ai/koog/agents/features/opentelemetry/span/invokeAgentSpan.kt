@@ -168,7 +168,8 @@ internal fun startInvokeAgentSpan(
  * - gen_ai.output.messages (recommended)
  *
  * @param span The span to end.
- * @param messages The list of messages used in the inference.
+ * @param messages The live conversation of the run. Usage is summed over its assistant messages, and the
+ *        assistant messages alone are reported as the output.
  * @param model The model used for inference.
  * @param error The error that occurred during inference if any.
  * @param verbose Whether to log verbose information.
@@ -194,23 +195,27 @@ internal fun endInvokeAgentSpan(
     // gen_ai.response.model
     span.addAttribute(GenAIAttributes.Response.Model(model))
 
+    // The request side of the run is already on gen_ai.input.messages, so usage and output are derived
+    // from the responses only.
+    val responseMessages = messages.filterIsInstance<Message.Assistant>()
+
     // gen_ai.usage.input_tokens
     span.addAttribute(
         GenAIAttributes.Usage.InputTokens(
-            messages.filterIsInstance<Message.Assistant>().sumOf { message -> message.metaInfo.inputTokensCount ?: 0 }
+            responseMessages.sumOf { message -> message.metaInfo.inputTokensCount ?: 0 }
         )
     )
 
     // gen_ai.usage.output_tokens
     span.addAttribute(
         GenAIAttributes.Usage.OutputTokens(
-            messages.filterIsInstance<Message.Assistant>().sumOf { message -> message.metaInfo.outputTokensCount ?: 0 }
+            responseMessages.sumOf { message -> message.metaInfo.outputTokensCount ?: 0 }
         )
     )
 
     // gen_ai.output.messages
-    if (messages.isNotEmpty()) {
-        span.addAttribute(GenAIAttributes.Output.Messages(messages))
+    if (responseMessages.isNotEmpty()) {
+        span.addAttribute(GenAIAttributes.Output.Messages(responseMessages))
     }
 
     spanAdapter?.onBeforeSpanFinished(span)

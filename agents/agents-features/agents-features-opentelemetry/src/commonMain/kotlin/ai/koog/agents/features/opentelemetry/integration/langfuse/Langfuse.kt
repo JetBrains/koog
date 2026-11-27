@@ -18,6 +18,13 @@ private const val DEFAULT_LANGFUSE_URL = "https://cloud.langfuse.com"
 private val defaultRequestTimeout = 10.seconds
 
 /**
+ * Header that selects the Langfuse v4 ingestion path (observations-first data model, real-time processing).
+ * Older Langfuse servers ignore the header, so it is safe to send unconditionally.
+ */
+private const val LANGFUSE_INGESTION_VERSION_HEADER = "x-langfuse-ingestion-version"
+private const val LANGFUSE_INGESTION_VERSION = "4"
+
+/**
  * Installs the Langfuse [SpanAdapter][ai.koog.agents.features.opentelemetry.integration.SpanAdapter]
  * without registering the Langfuse cloud exporter. Spans are reshaped to the Langfuse-recommended
  * attribute layout but are emitted only through whatever exporters the caller registers separately.
@@ -43,7 +50,9 @@ public fun OpenTelemetryConfig.addLangfuseSpanAdapter(
  *
  * Uses the Kotlin Multiplatform OTLP/JSON exporter - works on every target supported by the
  * OpenTelemetry feature. Authenticates via HTTP Basic with `LANGFUSE_PUBLIC_KEY` and
- * `LANGFUSE_SECRET_KEY` (passed in or read from environment variables).
+ * `LANGFUSE_SECRET_KEY` (passed in or read from environment variables). Every request carries the
+ * `x-langfuse-ingestion-version: 4` header, so Langfuse processes the spans on its v4 (observations-first)
+ * path instead of the delayed legacy one. Older Langfuse servers ignore the header.
  *
  * Registered via [addSpanExporter][OpenTelemetryConfig.addSpanExporter], which wraps the exporter
  * in a batch span processor - the cloud HTTP round-trip happens on a worker thread instead of
@@ -87,7 +96,10 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
     addSpanExporter(
         OtlpJsonSpanExporter(
             endpoint = "$url/api/public/otel/v1/traces",
-            headers = mapOf("Authorization" to "Basic $auth"),
+            headers = mapOf(
+                "Authorization" to "Basic $auth",
+                LANGFUSE_INGESTION_VERSION_HEADER to LANGFUSE_INGESTION_VERSION,
+            ),
             timeout = timeout ?: defaultRequestTimeout,
         )
     )
