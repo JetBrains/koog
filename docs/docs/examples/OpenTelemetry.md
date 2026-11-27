@@ -61,7 +61,7 @@ This mirrors the example description: console logs for local debugging and OTLP 
 
 ```kotlin
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You are a code assistant. Provide concise code examples."
 ) {

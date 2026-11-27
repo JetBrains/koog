@@ -148,7 +148,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 
 val agent = AIAgent(
-    executor = executor,
+    promptExecutor = executor,
     llmModel = BedrockModels.AnthropicClaude35SonnetV2, // State-of-the-art reasoning model
     systemPrompt = """
         You are a helpful assistant that controls a switch device.
@@ -254,7 +254,7 @@ class HomeAutomationTools : ToolSet {
 ### 🧠 Memory & Context
 ```kotlin
 val agent = AIAgent(
-    executor = executor,
+    promptExecutor = executor,
     // ... other config
     features = listOf(
         MemoryFeature(), // Remember past interactions

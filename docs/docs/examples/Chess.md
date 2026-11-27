@@ -378,7 +378,7 @@ val toolRegistry = ToolRegistry { tools(listOf(Move(game))) }
 
 // Create a chat agent with a system prompt and the tool registry
 val agent = AIAgent(
-    executor = baseExecutor,
+    promptExecutor = baseExecutor,
     strategy = strategy,
     llmModel = OpenAIModels.Chat.O3Mini,
     systemPrompt = """
@@ -614,7 +614,7 @@ val game = ChessGame()
 val toolRegistry = ToolRegistry { tools(listOf(Move(game))) }
 
 val agent = AIAgent(
-    executor = promptExecutor,
+    promptExecutor = promptExecutor,
     strategy = strategy,
     llmModel = OpenAIModels.Chat.O3Mini,
     systemPrompt = """
@@ -759,7 +759,7 @@ val game = ChessGame()
 val toolRegistry = ToolRegistry { tools(listOf(Move(game))) }
 
 val agent = AIAgent(
-    executor = baseExecutor,
+    promptExecutor = baseExecutor,
     strategy = strategy,
     llmModel = OpenAIModels.Chat.O3Mini,
     systemPrompt = """

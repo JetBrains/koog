@@ -67,7 +67,7 @@ val entity = System.getenv()["WEAVE_ENTITY"] ?: throw IllegalArgumentException("
 val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You are a code assistant. Provide concise code examples."
 ) {

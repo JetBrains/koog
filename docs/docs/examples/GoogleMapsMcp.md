@@ -83,7 +83,7 @@ Next we assemble a simple agent backed by the OpenAI executor and model. The age
 
 ```kotlin
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(openAIApiToken),
+    promptExecutor = simpleOpenAIExecutor(openAIApiToken),
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry,
 )

@@ -206,7 +206,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
 
 val transferAgentService = AIAgentService(
-    executor = openAIExecutor,
+    promptExecutor = openAIExecutor,
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = bankingAssistantSystemPrompt,
     temperature = 0.0,  // Use deterministic responses for financial operations
@@ -435,7 +435,7 @@ class TransactionAnalysisTools : ToolSet {
 
 ```kotlin
 val analysisAgentService = AIAgentService(
-    executor = openAIExecutor,
+    promptExecutor = openAIExecutor,
     llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "$bankingAssistantSystemPrompt\n$transactionAnalysisPrompt",
     temperature = 0.0,
@@ -687,7 +687,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 
 val classifierAgent = AIAgent(
-    executor = openAIExecutor,
+    promptExecutor = openAIExecutor,
     llmModel = OpenAIModels.Chat.GPT4oMini,
     toolRegistry = ToolRegistry {
         tool(AskUser)
