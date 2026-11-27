@@ -26,6 +26,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.junit.jupiter.api.Assertions.assertFalse
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -147,7 +148,7 @@ class FeatureMessageRemoteClientTest {
             val actualErrorMessage = throwable.message
             assertNotNull(actualErrorMessage)
 
-            assertTrue(actualErrorMessage.contains("Connection refused"))
+            assertContains(actualErrorMessage, "Failed to connect")
             assertFalse(client.isConnected.value)
             logger.info { "Client is finished successfully" }
         }

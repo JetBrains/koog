@@ -32,13 +32,13 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+                implementation(libs.ktor.client.engine.defaults)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(libs.ktor.client.cio)
                 implementation(project(":agents:agents-ext"))
             }
         }

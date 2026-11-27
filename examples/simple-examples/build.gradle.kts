@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.opentelemetry.exporter.logging)
     implementation(libs.opentelemetry.exporter.otlp)
 
-    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.engine.defaults)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.sse)
 
