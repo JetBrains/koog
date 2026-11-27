@@ -83,3 +83,20 @@ agent.run("Your prompt here")
 ```
 
 > **Note:** If the message history, tools, or model settings change between calls, the LiteRT session will be recreated. This incurs additional initialization time, so minimize unnecessary changes to these parameters.
+
+---
+
+## iOS
+
+The same `LiteRTLLMClient` runs on `iosArm64` and `iosSimulatorArm64`, through
+[litertlm-kmp](https://github.com/john-rocky/litert-lm-kmp), a Kotlin Multiplatform API over LiteRT-LM's C API. There is
+no client on `iosX64`. Unlike on Android, `executeStreaming` works here.
+
+The app adds the native runtime. In Xcode, choose **File > Add Package Dependencies...**, enter
+`https://github.com/john-rocky/litert-lm-kmp` and add the product `CLiteRTLM` to the app target. An app that has not done
+this still builds and runs, and a request fails with an `LLMClientException` that says so.
+
+`modelsPath` defaults to the app's Documents directory: copy the `.litertlm` file there, for example with
+`xcrun devicectl device copy to`. `backend` is `io.github.johnrocky.litertlm.Backend`: `Backend.GPU()`
+runs on Metal on a device, and the simulator has only `Backend.CPU()`. A failure of the runtime is an `LLMClientException` with a
+`LiteRtLmException` as its cause.
