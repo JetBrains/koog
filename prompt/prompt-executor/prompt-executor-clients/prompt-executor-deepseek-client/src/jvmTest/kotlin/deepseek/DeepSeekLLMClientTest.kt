@@ -291,13 +291,22 @@ class DeepSeekLLMClientTest {
 
     @Test
     fun testStreamingReasoningIsEmittedAndReplayedToProvider() = runTest {
-        val reasoning = "I should call the weather tool first."
+        assertStreamingReasoning("reasoning_content")
+    }
+
+    @Test
+    fun testStreamingReasoningAliasIsEmittedAndReplayedToProvider() = runTest {
+        assertStreamingReasoning("reasoning")
+    }
+
+    private suspend fun assertStreamingReasoning(field: String) {
+        val pieces = listOf("I", " ", "should", "\n", "\t", "call the weather tool first.")
+        val reasoning = pieces.joinToString("")
         val answer = "The weather in Boston is 72F."
 
-        // The reasoning-capable model streams reasoning under `reasoning_content` in one delta, then the answer.
-        //language=json
-        val reasoningChunk =
-            """{"id":"c","object":"chat.completion.chunk","created":0,"system_fingerprint":"fp","model":"deepseek-reasoner","choices":[{"index":0,"delta":{"role":"assistant","reasoning_content":"$reasoning"}}]}"""
+        val reasoningChunks = pieces.map { piece ->
+            """{"id":"c","object":"chat.completion.chunk","created":0,"system_fingerprint":"fp","model":"deepseek-reasoner","choices":[{"index":0,"delta":{"role":"assistant","$field":${JsonPrimitive(piece)}}}]}"""
+        }
         //language=json
         val answerChunk =
             """{"id":"c","object":"chat.completion.chunk","created":0,"system_fingerprint":"fp","model":"deepseek-reasoner","choices":[{"index":0,"delta":{"content":"$answer"},"finish_reason":"stop"}]}"""
@@ -339,7 +348,7 @@ class DeepSeekLLMClientTest {
                 parameters: Map<String, String>,
                 headers: Map<String, String>,
             ): Flow<O> = flow {
-                for (data in listOf(reasoningChunk, answerChunk)) {
+                for (data in reasoningChunks + answerChunk) {
                     if (dataFilter(data)) {
                         processStreamingChunk(decodeStreamingResponse(data))?.let { emit(it) }
                     }
@@ -365,10 +374,7 @@ class DeepSeekLLMClientTest {
             DeepSeekModels.DeepSeekV4Flash,
         ).toList()
 
-        assertTrue(
-            frames.any { it is StreamFrame.ReasoningDelta && it.text == reasoning },
-            "A reasoning delta should be emitted from the stream"
-        )
+        assertEquals(pieces, frames.filterIsInstance<StreamFrame.ReasoningDelta>().map { it.text })
         val reasoningComplete = frames.filterIsInstance<StreamFrame.ReasoningComplete>().single()
         assertEquals(listOf(reasoning), reasoningComplete.content)
 

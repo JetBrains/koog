@@ -206,7 +206,7 @@ public class DeepSeekLLMClient @JvmOverloads constructor(
                 }
 
                 choice.delta.reasoningContent
-                    ?.takeIf { it.isNotBlank() }
+                    ?.takeIf { it.isNotEmpty() }
                     ?.let { emitReasoningDelta(text = it, index = choice.index) }
 
                 choice.finishReason?.let { finishReason = it }
