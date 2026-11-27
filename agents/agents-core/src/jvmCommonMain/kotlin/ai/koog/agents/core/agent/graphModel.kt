@@ -166,12 +166,13 @@ private fun extractConditionLabel(str: String?): String? =
 /**
  * Extracts edge information from an AIAgentEdge.
  * Uses the public `toNode` property directly; reflection only for `forwardOutput` (internal).
+ * The internal getter's JVM name is mangled with the module name, so only its prefix is matched.
  */
 private fun extractEdgeInfo(edge: AIAgentEdge<*, *>): RawEdgeInfo {
     val toNode = edge.toNode
 
     val forwardOutput = edge::class.java.methods
-        .firstOrNull { it.name == $$"getForwardOutput$agents_core" || it.name == "getForwardOutput" }
+        .firstOrNull { it.name == "getForwardOutput" || it.name.startsWith($$"getForwardOutput$") }
         ?.invoke(edge)
 
     return RawEdgeInfo(toNode, extractConditionFromForwardOutput(forwardOutput))

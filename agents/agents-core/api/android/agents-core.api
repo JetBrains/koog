@@ -4776,6 +4776,7 @@ public final class ai/koog/agents/core/feature/remote/client/config/DefaultClien
 	public static final field Companion Lai/koog/agents/core/feature/remote/client/config/DefaultClientConnectionConfig$Companion;
 	public static final field DEFAULT_HOST Ljava/lang/String;
 	public static final field DEFAULT_PORT I
+	public fun <init> ()V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;Ljava/util/Map;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;Ljava/util/Map;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }

@@ -295,8 +295,8 @@ effectively final.
     import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
     import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
     import ai.koog.agents.core.dsl.builder.node
-    typealias Input = Unit
-    typealias Output = Unit
+    typealias Input = String
+    typealias Output = String
     -->
     ```kotlin
     fun AIAgentSubgraphBuilderBase<*, *>.myStatefulNode(
