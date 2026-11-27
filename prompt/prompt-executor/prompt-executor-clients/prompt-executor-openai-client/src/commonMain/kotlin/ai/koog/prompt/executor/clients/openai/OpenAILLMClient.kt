@@ -439,7 +439,7 @@ public open class OpenAILLMClient @JvmOverloads constructor(
 
                         is OpenAIStreamEvent.ResponseCompleted -> {
                             StreamFrame.End(
-                                finishReason = null,
+                                finishReason = it.response.status.name,
                                 metaInfo = it.response.usage.let { usage ->
                                     ResponseMetaInfo.create(
                                         clock = clock,
