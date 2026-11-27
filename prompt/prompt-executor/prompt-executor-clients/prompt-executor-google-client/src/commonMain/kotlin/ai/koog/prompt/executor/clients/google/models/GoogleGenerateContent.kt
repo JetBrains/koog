@@ -310,7 +310,7 @@ internal class GoogleFunctionDeclaration(
  */
 @Serializable
 @Suppress("LongParameterList")
-internal class GoogleGenerationConfig(
+internal data class GoogleGenerationConfig(
     val responseMimeType: String? = null,
     val responseSchema: JsonObject? = null,
     val responseJsonSchema: JsonObject? = null,

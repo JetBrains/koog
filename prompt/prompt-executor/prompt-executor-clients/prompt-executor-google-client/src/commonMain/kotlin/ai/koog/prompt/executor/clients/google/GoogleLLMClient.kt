@@ -385,8 +385,8 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             topP = googleParams.topP,
             topK = googleParams.topK,
             thinkingConfig = googleParams.thinkingConfig,
-            additionalProperties = googleParams.additionalProperties
-        )
+            additionalProperties = googleParams.additionalProperties?.takeIf { it.isNotEmpty() }
+        ).takeIf { it != GoogleGenerationConfig() }
 
         val functionCallingConfig = when (val toolChoice = googleParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
@@ -410,7 +410,7 @@ public open class GoogleLLMClient @JvmOverloads constructor(
             systemInstruction = googleSystemInstruction,
             tools = googleTools,
             generationConfig = generationConfig,
-            toolConfig = GoogleToolConfig(functionCallingConfig),
+            toolConfig = functionCallingConfig?.takeIf { tools.isNotEmpty() }?.let { GoogleToolConfig(it) },
         )
     }
 
