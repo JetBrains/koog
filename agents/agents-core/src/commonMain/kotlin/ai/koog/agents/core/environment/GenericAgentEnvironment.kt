@@ -30,7 +30,7 @@ public class GenericAgentEnvironment(
         metadata: ToolCallMetadata,
     ): ReceivedToolResult {
         logger.info {
-            formatLog("Executing tool (name: ${toolCall.tool}, args: ${toolCall.args}")
+            formatLog("Executing tool (name: ${toolCall.tool}, args: ${toolCall.args})")
         }
 
         val environmentToolResult = processToolCall(toolCall, metadata)
