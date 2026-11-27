@@ -2,6 +2,7 @@ package ai.koog.prompt.cache.memory
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
+import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.get
 import ai.koog.prompt.cache.model.put
 import ai.koog.prompt.message.Message
@@ -55,6 +56,16 @@ class InMemoryPromptCacheTest {
         private val testClock = KoogClock { testResponse.metaInfo.timestamp }
 
         private val differentTestClock = KoogClock { testClock.now().plus(1.milliseconds) }
+
+        private val testResponseWithMetadata = testResponse.copy(
+            metaInfo = testResponse.metaInfo.copy(
+                totalTokensCount = 13,
+                inputTokensCount = 8,
+                outputTokensCount = 5,
+                modelId = "cached-model",
+                metadata = JsonObject(mapOf("source" to JsonPrimitive("cached-response")))
+            )
+        )
     }
 
     @BeforeTest
@@ -74,6 +85,51 @@ class InMemoryPromptCacheTest {
         // Verify the response is correct
         assertNotNull(cachedResponse)
         assertEquals(testResponse, cachedResponse)
+    }
+
+    @Test
+    fun testCacheHitPreservesStoredMetadataWithoutAssistantHistory() = runTest {
+        cache.put(testPrompt, testTools, testResponseWithMetadata)
+
+        val cachedResponse = cache.get(testPrompt, testTools, differentTestClock)
+
+        assertEquals(
+            testResponseWithMetadata.copy(
+                metaInfo = testResponseWithMetadata.metaInfo.copy(timestamp = differentTestClock.now())
+            ),
+            cachedResponse
+        )
+        assertEquals(
+            testResponseWithMetadata,
+            cache.get(PromptCache.Request.create(testPrompt, testTools)),
+            "Reading a cached response should not change the stored metadata"
+        )
+    }
+
+    @Test
+    fun testCacheHitPreservesStoredMetadataWithAssistantHistory() = runTest {
+        val previousResponse = testResponse.copy(
+            metaInfo = testResponse.metaInfo.copy(
+                totalTokensCount = 37,
+                inputTokensCount = 24,
+                outputTokensCount = 13,
+                modelId = "previous-model",
+                metadata = JsonObject(mapOf("source" to JsonPrimitive("previous-response")))
+            )
+        )
+        val prompt = createTestPrompt(
+            listOf(testUserMessage, previousResponse, Message.User("Continue", RequestMetaInfo.Empty))
+        )
+        cache.put(prompt, testTools, testResponseWithMetadata)
+
+        val cachedResponse = cache.get(prompt, testTools, differentTestClock)
+
+        assertEquals(
+            testResponseWithMetadata.copy(
+                metaInfo = testResponseWithMetadata.metaInfo.copy(timestamp = differentTestClock.now())
+            ),
+            cachedResponse
+        )
     }
 
     @Test
