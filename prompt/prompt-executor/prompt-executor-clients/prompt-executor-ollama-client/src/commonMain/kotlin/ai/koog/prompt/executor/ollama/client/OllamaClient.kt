@@ -256,8 +256,6 @@ public class OllamaClient @JvmOverloads constructor(
         // Calculate total tokens (prompt + response) if both are available
         val totalTokensCount = when {
             promptTokenCount != null && responseTokenCount != null -> promptTokenCount + responseTokenCount
-            promptTokenCount != null -> promptTokenCount
-            responseTokenCount != null -> responseTokenCount
             else -> null
         }
 
