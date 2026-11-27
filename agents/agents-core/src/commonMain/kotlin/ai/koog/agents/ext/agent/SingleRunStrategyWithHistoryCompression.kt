@@ -71,17 +71,17 @@ public fun singleRunStrategyWithHistoryCompression(
     edge(nodeExecuteTool forwardTo nodeSendToolResult onCondition { llm.readSession { !config.isHistoryTooBig(prompt) } })
     edge(nodeCompressHistory forwardTo nodeSendCompressedHistory)
 
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
+
     edge(
         nodeSendToolResult forwardTo nodeFinish
             onTextMessage { true }
     )
 
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCalls { true })
+    edge(nodeSendCompressedHistory forwardTo nodeExecuteTool onToolCalls { true })
 
     edge(
         nodeSendCompressedHistory forwardTo nodeFinish
             onTextMessage { true }
     )
-
-    edge(nodeSendCompressedHistory forwardTo nodeExecuteTool onToolCalls { true })
 }

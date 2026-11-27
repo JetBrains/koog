@@ -5,6 +5,7 @@ import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.serialization.kotlinx.KotlinxSerializer
@@ -85,6 +86,54 @@ class SingleRunStrategyWithHistoryCompressionTests {
     }
 
     @Test
+    fun test_no_compression_post_tool_mixed_response_executes_next_tool_call() = runTest {
+        val actualToolCalls = mutableListOf<String>()
+        val config = HistoryCompressionConfig(
+            isHistoryTooBig = { it.messages.size > 100 },
+            compressionStrategy = HistoryCompressionStrategy.WholeHistory
+        )
+
+        val intermediateResponse = "Need another tool."
+        val finalResponse = "Task solved after second tool."
+        var postFirstToolResultHandled = false
+
+        val mockLLMApi = getMockExecutor(serializer) {
+            mockLLMToolCall(CreateTool, CreateTool.Args("first")) onRequestEquals "Solve task"
+            mockLLMMixedResponse(
+                toolCalls = listOf(CreateTool to CreateTool.Args("second")),
+                responses = listOf(intermediateResponse)
+            ) onCondition { request ->
+                if (request == "created" && !postFirstToolResultHandled) {
+                    postFirstToolResultHandled = true
+                    true
+                } else {
+                    false
+                }
+            }
+            mockLLMAnswer(finalResponse) onCondition { request ->
+                request == "created" && postFirstToolResultHandled
+            }
+            mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            mockLLMApi,
+            OllamaModels.Meta.LLAMA_3_2,
+            strategy = singleRunStrategyWithHistoryCompression(config),
+            toolRegistry = ToolRegistry { tool(CreateTool) }
+        ) {
+            install(EventHandler) {
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+            }
+        }
+
+        val result = agent.run("Solve task", null)
+
+        assertEquals(listOf("""{"name":"first"}""", """{"name":"second"}"""), actualToolCalls)
+        assertEquals(finalResponse, result)
+    }
+
+    @Test
     fun test_sequential_mode() = runTest {
         var compressionRequested = false
 
@@ -140,5 +189,63 @@ class SingleRunStrategyWithHistoryCompressionTests {
 
         agent.run("Solve task", null)
         assertTrue(compressionRequested)
+    }
+
+    @Test
+    fun test_compressed_history_mixed_response_executes_next_tool_call() = runTest {
+        val actualToolCalls = mutableListOf<String>()
+        val compressedHistoryResponse = "TLDR summary."
+        val intermediateResponse = "Need another tool after compression."
+        val finalResponse = "Task solved after compressed history tool."
+        var compressionFinished = false
+        var compressedHistoryResponseHandled = false
+
+        val config = HistoryCompressionConfig(
+            isHistoryTooBig = { !compressionFinished },
+            compressionStrategy = HistoryCompressionStrategy.WholeHistory
+        )
+
+        val mockLLMApi = getMockExecutor(serializer) {
+            mockLLMToolCall(CreateTool, CreateTool.Args("first")) onRequestEquals "Solve task"
+            mockLLMAnswer(compressedHistoryResponse) onCondition { request ->
+                if (request.contains("comprehensive summary")) {
+                    compressionFinished = true
+                    true
+                } else {
+                    false
+                }
+            }
+            mockLLMMixedResponse(
+                toolCalls = listOf(CreateTool to CreateTool.Args("second")),
+                responses = listOf(intermediateResponse)
+            ) onCondition { request ->
+                if (request.isEmpty() && compressionFinished && !compressedHistoryResponseHandled) {
+                    compressedHistoryResponseHandled = true
+                    true
+                } else {
+                    false
+                }
+            }
+            mockLLMAnswer(finalResponse) onCondition { request ->
+                request == "created" && compressedHistoryResponseHandled
+            }
+            mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            mockLLMApi,
+            OllamaModels.Meta.LLAMA_3_2,
+            strategy = singleRunStrategyWithHistoryCompression(config),
+            toolRegistry = ToolRegistry { tool(CreateTool) }
+        ) {
+            install(EventHandler) {
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+            }
+        }
+
+        val result = agent.run("Solve task", null)
+
+        assertEquals(listOf("""{"name":"first"}""", """{"name":"second"}"""), actualToolCalls)
+        assertEquals(finalResponse, result)
     }
 }
