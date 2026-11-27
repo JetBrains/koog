@@ -551,7 +551,7 @@ class GoogleLLMClientTest {
     }
 
     @Test
-    fun `execute maps cachedContentTokenCount from usage metadata`() = runTest {
+    fun `execute maps cachedContentTokenCount and thoughtsTokenCount from usage metadata`() = runTest {
         val model = GoogleModels.Gemini2_5Pro
 
         val transport = object : KoogHttpClient {
@@ -585,6 +585,7 @@ class GoogleLLMClientTest {
                     candidatesTokenCount = 42,
                     totalTokenCount = 31953,
                     cachedContentTokenCount = 28643,
+                    thoughtsTokenCount = 517,
                 )
             ) as R
 
@@ -619,6 +620,8 @@ class GoogleLLMClientTest {
         )
 
         result.metaInfo.metadata?.get("cachedContentTokenCount")?.jsonPrimitive?.int shouldBe 28643
+        result.metaInfo.metadata?.get("thoughtsTokenCount")?.jsonPrimitive?.int shouldBe 517
+        result.metaInfo.outputTokensCount shouldBe 42
     }
 
     @Test
@@ -710,6 +713,84 @@ class GoogleLLMClientTest {
             StreamFrame.TextComplete(finalAnswer, 1),
             StreamFrame.End(finishReason, ResponseMetaInfo.Empty),
         )
+    }
+
+    @Test
+    fun testExecuteStreamingMapsCachedAndThoughtsTokenCountsIntoEndFrame() = runTest {
+        val model = GoogleModels.Gemini2_5Pro
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "GoogleStreamingTokenDetailsTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("POST is not expected in this test")
+
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<O> {
+                val response = GoogleResponse(
+                    candidates = listOf(
+                        GoogleCandidate(
+                            content = GoogleContent(role = "model", parts = listOf(GooglePart.Text(text = "answer"))),
+                            finishReason = "STOP",
+                            index = 0
+                        )
+                    ),
+                    usageMetadata = GoogleUsageMetadata(
+                        promptTokenCount = 31911,
+                        candidatesTokenCount = 42,
+                        totalTokenCount = 32470,
+                        cachedContentTokenCount = 28643,
+                        thoughtsTokenCount = 517,
+                    )
+                )
+
+                val chunk = processStreamingChunk(response as R)
+                return if (chunk != null) flowOf(chunk) else emptyFlow()
+            }
+
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = GoogleLLMClient(httpClient = transport)
+
+        val end = client.executeStreaming(
+            prompt = Prompt(messages = listOf(Message.User("Hi", RequestMetaInfo.Empty)), id = "id"),
+            model = model,
+        ).toList().filterIsInstance<StreamFrame.End>().single()
+
+        end.metaInfo.metadata?.get("cachedContentTokenCount")?.jsonPrimitive?.int shouldBe 28643
+        end.metaInfo.metadata?.get("thoughtsTokenCount")?.jsonPrimitive?.int shouldBe 517
+        end.metaInfo.outputTokensCount shouldBe 42
     }
 
     @Test

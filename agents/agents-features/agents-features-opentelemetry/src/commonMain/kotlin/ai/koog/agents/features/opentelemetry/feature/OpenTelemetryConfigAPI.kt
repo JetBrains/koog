@@ -45,10 +45,14 @@ public interface OpenTelemetryConfigAPI {
     /**
      * Indicates whether OpenTelemetry resources should be shut down when the agent closes.
      *
-     * Defaults to `false`. When `true`, the feature's agent-close handler calls the internal
-     * SDK-shutdown routine, which shuts down every registered span processor (which in turn shuts
+     * Defaults to `false`. When `true`, the feature's agent-close handler first flushes every registered
+     * span processor, so the spans that ended right before the close still reach the exporter, and then
+     * calls the internal SDK-shutdown routine, which shuts down every span processor (which in turn shuts
      * down its wrapped exporter) and on JVM also closes the metrics `SdkMeterProvider`. On non-JVM
-     * targets the metrics path is a no-op; only span processors are shut down.
+     * targets the metrics path is a no-op; only span processors are flushed and shut down.
+     *
+     * Enable this in short-lived processes (scripts, CLI tools, tests) that exit right after the agent run;
+     * otherwise the batch span processor may not get to export the last spans before the process ends.
      *
      * Note: if multiple agents share the same [OpenTelemetryConfig], enabling this causes shutdown
      * to happen when the first agent closes, which may affect the remaining agents.
@@ -143,9 +147,10 @@ public interface OpenTelemetryConfigAPI {
     public fun setSdk(openTelemetry: OpenTelemetry)
 
     /**
-     * Toggles whether [OpenTelemetryPlatform.shutdown] runs when the agent closes. See [isShutdownOnAgentClose].
+     * Toggles whether the SDK is flushed and [OpenTelemetryPlatform.shutdown] runs when the agent closes.
+     * See [isShutdownOnAgentClose].
      *
-     * @param shutdownOnAgentClose When `true`, the feature shuts down its SDK when the agent closes.
+     * @param shutdownOnAgentClose When `true`, the feature flushes and shuts down its SDK when the agent closes.
      */
     public fun setShutdownOnAgentClose(shutdownOnAgentClose: Boolean)
 

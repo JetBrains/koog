@@ -12,6 +12,7 @@ import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.USER
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Parameter.defaultModel
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSimpleStrategy
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.Strategy.getSingleLLMCallStrategy
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assistantMessage
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.defaultMockExecutor
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.getMessagesString
@@ -32,6 +33,7 @@ import io.opentelemetry.kotlin.tracing.export.batchSpanProcessor
 import io.opentelemetry.kotlin.tracing.export.simpleSpanProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -251,12 +253,9 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
                             "gen_ai.response.model" to defaultModel.id,
                             "gen_ai.usage.input_tokens" to 0L,
                             "gen_ai.usage.output_tokens" to 0L,
-                            "gen_ai.output.messages" to getMessagesString(
-                                listOf(
-                                    Message.System(SYSTEM_PROMPT, RequestMetaInfo(testClock.now())),
-                                    Message.User(USER_PROMPT_PARIS, RequestMetaInfo(testClock.now()))
-                                )
-                            ),
+                            // agent.run("") does not match the mocked USER_PROMPT_PARIS, so the mock executor
+                            // answers with its default empty assistant message.
+                            "gen_ai.output.messages" to getMessagesString(listOf(assistantMessage(""))),
                             "gen_ai.response.finish_reasons" to listOf(GenAIAttributes.Response.FinishReasonType.Stop.id),
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,
                             customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,
@@ -268,6 +267,39 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
             )
 
             assertSpans(expectedInvokeAgentSpans, actualInvokeAgentSpans)
+        }
+    }
+
+    /**
+     * The Kotlin SDK batch span processor drops its queue on shutdown and closes the exporter before draining it,
+     * so the feature has to flush before it shuts the SDK down. Without the flush, the spans that end right before
+     * the agent closes (create_agent, invoke_agent) never reach the exporter.
+     *
+     * runBlocking rather than runTest: the flush waits on a real dispatcher, and runTest's virtual clock would
+     * expire the SDK's flush timeout immediately.
+     */
+    @Test
+    fun `test shutdown on agent close flushes the batch span processor`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+            val agent = createAgent(
+                strategy = getSingleLLMCallStrategy(AgentType.Graph),
+                executor = defaultMockExecutor,
+            ) {
+                addSpanProcessor { batchSpanProcessor(mockExporter) }
+                setShutdownOnAgentClose(true)
+            }
+
+            agent.run(USER_PROMPT_PARIS, null)
+            // Close right away, well inside the batch schedule delay: only the flush on close can deliver these spans.
+            agent.close()
+
+            val spanNames = mockExporter.collectedSpans.map { it.name }
+            listOf(OperationNameType.CREATE_AGENT, OperationNameType.INVOKE_AGENT, OperationNameType.CHAT).forEach { operation ->
+                assertTrue(
+                    spanNames.any { it.startsWith(operation.id) },
+                    "The ${operation.id} span should be flushed when the agent closes. Exported spans: $spanNames",
+                )
+            }
         }
     }
 

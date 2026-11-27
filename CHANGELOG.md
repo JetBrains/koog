@@ -1,3 +1,23 @@
+# 1.4.0
+> Published 27 November 2026
+
+## Improvements
+
+- **Langfuse v4 compatibility**: `addLangfuseExporter` now sends the `x-langfuse-ingestion-version: 4` header, so traces use the Langfuse v4 observations-first data model instead of the delayed legacy path. It also copies the run input and output onto the root `create_agent` observation, sets `gen_ai.conversation.id` on `create_agent` and `execute_tool` spans so they can be filtered by session, and maps `koog.node.input` / `koog.node.output` to `langfuse.observation.input` / `langfuse.observation.output` on node spans (#2227, #2340)
+- **Gemini cached and thinking tokens in Langfuse**: The Google client now also puts `thoughtsTokenCount` into `ResponseMetaInfo.metadata`, in both the streaming and non-streaming paths. `LangfuseSpanAdapter` turns the cached and thinking token counts into `langfuse.observation.usage_details`, so Langfuse prices Gemini calls correctly. Spans from other providers do not change (#2303)
+
+## Bug Fixes
+
+- **Every message part in Langfuse spans**: `LangfuseSpanAdapter` now writes the whole input history and the response as single `gen_ai.prompt` / `gen_ai.completion` JSON arrays in the OpenAI message shape. Answer text, readable reasoning, all tool calls and all tool results are now visible. Previously, Claude 5 signature-only thinking blocks produced empty outputs, text next to reasoning or tool calls was lost, and only the first of several parallel tool results was kept. Writing one attribute per message list also keeps long runs under the OTel SDK's 128-attributes-per-span limit (#2298)
+- **OpenTelemetry `invoke_agent` span and shutdown flush**: The `invoke_agent` span now reports the live conversation's assistant responses and real token usage, instead of echoing the configured prompt with zero usage. With `setShutdownOnAgentClose(true)`, `closeSdks()` now flushes the batch processor before shutdown, so the final spans (including `create_agent` and `invoke_agent`) are no longer dropped (#2340)
+- **Tool results order with missing tools**: `MissingToolsConversionStrategy.Missing` now keeps the remaining tool results ahead of the text parts converted from missing tools. Before, a parallel call to an unregistered tool made Anthropic models (direct or via Bedrock Converse) reject the whole request instead of receiving a recoverable error (#2318)
+- **Bedrock Converse fixes**: String tool arguments such as `"1917"` stay strings when history is replayed, and `"Infinity"`/`"NaN"` no longer fail the request. `BedrockConverseParams.requestMetadata` now reaches `ConverseRequest` / `ConverseStreamRequest`. Nested object parameters keep their `required` and `additionalProperties` constraints in the tool schema (#2316)
+- **Multi-line SSE chunks in Ktor**: `respondTextStream` and `respondInvocationText` (with `Accept: text/event-stream`) now write each line of a chunk as its own `data:` field, so spec-compliant clients no longer drop text after an embedded newline (#2289, #2292)
+
+## Build & CI
+
+- **Sharded Dokka and tuned CI memory**: Split Dokka generation into four shards that are aggregated in a separate job, lowered the default Gradle heap and capped worker and Kotlin daemon memory, and bumped GitHub Actions versions (#2333)
+
 # 1.3.0
 > Published 23 September 2026
 

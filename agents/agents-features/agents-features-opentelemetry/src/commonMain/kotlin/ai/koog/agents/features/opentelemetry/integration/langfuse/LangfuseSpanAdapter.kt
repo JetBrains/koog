@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
@@ -10,9 +11,17 @@ import ai.koog.agents.features.opentelemetry.span.SpanType
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
@@ -20,11 +29,26 @@ import kotlin.concurrent.atomics.fetchAndIncrement
 /**
  * Internal adapter class for enhancing and modifying spans related to GenAI agent processing.
  * It reshapes inference-span content from the OTel-standard `gen_ai.input.messages` /
- * `gen_ai.output.messages` attributes (which Langfuse does not currently recognize) into the
- * indexed `gen_ai.prompt.{i}.*` / `gen_ai.completion.{i}.*` attributes that Langfuse displays.
+ * `gen_ai.output.messages` attributes into the `gen_ai.prompt` / `gen_ai.completion` attributes.
+ * Langfuse reads those ahead of the semconv message attributes and renders them in the OpenAI message shape.
  *
- * The adapter consumes the typed `messages: List<Message>` exposed by those standard attributes
- * and re-emits them in the indexed shape; the original attributes remain on the span untouched.
+ * Each of the two attributes holds the whole message list as one JSON array in the OpenAI message shape.
+ * One attribute per list keeps a long tool-call history within the span attribute count limit,
+ * which is 128 by default. The original attributes remain on the span untouched.
+ *
+ * Langfuse v4 is observations-first: evaluators and filters read each observation on its own, and the
+ * request and response of the whole run belong on the root observation. Koog's trace root is the
+ * `create_agent` span, which carries neither, so the adapter copies the `invoke_agent` input and output
+ * onto that parent as `langfuse.observation.input` / `langfuse.observation.output`, in the same OpenAI
+ * message shape. The parent flushes its attributes only when it ends, which happens after the `invoke_agent` span.
+ *
+ * Langfuse also resolves the session of each observation on its own. The GenAI semantic conventions define no
+ * `gen_ai.conversation.id` on the `create_agent` span, so the adapter sets `langfuse.session.id` on that root
+ * observation to the run id, unless a `langfuse.session.id` trace attribute already set it.
+ *
+ * Node and subgraph spans keep their input and output under Koog-specific `koog.node.*` / `koog.subgraph.*`
+ * attributes, which Langfuse does not read, so the adapter also copies them to `langfuse.observation.input` /
+ * `langfuse.observation.output`. Without the copy, these observations show an empty input and output.
  */
 @OptIn(ExperimentalAtomicApi::class)
 internal class LangfuseSpanAdapter(
@@ -42,17 +66,27 @@ internal class LangfuseSpanAdapter(
                     span.attributes.find { attribute -> attribute.key == GenAIAttributes.Conversation.Id("").key }?.value
 
                 runId?.let { runId ->
-                    span.addAttribute(CustomAttribute("langfuse.session.id", runId))
+                    span.addAttribute(CustomAttribute(SESSION_ID_KEY, runId))
+                    // The `create_agent` root has no `gen_ai.conversation.id` of its own, as the GenAI semantic
+                    // conventions define none on it. A session from the trace attributes is already on the root and wins.
+                    span.copyToRootObservation(SESSION_ID_KEY, runId, overwrite = false)
+                }
+
+                // The run input belongs on the trace root observation in Langfuse v4.
+                span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()?.let { attribute ->
+                    val entries = JsonArray(attribute.messages.flatMap(::promptEntries))
+                    span.copyToRootObservation(OBSERVATION_INPUT_KEY, HiddenString(entries.toString()))
                 }
             }
 
             SpanType.INFERENCE -> {
-                // Decompose `gen_ai.input.messages` into Langfuse-shaped indexed prompt attributes.
+                // Rewrite `gen_ai.input.messages` as the Langfuse-shaped `gen_ai.prompt` attribute.
                 // The OTel standard `gen_ai.input.messages` attribute itself is left in place, so
                 // backends that recognize the modern semconv still see it.
                 val inputMessagesAttr = span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()
-                inputMessagesAttr?.messages?.forEachIndexed { index, message ->
-                    applyPromptAttributes(span, index, message)
+                inputMessagesAttr?.messages?.let { messages ->
+                    val entries = JsonArray(messages.flatMap(::promptEntries))
+                    span.addAttribute(CustomAttribute(PROMPT_KEY, HiddenString(entries.toString())))
                 }
             }
 
@@ -77,6 +111,12 @@ internal class LangfuseSpanAdapter(
                         )
                     )
                 }
+
+                span.copyToObservation<KoogAttributes.Koog.Node.Input>(OBSERVATION_INPUT_KEY)
+            }
+
+            SpanType.SUBGRAPH -> {
+                span.copyToObservation<KoogAttributes.Koog.Subgraph.Input>(OBSERVATION_INPUT_KEY)
             }
 
             else -> {}
@@ -92,131 +132,190 @@ internal class LangfuseSpanAdapter(
     override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
         when (span.type) {
             SpanType.INFERENCE -> {
-                // Decompose `gen_ai.output.messages` into Langfuse-shaped indexed completion attributes.
+                // Rewrite `gen_ai.output.messages` as the Langfuse-shaped `gen_ai.completion` attribute.
                 // The OTel standard attribute itself is left in place.
                 val outputMessagesAttr = span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()
-                outputMessagesAttr?.messages?.forEachIndexed { index, message ->
-                    applyCompletionAttributes(span, index, message)
+                outputMessagesAttr?.messages?.let { messages ->
+                    val entries = JsonArray(messages.filterIsInstance<Message.Assistant>().map(::completionEntry))
+                    span.addAttribute(CustomAttribute(COMPLETION_KEY, HiddenString(entries.toString())))
+                    usageDetails(messages.filterIsInstance<Message.Assistant>().firstOrNull()?.metaInfo)?.let { details ->
+                        span.addAttribute(CustomAttribute(USAGE_DETAILS_KEY, details.toString()))
+                    }
                 }
             }
+
+            SpanType.INVOKE_AGENT -> {
+                // The run output belongs on the trace root observation in Langfuse v4.
+                span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()?.let { attribute ->
+                    val responses = attribute.messages.filterIsInstance<Message.Assistant>()
+                    val entries = JsonArray(responses.map(::completionEntry))
+                    span.copyToRootObservation(OBSERVATION_OUTPUT_KEY, HiddenString(entries.toString()))
+                }
+            }
+
+            SpanType.NODE -> {
+                span.copyToObservation<KoogAttributes.Koog.Node.Output>(OBSERVATION_OUTPUT_KEY)
+            }
+
+            SpanType.SUBGRAPH -> {
+                span.copyToObservation<KoogAttributes.Koog.Subgraph.Output>(OBSERVATION_OUTPUT_KEY)
+            }
+
             else -> {}
         }
     }
 
     //region Private Methods
 
-    private fun applyPromptAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
-        when (message) {
-            is Message.System -> {
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(message.parts.joinToString("\n") { it.text })))
-            }
+    /**
+     * Writes [value] under [key] on the `create_agent` parent of this span, the trace root. Langfuse v4 reads the
+     * request and response of a run from the root observation, which the `create_agent` span does not carry itself.
+     * Guarded on the parent type, so a change in the span hierarchy degrades to a no-op rather than writing
+     * to the wrong span. With [overwrite] set to `false`, a value already on the root is kept.
+     */
+    private fun GenAIAgentSpan.copyToRootObservation(key: String, value: Any, overwrite: Boolean = true) {
+        val root = parentSpan?.takeIf { parent -> parent.type == SpanType.CREATE_AGENT } ?: return
+        if (!overwrite && root.attributes.any { attribute -> attribute.key == key }) return
+        root.addAttribute(CustomAttribute(key, value))
+    }
 
-            is Message.User -> {
-                val toolResults = message.parts.filterIsInstance<MessagePart.Tool.Result>()
-                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+    /**
+     * Copies the value of the Koog-specific attribute [T] to [key] on the same span. Langfuse maps only a fixed list
+     * of attribute keys onto the input and output of an observation, and none of the `koog.*` keys is on it.
+     */
+    private inline fun <reified T : Attribute> GenAIAgentSpan.copyToObservation(key: String) {
+        attributes.filterIsInstance<T>().firstOrNull()?.let { attribute ->
+            addAttribute(CustomAttribute(key, attribute.value))
+        }
+    }
 
-                if (toolResults.isNotEmpty()) {
-                    val toolResult = toolResults.first()
-                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", "tool"))
-                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(toolResult.output)))
-                } else {
-                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                    span.addAttribute(CustomAttribute("gen_ai.prompt.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
+    private fun promptEntries(message: Message): List<JsonObject> = when (message) {
+        is Message.System -> listOf(textEntry(message.role, message.parts.joinToString("\n") { it.text }))
+
+        is Message.User -> {
+            val toolResults = message.parts.filterIsInstance<MessagePart.Tool.Result>()
+            val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+            val toolEntries = toolResults.map { toolResult ->
+                buildJsonObject {
+                    put("role", "tool")
+                    toolResult.id?.let { id -> put("tool_call_id", id) }
+                    put("content", toolResult.output)
                 }
             }
+            if (toolResults.isNotEmpty() && textParts.isEmpty()) {
+                toolEntries
+            } else {
+                toolEntries + textEntry(message.role, textParts.joinToString("\n") { it.text })
+            }
+        }
 
-            is Message.Assistant -> {
-                val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
-                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
-                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+        is Message.Assistant -> listOf(assistantEntry(message))
+    }
 
-                span.addAttribute(CustomAttribute("gen_ai.prompt.$index.role", message.role.name.lowercase()))
-                span.addAttribute(
-                    CustomAttribute(
-                        "gen_ai.prompt.$index.content",
-                        when {
-                            toolCalls.isNotEmpty() -> HiddenString(encodeToolCallsContent(toolCalls))
-                            reasoningParts.isNotEmpty() -> HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })
-                            else -> HiddenString(textParts.joinToString("\n") { it.text })
+    private fun completionEntry(message: Message.Assistant): JsonObject {
+        val finishReason = if (message.parts.any { it is MessagePart.Tool.Call }) {
+            GenAIAttributes.Response.FinishReasonType.ToolCalls.id
+        } else {
+            message.finishReason
+        }
+        val entry = assistantEntry(message)
+        return finishReason?.let { reason -> JsonObject(entry + ("finish_reason" to JsonPrimitive(reason))) } ?: entry
+    }
+
+    /**
+     * Builds the Langfuse `usage_details` for a response that reports cached or reasoning tokens in its
+     * metadata. Langfuse prices `input_cached_tokens` and `output_reasoning` apart from `input` and `output`,
+     * and the `langfuse.observation.usage_details` attribute takes precedence over `gen_ai.usage.*`.
+     * Google counts cached tokens inside the prompt token count, so they are subtracted from `input`,
+     * and counts thoughts apart from the candidate tokens. Returns null when neither count is present.
+     */
+    private fun usageDetails(metaInfo: ResponseMetaInfo?): JsonObject? {
+        val metadata = metaInfo?.metadata ?: return null
+        val cached = metadata[CACHED_TOKENS_KEY]?.jsonPrimitive?.intOrNull
+        val reasoning = metadata[REASONING_TOKENS_KEY]?.jsonPrimitive?.intOrNull
+        if (cached == null && reasoning == null) return null
+        return buildJsonObject {
+            metaInfo.inputTokensCount?.let { put("input", it - (cached ?: 0)) }
+            cached?.let { put("input_cached_tokens", it) }
+            metaInfo.outputTokensCount?.let { put("output", it) }
+            reasoning?.let { put("output_reasoning", it) }
+        }
+    }
+
+    private fun textEntry(role: Message.Role, text: String): JsonObject = buildJsonObject {
+        put("role", role.name.lowercase())
+        put("content", text)
+    }
+
+    /**
+     * Builds an assistant message in the OpenAI message shape that Langfuse renders.
+     * The text goes to `content` and the tool calls to `tool_calls`. When the message carries readable
+     * reasoning, `content` becomes a list of typed `reasoning` and `text` blocks in the original order,
+     * so the reasoning stays apart from the answer.
+     */
+    private fun assistantEntry(message: Message.Assistant): JsonObject = buildJsonObject {
+        val reasoningParts = message.parts.reasoningWithContent()
+        val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+        val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
+
+        put("role", Message.Role.Assistant.name.lowercase())
+        if (reasoningParts.isNotEmpty()) {
+            putJsonArray("content") {
+                message.parts.forEach { part ->
+                    when (part) {
+                        is MessagePart.Reasoning -> if (part in reasoningParts) {
+                            addJsonObject {
+                                put("type", "reasoning")
+                                put("text", part.content.joinToString("\n"))
+                            }
                         }
-                    )
-                )
+
+                        is MessagePart.Text -> addJsonObject {
+                            put("type", "text")
+                            put("text", part.text)
+                        }
+
+                        else -> {}
+                    }
+                }
+            }
+        } else if (textParts.isNotEmpty() || toolCalls.isEmpty()) {
+            put("content", textParts.joinToString("\n") { it.text })
+        }
+
+        if (toolCalls.isNotEmpty()) {
+            putJsonArray("tool_calls") {
+                toolCalls.forEach { toolCall ->
+                    addJsonObject {
+                        toolCall.id?.let { id -> put("id", id) }
+                        put("type", "function")
+                        putJsonObject("function") {
+                            put("name", toolCall.tool)
+                            put("arguments", toolCall.args)
+                        }
+                    }
+                }
             }
         }
     }
 
-    private fun applyCompletionAttributes(span: GenAIAgentSpan, index: Int, message: Message) {
-        // Langfuse expects `assistant` for completion entries.
-        span.addAttribute(
-            CustomAttribute("gen_ai.completion.$index.role", Message.Role.Assistant.name.lowercase())
-        )
-
-        when (message) {
-            is Message.Assistant -> {
-                val toolCalls = message.parts.filterIsInstance<MessagePart.Tool.Call>()
-                // Reasoning parts with no content (e.g. Google's signature-only parts) must not
-                // suppress the text parts of the same message.
-                val reasoningParts = message.parts.filterIsInstance<MessagePart.Reasoning>()
-                    .filter { it.content.isNotEmpty() }
-                val textParts = message.parts.filterIsInstance<MessagePart.Text>()
-
-                when {
-                    toolCalls.isNotEmpty() -> {
-                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(encodeToolCallsContent(toolCalls))))
-                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", GenAIAttributes.Response.FinishReasonType.ToolCalls.id))
-                    }
-                    reasoningParts.isNotEmpty() -> {
-                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(reasoningParts.joinToString("\n") { it.content.joinToString("\n") })))
-                        message.finishReason?.let { reason ->
-                            span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
-                        }
-                    }
-                    else -> {
-                        span.addAttribute(CustomAttribute("gen_ai.completion.$index.content", HiddenString(textParts.joinToString("\n") { it.text })))
-                        message.finishReason?.let { reason ->
-                            span.addAttribute(CustomAttribute("gen_ai.completion.$index.finish_reason", reason))
-                        }
-                    }
-                }
-            }
-
-            else -> {
-                // Output messages should only be assistant responses.
-            }
-        }
-    }
+    /**
+     * Reasoning parts that carry text. Signature-only parts (Google sends an empty list,
+     * Anthropic sends a single empty string) must not suppress the text parts of the same message.
+     */
+    private fun List<MessagePart>.reasoningWithContent(): List<MessagePart.Reasoning> =
+        filterIsInstance<MessagePart.Reasoning>().filter { part -> part.content.any { it.isNotBlank() } }
 
     //endregion Private Methods
-}
 
-/**
- * Encodes a list of tool-call messages into the raw JSON-array string used by [LangfuseSpanAdapter]
- * for the `gen_ai.prompt.{i}.content` / `gen_ai.completion.{i}.content` attribute when the underlying message
- * is a tool call.
- *
- * Each entry is shaped as `{"function": {"name": <name>, "arguments": <args>}, "id": <id>, "type": "function"}`.
- * Masking is the caller's responsibility — the caller wraps the result in [HiddenString] and the
- * standard `applyAttributes` pipeline handles the verbose flag uniformly with all other attributes.
- *
- * Marked `internal` so the [LangfuseSpanAdapter] tests can compute the identical expected value.
- */
-internal fun encodeToolCallsContent(toolCalls: List<MessagePart.Tool.Call>): String {
-    val array = JsonArray(
-        toolCalls.map { tool ->
-            JsonObject(
-                mapOf(
-                    "function" to JsonObject(
-                        mapOf(
-                            "name" to JsonPrimitive(tool.tool),
-                            "arguments" to JsonPrimitive(tool.args),
-                        )
-                    ),
-                    "id" to JsonPrimitive(tool.id ?: ""),
-                    "type" to JsonPrimitive("function"),
-                )
-            )
-        }
-    )
-    return array.toString()
+    private companion object {
+        const val PROMPT_KEY = "gen_ai.prompt"
+        const val COMPLETION_KEY = "gen_ai.completion"
+        const val USAGE_DETAILS_KEY = "langfuse.observation.usage_details"
+        const val SESSION_ID_KEY = "langfuse.session.id"
+        const val OBSERVATION_INPUT_KEY = "langfuse.observation.input"
+        const val OBSERVATION_OUTPUT_KEY = "langfuse.observation.output"
+        const val CACHED_TOKENS_KEY = "cachedContentTokenCount"
+        const val REASONING_TOKENS_KEY = "thoughtsTokenCount"
+    }
 }

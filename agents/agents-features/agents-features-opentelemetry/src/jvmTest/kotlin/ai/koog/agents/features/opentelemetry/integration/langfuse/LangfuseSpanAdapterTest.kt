@@ -8,10 +8,14 @@ import ai.koog.agents.features.opentelemetry.mock.MockContextFactory
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.span.endInvokeAgentSpan
+import ai.koog.agents.features.opentelemetry.span.endNodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.endSubgraphExecuteSpan
 import ai.koog.agents.features.opentelemetry.span.startCreateAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
 import ai.koog.agents.features.opentelemetry.span.startInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startNodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -19,11 +23,40 @@ import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.put
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class LangfuseSpanAdapterTest {
+
+    /** Shapes of a signature-only Reasoning part, as each provider client builds it. */
+    enum class SignatureOnlyReasoning(val content: List<String>) {
+        GOOGLE(emptyList()),
+        ANTHROPIC(listOf("")),
+    }
+
+    /**
+     * Token counts a response reports in its metadata, with the usage details Langfuse should receive.
+     * Anthropic reports its cache reads under `cacheReadInputTokens` and already leaves them out of the input count.
+     */
+    enum class TokenDetails(
+        val cached: Int?,
+        val reasoning: Int?,
+        val expectedUsageDetails: String?,
+        val anthropicCacheRead: Int? = null,
+    ) {
+        CACHED_AND_REASONING(800, 200, """{"input": 200, "input_cached_tokens": 800, "output": 50, "output_reasoning": 200}"""),
+        REASONING_ONLY(null, 200, """{"input": 1000, "output": 50, "output_reasoning": 200}"""),
+        CACHED_ONLY(800, null, """{"input": 200, "input_cached_tokens": 800, "output": 50}"""),
+        ANTHROPIC_CACHE_READ_ONLY(null, null, null, anthropicCacheRead = 300),
+    }
 
     @Test
     fun `onBeforeSpanStarted adds trace attributes to invoke span`() {
@@ -40,6 +73,7 @@ class LangfuseSpanAdapterTest {
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
+        val runId = "run-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
@@ -58,7 +92,6 @@ class LangfuseSpanAdapterTest {
         }
 
         val invokeAgentSpanId = "invoke-agent-span-id"
-        val runId = "run-id"
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
@@ -91,7 +124,6 @@ class LangfuseSpanAdapterTest {
         val assistantContent = "Checking the weather tool."
         val toolResponseContent = "tool response payload"
 
-        val toolCallPart = MessagePart.Tool.Call(id = "tool-call-id", tool = "getWeather", args = "{\"location\":\"Paris\"}")
         val inputMessages = listOf(
             Message.System(systemContent, RequestMetaInfo.Empty),
             Message.User(userContent, RequestMetaInfo.Empty),
@@ -101,46 +133,36 @@ class LangfuseSpanAdapterTest {
                 metaInfo = RequestMetaInfo.Empty,
             ),
             Message.Assistant(
-                parts = listOf(toolCallPart),
+                parts = listOf(MessagePart.Tool.Call(id = "tool-call-id", tool = "getWeather", args = "{\"location\":\"Paris\"}")),
                 metaInfo = ResponseMetaInfo.Empty,
                 finishReason = "tool_call",
             ),
         )
         val inferenceSpan = createInferenceSpan(provider, messages = inputMessages)
-        val expectedToolCallJson = encodeToolCallsContent(listOf(toolCallPart))
 
         adapter.onBeforeSpanStarted(inferenceSpan)
 
         val attributes = inferenceSpan.attributes
 
-        // Adapter decomposes Input.Messages into per-index prompt attributes but leaves the
+        // Adapter rewrites Input.Messages into the prompt attribute but leaves the
         // original OTel-standard attribute in place.
         assertEquals(1, attributes.count { it is GenAIAttributes.Input.Messages })
 
-        assertEquals("system", attributes.requireValue("gen_ai.prompt.0.role"))
-        val actualSystemContent = attributes.requireValue("gen_ai.prompt.0.content")
-        assertIs<HiddenString>(actualSystemContent)
-        assertEquals(systemContent, actualSystemContent.value)
-
-        assertEquals("user", attributes.requireValue("gen_ai.prompt.1.role"))
-        val actualUserContent = attributes.requireValue("gen_ai.prompt.1.content")
-        assertIs<HiddenString>(actualUserContent)
-        assertEquals(userContent, actualUserContent.value)
-
-        assertEquals("assistant", attributes.requireValue("gen_ai.prompt.2.role"))
-        val actualAssistantContent = attributes.requireValue("gen_ai.prompt.2.content")
-        assertIs<HiddenString>(actualAssistantContent)
-        assertEquals(assistantContent, actualAssistantContent.value)
-
-        assertEquals("tool", attributes.requireValue("gen_ai.prompt.3.role"))
-        val actualToolResponseContent = attributes.requireValue("gen_ai.prompt.3.content")
-        assertIs<HiddenString>(actualToolResponseContent)
-        assertEquals(toolResponseContent, actualToolResponseContent.value)
-
-        assertEquals("assistant", attributes.requireValue("gen_ai.prompt.4.role"))
-        val actualToolCallContent = attributes.requireValue("gen_ai.prompt.4.content")
-        assertIs<HiddenString>(actualToolCallContent)
-        assertEquals(expectedToolCallJson, actualToolCallContent.value)
+        assertJsonAttribute(
+            """
+            [
+              {"role": "system", "content": "$systemContent"},
+              {"role": "user", "content": "$userContent"},
+              {"role": "assistant", "content": "$assistantContent"},
+              {"role": "tool", "tool_call_id": "tool-call-id", "content": "$toolResponseContent"},
+              {"role": "assistant", "tool_calls": [
+                {"id": "tool-call-id", "type": "function", "function": {"name": "getWeather", "arguments": "{\"location\":\"Paris\"}"}}
+              ]}
+            ]
+            """,
+            attributes,
+            "gen_ai.prompt",
+        )
     }
 
     @Test
@@ -157,53 +179,81 @@ class LangfuseSpanAdapterTest {
             finishReason = "stop",
         )
 
-        val toolCallPart2 = MessagePart.Tool.Call(id = "tool-call-id", tool = "getWeather", args = "{\"location\":\"Rome\"}")
         val toolCallMessage2 = Message.Assistant(
-            parts = listOf(toolCallPart2),
+            parts = listOf(MessagePart.Tool.Call(id = "tool-call-id", tool = "getWeather", args = "{\"location\":\"Rome\"}")),
             metaInfo = ResponseMetaInfo.Empty,
             finishReason = "tool_call",
         )
-        val expectedToolCallJson = encodeToolCallsContent(listOf(toolCallPart2))
         inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage, toolCallMessage2)))
 
         adapter.onBeforeSpanFinished(inferenceSpan)
 
         val attributes = inferenceSpan.attributes
 
-        // Adapter decomposes Output.Messages into per-index completion attributes but leaves
+        // Adapter rewrites Output.Messages into the completion attribute but leaves
         // the original OTel-standard attribute in place.
         assertEquals(1, attributes.count { it is GenAIAttributes.Output.Messages })
 
-        assertEquals("assistant", attributes.requireValue("gen_ai.completion.0.role"))
-        val actualAssistantAnswer = attributes.requireValue("gen_ai.completion.0.content")
-        assertIs<HiddenString>(actualAssistantAnswer)
-        assertEquals(assistantAnswer, actualAssistantAnswer.value)
-        assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
-
-        assertEquals("assistant", attributes.requireValue("gen_ai.completion.1.role"))
-        val actualToolCallContent = attributes.requireValue("gen_ai.completion.1.content")
-        assertIs<HiddenString>(actualToolCallContent)
-        assertEquals(expectedToolCallJson, actualToolCallContent.value)
-        assertEquals(
-            GenAIAttributes.Response.FinishReasonType.ToolCalls.id,
-            attributes.requireValue("gen_ai.completion.1.finish_reason"),
+        assertJsonAttribute(
+            """
+            [
+              {"role": "assistant", "content": "$assistantAnswer", "finish_reason": "stop"},
+              {"role": "assistant", "tool_calls": [
+                {"id": "tool-call-id", "type": "function", "function": {"name": "getWeather", "arguments": "{\"location\":\"Rome\"}"}}
+              ], "finish_reason": "tool_calls"}
+            ]
+            """,
+            attributes,
+            "gen_ai.completion",
         )
     }
 
-    @Test
-    fun `onBeforeSpanFinished uses text content when reasoning part carries no content`() {
+    @ParameterizedTest
+    @EnumSource(SignatureOnlyReasoning::class)
+    fun testPromptUsesTextWhenReasoningIsSignatureOnly(reasoning: SignatureOnlyReasoning) {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val provider = MockLLMProvider()
+        val assistantAnswer = "It's sunny in Rome."
+        val inputMessages = listOf(
+            Message.User("What's the forecast for Rome?", RequestMetaInfo.Empty),
+            Message.Assistant(
+                parts = listOf(
+                    MessagePart.Reasoning(content = reasoning.content, encrypted = "signature"),
+                    MessagePart.Text(assistantAnswer),
+                ),
+                metaInfo = ResponseMetaInfo.Empty,
+                finishReason = "stop",
+            ),
+        )
+        val inferenceSpan = createInferenceSpan(provider, messages = inputMessages)
+
+        adapter.onBeforeSpanStarted(inferenceSpan)
+
+        assertJsonAttribute(
+            """
+            [
+              {"role": "user", "content": "What's the forecast for Rome?"},
+              {"role": "assistant", "content": "$assistantAnswer"}
+            ]
+            """,
+            inferenceSpan.attributes,
+            "gen_ai.prompt",
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(SignatureOnlyReasoning::class)
+    fun testCompletionUsesTextWhenReasoningIsSignatureOnly(reasoning: SignatureOnlyReasoning) {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
         val provider = MockLLMProvider()
         val inferenceSpan = createInferenceSpan(provider)
 
-        // Mirrors the Google client: a signature-only Reasoning part (empty content) alongside
-        // the real Text part of the same message. The empty reasoning part must not suppress
-        // the text content or the finish reason.
         val assistantAnswer = "It's sunny in Rome."
         val assistantMessage = Message.Assistant(
             parts = listOf(
-                MessagePart.Reasoning(content = emptyList(), encrypted = "signature"),
+                MessagePart.Reasoning(content = reasoning.content, encrypted = "signature"),
                 MessagePart.Text(assistantAnswer),
             ),
             metaInfo = ResponseMetaInfo.Empty,
@@ -213,12 +263,187 @@ class LangfuseSpanAdapterTest {
 
         adapter.onBeforeSpanFinished(inferenceSpan)
 
-        val attributes = inferenceSpan.attributes
+        assertJsonAttribute(
+            """[{"role": "assistant", "content": "$assistantAnswer", "finish_reason": "stop"}]""",
+            inferenceSpan.attributes,
+            "gen_ai.completion",
+        )
+    }
 
-        val actualContent = attributes.requireValue("gen_ai.completion.0.content")
-        assertIs<HiddenString>(actualContent)
-        assertEquals(assistantAnswer, actualContent.value)
-        assertEquals("stop", attributes.requireValue("gen_ai.completion.0.finish_reason"))
+    @Test
+    fun testCompletionKeepsTextNextToReadableReasoning() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        // Claude with extended thinking, or Gemini with includeThoughts, returns readable reasoning next to the answer.
+        val assistantMessage = Message.Assistant(
+            parts = listOf(
+                MessagePart.Reasoning(content = listOf("Dan is at seat 1, so Cara is at seat 2."), encrypted = "signature"),
+                MessagePart.Text("Eva"),
+            ),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "end_turn",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        assertJsonAttribute(
+            """
+            [
+              {"role": "assistant", "content": [
+                {"type": "reasoning", "text": "Dan is at seat 1, so Cara is at seat 2."},
+                {"type": "text", "text": "Eva"}
+              ], "finish_reason": "end_turn"}
+            ]
+            """,
+            inferenceSpan.attributes,
+            "gen_ai.completion",
+        )
+    }
+
+    @Test
+    fun testCompletionKeepsTextNextToToolCall() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        val assistantMessage = Message.Assistant(
+            parts = listOf(
+                MessagePart.Text("I will check the weather in Prague."),
+                MessagePart.Tool.Call(id = "toolu_1", tool = "get_weather", args = "{\"city\":\"Prague\"}"),
+            ),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "tool_use",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        assertJsonAttribute(
+            """
+            [
+              {"role": "assistant", "content": "I will check the weather in Prague.", "tool_calls": [
+                {"id": "toolu_1", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Prague\"}"}}
+              ], "finish_reason": "tool_calls"}
+            ]
+            """,
+            inferenceSpan.attributes,
+            "gen_ai.completion",
+        )
+    }
+
+    @Test
+    fun testCompletionWritesReasoningWhenResponseIsCutBeforeText() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+
+        val assistantMessage = Message.Assistant(
+            parts = listOf(MessagePart.Reasoning(content = listOf("Let me check every order."), encrypted = "signature")),
+            metaInfo = ResponseMetaInfo.Empty,
+            finishReason = "max_tokens",
+        )
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(assistantMessage)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        assertJsonAttribute(
+            """
+            [
+              {"role": "assistant", "content": [{"type": "reasoning", "text": "Let me check every order."}], "finish_reason": "max_tokens"}
+            ]
+            """,
+            inferenceSpan.attributes,
+            "gen_ai.completion",
+        )
+    }
+
+    @Test
+    fun testPromptWritesOneToolMessagePerParallelToolResult() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val pragueCall = MessagePart.Tool.Call(id = "call-prague", tool = "get_weather", args = "{\"city\":\"Prague\"}")
+        val brnoCall = MessagePart.Tool.Call(id = "call-brno", tool = "get_weather", args = "{\"city\":\"Brno\"}")
+        val inputMessages = listOf(
+            Message.System("You are Koog.", RequestMetaInfo.Empty),
+            Message.User("Weather in Prague and Brno?", RequestMetaInfo.Empty),
+            Message.Assistant(
+                parts = listOf(MessagePart.Text("I will check both cities."), pragueCall, brnoCall),
+                metaInfo = ResponseMetaInfo.Empty,
+                finishReason = "tool_use",
+            ),
+            Message.User(
+                parts = listOf(
+                    MessagePart.Tool.Result(id = "call-prague", tool = "get_weather", output = "Prague: 18 C"),
+                    MessagePart.Tool.Result(id = "call-brno", tool = "get_weather", output = "Brno: 20 C"),
+                ),
+                metaInfo = RequestMetaInfo.Empty,
+            ),
+            Message.User("Thanks.", RequestMetaInfo.Empty),
+        )
+        val inferenceSpan = createInferenceSpan(MockLLMProvider(), messages = inputMessages)
+
+        adapter.onBeforeSpanStarted(inferenceSpan)
+
+        assertJsonAttribute(
+            """
+            [
+              {"role": "system", "content": "You are Koog."},
+              {"role": "user", "content": "Weather in Prague and Brno?"},
+              {"role": "assistant", "content": "I will check both cities.", "tool_calls": [
+                {"id": "call-prague", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Prague\"}"}},
+                {"id": "call-brno", "type": "function", "function": {"name": "get_weather", "arguments": "{\"city\":\"Brno\"}"}}
+              ]},
+              {"role": "tool", "tool_call_id": "call-prague", "content": "Prague: 18 C"},
+              {"role": "tool", "tool_call_id": "call-brno", "content": "Brno: 20 C"},
+              {"role": "user", "content": "Thanks."}
+            ]
+            """,
+            inferenceSpan.attributes,
+            "gen_ai.prompt",
+        )
+    }
+
+    @Test
+    fun testPromptWritesLongToolCallHistoryAsOneAttribute() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val toolRounds = (1..30).flatMap { round ->
+            listOf(
+                Message.Assistant(
+                    parts = listOf(MessagePart.Tool.Call(id = "call-$round", tool = "get_weather", args = "{}")),
+                    metaInfo = ResponseMetaInfo.Empty,
+                    finishReason = "tool_use",
+                ),
+                Message.User(
+                    parts = listOf(MessagePart.Tool.Result(id = "call-$round", tool = "get_weather", output = "18 C")),
+                    metaInfo = RequestMetaInfo.Empty,
+                ),
+            )
+        }
+        val inputMessages = listOf(Message.User("Weather?", RequestMetaInfo.Empty)) + toolRounds
+        val inferenceSpan = createInferenceSpan(MockLLMProvider(), messages = inputMessages)
+        val attributeCountBefore = inferenceSpan.attributes.size
+
+        adapter.onBeforeSpanStarted(inferenceSpan)
+
+        // The OTel SDK keeps 128 attributes per span by default and drops the rest.
+        assertEquals(attributeCountBefore + 1, inferenceSpan.attributes.size)
+        val prompt = assertIs<HiddenString>(inferenceSpan.attributes.requireValue("gen_ai.prompt")).value
+        assertEquals(61, Json.parseToJsonElement(prompt).jsonArray.size)
+    }
+
+    @ParameterizedTest
+    @EnumSource(TokenDetails::class)
+    fun testInferenceSpanReportsCachedAndReasoningTokensAsUsageDetails(details: TokenDetails) {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val inferenceSpan = createInferenceSpan(MockLLMProvider())
+        val answer = assistantWithUsage(1000, 50, details.cached, details.reasoning, details.anthropicCacheRead)
+        inferenceSpan.addAttribute(GenAIAttributes.Output.Messages(listOf(answer)))
+
+        adapter.onBeforeSpanFinished(inferenceSpan)
+
+        val usageDetails = inferenceSpan.attributes.firstOrNull { it.key == "langfuse.observation.usage_details" }?.value as String?
+        assertEquals(details.expectedUsageDetails?.let(Json::parseToJsonElement), usageDetails?.let(Json::parseToJsonElement))
     }
 
     @Test
@@ -232,6 +457,7 @@ class LangfuseSpanAdapterTest {
 
         val createAgentSpanId = "create-agent-span-id"
         val agentId = "test-agent-id"
+        val runId = "run-id"
 
         val createAgentSpan = startCreateAgentSpan(
             tracer = tracer,
@@ -244,7 +470,6 @@ class LangfuseSpanAdapterTest {
         )
 
         val invokeSpanId = "invoke-agent-span-id"
-        val runId = "run-id"
 
         val invokeSpan = startInvokeAgentSpan(
             tracer = tracer,
@@ -299,6 +524,261 @@ class LangfuseSpanAdapterTest {
 
         // Langfuse span adapter adds an attribute 'langgraph_node' with the node name as a value.
         assertEquals("executor-node-id", secondNode.attributes.requireValue("langfuse.observation.metadata.langgraph_node"))
+    }
+
+    @Test
+    fun testRunInputAndOutputAreCopiedToTheRootObservation() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val model = createTestModel(MockLLMProvider())
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "create-agent-span-id",
+            agentId = "test-agent-id",
+            model = model,
+            messages = emptyList()
+        )
+
+        val inputMessages = listOf(
+            Message.System("You are Koog.", RequestMetaInfo.Empty),
+            Message.User("What's the forecast for Paris?", RequestMetaInfo.Empty),
+        )
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = createAgentSpan,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = "run-id",
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = inputMessages,
+            tools = emptyList()
+        )
+
+        adapter.onBeforeSpanStarted(invokeSpan)
+
+        // Langfuse v4 reads the run input from the root observation, which is the create_agent span.
+        assertJsonAttribute(
+            """
+            [
+              {"role": "system", "content": "You are Koog."},
+              {"role": "user", "content": "What's the forecast for Paris?"}
+            ]
+            """,
+            createAgentSpan.attributes,
+            "langfuse.observation.input",
+        )
+
+        val answer = Message.Assistant("It's sunny in Paris.", ResponseMetaInfo.Empty, finishReason = "stop")
+        endInvokeAgentSpan(span = invokeSpan, messages = inputMessages + answer, model = model, spanAdapter = adapter)
+
+        assertJsonAttribute(
+            """[{"role": "assistant", "content": "It's sunny in Paris.", "finish_reason": "stop"}]""",
+            createAgentSpan.attributes,
+            "langfuse.observation.output",
+        )
+        assertTrue(
+            invokeSpan.attributes.none { it.key.startsWith("langfuse.observation.") },
+            "The run input and output belong on the root observation only",
+        )
+    }
+
+    @Test
+    fun testRootObservationCopyIsSkippedWhenParentIsAbsent() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val model = createTestModel(MockLLMProvider())
+
+        val messages = listOf(
+            Message.User("hi", RequestMetaInfo.Empty),
+            Message.Assistant("hello", ResponseMetaInfo.Empty),
+        )
+        val invokeSpanWithoutParent = startInvokeAgentSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = "run-id",
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = messages,
+            tools = emptyList()
+        )
+
+        // With no parent to write to, the copy is a silent no-op and never falls back to the child.
+        adapter.onBeforeSpanStarted(invokeSpanWithoutParent)
+        endInvokeAgentSpan(span = invokeSpanWithoutParent, messages = messages, model = model, spanAdapter = adapter)
+
+        assertTrue(invokeSpanWithoutParent.attributes.none { it.key.startsWith("langfuse.observation.") })
+    }
+
+    @Test
+    fun testRootObservationCopyIsSkippedWhenParentIsNotCreateAgent() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val model = createTestModel(MockLLMProvider())
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val nodeParentSpan = startNodeExecuteSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "node-span-id",
+            runId = "run-id",
+            nodeId = "node-id",
+            nodeInput = "node-input"
+        )
+
+        val messages = listOf(
+            Message.User("hi", RequestMetaInfo.Empty),
+            Message.Assistant("hello", ResponseMetaInfo.Empty),
+        )
+        val invokeSpanUnderNode = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = nodeParentSpan,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = "run-id",
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = messages,
+            tools = emptyList()
+        )
+
+        adapter.onBeforeSpanStarted(invokeSpanUnderNode)
+        endInvokeAgentSpan(span = invokeSpanUnderNode, messages = messages, model = model, spanAdapter = adapter)
+
+        assertTrue(nodeParentSpan.attributes.none { it.key.startsWith("langfuse.observation.") })
+        assertTrue(invokeSpanUnderNode.attributes.none { it.key.startsWith("langfuse.observation.") })
+    }
+
+    @Test
+    fun testNodeInputAndOutputAreCopiedToTheNodeObservation() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val nodeInput = """{"query": "What's the weather in Paris?"}"""
+        val nodeOutput = """{"answer": "Rainy, 14 degrees."}"""
+
+        val nodeSpan = startNodeExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "node-span-id",
+            runId = "run-id",
+            nodeId = "node-id",
+            nodeInput = nodeInput
+        )
+
+        adapter.onBeforeSpanStarted(nodeSpan)
+
+        // The Koog-specific attribute stays in place for other backends; Langfuse reads the copy.
+        assertEquals(HiddenString(nodeInput), nodeSpan.attributes.requireValue("koog.node.input"))
+        assertEquals(HiddenString(nodeInput), nodeSpan.attributes.requireValue("langfuse.observation.input"))
+        assertTrue(nodeSpan.attributes.none { it.key == "langfuse.observation.output" })
+
+        endNodeExecuteSpan(span = nodeSpan, nodeOutput = nodeOutput, spanAdapter = adapter)
+
+        assertEquals(HiddenString(nodeOutput), nodeSpan.attributes.requireValue("koog.node.output"))
+        assertEquals(HiddenString(nodeOutput), nodeSpan.attributes.requireValue("langfuse.observation.output"))
+    }
+
+    @Test
+    fun testRootObservationGetsTheRunSession() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val (createAgentSpan, invokeSpan) = startRunSpans(adapter, runId = "run-id")
+
+        // The GenAI semantic conventions define no conversation id on create_agent, so the generic span has none.
+        assertTrue(createAgentSpan.attributes.none { it.key == "gen_ai.conversation.id" })
+        assertEquals("run-id", createAgentSpan.attributes.requireValue("langfuse.session.id"))
+        assertEquals("run-id", invokeSpan.attributes.requireValue("langfuse.session.id"))
+    }
+
+    @Test
+    fun testRootObservationKeepsTheSessionFromTraceAttributes() {
+        val adapter = LangfuseSpanAdapter(
+            listOf(CustomAttribute("langfuse.session.id", "user-session")),
+            OpenTelemetryConfig(),
+        )
+        val (createAgentSpan, invokeSpan) = startRunSpans(adapter, runId = "run-id")
+
+        assertEquals("user-session", createAgentSpan.attributes.requireValue("langfuse.session.id"))
+        assertEquals("user-session", invokeSpan.attributes.requireValue("langfuse.session.id"))
+    }
+
+    @Test
+    fun testSubgraphInputAndOutputAreCopiedToTheSubgraphObservation() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val subgraphInput = """{"task": "Plan the trip"}"""
+        val subgraphOutput = """{"plan": "Fly to Paris"}"""
+
+        val subgraphSpan = startSubgraphExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "subgraph-span-id",
+            runId = "run-id",
+            subgraphId = "planner",
+            subgraphInput = subgraphInput,
+        )
+
+        adapter.onBeforeSpanStarted(subgraphSpan)
+
+        // The Koog-specific attribute stays in place for other backends; Langfuse reads the copy.
+        assertEquals(HiddenString(subgraphInput), subgraphSpan.attributes.requireValue("koog.subgraph.input"))
+        assertEquals(HiddenString(subgraphInput), subgraphSpan.attributes.requireValue("langfuse.observation.input"))
+        assertTrue(subgraphSpan.attributes.none { it.key == "langfuse.observation.output" })
+
+        endSubgraphExecuteSpan(span = subgraphSpan, subgraphOutput = subgraphOutput, spanAdapter = adapter)
+
+        assertEquals(HiddenString(subgraphOutput), subgraphSpan.attributes.requireValue("koog.subgraph.output"))
+        assertEquals(HiddenString(subgraphOutput), subgraphSpan.attributes.requireValue("langfuse.observation.output"))
+    }
+
+    @Test
+    fun testSubgraphObservationCopyIsSkippedWhenTheSubgraphHasNoInputOrOutput() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val subgraphSpan = startSubgraphExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "subgraph-span-id",
+            runId = "run-id",
+            subgraphId = "planner",
+            subgraphInput = null,
+        )
+
+        adapter.onBeforeSpanStarted(subgraphSpan)
+        endSubgraphExecuteSpan(span = subgraphSpan, subgraphOutput = null, spanAdapter = adapter)
+
+        assertTrue(subgraphSpan.attributes.none { it.key == "langfuse.observation.input" })
+        assertTrue(subgraphSpan.attributes.none { it.key == "langfuse.observation.output" })
+    }
+
+    @Test
+    fun testNodeObservationCopyIsSkippedWhenTheNodeHasNoInputOrOutput() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val nodeSpan = startNodeExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "node-span-id",
+            runId = "run-id",
+            nodeId = "node-id",
+            nodeInput = null
+        )
+
+        adapter.onBeforeSpanStarted(nodeSpan)
+        endNodeExecuteSpan(span = nodeSpan, nodeOutput = null, spanAdapter = adapter)
+
+        assertTrue(nodeSpan.attributes.none { it.key == "langfuse.observation.input" })
+        assertTrue(nodeSpan.attributes.none { it.key == "langfuse.observation.output" })
     }
 
     private fun createInferenceSpan(
@@ -367,9 +847,61 @@ class LangfuseSpanAdapterTest {
         return inferenceSpan
     }
 
+    private fun assistantWithUsage(inputTokens: Int, outputTokens: Int, cached: Int?, reasoning: Int?, anthropicCacheRead: Int?) =
+        Message.Assistant(
+            content = "answer",
+            metaInfo = ResponseMetaInfo.Empty.copy(
+                inputTokensCount = inputTokens,
+                outputTokensCount = outputTokens,
+                metadata = buildJsonObject {
+                    cached?.let { put("cachedContentTokenCount", it) }
+                    reasoning?.let { put("thoughtsTokenCount", it) }
+                    anthropicCacheRead?.let { put("cacheReadInputTokens", it) }
+                }.takeIf { it.isNotEmpty() },
+            ),
+            finishReason = "stop",
+        )
+
+    /** Starts a `create_agent` span and its `invoke_agent` child the way the feature does, both through [adapter]. */
+    private fun startRunSpans(adapter: LangfuseSpanAdapter, runId: String): Pair<GenAIAgentSpan, GenAIAgentSpan> {
+        val model = createTestModel(MockLLMProvider())
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "create-agent-span-id",
+            agentId = "test-agent-id",
+            model = model,
+            messages = emptyList(),
+            spanAdapter = adapter,
+        )
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = createAgentSpan,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = runId,
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = emptyList(),
+            tools = emptyList(),
+            spanAdapter = adapter,
+        )
+        return createAgentSpan to invokeSpan
+    }
+
     private fun createTestModel(provider: MockLLMProvider): LLModel =
         LLModel(provider, "test-model", emptyList(), contextLength = 8192)
 
     private fun List<Attribute>.requireValue(key: String): Any =
         firstOrNull { it.key == key }?.value ?: error("Expected attribute '$key' to be present")
+
+    private fun assertJsonAttribute(expectedJson: String, attributes: List<Attribute>, key: String) {
+        val actual = assertIs<HiddenString>(attributes.requireValue(key)).value
+        assertEquals(Json.parseToJsonElement(expectedJson), Json.parseToJsonElement(actual))
+    }
 }
