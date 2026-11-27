@@ -36,6 +36,7 @@ internal object SpringAiChatModelProviderDetector {
         LLMProvider.HuggingFace,
         LLMProvider.Azure,
         LLMProvider.Vertex,
+        LLMProvider.Requesty,
     ).sortedByDescending { it.id.length }
 
     private val providersById: Map<String, LLMProvider> = knownProviders.associateBy { it.id }

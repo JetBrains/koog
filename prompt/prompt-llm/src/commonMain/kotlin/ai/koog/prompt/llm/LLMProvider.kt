@@ -166,6 +166,13 @@ public open class LLMProvider(public val id: String, public val display: String)
          */
         @JvmField
         public val Vertex: VertexLLMProvider = VertexLLMProvider
+
+        /**
+         * Represents the Requesty provider for large language models (LLMs).
+         * This constant is part of the available LLM providers within the [LLMProvider] enumeration.
+         */
+        @JvmField
+        public val Requesty: RequestyLLMProvider = RequestyLLMProvider
     }
 }
 
@@ -340,3 +347,15 @@ public object AzureLLMProvider : LLMProvider("azure", "Azure OpenAI")
  */
 @Serializable
 public object VertexLLMProvider : LLMProvider("vertex", "Google VertexAI")
+
+/**
+ * Represents the Requesty provider within the available set of large language model providers.
+ *
+ * Requesty is identified by its unique ID ("requesty") and display name ("Requesty").
+ * It extends the `LLMProvider` sealed class, which serves as a base class for all supported language model providers.
+ *
+ * Requesty is an LLM gateway that exposes models from multiple upstream providers behind one
+ * OpenAI compatible API.
+ */
+@Serializable
+public object RequestyLLMProvider : LLMProvider("requesty", "Requesty")

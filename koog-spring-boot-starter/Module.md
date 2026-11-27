@@ -6,7 +6,7 @@ Spring Boot auto-configuration and integration for Koog AI agents framework.
 
 The spring-boot-starter module provides seamless integration between the Koog AI agents framework and Spring Boot applications. It includes:
 
-- Auto-configuration for LLM clients (Anthropic, Google, MistralAI, OpenAI, OpenRouter, DeepSeek, Ollama)
+- Auto-configuration for LLM clients (Anthropic, Google, MistralAI, OpenAI, OpenRouter, DeepSeek, Requesty, Ollama)
 - Configuration properties for easy setup through application.properties/yml
 - Conditional bean creation based on configuration presence
 - Ready-to-use `SingleLLMPromptExecutor` beans for dependency injection
@@ -50,6 +50,10 @@ ai.koog.openrouter.base-url=https://openrouter.ai
 # DeepSeek configuration
 ai.koog.deepseek.api-key=your-deepseek-api-key
 ai.koog.deepseek.base-url=https://api.deepseek.com
+
+# Requesty configuration
+ai.koog.requesty.api-key=your-requesty-api-key
+ai.koog.requesty.base-url=https://router.requesty.ai
 ```
 
 ### Using in tests
