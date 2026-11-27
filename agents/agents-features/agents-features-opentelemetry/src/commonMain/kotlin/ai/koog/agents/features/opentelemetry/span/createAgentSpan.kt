@@ -24,7 +24,6 @@ import io.opentelemetry.kotlin.tracing.Tracer
  * - gen_ai.agent.description (conditional)
  * - gen_ai.agent.id (conditional)
  * - gen_ai.agent.name (conditional)
- * - gen_ai.conversation.id (conditional)
  * - gen_ai.request.model (conditional)
  * - gen_ai.system_instructions (recommended)
  * - server.port (conditional/required)
@@ -38,7 +37,6 @@ import io.opentelemetry.kotlin.tracing.Tracer
  * @param parentSpan The parent span to use
  * @param id The id of the span
  * @param agentId The id of the agent
- * @param runId The id of the agent run, reported as the conversation id
  * @param model The model to use
  * @param messages The messages to use
  * @param spanAdapter The span adapter to use
@@ -49,7 +47,6 @@ internal fun startCreateAgentSpan(
     parentSpan: GenAIAgentSpan?,
     id: String,
     agentId: String,
-    runId: String,
     model: LLModel,
     messages: List<Message>,
     spanAdapter: SpanAdapter? = null,
@@ -70,8 +67,6 @@ internal fun startCreateAgentSpan(
         // gen_ai.agent.description - Ignore. Not supported in Koog
         // gen_ai.agent.id
         .addAttribute(GenAIAttributes.Agent.Id(agentId))
-        // gen_ai.conversation.id
-        .addAttribute(GenAIAttributes.Conversation.Id(runId))
 
     // gen_ai.agent.name - Ignore. Not supported in Koog
     // server.port - Ignore. Not supported in Koog

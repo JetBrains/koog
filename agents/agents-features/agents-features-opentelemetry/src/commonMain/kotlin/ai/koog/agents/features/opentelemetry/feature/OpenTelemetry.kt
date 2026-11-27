@@ -313,7 +313,6 @@ public class OpenTelemetry {
                     id = eventContext.eventId,
                     model = eventContext.agent.agentConfig.model,
                     agentId = eventContext.context.agentId,
-                    runId = eventContext.runId,
                     messages = messages,
                     spanAdapter = spanAdapter,
                 )

@@ -184,12 +184,13 @@ are read from the root observation of the trace. The exporter supports this data
 - The root observation of each trace (the `create_agent` span) carries the input and output of the whole run as
   `langfuse.observation.input` and `langfuse.observation.output`, so observation-level evaluators that target the root
   have something to read. Both values use the same message shape as `gen_ai.prompt` and `gen_ai.completion`.
-- Every node observation carries the node input and output as `langfuse.observation.input` and
-  `langfuse.observation.output`, copied from the Koog-specific `koog.node.input` and `koog.node.output` attributes
-  that Langfuse does not read on its own. The values are masked unless verbose mode is on.
-- Every span carries `gen_ai.conversation.id` set to the agent run ID. Langfuse resolves the session of each observation
-  on its own, so the trace root and every tool execution resolve to the same session as the LLM calls, unless a
-  `langfuse.session.id` trace attribute overrides it.
+- Every node and subgraph observation carries its input and output as `langfuse.observation.input` and
+  `langfuse.observation.output`, copied from the Koog-specific `koog.node.*` and `koog.subgraph.*` attributes that
+  Langfuse does not read on its own. The values are masked unless verbose mode is on.
+- Every observation resolves to the session of its agent run. Langfuse resolves the session of each observation on its
+  own, with no inheritance from the parent. Koog spans carry `gen_ai.conversation.id` set to the run ID wherever the
+  GenAI semantic conventions define it, which excludes `create_agent`, so the exporter sets `langfuse.session.id` on
+  that root observation instead. A `langfuse.session.id` trace attribute overrides the run ID on every observation.
 
 Two Langfuse conventions are worth knowing when reading the result:
 

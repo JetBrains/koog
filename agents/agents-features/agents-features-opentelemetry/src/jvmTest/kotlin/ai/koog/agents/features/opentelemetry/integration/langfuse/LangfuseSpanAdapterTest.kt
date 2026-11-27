@@ -10,10 +10,12 @@ import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.endInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.endNodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.endSubgraphExecuteSpan
 import ai.koog.agents.features.opentelemetry.span.startCreateAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startInferenceSpan
 import ai.koog.agents.features.opentelemetry.span.startInvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.startNodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.startSubgraphExecuteSpan
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -79,7 +81,6 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
-            runId = runId,
             model = model,
             messages = emptyList()
         )
@@ -464,7 +465,6 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
-            runId = runId,
             model = model,
             messages = emptyList()
         )
@@ -539,7 +539,6 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = "create-agent-span-id",
             agentId = "test-agent-id",
-            runId = "run-id",
             model = model,
             messages = emptyList()
         )
@@ -689,6 +688,79 @@ class LangfuseSpanAdapterTest {
     }
 
     @Test
+    fun testRootObservationGetsTheRunSession() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val (createAgentSpan, invokeSpan) = startRunSpans(adapter, runId = "run-id")
+
+        // The GenAI semantic conventions define no conversation id on create_agent, so the generic span has none.
+        assertTrue(createAgentSpan.attributes.none { it.key == "gen_ai.conversation.id" })
+        assertEquals("run-id", createAgentSpan.attributes.requireValue("langfuse.session.id"))
+        assertEquals("run-id", invokeSpan.attributes.requireValue("langfuse.session.id"))
+    }
+
+    @Test
+    fun testRootObservationKeepsTheSessionFromTraceAttributes() {
+        val adapter = LangfuseSpanAdapter(
+            listOf(CustomAttribute("langfuse.session.id", "user-session")),
+            OpenTelemetryConfig(),
+        )
+        val (createAgentSpan, invokeSpan) = startRunSpans(adapter, runId = "run-id")
+
+        assertEquals("user-session", createAgentSpan.attributes.requireValue("langfuse.session.id"))
+        assertEquals("user-session", invokeSpan.attributes.requireValue("langfuse.session.id"))
+    }
+
+    @Test
+    fun testSubgraphInputAndOutputAreCopiedToTheSubgraphObservation() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+        val subgraphInput = """{"task": "Plan the trip"}"""
+        val subgraphOutput = """{"plan": "Fly to Paris"}"""
+
+        val subgraphSpan = startSubgraphExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "subgraph-span-id",
+            runId = "run-id",
+            subgraphId = "planner",
+            subgraphInput = subgraphInput,
+        )
+
+        adapter.onBeforeSpanStarted(subgraphSpan)
+
+        // The Koog-specific attribute stays in place for other backends; Langfuse reads the copy.
+        assertEquals(HiddenString(subgraphInput), subgraphSpan.attributes.requireValue("koog.subgraph.input"))
+        assertEquals(HiddenString(subgraphInput), subgraphSpan.attributes.requireValue("langfuse.observation.input"))
+        assertTrue(subgraphSpan.attributes.none { it.key == "langfuse.observation.output" })
+
+        endSubgraphExecuteSpan(span = subgraphSpan, subgraphOutput = subgraphOutput, spanAdapter = adapter)
+
+        assertEquals(HiddenString(subgraphOutput), subgraphSpan.attributes.requireValue("koog.subgraph.output"))
+        assertEquals(HiddenString(subgraphOutput), subgraphSpan.attributes.requireValue("langfuse.observation.output"))
+    }
+
+    @Test
+    fun testSubgraphObservationCopyIsSkippedWhenTheSubgraphHasNoInputOrOutput() {
+        val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
+
+        val subgraphSpan = startSubgraphExecuteSpan(
+            tracer = MockTracer(),
+            contextFactory = MockContextFactory(),
+            parentSpan = null,
+            id = "subgraph-span-id",
+            runId = "run-id",
+            subgraphId = "planner",
+            subgraphInput = null,
+        )
+
+        adapter.onBeforeSpanStarted(subgraphSpan)
+        endSubgraphExecuteSpan(span = subgraphSpan, subgraphOutput = null, spanAdapter = adapter)
+
+        assertTrue(subgraphSpan.attributes.none { it.key == "langfuse.observation.input" })
+        assertTrue(subgraphSpan.attributes.none { it.key == "langfuse.observation.output" })
+    }
+
+    @Test
     fun testNodeObservationCopyIsSkippedWhenTheNodeHasNoInputOrOutput() {
         val adapter = LangfuseSpanAdapter(emptyList(), OpenTelemetryConfig())
 
@@ -729,7 +801,6 @@ class LangfuseSpanAdapterTest {
             parentSpan = null,
             id = createAgentSpanId,
             agentId = agentId,
-            runId = runId,
             model = model,
             messages = emptyList()
         )
@@ -790,6 +861,38 @@ class LangfuseSpanAdapterTest {
             ),
             finishReason = "stop",
         )
+
+    /** Starts a `create_agent` span and its `invoke_agent` child the way the feature does, both through [adapter]. */
+    private fun startRunSpans(adapter: LangfuseSpanAdapter, runId: String): Pair<GenAIAgentSpan, GenAIAgentSpan> {
+        val model = createTestModel(MockLLMProvider())
+        val tracer = MockTracer()
+        val contextFactory = MockContextFactory()
+
+        val createAgentSpan = startCreateAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = null,
+            id = "create-agent-span-id",
+            agentId = "test-agent-id",
+            model = model,
+            messages = emptyList(),
+            spanAdapter = adapter,
+        )
+        val invokeSpan = startInvokeAgentSpan(
+            tracer = tracer,
+            contextFactory = contextFactory,
+            parentSpan = createAgentSpan,
+            id = "invoke-agent-span-id",
+            model = model,
+            runId = runId,
+            agentId = "test-agent-id",
+            llmParams = LLMParams(),
+            messages = emptyList(),
+            tools = emptyList(),
+            spanAdapter = adapter,
+        )
+        return createAgentSpan to invokeSpan
+    }
 
     private fun createTestModel(provider: MockLLMProvider): LLModel =
         LLModel(provider, "test-model", emptyList(), contextLength = 8192)
