@@ -399,6 +399,72 @@ class DeepSeekLLMClientTest {
     }
 
     @Test
+    fun testStreamingReasoningKeepsWhitespaceOnlyChunks() = runTest {
+        // Providers may stream whitespace as its own delta; dropping it glues words together.
+        val pieces = listOf("Let", " ", "me", "\\n", "think")
+        val chunks = pieces.map { piece ->
+            //language=json
+            """{"id":"c","object":"chat.completion.chunk","created":0,"system_fingerprint":"fp","model":"deepseek-reasoner","choices":[{"index":0,"delta":{"reasoning_content":"$piece"}}]}"""
+        }
+
+        val transport = object : KoogHttpClient {
+            override val clientName: String = "DeepSeekWhitespaceTestClient"
+
+            override suspend fun <R : Any> get(
+                path: String,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("GET is not expected in this test")
+
+            override suspend fun <T : Any, R : Any> post(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                responseType: KClass<R>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): R = error("POST is not expected in this test")
+
+            override fun <T : Any, R : Any, O : Any> sse(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                dataFilter: (String?) -> Boolean,
+                decodeStreamingResponse: (String) -> R,
+                processStreamingChunk: (R) -> O?,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<O> = flow {
+                for (data in chunks) {
+                    if (dataFilter(data)) {
+                        processStreamingChunk(decodeStreamingResponse(data))?.let { emit(it) }
+                    }
+                }
+            }
+
+            override fun <T : Any> lines(
+                path: String,
+                requestBody: T,
+                requestBodyType: KClass<T>,
+                parameters: Map<String, String>,
+                headers: Map<String, String>,
+            ): Flow<String> = error("lines is not expected in this test")
+
+            override fun close(): Unit = Unit
+        }
+
+        val client = DeepSeekLLMClient(httpClient = transport, clock = FixedClock)
+        val frames = client.executeStreaming(
+            Prompt.build(id = "p-ws", clock = FixedClock) { user("Think") },
+            DeepSeekModels.DeepSeekV4Flash,
+        ).toList()
+
+        val streamed = frames.filterIsInstance<StreamFrame.ReasoningDelta>().joinToString("") { it.text.orEmpty() }
+        assertEquals("Let me\nthink", streamed)
+    }
+
+    @Test
     fun testExecuteToolCallResponsePreservesReasoningMessage() = runTest {
         val engine = MockEngine { _ ->
             respond(
