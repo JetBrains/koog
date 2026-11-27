@@ -4,9 +4,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.dsl.builder.node
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.ReceivedToolResults
 import ai.koog.agents.core.dsl.extension.nodeExecuteTools
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResultsStreaming
 import ai.koog.agents.core.dsl.extension.onTextMessage
 import ai.koog.agents.core.dsl.extension.onToolCalls
 import ai.koog.agents.core.tools.ToolRegistry
@@ -23,6 +22,7 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponse
 import kotlinx.coroutines.flow.toList
@@ -114,16 +114,28 @@ private fun anthropicAgent(
 )
 
 fun streamingWithToolsStrategy() = strategy("streaming_loop") {
-    // Streaming node: appends the user message to the prompt, issues a streaming LLM call (so the
-    // onLLMStreamingFrameReceived / onLLMStreamingFailed / onLLMStreamingCompleted event handlers
-    // fire frame-by-frame), then collapses the stream into a Message.Assistant for downstream
-    // tool-call / text-part dispatch.
-    val nodeCallLLM by nodeLLMRequestStreaming().transform {
-        it.toList().toMessageResponse()
+    // Streaming requests do not save assistant history automatically. Collect and append the
+    // complete response, including tool calls and reasoning, before dispatching to the next node.
+    val nodeCallLLM by node<String, Message.Assistant> { input ->
+        llm.writeSession {
+            appendPrompt { user(input) }
+            val response = requestLLMStreaming().toList().toMessageResponse()
+            appendPrompt { message(response) }
+            response
+        }
     }
 
-    val nodeSendToolResults by nodeLLMSendToolResultsStreaming().transform {
-        it.toList().toMessageResponse()
+    val nodeSendToolResults by node<ReceivedToolResults, Message.Assistant> { toolResults ->
+        llm.writeSession {
+            appendPrompt {
+                user {
+                    toolResults.toolResults.forEach { toolResult -> toolResult(toolResult.toMessagePart()) }
+                }
+            }
+            val response = requestLLMStreaming().toList().toMessageResponse()
+            appendPrompt { message(response) }
+            response
+        }
     }
 
     val executeTools by nodeExecuteTools(parallel = true)
