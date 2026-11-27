@@ -23,6 +23,7 @@ You can find ready-to-use MCP servers in the [MCP Marketplace](https://mcp.so/) 
 The MCP servers support the following transport protocols to communicate with agents:
 
 * Standard input/output (stdio) transport protocol used to communicate with the MCP servers running as separate processes. For example, a Docker container or a CLI tool.
+* Streamable HTTP for remote MCP servers exposing an HTTP endpoint.
 * Server-sent events (SSE) transport protocol (optional) used to communicate with the MCP servers over HTTP.
 
 ## Integration with Koog
@@ -31,7 +32,7 @@ The Koog framework integrates with MCP using the [MCP SDK](https://github.com/mo
 
 This integration lets the Koog agents perform the following:
 
-* Connect to MCP servers through various transport mechanisms (stdio, SSE).
+* Connect to MCP servers through various transport mechanisms (Streamable HTTP, stdio, SSE).
 * Retrieve available tools from an MCP server.
 * Transform MCP tools into the Koog tool interface.
 * Register the transformed tools in a tool registry.
@@ -45,7 +46,7 @@ Here are the main components of the MCP integration in Koog:
 |---------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
 | [`McpTool`](api:agents-mcp::ai.koog.agents.mcp.McpTool)                                                                          | Serves as a bridge between the Koog tool interface and the MCP SDK.                  |                                                                              |
 | [`McpToolDescriptorParser`](api:agents-mcp::ai.koog.agents.mcp.McpToolDescriptorParser)                                        | Parses MCP tool definitions into the Koog tool descriptor format.                                          |
-| [`McpToolRegistryProvider`](api:agents-mcp::ai.koog.agents.mcp.McpToolRegistryProvider) | Creates MCP tool registries that connect to MCP servers through various transport mechanisms (stdio, SSE). |
+| [`McpToolRegistryProvider`](api:agents-mcp::ai.koog.agents.mcp.McpToolRegistryProvider) | Creates MCP tool registries that connect to MCP servers through various transport mechanisms (Streamable HTTP, stdio, SSE). |
 
 ## Getting started
 
@@ -56,7 +57,7 @@ To use MCP with Koog, you need to set up a connection:
 1. Start an MCP server (either as a process, Docker container, or web service).
 2. Create a transport mechanism to communicate with the server. 
 
-MCP servers support the stdio and SSE transport mechanisms to communicate with the agent, so you can connect using one of them.
+Choose the transport that the server exposes.
 
 #### Connect with stdio
 
@@ -87,6 +88,23 @@ import ai.koog.agents.mcp.McpToolRegistryProvider
 val transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:8931")
 ```
 <!--- KNIT example-model-context-protocol-02.kt -->
+
+#### Connect with Streamable HTTP
+
+Use `McpToolRegistryProvider.streamableHttp` for a remote MCP server. Set
+`url` in its configuration block to the server's MCP endpoint. This method
+returns a tool registry, so continue with [integrating it into an agent](#3-integrate-with-your-agent).
+
+For a server that requires authentication, supply a Ktor `HttpClient` through
+the `httpClient` option. Install the `SSE` plugin and configure the client's
+authorization header for that server. Keep the client open while the agent
+uses its tools and close the client afterward.
+
+For example, [ClickHouse Loom](https://github.com/ClickHouse/loom) serves memory
+and document search tools at `<server-base-url>/mcp`. Use HTTPS for a remote
+deployment and pass its scoped token as an HTTP bearer token. See the
+[Loom MCP reference](https://github.com/ClickHouse/loom/blob/main/docs/reference/mcp.md)
+for authentication and tool configuration.
 
 ### 2. Create a tool registry
 
