@@ -124,9 +124,11 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 return ToolParameterType.Enum(enum.map(::enumEntryToString).toTypedArray())
             }
 
-            val title =
-                element["title"]?.jsonPrimitive?.content ?: element["description"]?.jsonPrimitive?.content.orEmpty()
-            throw IllegalArgumentException("Parameter $title must have type property")
+            // Untyped JSON Schema (`{}` or metadata-only, e.g. FastMCP `Any`
+            // or empty `items` on a bare `list`) must not fail parsing. MCP
+            // tools with such parameters were previously dropped when this
+            // threw (issue #2326).
+            return untypedJsonValue()
         }
 
         // Convert the type string to a ToolParameterType
@@ -269,6 +271,30 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         return defs?.get(defName)?.jsonObject
             ?: throw IllegalArgumentException("Definition '$defName' not found in \$defs for \$ref: $ref")
     }
+
+    /**
+     * JSON Schema with no `type`, `anyOf`, or `enum` is an unconstrained value.
+     * Represent it as a union of the JSON types we support so the MCP tool can
+     * still be registered and models can emit strings, numbers, booleans, null,
+     * or objects. Nested arrays are not included in the union.
+     */
+    private fun untypedJsonValue(): ToolParameterType = ToolParameterType.AnyOf(
+        arrayOf(
+            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.String),
+            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Integer),
+            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Float),
+            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Boolean),
+            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Null),
+            ToolParameterDescriptor(
+                name = "",
+                description = "",
+                type = ToolParameterType.Object(
+                    properties = emptyList(),
+                    additionalProperties = true,
+                ),
+            ),
+        )
+    )
 
     private fun parseParameters(properties: JsonObject, defs: JsonObject?): List<ToolParameterDescriptor> {
         return properties.mapNotNull { (name, element) ->
