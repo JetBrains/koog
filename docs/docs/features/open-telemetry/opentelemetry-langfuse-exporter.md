@@ -174,6 +174,31 @@ When visualized in Langfuse, the trace appears as follows:
 For more details on Langfuse OpenTelemetry tracing, see:  
 [Langfuse OpenTelemetry Docs](https://langfuse.com/integrations/native/opentelemetry#opentelemetry-endpoint).
 
+### Langfuse v4
+
+Langfuse v4 is observations-first: filtering and evaluation run per observation, and the request and response of a run
+are read from the root observation of the trace. The exporter supports this data model without extra configuration:
+
+- Every request carries the `x-langfuse-ingestion-version: 4` header, so Langfuse processes the spans on its real-time
+  v4 path instead of the delayed legacy one. Older self-hosted Langfuse versions ignore the header.
+- The root observation of each trace (the `create_agent` span) carries the input and output of the whole run as
+  `langfuse.observation.input` and `langfuse.observation.output`, so observation-level evaluators that target the root
+  have something to read. Both values use the same message shape as `gen_ai.prompt` and `gen_ai.completion`.
+- Every node and subgraph observation carries its input and output as `langfuse.observation.input` and
+  `langfuse.observation.output`, copied from the Koog-specific `koog.node.*` and `koog.subgraph.*` attributes that
+  Langfuse does not read on its own. The values are masked unless verbose mode is on.
+- Every observation resolves to the session of its agent run. Langfuse resolves the session of each observation on its
+  own, with no inheritance from the parent. Koog spans carry `gen_ai.conversation.id` set to the run ID wherever the
+  GenAI semantic conventions define it, which excludes `create_agent`, so the exporter sets `langfuse.session.id` on
+  that root observation instead. A `langfuse.session.id` trace attribute overrides the run ID on every observation.
+
+Two Langfuse conventions are worth knowing when reading the result:
+
+- Langfuse ignores model, usage, and cost on every `invoke_agent` observation, so that aggregated agent usage is never
+  counted twice. Token counts and costs of a run are read from its `chat` generations.
+- The trace name falls back to the name of the root observation, which is `create_agent <agent id>`. Pass a
+  `langfuse.trace.name` trace attribute to override it.
+
 ---
 
 ## Troubleshooting

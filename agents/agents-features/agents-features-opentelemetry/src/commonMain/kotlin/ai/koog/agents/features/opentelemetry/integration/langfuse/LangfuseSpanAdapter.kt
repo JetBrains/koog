@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.GenAIAttributes
 import ai.koog.agents.features.opentelemetry.attribute.KoogAttributes
@@ -28,12 +29,26 @@ import kotlin.concurrent.atomics.fetchAndIncrement
 /**
  * Internal adapter class for enhancing and modifying spans related to GenAI agent processing.
  * It reshapes inference-span content from the OTel-standard `gen_ai.input.messages` /
- * `gen_ai.output.messages` attributes (which Langfuse does not currently recognize) into the
- * `gen_ai.prompt` / `gen_ai.completion` attributes that Langfuse displays.
+ * `gen_ai.output.messages` attributes into the `gen_ai.prompt` / `gen_ai.completion` attributes.
+ * Langfuse reads those ahead of the semconv message attributes and renders them in the OpenAI message shape.
  *
  * Each of the two attributes holds the whole message list as one JSON array in the OpenAI message shape.
  * One attribute per list keeps a long tool-call history within the span attribute count limit,
  * which is 128 by default. The original attributes remain on the span untouched.
+ *
+ * Langfuse v4 is observations-first: evaluators and filters read each observation on its own, and the
+ * request and response of the whole run belong on the root observation. Koog's trace root is the
+ * `create_agent` span, which carries neither, so the adapter copies the `invoke_agent` input and output
+ * onto that parent as `langfuse.observation.input` / `langfuse.observation.output`, in the same OpenAI
+ * message shape. The parent flushes its attributes only when it ends, which happens after the `invoke_agent` span.
+ *
+ * Langfuse also resolves the session of each observation on its own. The GenAI semantic conventions define no
+ * `gen_ai.conversation.id` on the `create_agent` span, so the adapter sets `langfuse.session.id` on that root
+ * observation to the run id, unless a `langfuse.session.id` trace attribute already set it.
+ *
+ * Node and subgraph spans keep their input and output under Koog-specific `koog.node.*` / `koog.subgraph.*`
+ * attributes, which Langfuse does not read, so the adapter also copies them to `langfuse.observation.input` /
+ * `langfuse.observation.output`. Without the copy, these observations show an empty input and output.
  */
 @OptIn(ExperimentalAtomicApi::class)
 internal class LangfuseSpanAdapter(
@@ -51,7 +66,16 @@ internal class LangfuseSpanAdapter(
                     span.attributes.find { attribute -> attribute.key == GenAIAttributes.Conversation.Id("").key }?.value
 
                 runId?.let { runId ->
-                    span.addAttribute(CustomAttribute("langfuse.session.id", runId))
+                    span.addAttribute(CustomAttribute(SESSION_ID_KEY, runId))
+                    // The `create_agent` root has no `gen_ai.conversation.id` of its own, as the GenAI semantic
+                    // conventions define none on it. A session from the trace attributes is already on the root and wins.
+                    span.copyToRootObservation(SESSION_ID_KEY, runId, overwrite = false)
+                }
+
+                // The run input belongs on the trace root observation in Langfuse v4.
+                span.attributes.filterIsInstance<GenAIAttributes.Input.Messages>().firstOrNull()?.let { attribute ->
+                    val entries = JsonArray(attribute.messages.flatMap(::promptEntries))
+                    span.copyToRootObservation(OBSERVATION_INPUT_KEY, HiddenString(entries.toString()))
                 }
             }
 
@@ -87,6 +111,12 @@ internal class LangfuseSpanAdapter(
                         )
                     )
                 }
+
+                span.copyToObservation<KoogAttributes.Koog.Node.Input>(OBSERVATION_INPUT_KEY)
+            }
+
+            SpanType.SUBGRAPH -> {
+                span.copyToObservation<KoogAttributes.Koog.Subgraph.Input>(OBSERVATION_INPUT_KEY)
             }
 
             else -> {}
@@ -113,11 +143,51 @@ internal class LangfuseSpanAdapter(
                     }
                 }
             }
+
+            SpanType.INVOKE_AGENT -> {
+                // The run output belongs on the trace root observation in Langfuse v4.
+                span.attributes.filterIsInstance<GenAIAttributes.Output.Messages>().firstOrNull()?.let { attribute ->
+                    val responses = attribute.messages.filterIsInstance<Message.Assistant>()
+                    val entries = JsonArray(responses.map(::completionEntry))
+                    span.copyToRootObservation(OBSERVATION_OUTPUT_KEY, HiddenString(entries.toString()))
+                }
+            }
+
+            SpanType.NODE -> {
+                span.copyToObservation<KoogAttributes.Koog.Node.Output>(OBSERVATION_OUTPUT_KEY)
+            }
+
+            SpanType.SUBGRAPH -> {
+                span.copyToObservation<KoogAttributes.Koog.Subgraph.Output>(OBSERVATION_OUTPUT_KEY)
+            }
+
             else -> {}
         }
     }
 
     //region Private Methods
+
+    /**
+     * Writes [value] under [key] on the `create_agent` parent of this span, the trace root. Langfuse v4 reads the
+     * request and response of a run from the root observation, which the `create_agent` span does not carry itself.
+     * Guarded on the parent type, so a change in the span hierarchy degrades to a no-op rather than writing
+     * to the wrong span. With [overwrite] set to `false`, a value already on the root is kept.
+     */
+    private fun GenAIAgentSpan.copyToRootObservation(key: String, value: Any, overwrite: Boolean = true) {
+        val root = parentSpan?.takeIf { parent -> parent.type == SpanType.CREATE_AGENT } ?: return
+        if (!overwrite && root.attributes.any { attribute -> attribute.key == key }) return
+        root.addAttribute(CustomAttribute(key, value))
+    }
+
+    /**
+     * Copies the value of the Koog-specific attribute [T] to [key] on the same span. Langfuse maps only a fixed list
+     * of attribute keys onto the input and output of an observation, and none of the `koog.*` keys is on it.
+     */
+    private inline fun <reified T : Attribute> GenAIAgentSpan.copyToObservation(key: String) {
+        attributes.filterIsInstance<T>().firstOrNull()?.let { attribute ->
+            addAttribute(CustomAttribute(key, attribute.value))
+        }
+    }
 
     private fun promptEntries(message: Message): List<JsonObject> = when (message) {
         is Message.System -> listOf(textEntry(message.role, message.parts.joinToString("\n") { it.text }))
@@ -242,6 +312,9 @@ internal class LangfuseSpanAdapter(
         const val PROMPT_KEY = "gen_ai.prompt"
         const val COMPLETION_KEY = "gen_ai.completion"
         const val USAGE_DETAILS_KEY = "langfuse.observation.usage_details"
+        const val SESSION_ID_KEY = "langfuse.session.id"
+        const val OBSERVATION_INPUT_KEY = "langfuse.observation.input"
+        const val OBSERVATION_OUTPUT_KEY = "langfuse.observation.output"
         const val CACHED_TOKENS_KEY = "cachedContentTokenCount"
         const val REASONING_TOKENS_KEY = "thoughtsTokenCount"
     }

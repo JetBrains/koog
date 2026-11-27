@@ -492,6 +492,10 @@ attributes rather than per-message events:
 - `gen_ai.input.messages`: a JSON array of the messages sent to the model (system / user / assistant / tool roles).
 - `gen_ai.output.messages`: a JSON array of the messages returned by the model.
 
+The `InvokeAgentSpan` carries the same two attributes for the whole run: `gen_ai.input.messages` holds the configured
+prompt the run started with, and `gen_ai.output.messages` holds the assistant responses the run produced. Its
+`gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens` attributes sum the usage of those responses.
+
 Earlier versions of Koog emitted per-message OpenTelemetry events
 (`gen_ai.system.message`, `gen_ai.user.message`, `gen_ai.assistant.message`, `gen_ai.tool.message`, `gen_ai.choice`)
 to capture message content. Those events have been removed from the OpenTelemetry GenAI specification and are no longer
@@ -1147,8 +1151,12 @@ Here is the full code sample:
 
 3. **Missing spans or incomplete traces**
     - Verify that the agent execution completes successfully.
-    - Ensure that you're not closing the application too quickly after agent execution.
-    - Add a delay after agent execution to allow time for spans to be exported.
+    - Ensure that you're not closing the application too quickly after agent execution. Exporters registered with
+      `addSpanExporter()` run behind a batch span processor that exports about once a second, so a process that exits
+      right after `agent.run()` loses the last spans, typically the whole top of the trace.
+    - In short-lived processes (scripts, CLI tools, tests), call `setShutdownOnAgentClose(true)` in the feature
+      configuration and close the agent (for example with `agent.use { ... }`). The feature then flushes and shuts
+      down the SDK when the agent closes. Alternatively, keep the process alive for a few seconds after the run.
 
 4. **Excessive number of spans**
     - Consider using a different sampling strategy by configuring the `sampler` property.
