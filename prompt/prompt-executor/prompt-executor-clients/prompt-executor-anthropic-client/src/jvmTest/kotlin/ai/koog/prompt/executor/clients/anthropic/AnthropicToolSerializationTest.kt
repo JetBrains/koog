@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.Prompt
-import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.AttachmentSource
 import ai.koog.prompt.message.Message
@@ -17,9 +16,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
-import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -78,7 +75,7 @@ class AnthropicToolSerializationTest {
     }
 
     @Test
-    fun `createAnthropicRequest should throw exception for AnyOf parameter type`() {
+    fun testCreateAnthropicRequestSerialisesAnyOfParameterType() {
         val client = AnthropicLLMClient(apiKey = "test-key")
         val model = AnthropicModels.Sonnet_4
 
@@ -99,23 +96,159 @@ class AnthropicToolSerializationTest {
             )
         )
 
-        val exception = assertFailsWith<LLMClientException> {
-            client.createAnthropicRequest(
-                prompt = Prompt(
-                    messages = emptyList(),
-                    id = "id"
-                ),
-                tools = listOf(tool),
-                model = model,
-                stream = false
-            )
-        }
+        val requestJson = client.createAnthropicRequest(
+            prompt = Prompt(messages = emptyList(), id = "id"),
+            tools = listOf(tool),
+            model = model,
+            stream = false
+        )
 
-        val message = exception.message
+        val valueSchema = json.parseToJsonElement(requestJson).jsonObject["tools"]
+            ?.jsonArray?.single()?.jsonObject?.get("input_schema")?.jsonObject
+            ?.get("properties")?.jsonObject?.get("value")?.jsonObject
 
-        assertNotNull(message)
-        assertContains(message, "AnyOf type is not supported")
+        assertEquals(
+            json.parseToJsonElement(
+                """{
+                    "description":"A value that can be string or number",
+                    "anyOf":[
+                        {"type":"string","description":"String option"},
+                        {"type":"number","description":"Number option"}
+                    ]
+                }"""
+            ).jsonObject,
+            assertNotNull(valueSchema)
+        )
     }
+
+    @Test
+    fun testCreateAnthropicRequestSerialisesCalculatorNumberOrReferenceAnyOf() {
+        val client = AnthropicLLMClient(apiKey = "test-key")
+        val tool = ToolDescriptor(
+            name = "calculate",
+            description = "Calculate a value",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operand",
+                    description = "A number or prior result reference",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(
+                                name = "number",
+                                description = "Finite numeric literal",
+                                type = ToolParameterType.Float
+                            ),
+                            ToolParameterDescriptor(
+                                name = "reference",
+                                description = "Prior-step reference",
+                                type = ToolParameterType.Object(
+                                    properties = listOf(
+                                        ToolParameterDescriptor(
+                                            name = "ref",
+                                            description = "Prior successful step ID",
+                                            type = ToolParameterType.String
+                                        )
+                                    ),
+                                    requiredProperties = listOf("ref"),
+                                    additionalProperties = false
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val requestJson = client.createAnthropicRequest(
+            prompt = Prompt(messages = emptyList(), id = "id"),
+            tools = listOf(tool),
+            model = AnthropicModels.Sonnet_4,
+            stream = false
+        )
+
+        val operandSchema = json.parseToJsonElement(requestJson).jsonObject["tools"]
+            ?.jsonArray?.single()?.jsonObject?.get("input_schema")?.jsonObject
+            ?.get("properties")?.jsonObject?.get("operand")?.jsonObject
+
+        assertEquals(
+            json.parseToJsonElement(
+                """{
+                    "description":"A number or prior result reference",
+                    "anyOf":[
+                        {"type":"number","description":"Finite numeric literal"},
+                        {
+                            "type":"object",
+                            "properties":{
+                                "ref":{"type":"string","description":"Prior successful step ID"}
+                            },
+                            "required":["ref"],
+                            "additionalProperties":false,
+                            "description":"Prior-step reference"
+                        }
+                    ]
+                }"""
+            ).jsonObject,
+            assertNotNull(operandSchema)
+        )
+    }
+
+    @Test
+    fun testCreateAnthropicRequestPreservesNullableUnion() {
+        val type = ToolParameterType.AnyOf(
+            arrayOf(
+                ToolParameterDescriptor("", "", ToolParameterType.String),
+                ToolParameterDescriptor("", "", ToolParameterType.Null),
+            )
+        )
+        assertEquals(
+            json.parseToJsonElement("""{"type":["string","null"],"description":"Value"}"""),
+            parameterSchema(type),
+        )
+    }
+
+    @Test
+    fun testCreateAnthropicRequestSerialisesNestedAnyOfWithoutBlankDescriptions() {
+        val type = ToolParameterType.AnyOf(
+            arrayOf(
+                ToolParameterDescriptor(
+                    "",
+                    " ",
+                    ToolParameterType.AnyOf(
+                        arrayOf(
+                            ToolParameterDescriptor("", "", ToolParameterType.String),
+                            ToolParameterDescriptor("", "", ToolParameterType.Float),
+                        )
+                    )
+                ),
+                ToolParameterDescriptor("", "", ToolParameterType.Boolean),
+            )
+        )
+        assertEquals(
+            json.parseToJsonElement(
+                """{"anyOf":[{"anyOf":[{"type":"string"},{"type":"number"}]},{"type":"boolean"}],"description":"Value"}"""
+            ),
+            parameterSchema(type),
+        )
+    }
+
+    private fun parameterSchema(type: ToolParameterType) =
+        AnthropicLLMClient(apiKey = "test-key").use { client ->
+            val request = client.createAnthropicRequest(
+                prompt = Prompt(messages = emptyList(), id = "anyof-regression"),
+                tools = listOf(
+                    ToolDescriptor(
+                        name = "test_tool",
+                        description = "Test tool",
+                        requiredParameters = listOf(ToolParameterDescriptor("value", "Value", type)),
+                    )
+                ),
+                model = AnthropicModels.Sonnet_4,
+                stream = false,
+            )
+            json.parseToJsonElement(request).jsonObject.getValue("tools").jsonArray.single()
+                .jsonObject.getValue("input_schema").jsonObject.getValue("properties")
+                .jsonObject.getValue("value")
+        }
 
     @Test
     fun `createAnthropicRequest should handle multiple parameter types including Null`() {
